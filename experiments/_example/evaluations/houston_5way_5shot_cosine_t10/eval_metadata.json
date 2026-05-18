@@ -1,0 +1,15 @@
+{
+  "experiment": "_example",
+  "eval_name": "houston_5way_5shot_cosine_t10",
+  "status": "example",
+  "started_at": "2026-05-13T00:00:00",
+  "finished_at": "2026-05-13T00:00:00",
+  "git_sha": null,
+  "summary": {
+    "OA": {"mean": null, "std": null, "ci_95": null},
+    "AA": {"mean": null, "std": null, "ci_95": null},
+    "Kappa": {"mean": null, "std": null, "ci_95": null},
+    "num_episodes": null
+  },
+  "wallclock_seconds": null
+}

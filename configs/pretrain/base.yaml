@@ -1,0 +1,77 @@
+# Base pretraining configuration for MFT-CPEA
+# This file contains shared settings for all pretraining experiments
+#
+# Projection head is trained during pretraining for few-shot transfer
+# following best practices from SimCLR/BYOL (ICLR 2024)
+
+# Model architecture
+model:
+  name: "mft_cpea"
+  embed_dim: 128
+  num_heads: 8
+  num_layers: 4
+  lambda_factor: 2.0
+  dropout: 0.1
+
+  # Projection head settings (trained during pretraining for few-shot transfer)
+  use_projection: true
+  proj_hidden_dim: 512  # 4x embed_dim for expansion
+  proj_num_layers: 2    # 2-layer MLP following SSL best practices
+  proj_l2_normalize: true  # L2 norm for metric-based few-shot
+
+# Data settings
+data:
+  patch_size: 11
+  num_workers: 4
+
+# Pretraining settings (base)
+pretrain:
+  # Datasets to use for pretraining
+  # Options: houston, trento, muufl (can combine multiple)
+  datasets:
+    - houston
+
+  # Training
+  epochs: 800
+  batch_size: 64
+  val_split: 0.1
+
+  # Optimizer
+  lr: 1.5e-4
+  min_lr: 1e-6
+  weight_decay: 0.05
+  warmup_epochs: 40
+  grad_clip: 1.0
+
+  # Decoder
+  decoder_hidden_dim: 256
+
+  # Unified masking over concatenated HSI+aux bands.
+  # band_mask_ratio: fraction of (pixel, band) entries masked (0 to disable).
+  # spatial_mask_ratio: fraction of whole pixel tokens masked, MAE-style (0 to disable).
+  band_mask_ratio: 0.9
+  spatial_mask_ratio: 0.0
+
+  # Center-weighted reconstruction loss (Gaussian sigma)
+  # Emphasizes center pixel reconstruction; larger = more uniform
+  # Uncomment to enable: recommended sigma=3.0
+  # recon_center_sigma: 3.0
+
+  # Checkpointing
+  save_interval: 100
+  val_interval: 50
+  log_interval: 10
+
+  # Mixed precision
+  use_amp: true
+
+# Paths
+paths:
+  data_root: "./data/raw"
+  checkpoint_dir: "./checkpoints/pretrained"
+  log_dir: "./logs/pretrain"
+
+# Hardware
+hardware:
+  device: "cuda"
+  seed: 42

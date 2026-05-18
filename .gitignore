@@ -1,0 +1,102 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+finetune_output.log
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Project specific
+data/raw/
+data/processed/
+checkpoints/
+logs/
+outputs/
+experiments/*/
+!/experiments/_example/
+!/experiments/_example/**
+*.pth
+*.pt
+*.ckpt
+wandb/
+
+# The repo-root `lib/` is a source package and must not be matched by the
+# venv-related `lib/` / `lib64/` rules above.
+!/lib/
+!/lib/**
+# ...but keep __pycache__ ignored everywhere under lib/.
+/lib/**/__pycache__/
+/lib/__pycache__/
+
+# Large files
+*.mat
+*.h5
+*.hdf5
+*.npy
+*.npz
+*.tif
+*.tiff
+
+# OS
+.DS_Store
+Thumbs.db
+
+#Old files
+old_outputs/
+old_models/
+old*
+exploration_results/

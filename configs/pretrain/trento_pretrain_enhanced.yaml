@@ -1,0 +1,80 @@
+# Enhanced Trento Pretraining Configuration (unified HSI+LiDAR tokens)
+#
+# LiDAR is concatenated as an extra band on each pixel (64 total bands for
+# Trento). Two masking regimes are supported and can be combined (set either
+# ratio to 0 to disable):
+#   - band_mask_ratio: per-(pixel, band) Bernoulli mask on the raw input.
+#   - spatial_mask_ratio: MAE-style masking of whole pixel tokens.
+# The decoder reconstructs the full per-pixel band vector; loss is MSE over
+# the masked entries (union of both masks when both are enabled).
+#
+# Run with:
+#   python scripts/pretrain_enhanced.py --config configs/pretrain/trento_pretrain_enhanced.yaml
+
+# Model architecture
+model:
+  name: "mft_cpea"
+  embed_dim: 128
+  num_heads: 8
+  num_layers: 4
+  lambda_factor: 4.0
+  dropout: 0.1
+
+  # Projection head (trained for few-shot transfer)
+  use_projection: true
+  proj_hidden_dim: 512
+  proj_num_layers: 2
+  proj_l2_normalize: true
+
+# Data settings
+data:
+  patch_size: 11
+  num_workers: 4
+  # Trento-specific
+  hsi_channels: 63
+  aux_channels: 1
+
+# Enhanced pretraining settings
+pretrain:
+  # Single dataset
+  datasets:
+    - trento
+
+  # Training schedule
+  epochs: 1000
+  batch_size: 64
+  val_split: 0.0
+
+  # Optimizer (MAE settings)
+  lr: 1.5e-4
+  min_lr: 1e-6
+  weight_decay: 0.05
+  warmup_epochs: 50
+  grad_clip: 1.0
+
+  # Decoder
+  decoder_hidden_dim: 256
+
+  # Unified masking: per-(pixel, band) Bernoulli mask on the combined tensor.
+  band_mask_ratio: 0.9
+  # MAE-style whole-token masking (0 to disable).
+  spatial_mask_ratio: 0.0
+
+  # Center-weighted reconstruction loss (Gaussian sigma)
+  recon_center_sigma: 3.0
+
+  # Checkpointing
+  save_interval: 25
+  val_interval: 3000
+  log_interval: 1
+  use_amp: true
+
+# Paths - unique for enhanced Trento pretraining
+paths:
+  data_root: "./data/raw"
+  checkpoint_dir: "./checkpoints/pretrained/trento_enhanced"
+  log_dir: "./logs/pretrain/trento_enhanced"
+
+hardware:
+  device: "cuda"
+  seed: 42

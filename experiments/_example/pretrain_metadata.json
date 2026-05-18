@@ -1,0 +1,14 @@
+{
+  "name": "_example",
+  "description": "Reference layout. Not a real run.",
+  "status": "example",
+  "started_at": "2026-05-13T00:00:00",
+  "finished_at": "2026-05-13T00:00:00",
+  "git_sha": null,
+  "history": {
+    "best_val_loss": null,
+    "final_train_loss": null,
+    "epochs_run": null
+  },
+  "wallclock_seconds": null
+}

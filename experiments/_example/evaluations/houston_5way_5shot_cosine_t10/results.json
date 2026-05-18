@@ -1,0 +1,13 @@
+{
+  "_comment": "Placeholder file — illustrates schema. lib.experiments.load_all_evaluations skips entries with status='example'.",
+  "model_type": "MFTCPEACosine",
+  "dataset": "houston",
+  "n_way": 5,
+  "k_shot": 5,
+  "k_query": 15,
+  "num_episodes": 0,
+  "OA": {"mean": null, "std": null, "ci_95": null},
+  "AA": {"mean": null, "std": null, "ci_95": null},
+  "Kappa": {"mean": null, "std": null, "ci_95": null},
+  "per_class": {}
+}

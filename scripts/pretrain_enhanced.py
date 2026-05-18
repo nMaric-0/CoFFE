@@ -320,20 +320,22 @@ def run_pretrain(
     logger.info(f"Band mask ratio: {band_mask_ratio}")
     logger.info(f"Spatial mask ratio: {spatial_mask_ratio}")
 
-    # Create trainer
+    # Create trainer. Cast numeric fields defensively — PyYAML's YAML-1.1
+    # resolver parses `1e-6` (no dot before the exponent) as a *string*,
+    # not a float, which detonates downstream in the LR scheduler.
     trainer_config = {
-        "epochs": pretrain_config.get("epochs", 800),
-        "lr": pretrain_config.get("lr", 1.5e-4),
-        "min_lr": pretrain_config.get("min_lr", 1e-6),
-        "weight_decay": pretrain_config.get("weight_decay", 0.05),
-        "warmup_epochs": pretrain_config.get("warmup_epochs", 40),
-        "warmup_start_factor": pretrain_config.get("warmup_start_factor", 0.01),
-        "adam_betas": tuple(pretrain_config.get("adam_betas", (0.9, 0.95))),
-        "grad_clip": pretrain_config.get("grad_clip", 1.0),
-        "save_interval": pretrain_config.get("save_interval", 100),
-        "val_interval": pretrain_config.get("val_interval", 50),
-        "log_interval": pretrain_config.get("log_interval", 10),
-        "use_amp": pretrain_config.get("use_amp", False),
+        "epochs": int(pretrain_config.get("epochs", 800)),
+        "lr": float(pretrain_config.get("lr", 1.5e-4)),
+        "min_lr": float(pretrain_config.get("min_lr", 1e-6)),
+        "weight_decay": float(pretrain_config.get("weight_decay", 0.05)),
+        "warmup_epochs": int(pretrain_config.get("warmup_epochs", 40)),
+        "warmup_start_factor": float(pretrain_config.get("warmup_start_factor", 0.01)),
+        "adam_betas": tuple(float(b) for b in pretrain_config.get("adam_betas", (0.9, 0.95))),
+        "grad_clip": float(pretrain_config.get("grad_clip", 1.0)),
+        "save_interval": int(pretrain_config.get("save_interval", 100)),
+        "val_interval": int(pretrain_config.get("val_interval", 50)),
+        "log_interval": int(pretrain_config.get("log_interval", 10)),
+        "use_amp": bool(pretrain_config.get("use_amp", False)),
     }
 
     trainer = PretrainTrainer(

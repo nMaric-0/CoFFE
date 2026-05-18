@@ -44,7 +44,7 @@ pretrain:
 
   # Optimizer
   lr: 1.5e-4
-  min_lr: 1e-6
+  min_lr: 1.0e-6
   weight_decay: 0.05
   warmup_epochs: 40
   warmup_start_factor: 0.01  # LR multiplier at the start of warmup

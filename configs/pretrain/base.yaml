@@ -23,6 +23,12 @@ model:
 data:
   patch_size: 11
   num_workers: 4
+  # DataLoader knobs. `pin_memory` defaults to True on CUDA, False on CPU
+  # (auto-detected in scripts/pretrain_enhanced.py); set explicitly to override.
+  # pin_memory: true
+  # drop_last: true
+  # persistent_workers: false   # keep workers alive between epochs (num_workers > 0 only)
+  # prefetch_factor: 2          # batches each worker pre-loads (num_workers > 0 only)
 
 # Pretraining settings (base)
 pretrain:
@@ -41,6 +47,8 @@ pretrain:
   min_lr: 1e-6
   weight_decay: 0.05
   warmup_epochs: 40
+  warmup_start_factor: 0.01  # LR multiplier at the start of warmup
+  adam_betas: [0.9, 0.95]    # AdamW (beta1, beta2)
   grad_clip: 1.0
 
   # Decoder
@@ -73,5 +81,8 @@ paths:
 
 # Hardware
 hardware:
+  # device: "cuda" requires a working CUDA build + visible GPU and fails
+  # loudly otherwise. Use "auto" to fall back to CPU when no GPU is available,
+  # or "cpu" to force CPU. Specify "cuda:N" to pin a particular GPU.
   device: "cuda"
   seed: 42

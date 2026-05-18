@@ -77,6 +77,8 @@ class PretrainTrainer:
             "min_lr": 1e-6,
             "weight_decay": 0.05,
             "warmup_epochs": 40,
+            "warmup_start_factor": 0.01,
+            "adam_betas": (0.9, 0.95),
             "grad_clip": 1.0,
             "save_interval": 100,
             "val_interval": 50,
@@ -85,19 +87,20 @@ class PretrainTrainer:
         }
         if config:
             self.config.update(config)
-        
+        self.config["adam_betas"] = tuple(self.config["adam_betas"])
+
         # Optimizer
         self.optimizer = AdamW(
             model.parameters(),
             lr=self.config["lr"],
             weight_decay=self.config["weight_decay"],
-            betas=(0.9, 0.95)
+            betas=self.config["adam_betas"],
         )
-        
+
         # Learning rate scheduler with warmup
         warmup_scheduler = LinearLR(
             self.optimizer,
-            start_factor=0.01,
+            start_factor=self.config["warmup_start_factor"],
             end_factor=1.0,
             total_iters=self.config["warmup_epochs"]
         )
@@ -441,7 +444,8 @@ class PretrainTrainer:
             "train_losses": self.train_losses,
             "val_losses": self.val_losses,
             "best_val_loss": self.best_val_loss,
-            "final_train_loss": self.train_losses[-1] if self.train_losses else None
+            "final_train_loss": self.train_losses[-1] if self.train_losses else None,
+            "epochs_run": self.current_epoch + 1 if self.train_losses else 0,
         }
 
 

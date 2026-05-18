@@ -63,12 +63,20 @@ def run_pretrain(
     """
     from scripts.pretrain_enhanced import run_pretrain as _run
 
+    base_config_path = str(config) if isinstance(config, (str, Path)) else None
     cfg = _load_config(config)
     if overrides:
         cfg = _deep_merge(cfg, overrides)
 
     logger_ = ExperimentLogger(experiments_root=experiments_root, repo_root=REPO_ROOT)
-    exp = logger_.start_pretrain(name, description, cfg, overwrite=overwrite)
+    exp = logger_.start_pretrain(
+        name,
+        description,
+        cfg,
+        overwrite=overwrite,
+        overrides=overrides or {},
+        base_config_path=base_config_path,
+    )
 
     handler = attach_file_logger(exp)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")

@@ -219,24 +219,27 @@ def run_pretrain(
     logger.info(f"Total samples: {len(full_dataset)}")
     logger.info(f"HSI channels: {hsi_channels}, Aux channels: {aux_channels}")
 
-    # Split into train/val (stratified by label to preserve class distribution)
-    val_split = pretrain_config.get("val_split", 0.1)
+    # Datasets are loaded with split="all" for pretraining (self-supervised
+    # masked modelling has no notion of label leakage), so val_split <= 0
+    # means "skip validation entirely" and train on every sample. A positive
+    # val_split still carves off a stratified hold-out if the user wants to
+    # eyeball the reconstruction loss on unseen patches.
+    val_split = float(pretrain_config.get("val_split", 0.0))
 
-    # Extract labels for stratification
-    if hasattr(full_dataset, 'labels'):
-        all_labels = full_dataset.labels.numpy()
+    if val_split > 0:
+        if hasattr(full_dataset, 'labels'):
+            all_labels = full_dataset.labels.numpy()
+        else:
+            all_labels = np.concatenate([ds.labels.numpy() for ds in full_dataset.datasets])
+        from sklearn.model_selection import StratifiedShuffleSplit
+        splitter = StratifiedShuffleSplit(n_splits=1, test_size=val_split, random_state=seed)
+        train_idx, val_idx = next(splitter.split(np.zeros(len(all_labels)), all_labels))
+        train_dataset = torch.utils.data.Subset(full_dataset, train_idx)
+        val_dataset = torch.utils.data.Subset(full_dataset, val_idx)
     else:
-        # CombinedPatchedDataset or similar: extract labels from sub-datasets
-        all_labels = []
-        for ds in full_dataset.datasets:
-            all_labels.append(ds.labels.numpy())
-        all_labels = np.concatenate(all_labels)
-
-    from sklearn.model_selection import StratifiedShuffleSplit
-    splitter = StratifiedShuffleSplit(n_splits=1, test_size=val_split, random_state=seed)
-    train_idx, val_idx = next(splitter.split(np.zeros(len(all_labels)), all_labels))
-    train_dataset = torch.utils.data.Subset(full_dataset, train_idx)
-    val_dataset = torch.utils.data.Subset(full_dataset, val_idx)
+        train_dataset = full_dataset
+        val_dataset = None
+        logger.info("val_split <= 0: training on the full dataset, no validation set")
 
     # Create dataloaders. pin_memory only matters on CUDA; turning it on for
     # CPU runs wastes memory and prints a torch warning.
@@ -261,17 +264,21 @@ def run_pretrain(
         **loader_extra,
     )
 
-    val_loader = DataLoader(
-        val_dataset,
-        batch_size=pretrain_config.get("batch_size", 64),
-        shuffle=False,
-        num_workers=num_workers,
-        pin_memory=pin_memory,
-        **loader_extra,
-    )
+    if val_dataset is not None:
+        val_loader = DataLoader(
+            val_dataset,
+            batch_size=pretrain_config.get("batch_size", 64),
+            shuffle=False,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+            **loader_extra,
+        )
+    else:
+        val_loader = None
 
     logger.info(f"Training samples: {len(train_dataset)}")
-    logger.info(f"Validation samples: {len(val_dataset)}")
+    if val_dataset is not None:
+        logger.info(f"Validation samples: {len(val_dataset)}")
 
     # Create encoder (MFT-CPEA-Cosine model)
     model_config = config.get("model", {})

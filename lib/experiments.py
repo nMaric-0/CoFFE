@@ -134,6 +134,9 @@ class PretrainExperiment:
                 for k in ("best_val_loss", "final_train_loss", "epochs_run")
                 if k in history
             }
+            for k in ("resolved_device", "cuda_device_name"):
+                if k in history:
+                    update[k] = history[k]
         update.update(extra)
         self.metadata.update(update)
         _write_json(self.metadata_path, self.metadata)
@@ -235,12 +238,19 @@ class ExperimentLogger:
         config: Dict[str, Any],
         *,
         overwrite: bool = False,
+        overrides: Optional[Dict[str, Any]] = None,
+        base_config_path: Optional[str] = None,
     ) -> PretrainExperiment:
         """Create a new pretraining experiment directory.
 
         Raises FileExistsError if the directory exists and `overwrite` is
         False, so accidentally rerunning the same notebook cell doesn't
         clobber a previous run.
+
+        `overrides` (the raw dict the user passed in the notebook, *not* the
+        merged config) and `base_config_path` (the YAML the overrides were
+        applied on top of) are persisted alongside the frozen merged config
+        so the lineage of the run is recoverable.
         """
         exp_dir = self._experiment_dir(name)
         if exp_dir.exists() and not overwrite:
@@ -253,19 +263,24 @@ class ExperimentLogger:
         (exp_dir / "checkpoints").mkdir(exist_ok=True)
         (exp_dir / "evaluations").mkdir(exist_ok=True)
 
+        overrides = dict(overrides or {})
         metadata = {
             "name": name,
             "description": description,
             "status": "running",
             "started_at": _now_iso(),
             "git_sha": self._git_sha(),
+            "base_config_path": base_config_path,
+            "overrides": overrides,
         }
         _write_json(exp_dir / "pretrain_metadata.json", metadata)
         _write_yaml(exp_dir / "pretrain_config.yaml", config)
+        _write_yaml(exp_dir / "pretrain_overrides.yaml", overrides)
         (exp_dir / "README.md").write_text(
             f"# {name}\n\n{description}\n\n"
             f"Created: {metadata['started_at']}\n"
             f"Git SHA: {metadata['git_sha']}\n"
+            f"Base config: {base_config_path}\n"
         )
 
         return PretrainExperiment(

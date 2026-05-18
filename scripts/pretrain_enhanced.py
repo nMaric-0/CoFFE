@@ -88,6 +88,70 @@ class CombinedPatchedDataset(torch.utils.data.ConcatDataset):
         return sample
 
 
+def _log_gpu_diagnostics(logger: logging.Logger) -> None:
+    """Print a startup block describing the GPU environment.
+
+    Always called regardless of which device is requested so misconfigured
+    environments leave a paper trail in pretrain.log.
+    """
+    logger.info(f"torch={torch.__version__} cuda_build={torch.version.cuda} "
+                f"cuda_available={torch.cuda.is_available()}")
+    if torch.cuda.is_available():
+        count = torch.cuda.device_count()
+        logger.info(f"Visible GPUs ({count}):")
+        for i in range(count):
+            logger.info(f"  [{i}] {torch.cuda.get_device_name(i)}")
+    else:
+        logger.info("No CUDA devices visible to PyTorch.")
+
+
+def _resolve_device(requested: str, logger: logging.Logger) -> str:
+    """Resolve `hardware.device` per the strict contract.
+
+    - "cuda"        → require CUDA; raise if unavailable.
+    - "cuda:N"      → require that specific index; raise if out of range.
+    - "auto"        → cuda:0 if available, else cpu.
+    - "cpu"         → cpu (forced).
+    """
+    if requested == "auto":
+        chosen = "cuda:0" if torch.cuda.is_available() else "cpu"
+        logger.info(f"device=auto → selected {chosen}")
+    elif requested == "cpu":
+        chosen = "cpu"
+        logger.info("device=cpu (explicit)")
+    elif requested == "cuda" or requested.startswith("cuda:"):
+        if not torch.cuda.is_available():
+            raise RuntimeError(
+                f"hardware.device={requested!r} but CUDA is not available "
+                f"(torch={torch.__version__}, cuda_build={torch.version.cuda}, "
+                f"torch.cuda.is_available()={torch.cuda.is_available()}). "
+                "Fix the environment (install a CUDA-enabled torch build and "
+                "ensure a GPU is visible) or set hardware.device to 'auto' or 'cpu'."
+            )
+        if requested == "cuda":
+            chosen = "cuda:0"
+        else:
+            idx = int(requested.split(":", 1)[1])
+            count = torch.cuda.device_count()
+            if idx < 0 or idx >= count:
+                raise RuntimeError(
+                    f"hardware.device={requested!r} but only {count} CUDA "
+                    f"device(s) visible (valid indices: 0..{count - 1})."
+                )
+            chosen = requested
+        logger.info(f"device={requested} → selected {chosen} "
+                    f"({torch.cuda.get_device_name(int(chosen.split(':', 1)[1]))})")
+    else:
+        raise RuntimeError(
+            f"Unrecognised hardware.device={requested!r}. "
+            "Expected 'cuda', 'cuda:N', 'auto', or 'cpu'."
+        )
+
+    if chosen.startswith("cuda"):
+        torch.cuda.set_device(chosen)
+    return chosen
+
+
 def run_pretrain(
     config: dict,
     checkpoint_dir: str,
@@ -109,12 +173,10 @@ def run_pretrain(
     deterministic = config.get("hardware", {}).get("deterministic", False)
     set_seed(seed, deterministic=deterministic)
 
-    # Device
-    device = config.get("hardware", {}).get("device", "cuda")
-    if device == "cuda" and not torch.cuda.is_available():
-        device = "cpu"
-        logger.warning("CUDA not available, using CPU")
-    logger.info(f"Using device: {device}")
+    # Device — strict contract; fail loudly when CUDA is requested but missing.
+    _log_gpu_diagnostics(logger)
+    requested_device = config.get("hardware", {}).get("device", "cuda")
+    device = _resolve_device(requested_device, logger)
 
     # Load datasets for pretraining
     pretrain_config = config.get("pretrain", {})
@@ -176,22 +238,36 @@ def run_pretrain(
     train_dataset = torch.utils.data.Subset(full_dataset, train_idx)
     val_dataset = torch.utils.data.Subset(full_dataset, val_idx)
 
-    # Create dataloaders
+    # Create dataloaders. pin_memory only matters on CUDA; turning it on for
+    # CPU runs wastes memory and prints a torch warning.
+    num_workers = data_config.get("num_workers", 4)
+    pin_memory = data_config.get("pin_memory", device.startswith("cuda"))
+    drop_last = data_config.get("drop_last", True)
+    persistent_workers = data_config.get("persistent_workers", False) and num_workers > 0
+    prefetch_factor = data_config.get("prefetch_factor")
+    loader_extra = {}
+    if num_workers > 0:
+        loader_extra["persistent_workers"] = persistent_workers
+        if prefetch_factor is not None:
+            loader_extra["prefetch_factor"] = prefetch_factor
+
     train_loader = DataLoader(
         train_dataset,
         batch_size=pretrain_config.get("batch_size", 64),
         shuffle=True,
-        num_workers=data_config.get("num_workers", 4),
-        pin_memory=True,
-        drop_last=True
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+        drop_last=drop_last,
+        **loader_extra,
     )
 
     val_loader = DataLoader(
         val_dataset,
         batch_size=pretrain_config.get("batch_size", 64),
         shuffle=False,
-        num_workers=data_config.get("num_workers", 4),
-        pin_memory=True
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+        **loader_extra,
     )
 
     logger.info(f"Training samples: {len(train_dataset)}")
@@ -251,6 +327,8 @@ def run_pretrain(
         "min_lr": pretrain_config.get("min_lr", 1e-6),
         "weight_decay": pretrain_config.get("weight_decay", 0.05),
         "warmup_epochs": pretrain_config.get("warmup_epochs", 40),
+        "warmup_start_factor": pretrain_config.get("warmup_start_factor", 0.01),
+        "adam_betas": tuple(pretrain_config.get("adam_betas", (0.9, 0.95))),
         "grad_clip": pretrain_config.get("grad_clip", 1.0),
         "save_interval": pretrain_config.get("save_interval", 100),
         "val_interval": pretrain_config.get("val_interval", 50),
@@ -270,6 +348,13 @@ def run_pretrain(
 
     # Train
     history = trainer.train(resume_from=resume)
+
+    # Stamp environment info on the history so the runner can record it in
+    # pretrain_metadata.json (useful when sanity-checking that a run actually
+    # used the GPU it asked for).
+    history["resolved_device"] = device
+    if device.startswith("cuda"):
+        history["cuda_device_name"] = torch.cuda.get_device_name(int(device.split(":", 1)[1]))
 
     logger.info("Enhanced pretraining complete!")
     logger.info(f"Best validation loss: {history['best_val_loss']:.4f}")

@@ -12,6 +12,8 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
+import yaml
+
 from .experiments import (
     DEFAULT_EXPERIMENTS_ROOT,
     EvalRun,
@@ -24,6 +26,51 @@ from .experiments import (
 REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
+
+
+# Keys read from the pretrain experiment's saved config to seed eval defaults.
+# Eval-time overrides in `eval_params` still win.
+_ARCH_KEYS_FROM_MODEL = (
+    "embed_dim",
+    "num_heads",
+    "num_layers",
+    "lambda_factor",
+    "dropout",
+    "use_projection",
+    "proj_hidden_dim",
+    "proj_num_layers",
+    "proj_l2_normalize",
+)
+_ARCH_KEYS_FROM_DATA = ("patch_size",)
+
+
+def load_pretrain_config(
+    experiment_name: str,
+    *,
+    experiments_root: Union[str, Path] = DEFAULT_EXPERIMENTS_ROOT,
+) -> Dict[str, Any]:
+    """Read experiments/<name>/pretrain_config.yaml as a plain dict."""
+    logger_ = ExperimentLogger(experiments_root=experiments_root, repo_root=REPO_ROOT)
+    exp_dir = logger_.get_experiment(experiment_name)
+    cfg_path = exp_dir / "pretrain_config.yaml"
+    if not cfg_path.exists():
+        raise FileNotFoundError(f"No pretrain_config.yaml under {exp_dir}")
+    with cfg_path.open() as f:
+        return yaml.safe_load(f) or {}
+
+
+def _arch_defaults_from_pretrain(pretrain_cfg: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract architecture-shaped keys from a pretrain config dict."""
+    model_cfg = pretrain_cfg.get("model", {}) or {}
+    data_cfg = pretrain_cfg.get("data", {}) or {}
+    out: Dict[str, Any] = {}
+    for k in _ARCH_KEYS_FROM_MODEL:
+        if k in model_cfg:
+            out[k] = model_cfg[k]
+    for k in _ARCH_KEYS_FROM_DATA:
+        if k in data_cfg:
+            out[k] = data_cfg[k]
+    return out
 
 
 def find_checkpoint(
@@ -86,23 +133,37 @@ def run_evaluation(
     """
     from scripts.evaluate_cosine import run_evaluation as _run
 
-    params = dict(eval_params or {})
-    if "dataset" not in params:
+    user_params = dict(eval_params or {})
+    if "dataset" not in user_params:
         raise ValueError("eval_params must include 'dataset'")
 
     if checkpoint is None:
-        if params.get("checkpoint") in ("random", "none", "null"):
-            checkpoint = params.pop("checkpoint")
+        if user_params.get("checkpoint") in ("random", "none", "null"):
+            checkpoint = user_params.pop("checkpoint")
         else:
             checkpoint = find_checkpoint(
                 experiment_name, epoch=epoch, experiments_root=experiments_root,
             )
+
+    # Pull architecture defaults from the pretraining experiment so the
+    # notebook doesn't have to re-specify them (and can't silently drift).
+    # User-supplied keys win.
+    pretrain_cfg = load_pretrain_config(experiment_name, experiments_root=experiments_root)
+    arch_defaults = _arch_defaults_from_pretrain(pretrain_cfg)
+    params: Dict[str, Any] = {**arch_defaults, **user_params}
+
+    arch_summary = ", ".join(f"{k}={params[k]}" for k in arch_defaults if k in params)
+    logging.getLogger(__name__).info(
+        f"Loaded architecture from experiments/{experiment_name}/pretrain_config.yaml: "
+        f"{arch_summary or '(none)'}"
+    )
 
     logger_ = ExperimentLogger(experiments_root=experiments_root, repo_root=REPO_ROOT)
 
     config_for_logging = {
         "checkpoint": checkpoint,
         "epoch": epoch,
+        "arch_from_pretrain": arch_defaults,
         **params,
     }
 

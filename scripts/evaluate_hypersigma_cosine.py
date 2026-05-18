@@ -1,0 +1,660 @@
+#!/usr/bin/env python
+"""Few-shot evaluation for HyperSIGMA on the same episodes as MFT-CPEA-Cosine.
+
+Mirrors ``scripts/evaluate_cosine.py`` so result files are
+directly comparable. Differences:
+
+* Encoder is ``HyperSIGMACosine`` (a frozen wrapper around
+  ``HyperSIGMADual``), not ``MFTCPEACosine``.
+* The eval loop accumulates *both* a cosine and a Euclidean confusion
+  matrix from the same per-batch features so the JSON has parallel
+  ``cosine`` and ``euclidean`` result blocks.
+* CLI flags add ``--mode {fused, spat_pool, spec_pool}``,
+  ``--spat-patch-k {1, 3}``, ``--pca-spat-path``, and
+  ``--adapted-checkpoint`` (use the literal string ``none`` to skip
+  loading adapted weights — that's the "unadapted" ablation).
+
+Usage:
+    python scripts/evaluate_hypersigma_cosine.py \
+        --pca-spat-path checkpoints/hypersigma/pca_houston_3band.pkl \
+        --spat-ckpt checkpoints/hypersigma/spat-vit-base.pth \
+        --spec-ckpt checkpoints/hypersigma/spec-vit-base.pth \
+        --adapted-checkpoint checkpoints/hypersigma_adapted/houston_k3/checkpoint.pth \
+        --mode fused
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import logging
+import sys
+from collections import defaultdict
+from pathlib import Path
+
+import numpy as np
+import torch
+import torch.nn.functional as F
+from tqdm import tqdm
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from data.datasets import (  # noqa: E402
+    HoustonPatchedDataset,
+    TrentoPatchedDataset,
+    MUUFLPatchedDataset,
+)
+from data.samplers.patched_episode_sampler import PatchedEpisodeSampler  # noqa: E402
+from models.hypersigma import HyperSIGMADual, HyperSIGMACosine  # noqa: E402
+from scripts.evaluate_cosine import (  # noqa: E402
+    CLASS_NAMES,
+    compute_metrics_from_confusion_matrix,
+    generate_plots,
+)
+from utils.seed import set_seed  # noqa: E402
+
+DATASETS = {
+    "houston": HoustonPatchedDataset,
+    "trento": TrentoPatchedDataset,
+    "muufl": MUUFLPatchedDataset,
+}
+
+DATASET_SPECS = {
+    "houston": {"hsi_channels": 144, "num_classes": 15},
+    "trento": {"hsi_channels": 63, "num_classes": 6},
+    "muufl": {"hsi_channels": 64, "num_classes": 11},
+}
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
+
+
+# ----------------------------------------------------------------------
+# Model loading
+# ----------------------------------------------------------------------
+
+
+def _build_dual(
+    dataset_name: str,
+    pca_spat_path: str,
+    spat_ckpt: str,
+    spec_ckpt: str,
+    spat_patch_k: int,
+    embed_dim: int = 768,
+    num_tokens: int = 100,
+    dr_dim: int = 128,
+    num_stages: int = 4,
+) -> HyperSIGMADual:
+    specs = DATASET_SPECS[dataset_name]
+    dual = HyperSIGMADual(
+        pca_spat_path=pca_spat_path,
+        spat_ckpt=spat_ckpt,
+        spec_ckpt=spec_ckpt,
+        hsi_channels=specs["hsi_channels"],
+        spat_patch_k=spat_patch_k,
+        freeze_body=True,
+        embed_dim=embed_dim,
+        num_tokens=num_tokens,
+        dr_dim=dr_dim,
+        num_stages=num_stages,
+    )
+    dual.log_sanity()
+    return dual
+
+
+def _load_adapted_checkpoint(model: HyperSIGMACosine, ckpt_path: str) -> None:
+    """Apply an adapted-state checkpoint to the dual encoder.
+
+    The adapted checkpoint is the state_dict of a
+    ``HyperSIGMAMaskedAdaptation`` — keys are prefixed with ``dual.``,
+    plus ``input_masking.*`` and ``decoder.*``. We keep only the
+    ``dual.*`` keys.
+    """
+    ckpt = torch.load(ckpt_path, map_location="cpu")
+    if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
+        state = ckpt["model_state_dict"]
+    else:
+        state = ckpt
+
+    dual_state = {}
+    for k, v in state.items():
+        if k.startswith("dual."):
+            dual_state[k[len("dual."):]] = v
+    if not dual_state:
+        raise RuntimeError(
+            f"No 'dual.*' keys found in adapted checkpoint at {ckpt_path}"
+        )
+
+    missing, unexpected = model.dual.load_state_dict(dual_state, strict=False)
+    logger.info(
+        "[HyperSIGMA] Loaded adapted dual state: missing=%d, unexpected=%d",
+        len(missing), len(unexpected),
+    )
+    if missing:
+        logger.warning("Missing keys (first 10): %s", missing[:10])
+    if unexpected:
+        logger.warning("Unexpected keys (first 10): %s", unexpected[:10])
+
+
+def load_model(
+    dataset_name: str,
+    pca_spat_path: str,
+    spat_ckpt: str,
+    spec_ckpt: str,
+    spat_patch_k: int,
+    adapted_checkpoint: str | None,
+    mode: str,
+    temperature: float,
+    prototype_mode: str,
+    distance_metric: str,
+    device: str,
+) -> HyperSIGMACosine:
+    dual = _build_dual(
+        dataset_name=dataset_name,
+        pca_spat_path=pca_spat_path,
+        spat_ckpt=spat_ckpt,
+        spec_ckpt=spec_ckpt,
+        spat_patch_k=spat_patch_k,
+    )
+    model = HyperSIGMACosine(
+        dual=dual,
+        mode=mode,
+        distance_metric=distance_metric,
+        temperature=temperature,
+        prototype_mode=prototype_mode,
+    )
+
+    if adapted_checkpoint and adapted_checkpoint.lower() not in ("none", "null", "random"):
+        _load_adapted_checkpoint(model, adapted_checkpoint)
+    else:
+        logger.info("[HyperSIGMA] Running UNADAPTED ablation (no Houston adaptation applied)")
+
+    model = model.to(device)
+    model.eval()
+    return model
+
+
+# ----------------------------------------------------------------------
+# Eval loop
+# ----------------------------------------------------------------------
+
+
+def _compute_logits(
+    s_features: torch.Tensor,
+    support_labels: torch.Tensor,
+    q_features: torch.Tensor,
+    *,
+    metric: str,
+    temperature: float,
+) -> torch.Tensor:
+    """Prototype matching with explicit metric so we can run both in parallel."""
+    if metric == "cosine":
+        s_norm = F.normalize(s_features, p=2, dim=-1)
+        q_norm = F.normalize(q_features, p=2, dim=-1)
+    else:
+        s_norm = s_features
+        q_norm = q_features
+
+    num_classes = support_labels.max().item() + 1
+    prototypes = torch.zeros(num_classes, s_norm.shape[-1], device=s_norm.device)
+    counts = torch.zeros(num_classes, device=s_norm.device)
+    prototypes.scatter_add_(0, support_labels.unsqueeze(-1).expand_as(s_norm), s_norm)
+    counts.scatter_add_(0, support_labels, torch.ones_like(support_labels, dtype=s_norm.dtype))
+    prototypes = prototypes / counts.unsqueeze(-1).clamp(min=1)
+
+    if metric == "cosine":
+        return torch.matmul(q_norm, prototypes.T) * temperature
+    dists = torch.cdist(q_norm, prototypes, p=2)
+    return -dists.pow(2)
+
+
+@torch.no_grad()
+def evaluate(
+    model: HyperSIGMACosine,
+    sampler: PatchedEpisodeSampler,
+    device: str,
+    *,
+    num_episodes: int,
+    n_way: int,
+    num_total_classes: int,
+    temperature: float,
+    num_example_episodes: int,
+    max_tsne_samples: int,
+) -> dict:
+    """Run the prototype eval and return a results blob with parallel
+    cosine / euclidean confusion matrices."""
+    model.eval()
+
+    blocks = {}
+    for metric in ("cosine", "euclidean"):
+        blocks[metric] = {
+            "episode_oas": [],
+            "episode_aas": [],
+            "episode_kappas": [],
+            "class_results": defaultdict(lambda: {"correct": 0, "total": 0}),
+            "class_episode_accs": defaultdict(list),
+            "global_conf_matrix": np.zeros(
+                (num_total_classes + 1, num_total_classes + 1), dtype=np.int64,
+            ),
+            "pairwise_confusion": defaultdict(lambda: defaultdict(int)),
+            "pairwise_totals": defaultdict(lambda: defaultdict(int)),
+        }
+
+    example_episodes_data = []
+    aggregated_features = defaultdict(list)
+
+    primary_metric = model.distance_metric
+    pbar = tqdm(sampler, total=min(num_episodes, len(sampler)), desc="Evaluating")
+    completed = 0
+    for episode in pbar:
+        if completed >= num_episodes:
+            break
+        support_hsi = episode["support_hsi"].to(device)
+        support_aux = episode["support_aux"].to(device)
+        support_labels = episode["support_labels"].to(device)
+        query_hsi = episode["query_hsi"].to(device)
+        query_aux = episode["query_aux"].to(device)
+        query_labels = episode["query_labels"].to(device)
+        original_classes = episode["original_classes"].tolist()
+
+        s_patch, s_cls, _ = model.forward_features(support_hsi, support_aux)
+        q_patch, q_cls, _ = model.forward_features(query_hsi, query_aux)
+        s_feat = model.adapt_embeddings(s_patch, s_cls).mean(dim=1)
+        q_feat = model.adapt_embeddings(q_patch, q_cls).mean(dim=1)
+
+        for metric in ("cosine", "euclidean"):
+            logits = _compute_logits(
+                s_feat, support_labels, q_feat,
+                metric=metric, temperature=temperature,
+            )
+            preds = logits.argmax(dim=1)
+            query_cpu = query_labels.cpu().numpy()
+            preds_cpu = preds.cpu().numpy()
+
+            conf = np.zeros((n_way, n_way), dtype=np.int64)
+            for t, p in zip(query_cpu, preds_cpu):
+                conf[t, p] += 1
+            m = compute_metrics_from_confusion_matrix(conf)
+            blk = blocks[metric]
+            blk["episode_oas"].append(m["OA"])
+            blk["episode_aas"].append(m["AA"])
+            blk["episode_kappas"].append(m["Kappa"])
+
+            for way_idx, orig in enumerate(original_classes):
+                total = conf[way_idx, :].sum()
+                correct = conf[way_idx, way_idx]
+                blk["class_results"][orig]["correct"] += correct
+                blk["class_results"][orig]["total"] += total
+                if total > 0:
+                    blk["class_episode_accs"][orig].append(correct / total * 100)
+            for i, oi in enumerate(original_classes):
+                for j, oj in enumerate(original_classes):
+                    blk["global_conf_matrix"][oi, oj] += conf[i, j]
+                    blk["pairwise_confusion"][oi][oj] += conf[i, j]
+                    blk["pairwise_totals"][oi][oj] += conf[i, :].sum()
+
+            # Feature snapshots and aggregated features only need the
+            # primary metric (these drive the plots).
+            if metric == primary_metric:
+                if completed < num_example_episodes:
+                    s_norm = (
+                        F.normalize(s_feat, p=2, dim=-1) if metric == "cosine" else s_feat
+                    )
+                    q_norm = (
+                        F.normalize(q_feat, p=2, dim=-1) if metric == "cosine" else q_feat
+                    )
+                    prototypes = torch.zeros(
+                        support_labels.max().item() + 1, s_norm.shape[-1], device=s_norm.device,
+                    )
+                    counts = torch.zeros_like(prototypes[:, 0])
+                    prototypes.scatter_add_(
+                        0, support_labels.unsqueeze(-1).expand_as(s_norm), s_norm,
+                    )
+                    counts.scatter_add_(
+                        0, support_labels, torch.ones_like(support_labels, dtype=s_norm.dtype),
+                    )
+                    prototypes = prototypes / counts.unsqueeze(-1).clamp(min=1)
+                    example_episodes_data.append(
+                        {
+                            "s_features": s_norm.cpu().numpy(),
+                            "q_features": q_norm.cpu().numpy(),
+                            "prototypes": prototypes.cpu().numpy(),
+                            "s_labels": support_labels.cpu().numpy(),
+                            "q_labels": query_cpu,
+                            "q_preds": preds_cpu,
+                            "original_classes": original_classes,
+                        }
+                    )
+                q_feats_np = (
+                    F.normalize(q_feat, p=2, dim=-1) if metric == "cosine" else q_feat
+                ).cpu().numpy()
+                for way_idx, orig in enumerate(original_classes):
+                    mask = query_cpu == way_idx
+                    feats = q_feats_np[mask]
+                    cur = len(aggregated_features[orig])
+                    if max_tsne_samples > 0 and cur >= max_tsne_samples:
+                        continue
+                    if max_tsne_samples > 0:
+                        feats = feats[: max_tsne_samples - cur]
+                    aggregated_features[orig].append(feats)
+        completed += 1
+
+    # Concatenate aggregated features
+    for cls in aggregated_features:
+        aggregated_features[cls] = np.concatenate(aggregated_features[cls], axis=0)
+
+    def _ci(values):
+        from scipy.stats import t as t_dist
+        arr = np.asarray(values, dtype=float)
+        mean = float(arr.mean())
+        std = float(arr.std())
+        ci = float(t_dist.ppf(0.975, df=max(1, len(arr) - 1)) * std / max(1, np.sqrt(len(arr))))
+        return mean, std, ci
+
+    summary = {}
+    for metric, blk in blocks.items():
+        oa_m, oa_s, oa_ci = _ci(blk["episode_oas"])
+        aa_m, aa_s, aa_ci = _ci(blk["episode_aas"])
+        k_m, k_s, k_ci = _ci(blk["episode_kappas"])
+        per_class = {}
+        for orig, data in blk["class_results"].items():
+            accs = blk["class_episode_accs"].get(orig, [])
+            if accs:
+                m, s, ci = _ci(accs)
+            else:
+                pooled = data["correct"] / data["total"] * 100 if data["total"] else 0.0
+                m, s, ci = pooled, 0.0, 0.0
+            per_class[orig] = {
+                "accuracy": float(m),
+                "pooled_accuracy": float(
+                    data["correct"] / data["total"] * 100 if data["total"] else 0.0
+                ),
+                "std": float(s),
+                "ci_95": float(ci),
+                "total_samples": int(data["total"]),
+                "correct_samples": int(data["correct"]),
+            }
+        summary[metric] = {
+            "OA": {"mean": oa_m, "std": oa_s, "ci_95": oa_ci},
+            "AA": {"mean": aa_m, "std": aa_s, "ci_95": aa_ci},
+            "Kappa": {"mean": k_m, "std": k_s, "ci_95": k_ci},
+            "per_class": per_class,
+            "num_episodes": len(blk["episode_oas"]),
+            "global_conf_matrix": blk["global_conf_matrix"],
+            "episode_oas": np.asarray(blk["episode_oas"]),
+            "episode_aas": np.asarray(blk["episode_aas"]),
+            "episode_kappas": np.asarray(blk["episode_kappas"]),
+            "class_episode_accs": dict(blk["class_episode_accs"]),
+            "pairwise_confusion": {k: dict(v) for k, v in blk["pairwise_confusion"].items()},
+            "pairwise_totals": {k: dict(v) for k, v in blk["pairwise_totals"].items()},
+        }
+
+    summary["example_episodes_data"] = example_episodes_data
+    summary["aggregated_features"] = dict(aggregated_features)
+    return summary
+
+
+# ----------------------------------------------------------------------
+# Output
+# ----------------------------------------------------------------------
+
+
+def _to_json_friendly(block: dict) -> dict:
+    """Strip numpy arrays / non-serializable bits before json.dump."""
+    out = {}
+    for k, v in block.items():
+        if k in {
+            "global_conf_matrix",
+            "episode_oas",
+            "episode_aas",
+            "episode_kappas",
+        }:
+            continue
+        if k in {"class_episode_accs", "pairwise_confusion", "pairwise_totals"}:
+            continue
+        out[k] = v
+    return out
+
+
+def _write_results_json(
+    output_path: Path,
+    results: dict,
+    *,
+    dataset_name: str,
+    args,
+    seeds,
+) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    cosine = _to_json_friendly(results["cosine"])
+    euclidean = _to_json_friendly(results["euclidean"])
+    primary = results[args.distance_metric]
+    payload = {
+        "model_type": "HyperSIGMADual",
+        "mode": args.mode,
+        "spat_patch_k": args.spat_patch_k,
+        "adapted_checkpoint": args.adapted_checkpoint,
+        "pca_spat_path": args.pca_spat_path,
+        "spat_ckpt": args.spat_ckpt,
+        "spec_ckpt": args.spec_ckpt,
+        "dataset": dataset_name,
+        "split": args.split,
+        "n_way": args.n_way,
+        "k_shot": args.k_shot,
+        "k_query": args.k_query,
+        "seeds": seeds,
+        "num_episodes": primary["num_episodes"],
+        "distance_metric": args.distance_metric,
+        "temperature": args.temperature,
+        "prototype_mode": args.prototype_mode,
+        "cosine": cosine,
+        "euclidean": euclidean,
+        # Promote the primary metric's headline OA/AA/Kappa to the top
+        # level so existing tooling that looks for results["OA"] still
+        # works.
+        "OA": primary["OA"],
+        "AA": primary["AA"],
+        "Kappa": primary["Kappa"],
+        "per_class": {str(k): v for k, v in primary["per_class"].items()},
+        "class_names": CLASS_NAMES.get(dataset_name, []),
+    }
+    with output_path.open("w") as f:
+        json.dump(payload, f, indent=2, default=str)
+    logger.info("Results saved to %s", output_path)
+
+
+# ----------------------------------------------------------------------
+# Plot adapter
+# ----------------------------------------------------------------------
+
+
+def _shape_for_plots(block: dict) -> dict:
+    """Reshape a metric block into the dict ``generate_plots`` expects."""
+    return {
+        "OA": block["OA"],
+        "AA": block["AA"],
+        "Kappa": block["Kappa"],
+        "per_class": block["per_class"],
+        "num_episodes": block["num_episodes"],
+        "global_conf_matrix": block["global_conf_matrix"],
+        "episode_oas": block["episode_oas"],
+        "episode_aas": block["episode_aas"],
+        "episode_kappas": block["episode_kappas"],
+        "class_episode_accs": block["class_episode_accs"],
+        "pairwise_confusion": block["pairwise_confusion"],
+        "pairwise_totals": block["pairwise_totals"],
+        "example_episodes_data": [],
+        "aggregated_features": {},
+    }
+
+
+# ----------------------------------------------------------------------
+# Main / programmatic entry-point
+# ----------------------------------------------------------------------
+
+
+def main(args):
+    device = "cuda" if torch.cuda.is_available() and not args.cpu else "cpu"
+    logger.info("Using device: %s", device)
+
+    seeds = args.seeds if args.seeds else [args.seed]
+    dataset_name = args.dataset.lower()
+    DatasetClass = DATASETS[dataset_name]
+    dataset = DatasetClass(
+        data_root=args.data_root,
+        patch_size=args.patch_size,
+        split=args.split,
+        normalize=True,
+    )
+    logger.info("Loaded %s (%s): %d samples", dataset_name, args.split, len(dataset))
+
+    model = load_model(
+        dataset_name=dataset_name,
+        pca_spat_path=args.pca_spat_path,
+        spat_ckpt=args.spat_ckpt,
+        spec_ckpt=args.spec_ckpt,
+        spat_patch_k=args.spat_patch_k,
+        adapted_checkpoint=args.adapted_checkpoint,
+        mode=args.mode,
+        temperature=args.temperature,
+        prototype_mode=args.prototype_mode,
+        distance_metric=args.distance_metric,
+        device=device,
+    )
+
+    num_total = DATASET_SPECS[dataset_name]["num_classes"]
+
+    last_results = None
+    all_summaries = []
+    for seed in seeds:
+        set_seed(seed, deterministic=True)
+        sampler = PatchedEpisodeSampler(
+            dataset=dataset,
+            n_way=args.n_way,
+            k_shot=args.k_shot,
+            k_query=args.k_query,
+            num_episodes=args.num_episodes,
+            seed=seed,
+        )
+        results = evaluate(
+            model, sampler, device,
+            num_episodes=args.num_episodes,
+            n_way=args.n_way,
+            num_total_classes=num_total,
+            temperature=args.temperature,
+            num_example_episodes=args.num_example_episodes,
+            max_tsne_samples=args.max_tsne_samples,
+        )
+        last_results = results
+        all_summaries.append(
+            {
+                "seed": seed,
+                "cosine": {k: results["cosine"][k] for k in ("OA", "AA", "Kappa")},
+                "euclidean": {k: results["euclidean"][k] for k in ("OA", "AA", "Kappa")},
+            }
+        )
+
+        primary = results[args.distance_metric]
+        logger.info(
+            "[seed %d] %s OA=%.2f+-%.2f AA=%.2f+-%.2f Kappa=%.2f+-%.2f (%d eps)",
+            seed, args.distance_metric,
+            primary["OA"]["mean"], primary["OA"]["ci_95"],
+            primary["AA"]["mean"], primary["AA"]["ci_95"],
+            primary["Kappa"]["mean"], primary["Kappa"]["ci_95"],
+            primary["num_episodes"],
+        )
+
+    if args.output:
+        _write_results_json(
+            Path(args.output), last_results,
+            dataset_name=dataset_name, args=args, seeds=seeds,
+        )
+
+    if not args.no_plots and args.output_dir is not None:
+        plots_dir = Path(args.output_dir)
+        plots_dir.mkdir(parents=True, exist_ok=True)
+        # Pull in example_episodes_data + aggregated_features from the
+        # full results so the plot suite has feature-space inputs.
+        shaped = _shape_for_plots(last_results[args.distance_metric])
+        shaped["example_episodes_data"] = last_results["example_episodes_data"]
+        shaped["aggregated_features"] = last_results["aggregated_features"]
+        generate_plots(
+            shaped, dataset_name, args.n_way, args.k_shot, plots_dir,
+            args.distance_metric, args.prototype_mode, args.max_tsne_samples,
+        )
+
+    return last_results
+
+
+_DEFAULT_ARGS = {
+    "n_way": 15,
+    "k_shot": 5,
+    "k_query": 30,
+    "num_episodes": 600,
+    "data_root": "./data/raw",
+    "split": "test",
+    "patch_size": 11,
+    "distance_metric": "cosine",
+    "temperature": 10.0,
+    "prototype_mode": "mean_features",
+    "seed": 42,
+    "seeds": None,
+    "cpu": False,
+    "output": None,
+    "output_dir": None,
+    "no_plots": False,
+    "num_example_episodes": 3,
+    "max_tsne_samples": 0,
+    "spat_patch_k": 3,
+    "pca_spat_path": "checkpoints/hypersigma/pca_houston_3band.pkl",
+    "spat_ckpt": "checkpoints/hypersigma/spat-vit-base.pth",
+    "spec_ckpt": "checkpoints/hypersigma/spec-vit-base.pth",
+    "adapted_checkpoint": None,
+    "mode": "fused",
+}
+
+
+def run_evaluation(dataset: str, **overrides):
+    """Programmatic entry-point used by notebooks."""
+    cfg = {**_DEFAULT_ARGS, "dataset": dataset, **overrides}
+    args = argparse.Namespace(**cfg)
+    return main(args)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--dataset", type=str, default="houston", choices=list(DATASETS))
+    parser.add_argument("--n-way", type=int, default=15)
+    parser.add_argument("--k-shot", type=int, default=5)
+    parser.add_argument("--k-query", type=int, default=30)
+    parser.add_argument("--num-episodes", type=int, default=600)
+    parser.add_argument("--data-root", type=str, default="./data/raw")
+    parser.add_argument("--split", type=str, default="test", choices=["train", "test", "all"])
+    parser.add_argument("--patch-size", type=int, default=11)
+    parser.add_argument("--mode", type=str, default="fused",
+                        choices=list(HyperSIGMACosine.SUPPORTED_MODES))
+    parser.add_argument("--spat-patch-k", type=int, default=3, choices=[1, 3])
+    parser.add_argument("--pca-spat-path", type=str,
+                        default="checkpoints/hypersigma/pca_houston_3band.pkl")
+    parser.add_argument("--spat-ckpt", type=str,
+                        default="checkpoints/hypersigma/spat-vit-base.pth")
+    parser.add_argument("--spec-ckpt", type=str,
+                        default="checkpoints/hypersigma/spec-vit-base.pth")
+    parser.add_argument("--adapted-checkpoint", type=str, default=None,
+                        help="Path to adapted checkpoint, or 'none' for unadapted ablation")
+    parser.add_argument("--distance-metric", type=str, default="cosine",
+                        choices=["cosine", "euclidean"])
+    parser.add_argument("--temperature", type=float, default=10.0)
+    parser.add_argument("--prototype-mode", type=str, default="mean_features",
+                        choices=["mean_features"])  # mean_distances not used for the dual feature
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--seeds", type=int, nargs="+", default=None)
+    parser.add_argument("--cpu", action="store_true")
+    parser.add_argument("--output", type=str, default=None)
+    parser.add_argument("--output-dir", type=str, default=None)
+    parser.add_argument("--no-plots", action="store_true", default=False)
+    parser.add_argument("--num-example-episodes", type=int, default=3)
+    parser.add_argument("--max-tsne-samples", type=int, default=0)
+    args = parser.parse_args()
+    main(args)

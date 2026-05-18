@@ -1,0 +1,61 @@
+# Houston Level-2 MAE adaptation config for HyperSIGMA.
+#
+# Adapts the small randomly-initialized HyperSIGMA components
+# (SpatViT patch_embed + pos_embed, SpecViT spat_map + pos_embed + l1,
+# four-stage SEM, UnifiedBandMasking fill values) via masked HSI
+# reconstruction on Houston's normalized 11x11 patches. The SpatViT
+# and SpecViT transformer bodies stay frozen.
+#
+# Hyperparameters mirror configs/pretrain/houston_pretrain_enhanced.yaml
+# so the comparison with MFT-CPEA is apples-to-apples.
+#
+# Run with:
+#   python scripts/adapt_hypersigma_houston.py \
+#       --config configs/pretrain/hypersigma_houston_adapt.yaml
+
+model:
+  name: "hypersigma_dual"
+  hsi_channels: 144
+  spat_patch_k: 3
+  embed_dim: 768
+  num_tokens: 100
+  dr_dim: 128
+  num_stages: 4
+
+data:
+  dataset: "houston"
+  data_root: "./data/raw"
+  patch_size: 11
+  num_workers: 4
+
+paths:
+  pca_spat_path: "checkpoints/hypersigma/pca_houston_3band.pkl"
+  spat_ckpt: "checkpoints/hypersigma/spat-vit-base.pth"
+  spec_ckpt: "checkpoints/hypersigma/spec-vit-base.pth"
+  checkpoint_dir: "checkpoints/hypersigma_adapted/houston_k3"
+  log_dir: "logs/hypersigma_adapted/houston_k3"
+
+pretrain:
+  epochs: 3000
+  batch_size: 64
+  val_split: 0.01
+
+  lr: 1.5e-4
+  min_lr: 1.0e-6
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+
+  decoder_hidden_dim: 256
+  band_mask_ratio: 0.9
+  recon_center_sigma: 1.0
+
+  save_interval: 500
+  val_interval: 50
+  log_interval: 1
+  use_amp: False
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: False

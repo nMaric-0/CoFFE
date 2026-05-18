@@ -58,6 +58,77 @@ def find_checkpoint(
     return str(target)
 
 
+def run_hypersigma_evaluation(
+    experiment_name: str,
+    eval_name: str,
+    *,
+    adapted_checkpoint: Optional[str] = None,
+    eval_params: Optional[Dict[str, Any]] = None,
+    experiments_root: Union[str, Path] = DEFAULT_EXPERIMENTS_ROOT,
+    overwrite: bool = False,
+) -> EvalRun:
+    """Run HyperSIGMA few-shot evaluation under ``experiments/<name>/``.
+
+    Mirrors :func:`run_evaluation` (MFT-CPEA-Cosine) but dispatches to
+    ``scripts.evaluate_hypersigma_cosine.run_evaluation``. The
+    ``adapted_checkpoint`` argument can be a path or the literal string
+    ``"none"`` (the unadapted ablation).
+    """
+    from scripts.evaluate_hypersigma_cosine import run_evaluation as _run
+
+    params = dict(eval_params or {})
+    if "dataset" not in params:
+        raise ValueError("eval_params must include 'dataset'")
+    if adapted_checkpoint is not None:
+        params["adapted_checkpoint"] = adapted_checkpoint
+
+    logger_ = ExperimentLogger(experiments_root=experiments_root, repo_root=REPO_ROOT)
+
+    config_for_logging = {
+        "adapted_checkpoint": params.get("adapted_checkpoint"),
+        "mode": params.get("mode"),
+        "spat_patch_k": params.get("spat_patch_k"),
+        **params,
+    }
+
+    eval_run = logger_.start_eval(
+        experiment_name, eval_name, config_for_logging, overwrite=overwrite,
+    )
+
+    handler = attach_file_logger(eval_run)
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    log = logging.getLogger(__name__)
+    log.info(
+        f"Starting HyperSIGMA eval '{eval_name}' for experiment '{experiment_name}'"
+    )
+
+    eval_run.plots_dir.mkdir(parents=True, exist_ok=True)
+    forwarded = dict(params)
+    dataset = forwarded.pop("dataset")
+    forwarded["output"] = str(eval_run.results_path)
+    forwarded["output_dir"] = str(eval_run.plots_dir)
+
+    try:
+        results = _run(dataset=dataset, **forwarded)
+        if isinstance(results, list):
+            summary = results[-1]
+        else:
+            summary = results
+        # ``summary`` from the HyperSIGMA eval has separate cosine/euclidean
+        # blocks; pick the primary metric for the EvalRun.finalize summary.
+        primary_metric = forwarded.get("distance_metric", "cosine")
+        finalize_payload = summary.get(primary_metric, summary) if isinstance(summary, dict) else summary
+        eval_run.finalize(results=finalize_payload)
+        log.info(f"HyperSIGMA eval '{eval_name}' complete.")
+        return eval_run
+    except Exception as e:
+        log.exception("HyperSIGMA eval run failed")
+        eval_run.mark_failed(str(e))
+        raise
+    finally:
+        detach_file_logger(handler)
+
+
 def run_evaluation(
     experiment_name: str,
     eval_name: str,

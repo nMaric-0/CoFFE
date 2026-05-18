@@ -1,0 +1,35 @@
+# Default HyperSIGMA eval config (Houston, 15-way 5-shot)
+#
+# Consumed by ``scripts/evaluate_hypersigma_cosine.run_evaluation`` via
+# ``lib.eval_runner.run_hypersigma_evaluation``. Hand-running:
+#
+#   python scripts/evaluate_hypersigma_cosine.py \
+#       --dataset houston \
+#       --pca-spat-path checkpoints/hypersigma/pca_houston_3band.pkl \
+#       --adapted-checkpoint checkpoints/hypersigma_adapted/houston_k3/checkpoint.pth \
+#       --mode fused \
+#       --output results/cosine_eval/houston_15way_5shot/hypersigma_adapted_k3/results.json
+
+dataset: houston
+n_way: 15
+k_shot: 5
+k_query: 30
+num_episodes: 600
+split: test
+patch_size: 11
+seed: 42
+
+mode: fused
+spat_patch_k: 3
+pca_spat_path: checkpoints/hypersigma/pca_houston_3band.pkl
+spat_ckpt: checkpoints/hypersigma/spat-vit-base.pth
+spec_ckpt: checkpoints/hypersigma/spec-vit-base.pth
+adapted_checkpoint: checkpoints/hypersigma_adapted/houston_k3/checkpoint.pth
+
+distance_metric: cosine
+temperature: 10.0
+prototype_mode: mean_features
+
+num_example_episodes: 3
+max_tsne_samples: 0
+no_plots: false

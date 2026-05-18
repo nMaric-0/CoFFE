@@ -1,0 +1,43 @@
+HyperSIGMA — vendored components
+================================
+
+Upstream:  https://github.com/WHU-Sigma/HyperSIGMA
+License:   Apache-2.0 (see LICENSE)
+Commit:    c5981e0666b39047f8896be450d8a17cc20f38b0
+
+Vendored files
+--------------
+ImageClassification/model/SpatViT_fusion_patch.py
+ImageClassification/model/SpecViT_fusion.py
+ImageClassification/model/ss_fusion_cls.py    (reference; SEM logic ported into models/hypersigma/sem.py)
+Pretrain/util/pos_embed.py
+
+Local patches applied to vendored files
+---------------------------------------
+1. SpatViT_fusion_patch.py
+   - mmengine.dist.get_dist_info import wrapped with a try/except that
+     falls back to the local _compat.get_dist_info() shim.
+   - Added a `patch_size == 3` FPN branch (fpn1..fpn4 = nn.Identity)
+     so small-input HSI deployment can use a 3x3 patch_embed without
+     hitting an AttributeError. Mirrors upstream's `patch_size == 11`
+     handling.
+2. SpecViT_fusion.py
+   - Same mmengine.dist.get_dist_info import shim as above.
+3. ss_fusion_cls.py
+   - Relative imports adjusted from `from model import SpatViT_fusion_patch`
+     to `from . import SpatViT_fusion_patch` so the file can be loaded
+     in-place as part of the vendored package.
+   - File is kept as a *reference* for the SEM fusion logic; the
+     production fusion module lives in models/hypersigma/sem.py.
+
+Not vendored
+------------
+ImageClassification/model/utils.py — not imported by the vendored sources.
+mmcv_custom/                       — only referenced by a commented-out
+                                     `# from mmcv_custom import load_checkpoint`
+                                     in the encoder files.
+
+Files added (not from upstream)
+-------------------------------
+ImageClassification/model/_compat.py — local shim providing
+    `get_dist_info()` when `mmengine` is unavailable.

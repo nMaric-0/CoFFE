@@ -219,24 +219,27 @@ def run_pretrain(
     logger.info(f"Total samples: {len(full_dataset)}")
     logger.info(f"HSI channels: {hsi_channels}, Aux channels: {aux_channels}")
 
-    # Split into train/val (stratified by label to preserve class distribution)
-    val_split = pretrain_config.get("val_split", 0.1)
+    # Datasets are loaded with split="all" for pretraining (self-supervised
+    # masked modelling has no notion of label leakage), so val_split <= 0
+    # means "skip validation entirely" and train on every sample. A positive
+    # val_split still carves off a stratified hold-out if the user wants to
+    # eyeball the reconstruction loss on unseen patches.
+    val_split = float(pretrain_config.get("val_split", 0.0))
 
-    # Extract labels for stratification
-    if hasattr(full_dataset, 'labels'):
-        all_labels = full_dataset.labels.numpy()
+    if val_split > 0:
+        if hasattr(full_dataset, 'labels'):
+            all_labels = full_dataset.labels.numpy()
+        else:
+            all_labels = np.concatenate([ds.labels.numpy() for ds in full_dataset.datasets])
+        from sklearn.model_selection import StratifiedShuffleSplit
+        splitter = StratifiedShuffleSplit(n_splits=1, test_size=val_split, random_state=seed)
+        train_idx, val_idx = next(splitter.split(np.zeros(len(all_labels)), all_labels))
+        train_dataset = torch.utils.data.Subset(full_dataset, train_idx)
+        val_dataset = torch.utils.data.Subset(full_dataset, val_idx)
     else:
-        # CombinedPatchedDataset or similar: extract labels from sub-datasets
-        all_labels = []
-        for ds in full_dataset.datasets:
-            all_labels.append(ds.labels.numpy())
-        all_labels = np.concatenate(all_labels)
-
-    from sklearn.model_selection import StratifiedShuffleSplit
-    splitter = StratifiedShuffleSplit(n_splits=1, test_size=val_split, random_state=seed)
-    train_idx, val_idx = next(splitter.split(np.zeros(len(all_labels)), all_labels))
-    train_dataset = torch.utils.data.Subset(full_dataset, train_idx)
-    val_dataset = torch.utils.data.Subset(full_dataset, val_idx)
+        train_dataset = full_dataset
+        val_dataset = None
+        logger.info("val_split <= 0: training on the full dataset, no validation set")
 
     # Create dataloaders. pin_memory only matters on CUDA; turning it on for
     # CPU runs wastes memory and prints a torch warning.
@@ -261,17 +264,21 @@ def run_pretrain(
         **loader_extra,
     )
 
-    val_loader = DataLoader(
-        val_dataset,
-        batch_size=pretrain_config.get("batch_size", 64),
-        shuffle=False,
-        num_workers=num_workers,
-        pin_memory=pin_memory,
-        **loader_extra,
-    )
+    if val_dataset is not None:
+        val_loader = DataLoader(
+            val_dataset,
+            batch_size=pretrain_config.get("batch_size", 64),
+            shuffle=False,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+            **loader_extra,
+        )
+    else:
+        val_loader = None
 
     logger.info(f"Training samples: {len(train_dataset)}")
-    logger.info(f"Validation samples: {len(val_dataset)}")
+    if val_dataset is not None:
+        logger.info(f"Validation samples: {len(val_dataset)}")
 
     # Create encoder (MFT-CPEA-Cosine model)
     model_config = config.get("model", {})
@@ -320,20 +327,22 @@ def run_pretrain(
     logger.info(f"Band mask ratio: {band_mask_ratio}")
     logger.info(f"Spatial mask ratio: {spatial_mask_ratio}")
 
-    # Create trainer
+    # Create trainer. Cast numeric fields defensively — PyYAML's YAML-1.1
+    # resolver parses `1e-6` (no dot before the exponent) as a *string*,
+    # not a float, which detonates downstream in the LR scheduler.
     trainer_config = {
-        "epochs": pretrain_config.get("epochs", 800),
-        "lr": pretrain_config.get("lr", 1.5e-4),
-        "min_lr": pretrain_config.get("min_lr", 1e-6),
-        "weight_decay": pretrain_config.get("weight_decay", 0.05),
-        "warmup_epochs": pretrain_config.get("warmup_epochs", 40),
-        "warmup_start_factor": pretrain_config.get("warmup_start_factor", 0.01),
-        "adam_betas": tuple(pretrain_config.get("adam_betas", (0.9, 0.95))),
-        "grad_clip": pretrain_config.get("grad_clip", 1.0),
-        "save_interval": pretrain_config.get("save_interval", 100),
-        "val_interval": pretrain_config.get("val_interval", 50),
-        "log_interval": pretrain_config.get("log_interval", 10),
-        "use_amp": pretrain_config.get("use_amp", False),
+        "epochs": int(pretrain_config.get("epochs", 800)),
+        "lr": float(pretrain_config.get("lr", 1.5e-4)),
+        "min_lr": float(pretrain_config.get("min_lr", 1e-6)),
+        "weight_decay": float(pretrain_config.get("weight_decay", 0.05)),
+        "warmup_epochs": int(pretrain_config.get("warmup_epochs", 40)),
+        "warmup_start_factor": float(pretrain_config.get("warmup_start_factor", 0.01)),
+        "adam_betas": tuple(float(b) for b in pretrain_config.get("adam_betas", (0.9, 0.95))),
+        "grad_clip": float(pretrain_config.get("grad_clip", 1.0)),
+        "save_interval": int(pretrain_config.get("save_interval", 100)),
+        "val_interval": int(pretrain_config.get("val_interval", 50)),
+        "log_interval": int(pretrain_config.get("log_interval", 10)),
+        "use_amp": bool(pretrain_config.get("use_amp", False)),
     }
 
     trainer = PretrainTrainer(

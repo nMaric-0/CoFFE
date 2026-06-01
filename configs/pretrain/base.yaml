@@ -40,11 +40,14 @@ pretrain:
   # Training
   epochs: 800
   batch_size: 64
-  val_split: 0.1
+  # Pretraining is self-supervised over split="all" (train + test patches);
+  # set val_split > 0 only if you want to carve off a stratified hold-out
+  # for tracking the reconstruction loss on unseen patches. 0 = no val.
+  val_split: 0.0
 
   # Optimizer
   lr: 1.5e-4
-  min_lr: 1e-6
+  min_lr: 1.0e-6
   weight_decay: 0.05
   warmup_epochs: 40
   warmup_start_factor: 0.01  # LR multiplier at the start of warmup

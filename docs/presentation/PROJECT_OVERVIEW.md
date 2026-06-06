@@ -1,0 +1,219 @@
+# CoFFE — Project Overview
+
+*Few-shot, multimodal hyperspectral land-cover classification.*
+
+This document captures the current state of the project for presentation: the
+setup, the main model, the self-supervised pretraining and its ablations, the
+HyperSIGMA foundation-model baseline, the adaptation that was done, and the
+finetuning currently running. Compiled numbers live in
+[RESULTS.md](RESULTS.md) / [RESULTS.json](RESULTS.json).
+
+---
+
+## 1. Problem & motivation
+
+We classify land cover from **hyperspectral imagery (HSI)** plus a co-registered
+**auxiliary modality** (LiDAR elevation), under a **few-shot** regime: at test
+time a class is defined by only *K = 5* labelled examples. Models are evaluated
+as **prototypical networks** over many random *N*-way *K*-shot episodes — there
+is no per-task gradient finetuning at eval time; a class prototype is the mean of
+its support features and queries go to the nearest prototype.
+
+The research question: **what self-supervised pretraining yields HSI features
+that transfer best to few-shot tasks**, and how does a purpose-built encoder
+(MFT-CPEA) compare to adapting a large pretrained HSI **foundation model**
+(HyperSIGMA).
+
+## 2. Datasets
+
+| Dataset | HSI bands | Aux (LiDAR) | Classes | Notes |
+|---|---:|---:|---:|---|
+| **Houston** | 144 | 1 (elevation) | 15 | 2013 GRSS DF; urban scene |
+| **Trento** | 63 | 1 (elevation) | 6 | rural/agricultural |
+| **MUUFL** | 64 | 2 (elevation rasters) | 11 | Gulfport campus |
+
+All data are pre-cut into **11×11 spatial patches** centred on each labelled
+pixel; a sample is `{"hsi": [C_hsi,11,11], "aux": [C_aux,11,11]}`. Loaders live in
+[data/datasets/](../../data/datasets/) (`HoustonPatchedDataset`,
+`TrentoPatchedDataset`, `MUUFLPatchedDataset`), with a `CombinedPatchedDataset`
+that channel-pads for multi-dataset pretraining.
+
+## 3. Pipeline & experiment layout
+
+The workflow is **pretrain → evaluate**, one directory per experiment under
+`experiments/<name>/`:
+
+```
+experiments/<name>/
+  pretrain_config.yaml      # fully-resolved config (eval auto-reads arch from here)
+  pretrain_metadata.json    # timestamp, git SHA, device, wall-clock, loss history, status
+  checkpoints/              # checkpoint.pth (best val), checkpoint_epoch_*.pth
+  evaluations/<eval_name>/
+    results.json            # OA / AA / Kappa (+ per-class), with 95% CI
+    eval_config.json, eval.log
+```
+
+Evaluation is orchestrated by [lib/eval_runner.py](../../lib/eval_runner.py),
+which auto-loads the encoder architecture from `pretrain_config.yaml` so eval
+params can't drift from how the model was trained.
+
+**Eval protocol.** 5-shot, *N*-way (N = #classes), 1000 episodes for MFT-CPEA
+(`k_query=100`); cosine or euclidean prototype distance; temperature 10.
+**The projection head is discarded at eval time** (it exists only to shape the
+pretraining objective) — `use_projection` defaults to `False` for evaluation.
+
+## 4. Main model — MFT-CPEA-Cosine
+
+[models/mft_cpea_cosine.py](../../models/mft_cpea_cosine.py). A compact
+spectral-spatial transformer encoder built for few-shot transfer.
+
+- **Unified tokenization.** HSI and aux bands are concatenated on the channel
+  axis (when `use_aux=True`), passed through a `ChannelTokenizer`
+  (`Conv2d(C, D, 1) + BN + GELU`) then a `SpatialTokenizer`, giving one token per
+  pixel: `[B, H·W, D]`. Components in
+  [models/components/](../../models/components/).
+- **Class-agnostic CLS token** + learnable positional embeddings, then a small
+  **transformer encoder** (e.g. `embed_dim=128`, `num_heads=2`, `num_layers=2`;
+  the base config uses 8 heads / 4 layers).
+- **CPEA — Class-aware Patch Embedding Adaptation.** Each token is nudged toward
+  the class-agnostic embedding: `z̄ᵢ = zᵢ + λ · z_class` (λ = `lambda_factor`,
+  typically 0.5).
+- **Projection head** (MLP, optional L2-norm) — **train-time only**, removed for
+  evaluation.
+- **Few-shot head.** Center-weighted (Gaussian) pooling over patch tokens →
+  class prototypes (mean of support) → cosine or euclidean distance →
+  temperature-scaled logits. `forward_episode` does this end-to-end.
+
+Key knobs: `embed_dim`, `lambda_factor`, `temperature=10`, `distance_metric`,
+`pool_sigma`, `use_aux`, `use_projection`. See
+[docs/COSINE_VARIANT.md](../COSINE_VARIANT.md) for the cosine variant write-up.
+
+## 5. Self-supervised pretraining & ablations
+
+Two objectives wrap the MFT-CPEA encoder; both are driven by
+[scripts/pretrain_enhanced.py](../../scripts/pretrain_enhanced.py) (AdamW,
+`lr=1.5e-4`, cosine schedule + warmup, grad-clip 1.0). Houston trains 3000
+epochs; Trento/MUUFL 1500.
+
+**A. Enhanced masked modeling**
+([pretrain/masked_modeling_enhanced.py](../../pretrain/masked_modeling_enhanced.py),
+`EnhancedMaskedSpectralSpatialModel`). Two composable masks with an MLP decoder
+that reconstructs the full cube (MSE over masked entries, optional center-weighted):
+  - **Band masking** — per-(pixel, band) Bernoulli on the raw input, masked
+    values replaced by learnable per-channel fills (`band_mask_ratio`).
+  - **Spatial-token masking** — MAE-style whole-pixel-token masking after
+    tokenization (`spatial_mask_ratio`).
+  - **Regimes (the masking ablation):**
+    `spectral` (0.85 / 0.0), `spatial` (0.0 / 0.75), `combined` (0.85 / 0.75).
+    See [docs/ENHANCED_PRETRAINING.md](../ENHANCED_PRETRAINING.md).
+
+**B. MAE** ([pretrain/mae_pretrain.py](../../pretrain/mae_pretrain.py),
+`MAEPretrainModel`). Classic He-et-al. recipe in the unified token space: remove
+`mask_ratio=0.75` of tokens, asymmetric transformer decoder
+(`decoder_dim=64, depth=4, heads=4`), optional per-token `norm_pix_loss`. No
+projection head.
+
+**Ablation axes** (driven by
+[scripts/run_hsi_only_experiments.py](../../scripts/run_hsi_only_experiments.py)
+and [scripts/run_mae_experiments.py](../../scripts/run_mae_experiments.py)):
+
+1. **Dataset** — Houston / Trento / MUUFL.
+2. **Modality** — `HSI+LiDAR` vs `HSI-only` (the `*_no_lidar` configs).
+3. **Masking regime** — spectral / spatial / combined (Enhanced), or MAE.
+
+Result: adding LiDAR helps on every dataset, and spatial/combined regimes beat
+spectral-only (see [RESULTS.md](RESULTS.md)).
+
+## 6. HyperSIGMA implementation (foundation-model baseline)
+
+[models/hypersigma/](../../models/hypersigma/). HyperSIGMA is a large pretrained
+HSI foundation model with a **dual-branch ViT** design, integrated here as a
+**frozen few-shot baseline**.
+
+- **SpatViT branch** ([spat_vit_branch.py](../../models/hypersigma/spat_vit_branch.py))
+  — spatial pathway. HSI is PCA-reduced to **3 components**
+  ([preprocessing.py](../../models/hypersigma/preprocessing.py), `PCAPreprocessor`,
+  optionally `PCAStandardize`); a ViT-Base body (frozen) produces FPN spatial
+  features. `spat_patch_k=3`.
+- **SpecViT branch** ([spec_vit_branch.py](../../models/hypersigma/spec_vit_branch.py))
+  — spectral pathway over raw bands, with an `AdaptiveAvgPool1d` to **100 spectral
+  tokens** (so any band count fits). ViT-Base body frozen.
+- **SEM fusion** ([sem.py](../../models/hypersigma/sem.py)) — gated spatial-spectral
+  enhancement across 4 stages → a **512-d** fused feature.
+- **Eval wrapper** ([hypersigma_cosine.py](../../models/hypersigma/hypersigma_cosine.py),
+  `HyperSIGMACosine`) — selects the feature used for prototypes:
+  `fused` (512-d SEM), `spat_pool` (768-d spatial), or `spec_pool` (768-d
+  spectral), L2-normalised. No learnable parameters at eval.
+
+Only the small **random-init** pieces (patch-embed, positional embeddings,
+`spat_map`, `l1`, deformable offsets) and the SEM/decoders are ever trained; the
+transformer bodies stay frozen.
+
+## 7. Adaptation (done)
+
+"Adaptation" = a light, **Level-2 MAE finetuning** of HyperSIGMA's random-init
+components to each target dataset's *unlabelled* pixels. Two steps:
+
+1. **Fit PCA** ([scripts/fit_pca_hypersigma.py](../../scripts/fit_pca_hypersigma.py))
+   — 3-component PCA per dataset → `checkpoints/hypersigma/pca_<ds>_3band.pkl`
+   (+ per-channel `_stats.pkl` for input standardization).
+2. **MAE adaptation**
+   ([pretrain/hypersigma_mae.py](../../pretrain/hypersigma_mae.py),
+   `HyperSIGMAMaskedAdaptation`; runner
+   [scripts/adapt_hypersigma.py](../../scripts/adapt_hypersigma.py) /
+   notebook entry [lib/adapt_runner.py](../../lib/adapt_runner.py)) — upstream-style
+   **token-level masking** (`mask_ratio=0.75`, HyperGlobal-450K default) with a
+   learnable `mask_token` at masked positions and per-token z-scored
+   reconstruction targets. A single `adapt_mode` knob controls both adaptation and
+   eval feature:
+   - `spatial_only` — SpatViT pieces + spatial decoder (16 tokens → 27-px targets).
+   - `spectral_only` — SpecViT pieces + spectral decoder (100 tokens → 121-px targets).
+   - `joint_sem` — both branches **+ SEM** + 3 decoders, loss `L_spat+L_spec+L_fused`.
+
+Configs: `configs/pretrain/hypersigma_{houston,trento,muufl}_adapt.yaml`. The
+config recipe is 3000 epochs / `lr=1.5e-4` / batch 64; **the launched runs
+overrode** to **2000 epochs, `lr=1e-5`, batch 128, warmup 100** (see each
+experiment's `pretrain_metadata.json`). Trained on RTX 4090s; the Trento
+`joint_sem` run took ~25.8 h wall-clock for 2000 epochs.
+
+## 8. Finetuning being run (in progress)
+
+The HyperSIGMA MAE adaptation jobs are the active finetuning. Status from each
+experiment's `pretrain_metadata.json` (as of 2026-06-04):
+
+| Dataset | `spatial_only` | `spectral_only` | `joint_sem` |
+|---|---|---|---|
+| Houston | ✅ complete (run2; run1 interrupted) | ✅ complete | ✅ adapted (evaluated) |
+| Trento | ✅ complete | ⏸ interrupted | ✅ complete |
+| MUUFL | ✅ complete | ▶ **running** | — not yet started |
+
+- **Evaluated so far:** Houston (`joint_sem`/`spatial_only`/`spectral_only`) and
+  Trento (all three) — numbers in [RESULTS.md](RESULTS.md).
+- **Pending:** MUUFL HyperSIGMA evaluations — the MUUFL `spectral_only`
+  adaptation is still training; MUUFL few-shot results will follow once adaptation
+  finishes and the eval is run.
+- **Next:** fill the MUUFL HyperSIGMA row, settle the Houston `spatial_only`
+  run-to-run variance (44–53% OA across runs), and decide cosine vs euclidean as
+  the headline metric (euclidean wins consistently for HyperSIGMA features).
+
+## 9. Evaluation & metrics
+
+Each `results.json` reports **OA**, **AA**, **Kappa** as mean / std / 95% CI over
+episodes, plus a **per-class** breakdown (`accuracy`, `total/correct_samples`) and
+`class_names`. Query sets are class-balanced, so OA == AA. HyperSIGMA results
+carry **both** `cosine` and `euclidean` blocks; MFT-CPEA carries the single
+configured metric. Compilation: [scripts/compile_results.py](../../scripts/compile_results.py).
+
+## 10. Key files & pointers
+
+| Area | Path |
+|---|---|
+| Main model | [models/mft_cpea_cosine.py](../../models/mft_cpea_cosine.py) |
+| Enhanced pretraining | [pretrain/masked_modeling_enhanced.py](../../pretrain/masked_modeling_enhanced.py) |
+| MAE pretraining | [pretrain/mae_pretrain.py](../../pretrain/mae_pretrain.py) |
+| HyperSIGMA model | [models/hypersigma/](../../models/hypersigma/) |
+| HyperSIGMA adaptation | [pretrain/hypersigma_mae.py](../../pretrain/hypersigma_mae.py), [scripts/adapt_hypersigma.py](../../scripts/adapt_hypersigma.py) |
+| Evaluation | [lib/eval_runner.py](../../lib/eval_runner.py), [scripts/evaluate_cosine.py](../../scripts/evaluate_cosine.py), [scripts/evaluate_hypersigma_cosine.py](../../scripts/evaluate_hypersigma_cosine.py) |
+| Ablation drivers | [scripts/run_hsi_only_experiments.py](../../scripts/run_hsi_only_experiments.py), [scripts/run_mae_experiments.py](../../scripts/run_mae_experiments.py) |
+| Existing docs | [docs/COSINE_VARIANT.md](../COSINE_VARIANT.md), [docs/ENHANCED_PRETRAINING.md](../ENHANCED_PRETRAINING.md) |
+| Compiled results | [RESULTS.md](RESULTS.md), [RESULTS.json](RESULTS.json) |

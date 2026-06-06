@@ -1,0 +1,961 @@
+{
+  "_meta": {
+    "generated_at": "2026-06-04T13:46:52",
+    "generated_by": "scripts/compile_results.py",
+    "description": "Curated headline few-shot results for the CoFFE project. Metrics are mean +/- 95% CI over episodes (OA == AA when query sets are class-balanced). Regime is the pretraining masking config (derived from the experiment dir).",
+    "metric_keys": "OA = Overall Accuracy, AA = Average Accuracy, Kappa = Cohen's kappa (all %).",
+    "eval_protocol": {
+      "MFT-CPEA": "5-shot, k_query=100, 1000 episodes, euclidean prototypes.",
+      "HyperSIGMA": "5-shot, k_query=30 (Houston) / 100 (Trento), 600-2000 episodes; cosine & euclidean reported."
+    },
+    "curation": "Dropped scratch/test runs (*_test_run*, *_spatial_mask_test*), the _example placeholder, and one mislabelled cross-dataset eval. Repeat runs of the same config are collapsed to a representative (natural n-way, most episodes, newest); alternates are kept under 'other_runs'.",
+    "kept_results": 33,
+    "excluded_results": 6
+  },
+  "datasets": {
+    "houston": {
+      "n_classes": 15,
+      "natural_n_way": 15,
+      "entries": [
+        {
+          "model": "MFT-CPEA",
+          "regime": "Enhanced: combined",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 15,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 58.242,
+                "ci_95": 0.173
+              },
+              "AA": {
+                "mean": 58.242,
+                "ci_95": 0.173
+              },
+              "Kappa": {
+                "mean": 55.259,
+                "ci_95": 0.185
+              }
+            }
+          },
+          "source": "experiments/houston_enhanced_spectral_spatial_no_lidar/evaluations/houston_enhanced_spectral_spatial_no_lidar_eval/results.json"
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "Enhanced: spatial",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 15,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 65.504,
+                "ci_95": 0.19
+              },
+              "AA": {
+                "mean": 65.504,
+                "ci_95": 0.19
+              },
+              "Kappa": {
+                "mean": 63.04,
+                "ci_95": 0.204
+              }
+            }
+          },
+          "source": "experiments/houston_enhanced_spatial_no_lidar/evaluations/houston_enhanced_spatial_no_lidar_eval/results.json"
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "Enhanced: spectral",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 15,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 58.91,
+                "ci_95": 0.173
+              },
+              "AA": {
+                "mean": 58.91,
+                "ci_95": 0.173
+              },
+              "Kappa": {
+                "mean": 55.975,
+                "ci_95": 0.186
+              }
+            }
+          },
+          "source": "experiments/houston_enhanced_spectral_no_lidar/evaluations/houston_enhanced_spectral_no_lidar_eval/results.json"
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "MAE",
+          "modality": "HSI+LiDAR",
+          "eval_protocol": {
+            "n_way": 15,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 72.146,
+                "ci_95": 0.163
+              },
+              "AA": {
+                "mean": 72.146,
+                "ci_95": 0.163
+              },
+              "Kappa": {
+                "mean": 70.156,
+                "ci_95": 0.175
+              }
+            }
+          },
+          "source": "experiments/houston_mae_lidar/evaluations/houston_mae_lidar_eval/results.json"
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "MAE",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 15,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 69.035,
+                "ci_95": 0.167
+              },
+              "AA": {
+                "mean": 69.035,
+                "ci_95": 0.167
+              },
+              "Kappa": {
+                "mean": 66.823,
+                "ci_95": 0.179
+              }
+            }
+          },
+          "source": "experiments/houston_mae_no_lidar/evaluations/houston_mae_no_lidar_eval/results.json"
+        },
+        {
+          "model": "HyperSIGMA",
+          "regime": "joint_sem (fused)",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 15,
+            "k_shot": 5,
+            "k_query": 30,
+            "num_episodes": 600
+          },
+          "metrics": {
+            "cosine": {
+              "OA": {
+                "mean": 52.917,
+                "ci_95": 0.328
+              },
+              "AA": {
+                "mean": 52.917,
+                "ci_95": 0.328
+              },
+              "Kappa": {
+                "mean": 49.554,
+                "ci_95": 0.351
+              }
+            },
+            "euclidean": {
+              "OA": {
+                "mean": 61.592,
+                "ci_95": 0.294
+              },
+              "AA": {
+                "mean": 61.592,
+                "ci_95": 0.294
+              },
+              "Kappa": {
+                "mean": 58.848,
+                "ci_95": 0.315
+              }
+            }
+          },
+          "source": "experiments/hypersigma_baseline/evaluations/houston_15way_5shot_adapted_SEM/results.json",
+          "other_runs": [
+            {
+              "source": "experiments/hypersigma_baseline/evaluations/houston_15way_5shot_adapted_k3_fused/results.json",
+              "num_episodes": 600,
+              "metrics": {
+                "cosine": {
+                  "mean": 50.142,
+                  "ci_95": 0.376
+                },
+                "euclidean": {
+                  "mean": 56.04,
+                  "ci_95": 0.296
+                }
+              }
+            }
+          ]
+        },
+        {
+          "model": "HyperSIGMA",
+          "regime": "spatial_only (spat_pool)",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 15,
+            "k_shot": 5,
+            "k_query": 30,
+            "num_episodes": 2000
+          },
+          "metrics": {
+            "cosine": {
+              "OA": {
+                "mean": 44.278,
+                "ci_95": 0.182
+              },
+              "AA": {
+                "mean": 44.278,
+                "ci_95": 0.182
+              },
+              "Kappa": {
+                "mean": 40.297,
+                "ci_95": 0.195
+              }
+            },
+            "euclidean": {
+              "OA": {
+                "mean": 50.082,
+                "ci_95": 0.182
+              },
+              "AA": {
+                "mean": 50.082,
+                "ci_95": 0.182
+              },
+              "Kappa": {
+                "mean": 46.516,
+                "ci_95": 0.195
+              }
+            }
+          },
+          "source": "experiments/hypersigma_baseline_spat_only_run2/evaluations/houston_15way_5shot_adapted_spat_only_run2/results.json",
+          "other_runs": [
+            {
+              "source": "experiments/hypersigma_baseline_spat_only/evaluations/houston_15way_5shot_adapted_spat_only/results.json",
+              "num_episodes": 2000,
+              "metrics": {
+                "cosine": {
+                  "mean": 52.529,
+                  "ci_95": 0.187
+                },
+                "euclidean": {
+                  "mean": 61.772,
+                  "ci_95": 0.164
+                }
+              }
+            }
+          ]
+        },
+        {
+          "model": "HyperSIGMA",
+          "regime": "spectral_only (spec_pool)",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 15,
+            "k_shot": 5,
+            "k_query": 30,
+            "num_episodes": 2000
+          },
+          "metrics": {
+            "cosine": {
+              "OA": {
+                "mean": 15.127,
+                "ci_95": 0.1
+              },
+              "AA": {
+                "mean": 15.127,
+                "ci_95": 0.1
+              },
+              "Kappa": {
+                "mean": 9.065,
+                "ci_95": 0.107
+              }
+            },
+            "euclidean": {
+              "OA": {
+                "mean": 21.85,
+                "ci_95": 0.105
+              },
+              "AA": {
+                "mean": 21.85,
+                "ci_95": 0.105
+              },
+              "Kappa": {
+                "mean": 16.268,
+                "ci_95": 0.112
+              }
+            }
+          },
+          "source": "experiments/hypersigma_baseline_spectral_only_run1/evaluations/houston_15way_5shot_adapted_spectral_only_run1/results.json"
+        }
+      ]
+    },
+    "trento": {
+      "n_classes": 6,
+      "natural_n_way": 6,
+      "entries": [
+        {
+          "model": "MFT-CPEA",
+          "regime": "Enhanced: combined",
+          "modality": "HSI+LiDAR",
+          "eval_protocol": {
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 92.501,
+                "ci_95": 0.114
+              },
+              "AA": {
+                "mean": 92.501,
+                "ci_95": 0.114
+              },
+              "Kappa": {
+                "mean": 91.001,
+                "ci_95": 0.137
+              }
+            }
+          },
+          "source": "experiments/trento_enhanced_spectral_spatial_run2/evaluations/trento_enhanced_spectral_spatial_run2/results.json",
+          "other_runs": [
+            {
+              "source": "experiments/trento_enhanced_spectral_spatial_run2/evaluations/trento_6way_5shot_spectral_spatial_run2/results.json",
+              "num_episodes": 1000,
+              "metrics": {
+                "euclidean": {
+                  "mean": 92.501,
+                  "ci_95": 0.114
+                }
+              }
+            },
+            {
+              "source": "experiments/trento_enhanced_spectral_spatial_run1/evaluations/trento_6way_5shot_spectral_spatial_run1/results.json",
+              "num_episodes": 1000,
+              "metrics": {
+                "euclidean": {
+                  "mean": 88.52,
+                  "ci_95": 0.156
+                }
+              }
+            }
+          ]
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "Enhanced: combined",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 86.102,
+                "ci_95": 0.155
+              },
+              "AA": {
+                "mean": 86.102,
+                "ci_95": 0.155
+              },
+              "Kappa": {
+                "mean": 83.322,
+                "ci_95": 0.185
+              }
+            }
+          },
+          "source": "experiments/trento_enhanced_spectral_spatial_no_lidar/evaluations/trento_enhanced_spectral_spatial_no_lidar_eval/results.json"
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "Enhanced: spatial",
+          "modality": "HSI+LiDAR",
+          "eval_protocol": {
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 94.192,
+                "ci_95": 0.102
+              },
+              "AA": {
+                "mean": 94.192,
+                "ci_95": 0.102
+              },
+              "Kappa": {
+                "mean": 93.03,
+                "ci_95": 0.123
+              }
+            }
+          },
+          "source": "experiments/trento_enhanced_spatial_run2/evaluations/trento_6way_5shot_spatial_run2/results.json",
+          "other_runs": [
+            {
+              "source": "experiments/trento_enhanced_spatial_run2/evaluations/trento_6way_5shot_spectral_spatial_run2/results.json",
+              "num_episodes": 1000,
+              "metrics": {
+                "euclidean": {
+                  "mean": 94.192,
+                  "ci_95": 0.102
+                }
+              }
+            },
+            {
+              "source": "experiments/trento_enhanced_spat_run1/evaluations/trento_6way_5shot_spat__run1/results.json",
+              "num_episodes": 1000,
+              "metrics": {
+                "euclidean": {
+                  "mean": 89.396,
+                  "ci_95": 0.166
+                }
+              }
+            }
+          ]
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "Enhanced: spatial",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 87.596,
+                "ci_95": 0.138
+              },
+              "AA": {
+                "mean": 87.596,
+                "ci_95": 0.138
+              },
+              "Kappa": {
+                "mean": 85.115,
+                "ci_95": 0.165
+              }
+            }
+          },
+          "source": "experiments/trento_enhanced_spatial_no_lidar/evaluations/trento_enhanced_spatial_no_lidar_eval/results.json"
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "Enhanced: spectral",
+          "modality": "HSI+LiDAR",
+          "eval_protocol": {
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 90.318,
+                "ci_95": 0.146
+              },
+              "AA": {
+                "mean": 90.318,
+                "ci_95": 0.146
+              },
+              "Kappa": {
+                "mean": 88.381,
+                "ci_95": 0.175
+              }
+            }
+          },
+          "source": "experiments/trento_enhanced_spectral_run2/evaluations/trento_6way_5shot_spectral_run2/results.json",
+          "other_runs": [
+            {
+              "source": "experiments/trento_enhanced_spectral_run1/evaluations/trento_6way_5shot_spectral__run1/results.json",
+              "num_episodes": 1000,
+              "metrics": {
+                "euclidean": {
+                  "mean": 87.47,
+                  "ci_95": 0.159
+                }
+              }
+            }
+          ]
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "Enhanced: spectral",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 87.043,
+                "ci_95": 0.16
+              },
+              "AA": {
+                "mean": 87.043,
+                "ci_95": 0.16
+              },
+              "Kappa": {
+                "mean": 84.452,
+                "ci_95": 0.193
+              }
+            }
+          },
+          "source": "experiments/trento_enhanced_spectral_no_lidar/evaluations/trento_enhanced_spectral_no_lidar_eval/results.json"
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "MAE",
+          "modality": "HSI+LiDAR",
+          "eval_protocol": {
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 91.741,
+                "ci_95": 0.138
+              },
+              "AA": {
+                "mean": 91.741,
+                "ci_95": 0.138
+              },
+              "Kappa": {
+                "mean": 90.09,
+                "ci_95": 0.166
+              }
+            }
+          },
+          "source": "experiments/trento_mae_lidar/evaluations/trento_mae_lidar_eval/results.json"
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "MAE",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 88.428,
+                "ci_95": 0.14
+              },
+              "AA": {
+                "mean": 88.428,
+                "ci_95": 0.14
+              },
+              "Kappa": {
+                "mean": 86.114,
+                "ci_95": 0.168
+              }
+            }
+          },
+          "source": "experiments/trento_mae_no_lidar/evaluations/trento_mae_no_lidar_eval/results.json"
+        },
+        {
+          "model": "HyperSIGMA",
+          "regime": "joint_sem (fused)",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 2000
+          },
+          "metrics": {
+            "cosine": {
+              "OA": {
+                "mean": 84.601,
+                "ci_95": 0.122
+              },
+              "AA": {
+                "mean": 84.601,
+                "ci_95": 0.122
+              },
+              "Kappa": {
+                "mean": 81.521,
+                "ci_95": 0.146
+              }
+            },
+            "euclidean": {
+              "OA": {
+                "mean": 86.932,
+                "ci_95": 0.099
+              },
+              "AA": {
+                "mean": 86.932,
+                "ci_95": 0.099
+              },
+              "Kappa": {
+                "mean": 84.319,
+                "ci_95": 0.119
+              }
+            }
+          },
+          "source": "experiments/hypersigma_trento_joint_sem_run1/evaluations/hypersigma_trento_C6way_5shot_adapted_joint_sem_run1/results.json"
+        },
+        {
+          "model": "HyperSIGMA",
+          "regime": "spatial_only (spat_pool)",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 2000
+          },
+          "metrics": {
+            "cosine": {
+              "OA": {
+                "mean": 83.961,
+                "ci_95": 0.136
+              },
+              "AA": {
+                "mean": 83.961,
+                "ci_95": 0.136
+              },
+              "Kappa": {
+                "mean": 80.753,
+                "ci_95": 0.164
+              }
+            },
+            "euclidean": {
+              "OA": {
+                "mean": 85.875,
+                "ci_95": 0.119
+              },
+              "AA": {
+                "mean": 85.875,
+                "ci_95": 0.119
+              },
+              "Kappa": {
+                "mean": 83.05,
+                "ci_95": 0.143
+              }
+            }
+          },
+          "source": "experiments/hypersigma_trento_spatial_only_run1/evaluations/hypersigma_trento_C6way_5shot_adapted_spatial_only_run1/results.json"
+        },
+        {
+          "model": "HyperSIGMA",
+          "regime": "spectral_only (spec_pool)",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 2000
+          },
+          "metrics": {
+            "cosine": {
+              "OA": {
+                "mean": 31.741,
+                "ci_95": 0.15
+              },
+              "AA": {
+                "mean": 31.741,
+                "ci_95": 0.15
+              },
+              "Kappa": {
+                "mean": 18.089,
+                "ci_95": 0.181
+              }
+            },
+            "euclidean": {
+              "OA": {
+                "mean": 48.592,
+                "ci_95": 0.157
+              },
+              "AA": {
+                "mean": 48.592,
+                "ci_95": 0.157
+              },
+              "Kappa": {
+                "mean": 38.31,
+                "ci_95": 0.188
+              }
+            }
+          },
+          "source": "experiments/hypersigma_trento_spectral_only_run1/evaluations/hypersigma_trento_C6way_5shot_adapted_spectral_only_run1/results.json"
+        }
+      ]
+    },
+    "muufl": {
+      "n_classes": 11,
+      "natural_n_way": 11,
+      "entries": [
+        {
+          "model": "MFT-CPEA",
+          "regime": "Enhanced: combined",
+          "modality": "HSI+LiDAR",
+          "eval_protocol": {
+            "n_way": 11,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 55.566,
+                "ci_95": 0.188
+              },
+              "AA": {
+                "mean": 55.566,
+                "ci_95": 0.188
+              },
+              "Kappa": {
+                "mean": 51.123,
+                "ci_95": 0.206
+              }
+            }
+          },
+          "source": "experiments/muufl_enhanced_spectral_spatial_run2/evaluations/muufl_enhanced_spectral_spatial_run2/results.json"
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "Enhanced: combined",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 11,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 50.759,
+                "ci_95": 0.192
+              },
+              "AA": {
+                "mean": 50.759,
+                "ci_95": 0.192
+              },
+              "Kappa": {
+                "mean": 45.835,
+                "ci_95": 0.211
+              }
+            }
+          },
+          "source": "experiments/muufl_enhanced_spectral_spatial_no_lidar/evaluations/muufl_enhanced_spectral_spatial_no_lidar_eval/results.json"
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "Enhanced: spatial",
+          "modality": "HSI+LiDAR",
+          "eval_protocol": {
+            "n_way": 11,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 67.826,
+                "ci_95": 0.173
+              },
+              "AA": {
+                "mean": 67.826,
+                "ci_95": 0.173
+              },
+              "Kappa": {
+                "mean": 64.608,
+                "ci_95": 0.191
+              }
+            }
+          },
+          "source": "experiments/muufl_enhanced_spatial_run1/evaluations/muufl_enhanced_spatial_run1/results.json"
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "Enhanced: spatial",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 11,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 57.752,
+                "ci_95": 0.179
+              },
+              "AA": {
+                "mean": 57.752,
+                "ci_95": 0.179
+              },
+              "Kappa": {
+                "mean": 53.527,
+                "ci_95": 0.197
+              }
+            }
+          },
+          "source": "experiments/muufl_enhanced_spatial_no_lidar/evaluations/muufl_enhanced_spatial_no_lidar_eval/results.json"
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "Enhanced: spectral",
+          "modality": "HSI+LiDAR",
+          "eval_protocol": {
+            "n_way": 11,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 56.989,
+                "ci_95": 0.175
+              },
+              "AA": {
+                "mean": 56.989,
+                "ci_95": 0.175
+              },
+              "Kappa": {
+                "mean": 52.688,
+                "ci_95": 0.193
+              }
+            }
+          },
+          "source": "experiments/muufl_enhanced_spectral_run1/evaluations/muufl_enhanced_spectral_run1/results.json"
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "Enhanced: spectral",
+          "modality": "HSI-only",
+          "eval_protocol": {
+            "n_way": 11,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 55.023,
+                "ci_95": 0.151
+              },
+              "AA": {
+                "mean": 55.023,
+                "ci_95": 0.151
+              },
+              "Kappa": {
+                "mean": 50.525,
+                "ci_95": 0.166
+              }
+            }
+          },
+          "source": "experiments/muufl_enhanced_spectral_no_lidar/evaluations/muufl_enhanced_spectral_no_lidar_eval/results.json"
+        },
+        {
+          "model": "MFT-CPEA",
+          "regime": "MAE",
+          "modality": "HSI+LiDAR",
+          "eval_protocol": {
+            "n_way": 11,
+            "k_shot": 5,
+            "k_query": 100,
+            "num_episodes": 1000
+          },
+          "metrics": {
+            "euclidean": {
+              "OA": {
+                "mean": 65.325,
+                "ci_95": 0.187
+              },
+              "AA": {
+                "mean": 65.325,
+                "ci_95": 0.187
+              },
+              "Kappa": {
+                "mean": 61.858,
+                "ci_95": 0.206
+              }
+            }
+          },
+          "source": "experiments/muufl_mae_lidar/evaluations/muufl_mae_lidar_eval/results.json"
+        }
+      ]
+    }
+  },
+  "excluded": [
+    {
+      "path": "experiments/_example/evaluations/houston_5way_5shot_cosine_t10/results.json",
+      "reason": "scratch/test run"
+    },
+    {
+      "path": "experiments/houston_enhanced_spatial_mask_test_run1_seed52/evaluations/houston_15way_5shot_spatial_mask_test_run1_seed52/results.json",
+      "reason": "scratch/test run"
+    },
+    {
+      "path": "experiments/houston_enhanced_test_run3/evaluations/houston_15way_5shot_cosine_test_run3/results.json",
+      "reason": "scratch/test run"
+    },
+    {
+      "path": "experiments/houston_enhanced_test_run3/evaluations/houston_15way_5shot_cosine_test_run3_noProj/results.json",
+      "reason": "scratch/test run"
+    },
+    {
+      "path": "experiments/houston_enhanced_test_run3/evaluations/houston_15way_5shot_cosine_test_run3_noProj_3000ep/results.json",
+      "reason": "scratch/test run"
+    },
+    {
+      "path": "experiments/trento_enhanced_spectral_run1/evaluations/trento_15way_5shot_spectral__run1/results.json",
+      "reason": "dataset mismatch (dir says ['trento'], result says houston)"
+    }
+  ]
+}

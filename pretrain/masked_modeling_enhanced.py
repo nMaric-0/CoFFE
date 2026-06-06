@@ -50,6 +50,9 @@ class EnhancedMaskedSpectralSpatialModel(nn.Module):
                  ``pos_embed``).
         hsi_channels: Number of HSI spectral bands.
         aux_channels: Number of auxiliary channels (e.g. 1 for LiDAR).
+        use_aux: If True (default), aux bands are concatenated with HSI, masked,
+                 and reconstructed jointly. If False, the model is HSI-only: aux
+                 is ignored and masking/reconstruction cover HSI bands only.
         patch_size: Spatial patch size.
         embed_dim: Encoder embedding dimension.
         decoder_hidden_dim: Decoder hidden dimension.
@@ -66,6 +69,7 @@ class EnhancedMaskedSpectralSpatialModel(nn.Module):
         encoder: nn.Module,
         hsi_channels: int,
         aux_channels: int = 1,
+        use_aux: bool = True,
         patch_size: int = 11,
         embed_dim: int = 128,
         decoder_hidden_dim: int = 256,
@@ -83,7 +87,8 @@ class EnhancedMaskedSpectralSpatialModel(nn.Module):
         self.encoder = encoder
         self.hsi_channels = hsi_channels
         self.aux_channels = aux_channels
-        self.total_channels = hsi_channels + aux_channels
+        self.use_aux = use_aux
+        self.total_channels = hsi_channels + aux_channels if use_aux else hsi_channels
         self.patch_size = patch_size
         self.embed_dim = embed_dim
         self.num_tokens = patch_size * patch_size
@@ -140,8 +145,11 @@ class EnhancedMaskedSpectralSpatialModel(nn.Module):
         N = self.num_tokens
         assert H * W == N, f"Patch size mismatch: H*W={H*W}, num_tokens={N}"
 
-        # 1. Concatenate HSI + aux bands.
-        combined = torch.cat([hsi, aux], dim=1)                 # [B, C_total, H, W]
+        # 1. Concatenate HSI + aux bands (HSI-only when use_aux is False).
+        if self.use_aux:
+            combined = torch.cat([hsi, aux], dim=1)             # [B, C_total, H, W]
+        else:
+            combined = hsi                                      # [B, C_hsi, H, W]
 
         # 2. Per-(pixel, band) masking (if enabled).
         if self.use_band_mask:
@@ -151,9 +159,12 @@ class EnhancedMaskedSpectralSpatialModel(nn.Module):
             band_mask = None
 
         # 3. Split back and tokenize through the encoder (which re-concatenates).
-        hsi_masked = combined_masked[:, :self.hsi_channels]
-        aux_masked = combined_masked[:, self.hsi_channels:]
-        patch_tokens = self.encoder.tokenize(hsi_masked, aux_masked)  # [B, N, D]
+        if self.use_aux:
+            hsi_masked = combined_masked[:, :self.hsi_channels]
+            aux_masked = combined_masked[:, self.hsi_channels:]
+            patch_tokens = self.encoder.tokenize(hsi_masked, aux_masked)  # [B, N, D]
+        else:
+            patch_tokens = self.encoder.tokenize(combined_masked)         # [B, N, D]
 
         # 4. Spatial token masking (if enabled).
         if self.use_spatial_mask:

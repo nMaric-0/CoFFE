@@ -52,6 +52,10 @@ class MFTCPEACosine(nn.Module):
     Args:
         hsi_channels: Number of HSI spectral bands
         aux_channels: Number of auxiliary data channels
+        use_aux: If True (default), auxiliary (e.g. LiDAR) bands are concatenated
+                 with HSI before tokenization. If False, the model is HSI-only:
+                 aux is never used and the channel tokenizer is sized to
+                 hsi_channels alone.
         embed_dim: Embedding dimension
         num_heads: Number of attention heads
         num_layers: Number of transformer layers
@@ -72,6 +76,7 @@ class MFTCPEACosine(nn.Module):
         self,
         hsi_channels: int,
         aux_channels: int = 1,
+        use_aux: bool = True,
         embed_dim: int = 128,
         num_heads: int = 8,
         num_layers: int = 4,
@@ -105,15 +110,18 @@ class MFTCPEACosine(nn.Module):
                 make_center_weights(patch_size, pool_sigma, normalize=True)
             )
 
-        # Track channel counts (HSI + aux concatenated at input)
+        # Track channel counts. When use_aux is True the input is HSI + aux
+        # concatenated; when False the model is HSI-only and aux is ignored.
         self.hsi_channels = hsi_channels
         self.aux_channels = aux_channels
-        self.total_channels = hsi_channels + aux_channels
+        self.use_aux = use_aux
+        self.total_channels = hsi_channels + aux_channels if use_aux else hsi_channels
 
         # ========== Unified Tokenizer ==========
         # HSI and auxiliary bands are concatenated along the channel dim and
         # embedded by a single channel+spatial tokenizer. One token per pixel
         # carries information from both HSI bands and aux (e.g., LiDAR) bands.
+        # With use_aux=False the tokenizer is sized to HSI bands only.
         self.channel_tokenizer = ChannelTokenizer(
             in_channels=self.total_channels,
             embed_dim=embed_dim
@@ -187,22 +195,27 @@ class MFTCPEACosine(nn.Module):
     def tokenize(
         self,
         hsi: torch.Tensor,
-        aux: torch.Tensor
+        aux: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
-        Tokenize multimodal input.
+        Tokenize input.
 
-        HSI and auxiliary bands are concatenated along the channel dimension,
-        producing one token per spatial position that carries both modalities.
+        When use_aux is True, HSI and auxiliary bands are concatenated along the
+        channel dimension, producing one token per spatial position that carries
+        both modalities. When use_aux is False (HSI-only), aux is ignored and
+        only HSI bands are tokenized.
 
         Args:
             hsi: [B, C_hsi, H, W] hyperspectral data
-            aux: [B, C_aux, H, W] auxiliary data
+            aux: [B, C_aux, H, W] auxiliary data (ignored when use_aux=False)
 
         Returns:
-            patch_tokens: [B, N, D] unified patch tokens (one per pixel)
+            patch_tokens: [B, N, D] patch tokens (one per pixel)
         """
-        combined = torch.cat([hsi, aux], dim=1)         # [B, C_hsi + C_aux, H, W]
+        if self.use_aux:
+            combined = torch.cat([hsi, aux], dim=1)     # [B, C_hsi + C_aux, H, W]
+        else:
+            combined = hsi                              # [B, C_hsi, H, W]
         tokens = self.channel_tokenizer(combined)       # [B, D, H, W]
         tokens = self.spatial_tokenizer(tokens)         # [B, N, D]
         return tokens
@@ -210,14 +223,14 @@ class MFTCPEACosine(nn.Module):
     def forward_features(
         self,
         hsi: torch.Tensor,
-        aux: torch.Tensor
+        aux: Optional[torch.Tensor] = None
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
-        Extract features from multimodal input.
+        Extract features from input.
 
         Args:
             hsi: [B, C, H, W] hyperspectral data
-            aux: [B, C_aux, H, W] auxiliary data
+            aux: [B, C_aux, H, W] auxiliary data (ignored when use_aux=False)
 
         Returns:
             patch_emb: [B, N, D] patch embeddings
@@ -313,10 +326,10 @@ class MFTCPEACosine(nn.Module):
     def forward_episode(
         self,
         support_hsi: torch.Tensor,
-        support_aux: torch.Tensor,
+        support_aux: Optional[torch.Tensor],
         support_labels: torch.Tensor,
         query_hsi: torch.Tensor,
-        query_aux: torch.Tensor
+        query_aux: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
         Forward pass for few-shot episode using prototypical networks.
@@ -444,14 +457,14 @@ class MFTCPEACosine(nn.Module):
     def forward(
         self,
         hsi: torch.Tensor,
-        aux: torch.Tensor
+        aux: Optional[torch.Tensor] = None
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Standard forward pass (for pretraining or feature extraction).
 
         Args:
             hsi: [B, C, H, W] hyperspectral data
-            aux: [B, C_aux, H, W] auxiliary data
+            aux: [B, C_aux, H, W] auxiliary data (ignored when use_aux=False)
 
         Returns:
             patch_emb, cls_emb, aux_emb

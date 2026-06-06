@@ -1,0 +1,85 @@
+# Houston MAE HSI-only Pretraining Configuration (original MAE recipe, no LiDAR)
+#
+# HSI-only ablation of the MAE variant: model.use_aux=false drops the LiDAR/aux
+# band entirely, so one token per pixel carries the 144 HSI bands alone. The MAE
+# recipe is otherwise identical to houston_pretrain_mae.yaml (remove 75% of pixel
+# tokens, encode visible only, transformer decoder reconstructs masked tokens, no
+# projection head). Controlled HSI-only-vs-HSI+LiDAR comparison.
+#
+# Run with:
+#   python scripts/pretrain_enhanced.py --config configs/pretrain/houston_pretrain_mae_hsi_only.yaml
+
+# Model architecture
+model:
+  name: "mft_cpea"
+  embed_dim: 128
+  num_heads: 2
+  num_layers: 2
+  lambda_factor: 0.5
+  dropout: 0.1
+
+  # HSI-only: ignore aux/LiDAR bands entirely.
+  use_aux: false
+
+  # MAE removes the projection head. Kept (but inert) so eval auto-load of the
+  # architecture from this frozen config stays well-formed.
+  use_projection: false
+  proj_hidden_dim: 512
+  proj_num_layers: 1
+  proj_l2_normalize: true
+
+# Data settings
+data:
+  patch_size: 11
+  num_workers: 4
+
+# Pretraining settings
+pretrain:
+  # Single dataset
+  datasets:
+    - houston
+
+  # Select the original-MAE objective (transformer decoder, token removal).
+  objective: "mae"
+
+  # Training schedule (identical to houston_pretrain_enhanced.yaml)
+  epochs: 3000
+  batch_size: 64
+  val_split: 0.0
+
+  # Optimizer (MAE settings)
+  lr: 1.5e-4
+  min_lr: 1.0e-6
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+
+  # --- MAE masking & transformer decoder ---
+  mask_ratio: 0.75
+  decoder_dim: 64
+  decoder_depth: 4
+  decoder_heads: 4
+  norm_pix_loss: true
+
+  band_mask_ratio: 0.0
+  spatial_mask_ratio: 0.0
+
+  recon_center_sigma: null
+  pool_center_sigma: 1.0
+
+  # Checkpointing
+  save_interval: 50
+  val_interval: 50000
+  log_interval: 1
+  use_amp: false
+
+# Paths - unique for HSI-only MAE Houston pretraining
+paths:
+  data_root: "./data/raw"
+  checkpoint_dir: "./checkpoints/pretrained/houston_mae_hsi_only"
+  log_dir: "./logs/pretrain/houston_mae_hsi_only"
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: true

@@ -1,0 +1,97 @@
+# Houston MAE Pretraining Configuration (original MAE recipe, HSI+LiDAR tokens)
+#
+# MAE recipe (He et al. 2022): remove 75% of the spatial (pixel) tokens, encode
+# only the visible 25% (+ the CLS token), and let a transformer decoder
+# reconstruct the masked tokens. No per-(pixel,band) Bernoulli masking; the MLP
+# projection head is removed (use_projection=false) — the transformer decoder
+# replaces it. Channel counts (144 HSI + 1 LiDAR) are auto-detected from the
+# dataset class. Same training recipe as houston_pretrain_enhanced.yaml so the
+# result is directly comparable.
+#
+# Run with:
+#   python scripts/pretrain_enhanced.py --config configs/pretrain/houston_pretrain_mae.yaml
+
+# Model architecture
+model:
+  name: "mft_cpea"
+  embed_dim: 128
+  num_heads: 2
+  num_layers: 2
+  lambda_factor: 0.5
+  dropout: 0.1
+
+  # MAE removes the projection head. Kept (but inert) so eval auto-load of the
+  # architecture from this frozen config stays well-formed.
+  use_projection: false
+  proj_hidden_dim: 512
+  proj_num_layers: 1
+  proj_l2_normalize: true
+
+  # HSI+LiDAR: aux/LiDAR bands ARE concatenated as extra per-pixel bands.
+  use_aux: true
+
+# Data settings
+data:
+  patch_size: 11
+  num_workers: 4
+
+# Pretraining settings
+pretrain:
+  # Single dataset
+  datasets:
+    - houston
+
+  # Select the original-MAE objective (transformer decoder, token removal).
+  objective: "mae"
+
+  # Training schedule (identical to houston_pretrain_enhanced.yaml)
+  epochs: 3000
+  batch_size: 64
+  val_split: 0.0
+
+  # Optimizer (MAE settings)
+  lr: 1.5e-4
+  min_lr: 1.0e-6
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+
+  # --- MAE masking & transformer decoder ---
+  # Remove this fraction of whole pixel tokens before encoding (0.75 = paper).
+  mask_ratio: 0.75
+  # Asymmetric transformer decoder (narrower/shallower than the encoder). Heads
+  # must divide decoder_dim (64 % 4 == 0).
+  decoder_dim: 64
+  decoder_depth: 4
+  decoder_heads: 4
+  # Normalize each token's channel vector before the MSE loss (MAE default).
+  norm_pix_loss: true
+
+  # Original MAE does NOT use per-(pixel,band) Bernoulli masking or the
+  # in-place spatial_mask_ratio path. Kept at 0 so these are inert; the MAE
+  # objective ignores them and uses mask_ratio instead.
+  band_mask_ratio: 0.0
+  spatial_mask_ratio: 0.0
+
+  # Plain MAE reconstruction loss (no center weighting).
+  recon_center_sigma: null
+
+  # Center-weighted prototype pooling (Gaussian sigma, used at evaluation).
+  pool_center_sigma: 1.0
+
+  # Checkpointing
+  save_interval: 50
+  val_interval: 50000             # Validation effectively disabled (val_split 0)
+  log_interval: 1
+  use_amp: false
+
+# Paths - unique for MAE Houston pretraining
+paths:
+  data_root: "./data/raw"
+  checkpoint_dir: "./checkpoints/pretrained/houston_mae"
+  log_dir: "./logs/pretrain/houston_mae"
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: true

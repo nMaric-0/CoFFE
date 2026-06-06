@@ -22,7 +22,7 @@ class PatchedEpisodeSampler:
     def __init__(
         self,
         dataset: Dataset,
-        n_way: int = 5,
+        n_way: Optional[int] = None,
         k_shot: int = 5,
         k_query: int = 15,
         num_episodes: int = 600,
@@ -32,7 +32,9 @@ class PatchedEpisodeSampler:
         """
         Args:
             dataset: PatchedMultimodalDataset instance
-            n_way: Number of classes per episode
+            n_way: Number of classes per episode. ``None`` means "use all
+                available classes" (those that survive the k_shot+k_query
+                filter) — i.e. C-way evaluation.
             k_shot: Number of support samples per class
             k_query: Number of query samples per class
             num_episodes: Number of episodes to generate
@@ -40,27 +42,31 @@ class PatchedEpisodeSampler:
             fixed_support: If True, reuse the same support samples per class
         """
         self.dataset = dataset
-        self.n_way = n_way
         self.k_shot = k_shot
         self.k_query = k_query
         self.num_episodes = num_episodes
         self.fixed_support = fixed_support
-        
+
         self.rng = np.random.RandomState(seed)
-        
+
         # Build class indices from dataset
         self.class_indices = self._build_class_indices()
-        
+
         # Filter classes with enough samples
         self.available_classes = [
             c for c, indices in self.class_indices.items()
             if len(indices) >= k_shot + k_query
         ]
-        
-        if len(self.available_classes) < n_way:
+
+        if n_way is None:
+            self.n_way = len(self.available_classes)
+        else:
+            self.n_way = n_way
+
+        if len(self.available_classes) < self.n_way:
             raise ValueError(
                 f"Not enough classes with sufficient samples. "
-                f"Need {n_way} classes with >= {k_shot + k_query} samples each, "
+                f"Need {self.n_way} classes with >= {k_shot + k_query} samples each, "
                 f"found {len(self.available_classes)} classes. "
                 f"Class sample counts: {[(c, len(idx)) for c, idx in self.class_indices.items()]}"
             )

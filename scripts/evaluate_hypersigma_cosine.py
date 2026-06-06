@@ -28,9 +28,12 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import sys
+import time
 from collections import defaultdict
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import torch
@@ -41,11 +44,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from data.datasets import (  # noqa: E402
-    HoustonPatchedDataset,
-    TrentoPatchedDataset,
-    MUUFLPatchedDataset,
-)
+from data.datasets import DATASET_REGISTRY, get_spec  # noqa: E402
 from data.samplers.patched_episode_sampler import PatchedEpisodeSampler  # noqa: E402
 from models.hypersigma import HyperSIGMADual, HyperSIGMACosine  # noqa: E402
 from scripts.evaluate_cosine import (  # noqa: E402
@@ -55,16 +54,13 @@ from scripts.evaluate_cosine import (  # noqa: E402
 )
 from utils.seed import set_seed  # noqa: E402
 
-DATASETS = {
-    "houston": HoustonPatchedDataset,
-    "trento": TrentoPatchedDataset,
-    "muufl": MUUFLPatchedDataset,
-}
+# Derived from the central registry (data/datasets/registry.py) so band
+# and class counts cannot drift from the adapt pipeline.
+DATASETS = {name: spec.patched_cls for name, spec in DATASET_REGISTRY.items()}
 
 DATASET_SPECS = {
-    "houston": {"hsi_channels": 144, "num_classes": 15},
-    "trento": {"hsi_channels": 63, "num_classes": 6},
-    "muufl": {"hsi_channels": 64, "num_classes": 11},
+    name: {"hsi_channels": spec.hsi_channels, "num_classes": spec.num_classes}
+    for name, spec in DATASET_REGISTRY.items()
 }
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -74,6 +70,15 @@ logger = logging.getLogger(__name__)
 # ----------------------------------------------------------------------
 # Model loading
 # ----------------------------------------------------------------------
+
+
+# Which dual-branch components each eval mode actually consumes. Building only
+# these avoids loading an unused ViT-B (~half the encoder) into GPU memory.
+_MODE_BRANCHES = {
+    "fused":     {"build_spat": True,  "build_spec": True,  "build_sem": True},
+    "spat_pool": {"build_spat": True,  "build_spec": False, "build_sem": False},
+    "spec_pool": {"build_spat": False, "build_spec": True,  "build_sem": False},
+}
 
 
 def _build_dual(
@@ -86,8 +91,11 @@ def _build_dual(
     num_tokens: int = 100,
     dr_dim: int = 128,
     num_stages: int = 4,
+    pca_stats_path: Optional[str] = None,
+    mode: str = "fused",
 ) -> HyperSIGMADual:
     specs = DATASET_SPECS[dataset_name]
+    branches = _MODE_BRANCHES.get(mode, _MODE_BRANCHES["fused"])
     dual = HyperSIGMADual(
         pca_spat_path=pca_spat_path,
         spat_ckpt=spat_ckpt,
@@ -99,6 +107,8 @@ def _build_dual(
         num_tokens=num_tokens,
         dr_dim=dr_dim,
         num_stages=num_stages,
+        pca_stats_path=pca_stats_path,
+        **branches,
     )
     dual.log_sanity()
     return dual
@@ -150,6 +160,7 @@ def load_model(
     prototype_mode: str,
     distance_metric: str,
     device: str,
+    pca_stats_path: Optional[str] = None,
 ) -> HyperSIGMACosine:
     dual = _build_dual(
         dataset_name=dataset_name,
@@ -157,6 +168,8 @@ def load_model(
         spat_ckpt=spat_ckpt,
         spec_ckpt=spec_ckpt,
         spat_patch_k=spat_patch_k,
+        pca_stats_path=pca_stats_path,
+        mode=mode,
     )
     model = HyperSIGMACosine(
         dual=dual,
@@ -246,11 +259,34 @@ def evaluate(
     aggregated_features = defaultdict(list)
 
     primary_metric = model.distance_metric
+
+    # Opt-in per-section timing breakdown (set HYPERSIGMA_EVAL_PROFILE=1).
+    # When off, the `if profile` branches are skipped and the loop is unchanged.
+    profile = os.environ.get("HYPERSIGMA_EVAL_PROFILE") == "1"
+    profile_cuda = profile and isinstance(device, str) and device.startswith("cuda")
+    PROFILE_WARMUP = 3  # skip first episodes (CUDA/cuDNN warmup inflates them)
+
+    def _stamp() -> float:
+        # Wait for async CUDA kernels so GPU timings are real, not just launches.
+        if profile_cuda:
+            torch.cuda.synchronize(device)
+        return time.perf_counter()
+
+    timings: dict = defaultdict(float)
+    timed_episodes = 0
+    last_end = None
+
     pbar = tqdm(sampler, total=min(num_episodes, len(sampler)), desc="Evaluating")
     completed = 0
     for episode in pbar:
         if completed >= num_episodes:
             break
+        sec = {}
+        if profile:
+            t_top = _stamp()
+            if last_end is not None:
+                sec["data_wait"] = t_top - last_end
+
         support_hsi = episode["support_hsi"].to(device)
         support_aux = episode["support_aux"].to(device)
         support_labels = episode["support_labels"].to(device)
@@ -258,11 +294,19 @@ def evaluate(
         query_aux = episode["query_aux"].to(device)
         query_labels = episode["query_labels"].to(device)
         original_classes = episode["original_classes"].tolist()
+        if profile:
+            t_h2d = _stamp(); sec["h2d"] = t_h2d - t_top
 
         s_patch, s_cls, _ = model.forward_features(support_hsi, support_aux)
+        if profile:
+            t_fs = _stamp(); sec["fwd_support"] = t_fs - t_h2d
         q_patch, q_cls, _ = model.forward_features(query_hsi, query_aux)
+        if profile:
+            t_fq = _stamp(); sec["fwd_query"] = t_fq - t_fs
         s_feat = model.adapt_embeddings(s_patch, s_cls).mean(dim=1)
         q_feat = model.adapt_embeddings(q_patch, q_cls).mean(dim=1)
+        if profile:
+            t_ad = _stamp(); sec["adapt"] = t_ad - t_fq
 
         for metric in ("cosine", "euclidean"):
             logits = _compute_logits(
@@ -339,7 +383,37 @@ def evaluate(
                     if max_tsne_samples > 0:
                         feats = feats[: max_tsne_samples - cur]
                     aggregated_features[orig].append(feats)
+
+        if profile:
+            t_post = _stamp(); sec["post"] = t_post - t_ad
+            last_end = t_post
+            if completed >= PROFILE_WARMUP:
+                for k, v in sec.items():
+                    timings[k] += v
+                timed_episodes += 1
+                if timed_episodes:
+                    pbar.set_postfix({
+                        "fwd_s(ms)": f"{timings['fwd_support'] / timed_episodes * 1e3:.0f}",
+                        "fwd_q(ms)": f"{timings['fwd_query'] / timed_episodes * 1e3:.0f}",
+                        "data(ms)": f"{timings['data_wait'] / timed_episodes * 1e3:.0f}",
+                    })
         completed += 1
+
+    if profile and timed_episodes:
+        order = ("data_wait", "h2d", "fwd_support", "fwd_query", "adapt", "post")
+        means_ms = {k: timings[k] / timed_episodes * 1e3 for k in order}
+        total_ms = sum(means_ms.values())
+        logger.info(
+            "[HyperSIGMA][profile] mean ms/episode over %d episodes (warmup %d skipped):",
+            timed_episodes, PROFILE_WARMUP,
+        )
+        for k in order:
+            pct = (means_ms[k] / total_ms * 100) if total_ms else 0.0
+            logger.info("    %-12s %8.1f ms  (%4.1f%%)", k, means_ms[k], pct)
+        logger.info(
+            "    %-12s %8.1f ms  -> %.2f it/s",
+            "TOTAL", total_ms, (1e3 / total_ms) if total_ms else 0.0,
+        )
 
     # Concatenate aggregated features
     for cls in aggregated_features:
@@ -436,6 +510,7 @@ def _write_results_json(
         "spat_patch_k": args.spat_patch_k,
         "adapted_checkpoint": args.adapted_checkpoint,
         "pca_spat_path": args.pca_spat_path,
+        "pca_stats_path": getattr(args, "pca_stats_path", None),
         "spat_ckpt": args.spat_ckpt,
         "spec_ckpt": args.spec_ckpt,
         "dataset": dataset_name,
@@ -494,12 +569,64 @@ def _shape_for_plots(block: dict) -> dict:
 # ----------------------------------------------------------------------
 
 
+def _resolve_dataset_paths(args, dataset_name: str) -> None:
+    """Fill in dataset-coupled paths from the registry convention.
+
+    Makes ``--dataset <name>`` enough to evaluate: the spatial PCA and its
+    output-stats are strictly tied to the dataset, so when not given they
+    default to ``checkpoints/hypersigma/pca_<name>_3band[.|_stats.]pkl``.
+
+    ``--adapted-checkpoint``:
+      * omitted/None  -> unadapted ablation (no adapted weights loaded)
+      * "auto"        -> the convention path
+                         ``checkpoints/hypersigma_adapted/<name>_k<k>/checkpoint.pth``
+      * any other str -> used verbatim ("none"/"null"/"random" still skip)
+    """
+    spec = get_spec(dataset_name)
+    if not getattr(args, "pca_spat_path", None):
+        args.pca_spat_path = spec.pca_spat_path()
+    if not getattr(args, "pca_stats_path", None):
+        conv = spec.pca_stats_path()
+        # Only standardize if the stats file actually exists; otherwise
+        # fall back to raw PCA output (None), matching prior behavior.
+        args.pca_stats_path = conv if Path(conv).exists() else None
+    if getattr(args, "adapted_checkpoint", None) and args.adapted_checkpoint.lower() == "auto":
+        args.adapted_checkpoint = str(
+            Path(spec.adapt_ckpt_dir(args.spat_patch_k)) / "checkpoint.pth"
+        )
+
+
+def _resolve_device(args) -> str:
+    """Resolve the eval device, honoring ``--device``/``--gpu``.
+
+    ``--cpu`` or absent CUDA forces ``"cpu"`` (warning if a cuda device was
+    explicitly requested). Otherwise use ``args.device`` (e.g. ``"cuda:1"``),
+    falling back to ``"cuda"`` (= cuda:0).
+    """
+    requested = getattr(args, "gpu", None)
+    requested = f"cuda:{requested}" if requested is not None else getattr(args, "device", None)
+
+    if args.cpu or not torch.cuda.is_available():
+        if requested and str(requested).startswith("cuda"):
+            logger.warning(
+                "Requested device %r but %s -> falling back to CPU.",
+                requested, "--cpu set" if args.cpu else "CUDA unavailable",
+            )
+        return "cpu"
+    return requested or "cuda"
+
+
 def main(args):
-    device = "cuda" if torch.cuda.is_available() and not args.cpu else "cpu"
+    device = _resolve_device(args)
     logger.info("Using device: %s", device)
 
     seeds = args.seeds if args.seeds else [args.seed]
     dataset_name = args.dataset.lower()
+    _resolve_dataset_paths(args, dataset_name)
+    logger.info(
+        "Resolved paths: pca_spat=%s pca_stats=%s adapted=%s",
+        args.pca_spat_path, args.pca_stats_path, args.adapted_checkpoint,
+    )
     DatasetClass = DATASETS[dataset_name]
     dataset = DatasetClass(
         data_root=args.data_root,
@@ -521,6 +648,7 @@ def main(args):
         prototype_mode=args.prototype_mode,
         distance_metric=args.distance_metric,
         device=device,
+        pca_stats_path=getattr(args, "pca_stats_path", None),
     )
 
     num_total = DATASET_SPECS[dataset_name]["num_classes"]
@@ -537,6 +665,7 @@ def main(args):
             num_episodes=args.num_episodes,
             seed=seed,
         )
+        args.n_way = sampler.n_way
         results = evaluate(
             model, sampler, device,
             num_episodes=args.num_episodes,
@@ -588,7 +717,7 @@ def main(args):
 
 
 _DEFAULT_ARGS = {
-    "n_way": 15,
+    "n_way": None,
     "k_shot": 5,
     "k_query": 30,
     "num_episodes": 600,
@@ -601,13 +730,17 @@ _DEFAULT_ARGS = {
     "seed": 42,
     "seeds": None,
     "cpu": False,
+    "device": "cuda",
+    "gpu": None,
     "output": None,
     "output_dir": None,
     "no_plots": False,
     "num_example_episodes": 3,
     "max_tsne_samples": 0,
     "spat_patch_k": 3,
-    "pca_spat_path": "checkpoints/hypersigma/pca_houston_3band.pkl",
+    # None -> derived from `dataset` via the registry convention in main().
+    "pca_spat_path": None,
+    "pca_stats_path": None,
     "spat_ckpt": "checkpoints/hypersigma/spat-vit-base.pth",
     "spec_ckpt": "checkpoints/hypersigma/spec-vit-base.pth",
     "adapted_checkpoint": None,
@@ -625,7 +758,9 @@ def run_evaluation(dataset: str, **overrides):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", type=str, default="houston", choices=list(DATASETS))
-    parser.add_argument("--n-way", type=int, default=15)
+    parser.add_argument("--n-way", type=int, default=None,
+                        help="Number of classes per episode. Default: all "
+                             "available classes for the dataset (C-way).")
     parser.add_argument("--k-shot", type=int, default=5)
     parser.add_argument("--k-query", type=int, default=30)
     parser.add_argument("--num-episodes", type=int, default=600)
@@ -635,14 +770,20 @@ if __name__ == "__main__":
     parser.add_argument("--mode", type=str, default="fused",
                         choices=list(HyperSIGMACosine.SUPPORTED_MODES))
     parser.add_argument("--spat-patch-k", type=int, default=3, choices=[1, 3])
-    parser.add_argument("--pca-spat-path", type=str,
-                        default="checkpoints/hypersigma/pca_houston_3band.pkl")
+    parser.add_argument("--pca-spat-path", type=str, default=None,
+                        help="Spatial PCA pickle. If omitted, derived from "
+                             "--dataset (checkpoints/hypersigma/pca_<ds>_3band.pkl).")
+    parser.add_argument("--pca-stats-path", type=str, default=None,
+                        help="Pickled per-channel mean/std for PCA-output standardization. "
+                             "If omitted, the PCA output is fed raw to SpatViT.")
     parser.add_argument("--spat-ckpt", type=str,
                         default="checkpoints/hypersigma/spat-vit-base.pth")
     parser.add_argument("--spec-ckpt", type=str,
                         default="checkpoints/hypersigma/spec-vit-base.pth")
     parser.add_argument("--adapted-checkpoint", type=str, default=None,
-                        help="Path to adapted checkpoint, or 'none' for unadapted ablation")
+                        help="Path to adapted checkpoint; 'auto' derives "
+                             "checkpoints/hypersigma_adapted/<ds>_k<k>/checkpoint.pth; "
+                             "omit or 'none' for the unadapted ablation")
     parser.add_argument("--distance-metric", type=str, default="cosine",
                         choices=["cosine", "euclidean"])
     parser.add_argument("--temperature", type=float, default=10.0)
@@ -651,6 +792,11 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--seeds", type=int, nargs="+", default=None)
     parser.add_argument("--cpu", action="store_true")
+    parser.add_argument("--device", type=str, default="cuda",
+                        help="Torch device for eval, e.g. 'cuda', 'cuda:1', 'cpu'. "
+                             "Ignored if --cpu is set or CUDA is unavailable.")
+    parser.add_argument("--gpu", type=int, default=None,
+                        help="Convenience for --device cuda:<int> (overrides --device).")
     parser.add_argument("--output", type=str, default=None)
     parser.add_argument("--output-dir", type=str, default=None)
     parser.add_argument("--no-plots", action="store_true", default=False)

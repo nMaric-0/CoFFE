@@ -138,7 +138,10 @@ class SpatViTBranch(nn.Module):
             self._freeze_body()
 
     def _load_checkpoint(self, path: str) -> None:
-        ckpt = torch.load(path, map_location="cpu")
+        # weights_only=False: the upstream HyperSIGMA checkpoint pickles an
+        # argparse.Namespace alongside the state dict, which PyTorch 2.6's
+        # default safe-unpickler rejects. The file is trusted (WHU-Sigma HF).
+        ckpt = torch.load(path, map_location="cpu", weights_only=False)
         state_dict = _extract_state_dict(ckpt)
         state_dict = _strip_state_dict_prefix(state_dict)
 

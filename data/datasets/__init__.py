@@ -9,6 +9,7 @@ from .patched import (
     TrentoPatchedDataset,
     MUUFLPatchedDataset,
 )
+from .registry import DATASET_REGISTRY, DatasetSpec, get_spec
 
 __all__ = [
     "MultimodalEODataset",
@@ -20,4 +21,8 @@ __all__ = [
     "HoustonPatchedDataset",
     "TrentoPatchedDataset",
     "MUUFLPatchedDataset",
+    # Per-dataset spec registry (single source of truth)
+    "DATASET_REGISTRY",
+    "DatasetSpec",
+    "get_spec",
 ]

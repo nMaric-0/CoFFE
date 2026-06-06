@@ -39,6 +39,7 @@ from data.datasets import (
 )
 from models import MFTCPEACosine
 from pretrain.masked_modeling_enhanced import EnhancedMaskedSpectralSpatialModel
+from pretrain.mae_pretrain import MAEPretrainModel
 from trainers.pretrain_trainer import PretrainTrainer
 
 
@@ -216,27 +217,35 @@ def run_pretrain(
         hsi_channels = max(ds.hsi_channels for ds in all_datasets)
         aux_channels = max(ds.aux_channels for ds in all_datasets)
 
+    use_aux = config.get("model", {}).get("use_aux", True)
     logger.info(f"Total samples: {len(full_dataset)}")
-    logger.info(f"HSI channels: {hsi_channels}, Aux channels: {aux_channels}")
+    logger.info(f"HSI channels: {hsi_channels}, Aux channels: {aux_channels}, "
+                f"use_aux={use_aux} ({'HSI+aux' if use_aux else 'HSI-only'})")
 
-    # Split into train/val (stratified by label to preserve class distribution)
+    # Split into train/val (stratified by label to preserve class distribution).
+    # val_split <= 0 disables validation: the full dataset becomes the train set
+    # and no val loader is built. The trainer handles val_loader=None.
     val_split = pretrain_config.get("val_split", 0.1)
 
-    # Extract labels for stratification
-    if hasattr(full_dataset, 'labels'):
-        all_labels = full_dataset.labels.numpy()
+    if val_split <= 0:
+        train_dataset = full_dataset
+        val_dataset = None
     else:
-        # CombinedPatchedDataset or similar: extract labels from sub-datasets
-        all_labels = []
-        for ds in full_dataset.datasets:
-            all_labels.append(ds.labels.numpy())
-        all_labels = np.concatenate(all_labels)
+        # Extract labels for stratification
+        if hasattr(full_dataset, 'labels'):
+            all_labels = full_dataset.labels.numpy()
+        else:
+            # CombinedPatchedDataset or similar: extract labels from sub-datasets
+            all_labels = []
+            for ds in full_dataset.datasets:
+                all_labels.append(ds.labels.numpy())
+            all_labels = np.concatenate(all_labels)
 
-    from sklearn.model_selection import StratifiedShuffleSplit
-    splitter = StratifiedShuffleSplit(n_splits=1, test_size=val_split, random_state=seed)
-    train_idx, val_idx = next(splitter.split(np.zeros(len(all_labels)), all_labels))
-    train_dataset = torch.utils.data.Subset(full_dataset, train_idx)
-    val_dataset = torch.utils.data.Subset(full_dataset, val_idx)
+        from sklearn.model_selection import StratifiedShuffleSplit
+        splitter = StratifiedShuffleSplit(n_splits=1, test_size=val_split, random_state=seed)
+        train_idx, val_idx = next(splitter.split(np.zeros(len(all_labels)), all_labels))
+        train_dataset = torch.utils.data.Subset(full_dataset, train_idx)
+        val_dataset = torch.utils.data.Subset(full_dataset, val_idx)
 
     # Create dataloaders. pin_memory only matters on CUDA; turning it on for
     # CPU runs wastes memory and prints a torch warning.
@@ -261,25 +270,44 @@ def run_pretrain(
         **loader_extra,
     )
 
-    val_loader = DataLoader(
-        val_dataset,
-        batch_size=pretrain_config.get("batch_size", 64),
-        shuffle=False,
-        num_workers=num_workers,
-        pin_memory=pin_memory,
-        **loader_extra,
-    )
+    if val_dataset is None:
+        val_loader = None
+    else:
+        val_loader = DataLoader(
+            val_dataset,
+            batch_size=pretrain_config.get("batch_size", 64),
+            shuffle=False,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+            **loader_extra,
+        )
 
     logger.info(f"Training samples: {len(train_dataset)}")
-    logger.info(f"Validation samples: {len(val_dataset)}")
+    if val_dataset is None:
+        logger.info("Validation samples: 0 (val_split <= 0, validation disabled)")
+    else:
+        logger.info(f"Validation samples: {len(val_dataset)}")
 
     # Create encoder (MFT-CPEA-Cosine model)
     model_config = config.get("model", {})
     embed_dim = model_config.get("embed_dim", 128)
 
+    # Pretraining objective: "enhanced" (default; unified band/spatial masking +
+    # MLP decoder) or "mae" (original MAE recipe: remove 75% of tokens, encode
+    # visible only, transformer decoder, no projection head).
+    objective = pretrain_config.get("objective", "enhanced")
+    use_projection = model_config.get("use_projection", True)
+    if objective == "mae" and use_projection:
+        # The MAE recipe has no projection head; the transformer decoder replaces
+        # it. Force it off regardless of config so the encoder checkpoint matches
+        # what eval rebuilds (eval defaults use_projection=False).
+        logger.info("objective=mae: forcing use_projection=False (no projection head)")
+        use_projection = False
+
     encoder = MFTCPEACosine(
         hsi_channels=hsi_channels,
         aux_channels=aux_channels,
+        use_aux=use_aux,
         embed_dim=embed_dim,
         num_heads=model_config.get("num_heads", 8),
         num_layers=model_config.get("num_layers", 4),
@@ -287,38 +315,72 @@ def run_pretrain(
         lambda_factor=model_config.get("lambda_factor", 2.0),
         dropout=model_config.get("dropout", 0.1),
         # Projection head settings (trained for few-shot transfer)
-        use_projection=model_config.get("use_projection", True),
+        use_projection=use_projection,
         proj_hidden_dim=model_config.get("proj_hidden_dim", embed_dim * 4),
         proj_num_layers=model_config.get("proj_num_layers", 2),
         proj_l2_normalize=model_config.get("proj_l2_normalize", False),
     )
 
-    logger.info(f"Projection head: hidden_dim={model_config.get('proj_hidden_dim', embed_dim * 4)}, "
-                f"num_layers={model_config.get('proj_num_layers', 2)}, "
-                f"l2_normalize={model_config.get('proj_l2_normalize', False)}")
+    if objective == "mae":
+        mask_ratio = pretrain_config.get("mask_ratio", 0.75)
+        decoder_dim = pretrain_config.get("decoder_dim", 64)
+        decoder_depth = pretrain_config.get("decoder_depth", 4)
+        decoder_heads = pretrain_config.get("decoder_heads", 4)
+        norm_pix_loss = pretrain_config.get("norm_pix_loss", True)
 
-    # Create unified-mask pretraining model
-    band_mask_ratio = pretrain_config.get("band_mask_ratio", 0.9)
-    spatial_mask_ratio = pretrain_config.get("spatial_mask_ratio", 0.0)
+        pretrain_model = MAEPretrainModel(
+            encoder=encoder,
+            hsi_channels=hsi_channels,
+            aux_channels=aux_channels,
+            use_aux=use_aux,
+            patch_size=data_config.get("patch_size", 11),
+            embed_dim=embed_dim,
+            mask_ratio=mask_ratio,
+            decoder_dim=decoder_dim,
+            decoder_depth=decoder_depth,
+            decoder_heads=decoder_heads,
+            decoder_mlp_ratio=pretrain_config.get("decoder_mlp_ratio", 4.0),
+            norm_pix_loss=norm_pix_loss,
+            recon_sigma=pretrain_config.get("recon_center_sigma", None),
+        )
 
-    pretrain_model = EnhancedMaskedSpectralSpatialModel(
-        encoder=encoder,
-        hsi_channels=hsi_channels,
-        aux_channels=aux_channels,
-        patch_size=data_config.get("patch_size", 11),
-        embed_dim=embed_dim,
-        decoder_hidden_dim=pretrain_config.get("decoder_hidden_dim", 256),
-        band_mask_ratio=band_mask_ratio,
-        spatial_mask_ratio=spatial_mask_ratio,
-        recon_sigma=pretrain_config.get("recon_center_sigma", None),
-    )
+        total_params = sum(p.numel() for p in pretrain_model.parameters())
+        encoder_params = sum(p.numel() for p in encoder.parameters())
+        logger.info(f"Objective: MAE (transformer decoder, no projection head)")
+        logger.info(f"Total parameters: {total_params:,}")
+        logger.info(f"Encoder parameters: {encoder_params:,}")
+        logger.info(f"Mask ratio: {mask_ratio} "
+                    f"({pretrain_model.len_keep}/{pretrain_model.num_tokens} tokens visible)")
+        logger.info(f"Decoder: dim={decoder_dim}, depth={decoder_depth}, "
+                    f"heads={decoder_heads}, norm_pix_loss={norm_pix_loss}")
+    else:
+        logger.info(f"Projection head: hidden_dim={model_config.get('proj_hidden_dim', embed_dim * 4)}, "
+                    f"num_layers={model_config.get('proj_num_layers', 2)}, "
+                    f"l2_normalize={model_config.get('proj_l2_normalize', False)}")
 
-    total_params = sum(p.numel() for p in pretrain_model.parameters())
-    encoder_params = sum(p.numel() for p in encoder.parameters())
-    logger.info(f"Total parameters: {total_params:,}")
-    logger.info(f"Encoder parameters: {encoder_params:,}")
-    logger.info(f"Band mask ratio: {band_mask_ratio}")
-    logger.info(f"Spatial mask ratio: {spatial_mask_ratio}")
+        # Create unified-mask pretraining model
+        band_mask_ratio = pretrain_config.get("band_mask_ratio", 0.9)
+        spatial_mask_ratio = pretrain_config.get("spatial_mask_ratio", 0.0)
+
+        pretrain_model = EnhancedMaskedSpectralSpatialModel(
+            encoder=encoder,
+            hsi_channels=hsi_channels,
+            aux_channels=aux_channels,
+            use_aux=use_aux,
+            patch_size=data_config.get("patch_size", 11),
+            embed_dim=embed_dim,
+            decoder_hidden_dim=pretrain_config.get("decoder_hidden_dim", 256),
+            band_mask_ratio=band_mask_ratio,
+            spatial_mask_ratio=spatial_mask_ratio,
+            recon_sigma=pretrain_config.get("recon_center_sigma", None),
+        )
+
+        total_params = sum(p.numel() for p in pretrain_model.parameters())
+        encoder_params = sum(p.numel() for p in encoder.parameters())
+        logger.info(f"Total parameters: {total_params:,}")
+        logger.info(f"Encoder parameters: {encoder_params:,}")
+        logger.info(f"Band mask ratio: {band_mask_ratio}")
+        logger.info(f"Spatial mask ratio: {spatial_mask_ratio}")
 
     # Create trainer
     trainer_config = {

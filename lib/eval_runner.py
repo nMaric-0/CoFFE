@@ -37,6 +37,7 @@ _ARCH_KEYS_FROM_MODEL = (
     "lambda_factor",
     "dropout",
     "use_projection",
+    "use_aux",
     "proj_hidden_dim",
     "proj_num_layers",
     "proj_l2_normalize",

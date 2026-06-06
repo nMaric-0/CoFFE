@@ -26,21 +26,13 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from data.datasets import (  # noqa: E402
-    HoustonPatchedDataset,
-    TrentoPatchedDataset,
-    MUUFLPatchedDataset,
-)
+from data.datasets import DATASET_REGISTRY, get_spec  # noqa: E402
 from models.hypersigma.preprocessing import (  # noqa: E402
-    DATASET_PCA_CONFIG,
     fit_dataset_pca,
+    fit_pca_output_stats,
 )
 
-DATASETS = {
-    "houston": HoustonPatchedDataset,
-    "trento": TrentoPatchedDataset,
-    "muufl": MUUFLPatchedDataset,
-}
+DATASETS = {name: spec.patched_cls for name, spec in DATASET_REGISTRY.items()}
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -54,9 +46,8 @@ def main() -> None:
     parser.add_argument("--patch-size", type=int, default=11)
     args = parser.parse_args()
 
-    cfg = DATASET_PCA_CONFIG[args.dataset]
-    Dataset = DATASETS[args.dataset]
-    dataset = Dataset(
+    spec = get_spec(args.dataset)
+    dataset = spec.patched_cls(
         data_root=args.data_root,
         patch_size=args.patch_size,
         split="all",
@@ -64,12 +55,17 @@ def main() -> None:
     )
     logger.info("Loaded %s (split=all): %d samples", args.dataset, len(dataset))
 
-    save_path = Path(args.out_dir) / f"pca_{args.dataset}_{cfg['spat_components']}band.pkl"
-    fit_dataset_pca(
+    # Paths follow the registry convention so adapt/eval pick them up
+    # automatically. We also fit the per-channel output stats used to
+    # standardize the SpatViT input (mean=0/std=1), matching Houston.
+    pca_path = spec.pca_spat_path(args.out_dir)
+    stats_path = spec.pca_stats_path(args.out_dir)
+    pca = fit_dataset_pca(
         dataset=dataset,
-        n_components=cfg["spat_components"],
-        save_path=str(save_path),
+        n_components=spec.spat_components,
+        save_path=pca_path,
     )
+    fit_pca_output_stats(dataset=dataset, pca=pca, save_path=stats_path)
 
 
 if __name__ == "__main__":

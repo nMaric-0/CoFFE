@@ -1,0 +1,92 @@
+# Houston HSI-only Pretraining Configuration (no LiDAR/aux)
+#
+# Ablation of the unified MFT-CPEA-Cosine model with LiDAR removed. Setting
+# model.use_aux=false makes the model HSI-only: the aux/LiDAR bands are never
+# concatenated, so one token per pixel carries the 144 HSI bands alone. The
+# decoder reconstructs a 144-value per-pixel vector; loss is MSE over the
+# masked entries.
+#
+# Identical recipe to houston_pretrain_enhanced.yaml (2 heads / 2 layers,
+# lambda 0.5, band-only masking, AMP off, deterministic) so the result is a
+# controlled HSI-only-vs-HSI+LiDAR comparison.
+#
+# Run with:
+#   python scripts/pretrain_enhanced.py --config configs/pretrain/houston_pretrain_hsi_only.yaml
+
+# Model architecture
+model:
+  name: "mft_cpea"
+  embed_dim: 128
+  num_heads: 2
+  num_layers: 2
+  lambda_factor: 0.5
+  dropout: 0.1
+
+  # HSI-only: ignore aux/LiDAR bands entirely.
+  use_aux: false
+
+  # Projection head (trained for few-shot transfer)
+  use_projection: true
+  proj_hidden_dim: 512
+  proj_num_layers: 1
+  proj_l2_normalize: true
+
+# Data settings
+data:
+  patch_size: 11
+  num_workers: 4
+  # Houston-specific (informational only; actual values read from dataset class)
+  # hsi_channels: 144
+  # aux_channels: 1
+
+# Pretraining settings
+pretrain:
+  # Single dataset
+  datasets:
+    - houston
+
+  # Training schedule
+  epochs: 3000
+  batch_size: 64
+  val_split: 0.00
+
+  # Optimizer (MAE settings)
+  lr: 1.5e-4
+  min_lr: 1.0e-6
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+
+  # Decoder
+  decoder_hidden_dim: 256
+
+  # Unified masking: mask this fraction of (pixel, band) entries. With
+  # use_aux=false the bands are HSI channels only. Set to 0 to disable.
+  band_mask_ratio: 0.9
+
+  # MAE-style spatial token masking: fraction of whole pixel tokens replaced
+  # with a learnable mask token after tokenization. Set to 0 to disable.
+  spatial_mask_ratio: 0.0
+
+  # Center-weighted reconstruction loss (Gaussian sigma)
+  recon_center_sigma: 1.0
+
+  # Center-weighted prototype pooling (Gaussian sigma, used at evaluation)
+  pool_center_sigma: 1.0
+
+  # Checkpointing
+  save_interval: 50
+  val_interval: 50000             # Validate every 50 epochs
+  log_interval: 1
+  use_amp: False
+
+# Paths - unique for HSI-only Houston pretraining
+paths:
+  data_root: "./data/raw"
+  checkpoint_dir: "./checkpoints/pretrained/houston_hsi_only"
+  log_dir: "./logs/pretrain/houston_hsi_only"
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: true

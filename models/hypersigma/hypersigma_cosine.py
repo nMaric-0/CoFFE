@@ -86,8 +86,23 @@ class HyperSIGMACosine(nn.Module):
         hsi: torch.Tensor,
         aux: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        out = self.dual(hsi)
-        feats = self._extract(out)                        # [B, D]
+        # Skip the unused branch when the eval mode only needs one side.
+        # `mode="fused"` still requires both (SEM consumes spat + spec).
+        # Saves ~half the eval wallclock for `spat_pool` / `spec_pool` runs.
+        if self.mode == "spat_pool":
+            spat_in = self.dual.pca_spat(hsi)
+            spat_in = self.dual.pca_standardize(spat_in)
+            spat_features = self.dual.spat(spat_in)
+            last = spat_features[-1]
+            pooled = F.adaptive_avg_pool2d(last, 1).flatten(1)
+            feats = F.normalize(pooled, p=2, dim=-1)
+        elif self.mode == "spec_pool":
+            spec_features = self.dual.spec(hsi)
+            last = spec_features[-1]
+            feats = F.normalize(last.mean(dim=1), p=2, dim=-1)
+        else:  # "fused"
+            out = self.dual(hsi)
+            feats = self._extract(out)
         patch = feats.unsqueeze(1)                        # [B, 1, D]
         return patch, feats, feats
 

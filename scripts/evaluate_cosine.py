@@ -149,6 +149,7 @@ def load_model_with_checkpoint(
     model = MFTCPEACosine(
         hsi_channels=specs["hsi_channels"],
         aux_channels=specs["aux_channels"],
+        use_aux=model_config.get("use_aux", True),
         embed_dim=model_config.get("embed_dim", 128),
         num_heads=model_config.get("num_heads", 8),
         num_layers=model_config.get("num_layers", 4),
@@ -156,6 +157,9 @@ def load_model_with_checkpoint(
         lambda_factor=model_config.get("lambda_factor", 2.0),
         dropout=model_config.get("dropout", 0.1),
         use_projection=model_config.get("use_projection", False),
+        proj_hidden_dim=model_config.get("proj_hidden_dim", None),
+        proj_num_layers=model_config.get("proj_num_layers", 2),
+        proj_l2_normalize=model_config.get("proj_l2_normalize", True),
         distance_metric=model_config.get("distance_metric", "cosine"),
         temperature=model_config.get("temperature", 10.0),
         prototype_mode=model_config.get("prototype_mode", "mean_features"),
@@ -177,6 +181,28 @@ def load_model_with_checkpoint(
 
     model_state = model.state_dict()
     fixed_state = fix_state_dict_keys(state_dict, model_state)
+
+    # Fail loudly on a checkpoint <-> dataset band-count mismatch. The channel
+    # tokenizer is a 1x1 Conv2d whose weight is [embed_dim, total_bands, 1, 1],
+    # so weight.shape[1] is the number of input bands (HSI + aux) the checkpoint
+    # was trained on. If it differs from the bands the selected dataset provides,
+    # the input projection cannot load and would be left randomly initialized,
+    # silently producing meaningless results (e.g. evaluating a 64-band Trento
+    # checkpoint on 145-band Houston). Raise instead of silently degrading.
+    ckpt_w = fixed_state.get("channel_tokenizer.conv.0.weight")
+    model_w = model_state.get("channel_tokenizer.conv.0.weight")
+    if ckpt_w is not None and model_w is not None and ckpt_w.shape[1] != model_w.shape[1]:
+        ckpt_bands = ckpt_w.shape[1]
+        expected_bands = model_w.shape[1]
+        raise ValueError(
+            f"Band-count mismatch: checkpoint was trained on {ckpt_bands} input bands "
+            f"but dataset '{dataset_name}' provides {expected_bands} "
+            f"({specs['hsi_channels']} HSI + {specs['aux_channels']} aux). "
+            f"The channel tokenizer cannot load and would be left randomly initialized. "
+            f"This usually means the checkpoint and --dataset don't match "
+            f"(e.g. a Trento checkpoint evaluated on Houston). "
+            f"Set --dataset to the dataset this checkpoint was pretrained on."
+        )
 
     compatible_state = {}
     shape_mismatches = []
@@ -530,6 +556,7 @@ def run_single_seed(args, seed, device, dataset, model, dataset_name):
         num_episodes=args.num_episodes,
         seed=seed
     )
+    args.n_way = sampler.n_way
 
     logger.info(f"[Seed {seed}] Sampler: {args.n_way}-way {args.k_shot}-shot, {args.num_episodes} episodes")
 
@@ -647,9 +674,46 @@ def generate_plots(results, dataset_name, n_way, k_shot, output_dir,
     logger.info(f"All plots saved to {output_dir}")
 
 
+def _resolve_eval_device(requested: str, cpu_flag: bool) -> str:
+    """Resolve the evaluation device. Mirrors the pretrain contract:
+      - cpu_flag True or requested 'cpu'  -> 'cpu'
+      - 'auto'                            -> 'cuda:0' if CUDA, else 'cpu'
+      - 'cuda'                            -> 'cuda:0' (must be available)
+      - 'cuda:N'                          -> that index (must be valid)
+    Raises if CUDA is requested but unavailable / out of range.
+    """
+    if cpu_flag or requested == "cpu":
+        return "cpu"
+    if requested == "auto":
+        return "cuda:0" if torch.cuda.is_available() else "cpu"
+    if requested == "cuda":
+        if not torch.cuda.is_available():
+            raise RuntimeError("device='cuda' but CUDA is not available.")
+        return "cuda:0"
+    if requested.startswith("cuda:"):
+        if not torch.cuda.is_available():
+            raise RuntimeError(f"device={requested!r} but CUDA is not available.")
+        idx = int(requested.split(":", 1)[1])
+        count = torch.cuda.device_count()
+        if idx < 0 or idx >= count:
+            raise RuntimeError(
+                f"device={requested!r} but only {count} CUDA device(s) visible "
+                f"(valid indices: 0..{count - 1})."
+            )
+        return requested
+    raise RuntimeError(
+        f"Unrecognised device={requested!r}. Expected 'cuda', 'cuda:N', 'auto', or 'cpu'."
+    )
+
+
 def main(args):
-    device = "cuda" if torch.cuda.is_available() and not args.cpu else "cpu"
-    logger.info(f"Using device: {device}")
+    requested = getattr(args, "device", "auto") or "auto"
+    device = _resolve_eval_device(requested, getattr(args, "cpu", False))
+    if device.startswith("cuda"):
+        torch.cuda.set_device(device)
+        logger.info(f"Using device: {device} ({torch.cuda.get_device_name(int(device.split(':', 1)[1]))})")
+    else:
+        logger.info(f"Using device: {device}")
 
     # Determine seeds to use
     seeds = args.seeds if args.seeds else [args.seed]
@@ -679,6 +743,13 @@ def main(args):
         "temperature": args.temperature,
         "prototype_mode": args.prototype_mode,
         "use_projection": args.use_projection,
+        "use_aux": getattr(args, "use_aux", True),
+        # Projection-head shape: read from the pretrain experiment so the
+        # checkpoint's projection weights actually load (otherwise the head
+        # silently runs with random weights). See lib/eval_runner.py.
+        "proj_hidden_dim": getattr(args, "proj_hidden_dim", None),
+        "proj_num_layers": getattr(args, "proj_num_layers", 2),
+        "proj_l2_normalize": getattr(args, "proj_l2_normalize", True),
         "pool_sigma": args.pool_sigma,
     }
 
@@ -769,7 +840,7 @@ def main(args):
 
 
 _DEFAULT_ARGS = {
-    "n_way": 5,
+    "n_way": None,
     "k_shot": 5,
     "k_query": 15,
     "num_episodes": 2000,
@@ -782,6 +853,10 @@ _DEFAULT_ARGS = {
     "lambda_factor": 2.0,
     "dropout": 0.1,
     "use_projection": True,
+    "use_aux": True,
+    "proj_hidden_dim": None,
+    "proj_num_layers": 2,
+    "proj_l2_normalize": True,
     "distance_metric": "cosine",
     "temperature": 10.0,
     "prototype_mode": "mean_features",
@@ -789,6 +864,7 @@ _DEFAULT_ARGS = {
     "seed": 42,
     "seeds": None,
     "cpu": False,
+    "device": "auto",
     "output": None,
     "output_dir": None,
     "no_plots": False,
@@ -819,7 +895,9 @@ if __name__ == "__main__":
                        choices=["houston", "trento", "muufl"])
 
     # Few-shot settings
-    parser.add_argument("--n-way", type=int, default=5)
+    parser.add_argument("--n-way", type=int, default=None,
+                       help="Number of classes per episode. Default: all "
+                            "available classes for the dataset (C-way).")
     parser.add_argument("--k-shot", type=int, default=5)
     parser.add_argument("--k-query", type=int, default=15)
     parser.add_argument("--num-episodes", type=int, default=2000)
@@ -840,6 +918,11 @@ if __name__ == "__main__":
                        help="Use projection head (default: True, matching pretraining)")
     parser.add_argument("--no-projection", dest="use_projection", action="store_false",
                        help="Disable projection head")
+    parser.add_argument("--use-aux", action="store_true", default=True,
+                       help="Concatenate aux (LiDAR) bands with HSI (default: True). "
+                            "Must match how the checkpoint was pretrained.")
+    parser.add_argument("--no-aux", dest="use_aux", action="store_false",
+                       help="HSI-only: ignore aux/LiDAR bands (for HSI-only checkpoints)")
 
     # Cosine-specific
     parser.add_argument("--distance-metric", type=str, default="cosine",
@@ -861,7 +944,10 @@ if __name__ == "__main__":
     parser.add_argument("--seeds", type=int, nargs="+", default=None,
                        help="Multiple seeds for evaluation. Runs once per seed and reports "
                             "aggregate stats. Example: --seeds 42 123 456")
-    parser.add_argument("--cpu", action="store_true")
+    parser.add_argument("--cpu", action="store_true",
+                       help="Force CPU evaluation (legacy flag; --device cpu also works).")
+    parser.add_argument("--device", type=str, default="auto",
+                       help="'cuda' | 'cuda:N' | 'auto' | 'cpu'. Ignored if --cpu is set.")
     parser.add_argument("--output", type=str, default=None)
 
     # Visualization

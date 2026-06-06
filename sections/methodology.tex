@@ -1,0 +1,125 @@
+% !TEX root = ../samplepaper.tex
+% Methodology section for the MACLEAN'26 paper (LNCS / llncs).
+% Designed to be \input{} into samplepaper.tex. Assumes the preamble already
+% loads: amsmath, amssymb, graphicx, booktabs. Citation keys are placeholders;
+% reconcile them with your .bib (he2022mae, snell2017proto, lin2023ssmae,
+% mft, hypersigma, houston2013, trento, muufl).
+%
+% NOTE: no architecture figure exists in the repo yet. A placeholder is included
+% at the end of Sec. \ref{subsec:encoder}; replace it with a real diagram.
+
+\section{Methodology}
+\label{sec:method}
+
+We study few-shot, multimodal land-cover classification and compare two
+strategies for obtaining a transferable encoder: a compact, purpose-built
+spectral--spatial fusion transformer pretrained with self-supervised masked
+modeling (the \emph{CoFFE encoder}), and a large pretrained HSI foundation model
+(HyperSIGMA) lightly adapted to each scene. Both are evaluated under an identical
+parameter-free episodic protocol, isolating representation quality from
+task-specific adaptation.
+
+\subsection{Problem setup and notation}
+\label{subsec:setup}
+A labelled example is a spatial patch centred on a pixel,
+$x = \{x^{\text{hsi}}\!\in\!\mathbb{R}^{C_h\times P\times P},\,
+        x^{\text{aux}}\!\in\!\mathbb{R}^{C_a\times P\times P}\}$,
+with patch size $P{=}11$, $C_h$ hyperspectral bands and $C_a$ auxiliary (LiDAR
+elevation) channels. Evaluation is episodic: each $N$-way $K$-shot episode draws
+a support set $S$ of $K{=}5$ labelled patches per class and a query set $Q$. A
+frozen encoder $f_\theta$ maps a patch to a feature; the class prototype is the
+mean of its support features,
+\begin{equation}
+  c_n = \frac{1}{K}\!\!\sum_{(x_i,y_i)\in S,\, y_i=n}\!\! f_\theta(x_i),
+  \label{eq:prototype}
+\end{equation}
+and a query is assigned to the nearest prototype~\cite{snell2017proto}. There is
+\textbf{no gradient finetuning at test time} and the classifier has no learnable
+parameters, so the only transferred knowledge is the pretrained encoder. We
+report Overall Accuracy (OA), Average per-class Accuracy (AA), and Cohen's
+$\kappa$ as means over episodes with $95\%$ confidence intervals; query sets are
+class-balanced, hence OA${\equiv}$AA and we report OA and~$\kappa$.
+
+\subsection{Datasets and preprocessing}
+\label{subsec:data}
+We use Houston~2013 ($C_h{=}144$, $C_a{=}1$, $15$ classes), Trento ($63,1,6$) and
+MUUFL ($64,2,11$). Each scene is cut into $11\times11$ patches centred on every
+pixel; every HSI band and auxiliary channel is min--max normalised to $[0,1]$.
+Self-supervised pretraining uses all pixels (labelled and unlabelled).
+
+\subsection{The CoFFE encoder: unified multimodal fusion}
+\label{subsec:encoder}
+The encoder performs \emph{early, token-level fusion}. HSI and auxiliary bands are
+concatenated along the channel axis and embedded jointly: a $1{\times}1$
+convolution (BatchNorm, GELU) projects the $C_h{+}C_a$ bands to dimension $D$, and
+a $3{\times}3$ convolution (BatchNorm, GELU) mixes local context before flattening
+to one token per pixel,
+\begin{equation}
+  [B, C_h{+}C_a, P, P] \;\rightarrow\; [B, D, P, P] \;\rightarrow\;
+  [B, N{=}P^2, D].
+\end{equation}
+Each of the $N{=}121$ tokens thus carries both modalities at its pixel. A learnable
+class-agnostic token is prepended, learnable positional embeddings are added, and
+the sequence is processed by a small pre-LayerNorm transformer (multi-head
+self-attention and a $4\times$ GELU MLP per block). The labelled budget is tiny, so
+we use a deliberately compact configuration ($D{=}128$, $2$ heads, $2$ layers). A
+projection-head MLP shapes the pretraining objective but is \textbf{discarded for
+evaluation}; few-shot features are taken from the encoder output. We do not use any
+class-aware patch-embedding adaptation.
+
+% TODO: replace with a real architecture diagram.
+% \begin{figure}[t]\centering
+%   \includegraphics[width=\linewidth]{figures/coffe_architecture.pdf}
+%   \caption{The CoFFE encoder and the adapted HyperSIGMA baseline.}
+%   \label{fig:arch}
+% \end{figure}
+
+\subsection{Self-supervised pretraining}
+\label{subsec:pretrain}
+The encoder is pretrained by masked reconstruction over the unified token space,
+turning unlabelled pixels into supervision. Two composable masks act on the
+concatenated input: \textbf{band masking} hides each $(\text{pixel},\text{band})$
+entry independently with probability $r_b$ (masked entries replaced by a learnable
+per-channel fill), and \textbf{spatial-token masking} replaces a fraction $r_s$ of
+pixel tokens with a learnable mask token after tokenization. A lightweight $2$-layer
+MLP decoder reconstructs the full $C_h{+}C_a$-dimensional pixel vector, and the loss
+is a masked mean-squared error over the union of the two masks,
+\begin{equation}
+  \mathcal{L} \;=\; \frac{\sum_j w_j\, m_j\, (\hat v_j - v_j)^2}{\sum_j m_j},
+  \label{eq:recon}
+\end{equation}
+with optional Gaussian center-weighting $w_j$ that emphasises the patch centre (the
+classified pixel). We study three regimes: \emph{spectral} $(r_b,r_s){=}(0.85,0)$,
+\emph{spatial} $(0,0.75)$, and \emph{combined} $(0.85,0.75)$. As a strong
+single-objective baseline we also pretrain a standard MAE~\cite{he2022mae} in the
+same token space ($75\%$ token dropping, asymmetric transformer decoder). All
+encoders use AdamW (lr $1.5{\times}10^{-4}$, cosine schedule, $100$-epoch warm-up,
+weight decay $0.05$, gradient clip $1.0$, batch $64$; $3000$ epochs on Houston,
+$1500$ on Trento/MUUFL).
+
+\subsection{Parameter-free few-shot evaluation}
+\label{subsec:eval}
+At test time the encoder is frozen and the projection head removed. Patch tokens are
+pooled (uniform or Gaussian center-weighted) to one vector per patch; prototypes
+follow Eq.~\eqref{eq:prototype}. We use a Euclidean prototype rule as the primary
+classifier, $\text{logit}_n = -\lVert z_q - c_n\rVert_2^2$, and report a cosine
+variant ($\ell_2$-normalised features, $\text{logit}_n = \tau\,\langle z_q,c_n\rangle$,
+$\tau{=}10$) for comparison; Euclidean is consistently stronger on these features.
+Episodes are $5$-shot, $N$-way ($N$ = number of classes), with $100$ queries per
+class over $1000$ episodes.
+
+\subsection{Foundation-model baseline: adapted HyperSIGMA}
+\label{subsec:hypersigma}
+As the foundation-model point of comparison we use HyperSIGMA~\cite{hypersigma}, a
+dual-branch ViT. A \emph{spatial} branch encodes a $3$-component PCA of the HSI with
+a frozen ViT-Base body; a \emph{spectral} branch pools the raw bands to $100$
+spectral tokens and encodes them with a second frozen ViT-Base; a gated
+spatial--spectral enhancement module (SEM) fuses the branches into a $512$-d
+feature. Only the randomly-initialised input/projection layers and the SEM/decoders
+are trainable; the ViT bodies remain frozen. We adapt these trainable pieces to each
+scene's unlabelled pixels by a light MAE finetuning ($75\%$ token masking,
+per-token normalised targets), with three modes---\texttt{spatial\_only},
+\texttt{spectral\_only}, and \texttt{joint\_sem} (both branches plus SEM)---and
+evaluate the corresponding feature (\texttt{fused}, \texttt{spat\_pool}, or
+\texttt{spec\_pool}) under the identical protocol of
+Section~\ref{subsec:eval}.

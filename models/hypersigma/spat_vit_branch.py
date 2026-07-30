@@ -31,6 +31,8 @@ import torch.nn.functional as F
 
 from third_party.HyperSIGMA.ImageClassification.model import SpatViT_fusion_patch
 
+from ._input_fit import fit_input
+
 logger = logging.getLogger(__name__)
 
 
@@ -46,8 +48,24 @@ _EXPECTED_DROPPED_KEYS = (
 )
 
 
-def _looks_like_dropped_key(key: str) -> bool:
-    return any(key.startswith(p) or key == p for p in _EXPECTED_DROPPED_KEYS)
+# Native-geometry ablation: build SpatViT at its pretrained
+# img_size=64/patch_size=8/in_chans=100 so ``patch_embed.proj`` and
+# ``pos_embed`` LOAD from the released MAE checkpoint (no reinit). Here we
+# keep those two keys and only drop the genuine downstream / MAE-decoder
+# extras. At patch_size=8 the upstream FPN is all parameterless
+# (Identity + MaxPool), so dropping ``fpn*`` loses nothing.
+_NATIVE_DROPPED_KEYS = (
+    "fpn1.", "fpn2.", "fpn3.", "fpn4.",
+    "cls",
+    "classifier.", "classifier1.",
+    # MAE pretraining decoder + mask token (absent from the downstream model)
+    "decoder_blocks.", "decoder_embed.", "decoder_norm.",
+    "decoder_pred.", "decoder_pos_embed", "mask_token",
+)
+
+
+def _looks_like_dropped_key(key: str, drop_keys: Tuple[str, ...] = _EXPECTED_DROPPED_KEYS) -> bool:
+    return any(key.startswith(p) or key == p for p in drop_keys)
 
 
 def _strip_state_dict_prefix(state_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
@@ -86,19 +104,40 @@ class SpatViTBranch(nn.Module):
         out_indices: Tuple[int, ...] = (3, 5, 7, 11),
         freeze_body: bool = True,
         log_dropped_keys: bool = True,
+        native_geometry: bool = False,
+        native_img_size: int = 64,
+        native_patch_size: int = 8,
+        input_fit: str = "upscale",
+        pad_anchor: str = "center",
+        interp_mode: str = "bicubic",
     ) -> None:
         super().__init__()
         self.in_chans = in_chans
-        self.new_patch_size = new_patch_size
         self.pad_to = pad_to
         self.embed_dim = embed_dim
         self.out_indices = tuple(out_indices)
 
+        # Native geometry: keep the encoder at its pretrained 64x64/patch-8
+        # layout so patch_embed.proj + pos_embed load from the checkpoint,
+        # and resize the 11x11 input up to 64x64 instead.
+        self.native_geometry = native_geometry
+        self.native_img_size = native_img_size
+        self.input_fit = input_fit
+        self.pad_anchor = pad_anchor
+        self.interp_mode = interp_mode
+        if native_geometry:
+            eff_img, eff_patch = native_img_size, native_patch_size
+        else:
+            eff_img, eff_patch = pad_to, new_patch_size
+        # ``new_patch_size`` is passed into forward_features to build the
+        # deformable token grid, so it must reflect the effective patch.
+        self.new_patch_size = eff_patch
+
         # Construct upstream model directly at the target geometry.
         self.model = SpatViT_fusion_patch.SpatViT(
-            img_size=pad_to,
+            img_size=eff_img,
             in_chans=in_chans,
-            patch_size=new_patch_size,
+            patch_size=eff_patch,
             drop_path_rate=0.1,
             out_indices=list(out_indices),
             embed_dim=embed_dim,
@@ -116,7 +155,7 @@ class SpatViTBranch(nn.Module):
         )
 
         # Sanity check on the freshly-built encoder.
-        assert self.model.patch_embed.num_patches == (pad_to // new_patch_size) ** 2, (
+        assert self.model.patch_embed.num_patches == (eff_img // eff_patch) ** 2, (
             "SpatViT patch_embed num_patches mismatch"
         )
         assert self.model.pos_embed is not None and self.model.pos_embed.shape == (
@@ -127,6 +166,7 @@ class SpatViTBranch(nn.Module):
         self._unexpected_keys: List[str] = []
         self._missing_keys: List[str] = []
         self.pos_embed_source = "reinit"
+        self.patch_embed_source = "reinit"
 
         if pretrained_path is not None:
             self._load_checkpoint(pretrained_path)
@@ -148,24 +188,56 @@ class SpatViTBranch(nn.Module):
         # Inspect pos_embed BEFORE dropping it.
         ckpt_pos_embed = state_dict.get("pos_embed")
 
+        drop_keys = _NATIVE_DROPPED_KEYS if self.native_geometry else _EXPECTED_DROPPED_KEYS
         kept: Dict[str, torch.Tensor] = {}
         for k, v in state_dict.items():
-            if _looks_like_dropped_key(k):
+            if _looks_like_dropped_key(k, drop_keys):
                 self._dropped_keys.append(k)
                 continue
             kept[k] = v
 
         missing, unexpected = self.model.load_state_dict(kept, strict=False)
-        self._missing_keys = [k for k in missing if not _looks_like_dropped_key(k)]
+        self._missing_keys = [k for k in missing if not _looks_like_dropped_key(k, drop_keys)]
         self._unexpected_keys = list(unexpected)
 
-        # Re-init patch_embed.proj (kernel changed).
-        nn.init.trunc_normal_(self.model.patch_embed.proj.weight, std=0.02)
-        if self.model.patch_embed.proj.bias is not None:
-            nn.init.zeros_(self.model.patch_embed.proj.bias)
+        if self.native_geometry:
+            # Native geometry matches the checkpoint: patch_embed.proj and
+            # pos_embed are kept above and loaded by load_state_dict — do NOT
+            # reinit them.
+            pe_bad = any(
+                "patch_embed.proj" in k
+                for k in (self._missing_keys + self._unexpected_keys)
+            )
+            self.patch_embed_source = "reinit" if pe_bad else "loaded"
+            self._load_pos_embed(ckpt_pos_embed)
+            self._assert_native_loaded()
+        else:
+            # Re-init patch_embed.proj (kernel changed).
+            nn.init.trunc_normal_(self.model.patch_embed.proj.weight, std=0.02)
+            if self.model.patch_embed.proj.bias is not None:
+                nn.init.zeros_(self.model.patch_embed.proj.bias)
+            self.patch_embed_source = "reinit"
+            # pos_embed: load-then-interp-then-reinit decision tree.
+            self._load_pos_embed(ckpt_pos_embed)
 
-        # pos_embed: load-then-interp-then-reinit decision tree.
-        self._load_pos_embed(ckpt_pos_embed)
+    def _assert_native_loaded(self) -> None:
+        """Fail loudly if the native geometry did not actually load the
+        pretrained input projection / position embedding."""
+        if self.pos_embed_source != "loaded":
+            raise RuntimeError(
+                "[HyperSIGMA][native] SpatViT pos_embed did not load cleanly "
+                f"(source={self.pos_embed_source!r}); native_img_size/"
+                "native_patch_size likely do not match the checkpoint "
+                f"(pos_embed shape {tuple(self.model.pos_embed.shape)})."
+            )
+        if self.patch_embed_source != "loaded":
+            raise RuntimeError(
+                "[HyperSIGMA][native] SpatViT patch_embed.proj did not load "
+                "cleanly; in_chans must equal the pretrained channel count "
+                "(100) and native_patch_size must match the checkpoint kernel "
+                f"(got in_chans={self.in_chans}, patch={self.new_patch_size}, "
+                f"proj.weight shape {tuple(self.model.patch_embed.proj.weight.shape)})."
+            )
 
     def _load_pos_embed(self, ckpt_pos_embed) -> None:
         target = self.model.pos_embed  # [1, num_patches, embed_dim]
@@ -247,9 +319,16 @@ class SpatViTBranch(nn.Module):
             ``pad_to=12`` / ``new_patch_size=3`` each is ``[B, 768, 4, 4]``.
         """
         # forward_features returns [original_img, feat_a, feat_b, feat_c, feat_d]
-        pad_right = self.pad_to - x.shape[-1]
-        pad_bottom = self.pad_to - x.shape[-2]
-        if pad_right or pad_bottom:
-            x = F.pad(x, (0, pad_right, 0, pad_bottom), mode="reflect")
+        if self.native_geometry:
+            # Resize the small patch up to the native input size (64x64).
+            x = fit_input(
+                x, self.native_img_size, self.input_fit,
+                interp_mode=self.interp_mode, pad_anchor=self.pad_anchor,
+            )
+        else:
+            pad_right = self.pad_to - x.shape[-1]
+            pad_bottom = self.pad_to - x.shape[-2]
+            if pad_right or pad_bottom:
+                x = F.pad(x, (0, pad_right, 0, pad_bottom), mode="reflect")
         feats = self.model.forward_features(x, self.new_patch_size)
         return list(feats[1:])

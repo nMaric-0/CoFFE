@@ -32,6 +32,8 @@ import torch.nn.functional as F
 
 from third_party.HyperSIGMA.ImageClassification.model import SpecViT_fusion
 
+from ._input_fit import fit_input
+
 logger = logging.getLogger(__name__)
 
 
@@ -48,8 +50,22 @@ _DROPPED_PREFIXES = (
 )
 
 
-def _looks_like_dropped_key(key: str) -> bool:
-    return any(key.startswith(p) or key == p for p in _DROPPED_PREFIXES)
+# Native-geometry ablation: build SpecViT at its pretrained img_size=64 so
+# ``spat_map`` (Linear(4096, 768)) and ``pos_embed`` LOAD from the released
+# MAE checkpoint (no reinit). Keep those two; drop only the genuine
+# downstream-aux layers and the MAE-decoder / mask token extras.
+_NATIVE_DROPPED_PREFIXES = (
+    "conv_q.", "conv_k.", "conv_v.",
+    "l1.",
+    "cls",
+    "classifier.",
+    "decoder_blocks.", "decoder_embed.", "decoder_norm.",
+    "decoder_pred.", "decoder_pos_embed", "mask_token",
+)
+
+
+def _looks_like_dropped_key(key: str, drop_keys: Tuple[str, ...] = _DROPPED_PREFIXES) -> bool:
+    return any(key.startswith(p) or key == p for p in drop_keys)
 
 
 def _strip_state_dict_prefix(state_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
@@ -87,17 +103,31 @@ class SpecViTBranch(nn.Module):
         out_indices: Tuple[int, ...] = (3, 5, 7, 11),
         freeze_body: bool = True,
         log_dropped_keys: bool = True,
+        native_geometry: bool = False,
+        native_img_size: int = 64,
+        input_fit: str = "upscale",
+        pad_anchor: str = "center",
+        interp_mode: str = "bicubic",
     ) -> None:
         super().__init__()
         self.in_chans = in_chans
-        self.img_size = img_size
         self.num_tokens = num_tokens
         self.embed_dim = embed_dim
         self.out_indices = tuple(out_indices)
 
+        # Native geometry: keep the encoder at its pretrained img_size=64 so
+        # spat_map (Linear(4096, 768)) + pos_embed load from the checkpoint,
+        # and resize the 11x11 input up to 64x64 instead.
+        self.native_geometry = native_geometry
+        self.input_fit = input_fit
+        self.pad_anchor = pad_anchor
+        self.interp_mode = interp_mode
+        eff_img = native_img_size if native_geometry else img_size
+        self.img_size = eff_img
+
         self.model = SpecViT_fusion.SpectralVisionTransformer(
             NUM_TOKENS=num_tokens,
-            img_size=img_size,
+            img_size=eff_img,
             in_chans=in_chans,
             drop_path_rate=0.1,
             out_indices=list(out_indices),
@@ -116,7 +146,7 @@ class SpecViTBranch(nn.Module):
         )
 
         # Sanity check.
-        assert self.model.spat_map.weight.shape == (embed_dim, img_size * img_size), (
+        assert self.model.spat_map.weight.shape == (embed_dim, eff_img * eff_img), (
             f"unexpected spat_map shape {tuple(self.model.spat_map.weight.shape)}"
         )
         assert self.model.pos_embed is not None and self.model.pos_embed.shape == (
@@ -127,6 +157,7 @@ class SpecViTBranch(nn.Module):
         self._unexpected_keys: List[str] = []
         self._missing_keys: List[str] = []
         self.pos_embed_source: str = "reinit"
+        self.spat_map_source: str = "reinit"
 
         if pretrained_path is not None:
             self._load_checkpoint(pretrained_path)
@@ -148,24 +179,53 @@ class SpecViTBranch(nn.Module):
         # Inspect pos_embed BEFORE we drop it.
         ckpt_pos_embed = state_dict.get("pos_embed")
 
+        drop_keys = _NATIVE_DROPPED_PREFIXES if self.native_geometry else _DROPPED_PREFIXES
         kept: Dict[str, torch.Tensor] = {}
         for k, v in state_dict.items():
-            if _looks_like_dropped_key(k):
+            if _looks_like_dropped_key(k, drop_keys):
                 self._dropped_keys.append(k)
                 continue
             kept[k] = v
 
         missing, unexpected = self.model.load_state_dict(kept, strict=False)
-        self._missing_keys = [k for k in missing if not _looks_like_dropped_key(k)]
+        self._missing_keys = [k for k in missing if not _looks_like_dropped_key(k, drop_keys)]
         self._unexpected_keys = list(unexpected)
 
-        # Re-init spat_map (img_size-dependent linear projection).
-        nn.init.trunc_normal_(self.model.spat_map.weight, std=0.02)
-        if self.model.spat_map.bias is not None:
-            nn.init.zeros_(self.model.spat_map.bias)
+        if self.native_geometry:
+            # Native geometry matches the checkpoint: spat_map + pos_embed are
+            # kept above and loaded by load_state_dict — do NOT reinit them.
+            sm_bad = any(
+                "spat_map" in k for k in (self._missing_keys + self._unexpected_keys)
+            )
+            self.spat_map_source = "reinit" if sm_bad else "loaded"
+            self._load_pos_embed(ckpt_pos_embed)
+            self._assert_native_loaded()
+        else:
+            # Re-init spat_map (img_size-dependent linear projection).
+            nn.init.trunc_normal_(self.model.spat_map.weight, std=0.02)
+            if self.model.spat_map.bias is not None:
+                nn.init.zeros_(self.model.spat_map.bias)
+            self.spat_map_source = "reinit"
+            # pos_embed: load-then-interp-then-reinit.
+            self._load_pos_embed(ckpt_pos_embed)
 
-        # pos_embed: load-then-interp-then-reinit.
-        self._load_pos_embed(ckpt_pos_embed)
+    def _assert_native_loaded(self) -> None:
+        """Fail loudly if the native geometry did not actually load the
+        pretrained spat_map / position embedding."""
+        if self.pos_embed_source != "loaded":
+            raise RuntimeError(
+                "[HyperSIGMA][native] SpecViT pos_embed did not load cleanly "
+                f"(source={self.pos_embed_source!r}); num_tokens likely does not "
+                f"match the checkpoint (pos_embed shape {tuple(self.model.pos_embed.shape)})."
+            )
+        if self.spat_map_source != "loaded":
+            raise RuntimeError(
+                "[HyperSIGMA][native] SpecViT spat_map did not load cleanly; "
+                "native_img_size must satisfy native_img_size**2 == checkpoint "
+                "spat_map in_features (4096 -> img_size 64) "
+                f"(got img_size={self.img_size}, spat_map.weight shape "
+                f"{tuple(self.model.spat_map.weight.shape)})."
+            )
 
     def _load_pos_embed(self, ckpt_pos_embed: Optional[torch.Tensor]) -> None:
         target_shape = (1, self.num_tokens, self.embed_dim)
@@ -252,4 +312,11 @@ class SpecViTBranch(nn.Module):
         ``l1`` projection applied (768 -> 128); the rest are the raw
         post-block embeddings of shape ``[B, num_tokens, embed_dim]``.
         """
+        if self.native_geometry:
+            # Resize the small patch up to the native input size (64x64) so
+            # spat_map's 4096 in-features match.
+            x = fit_input(
+                x, self.img_size, self.input_fit,
+                interp_mode=self.interp_mode, pad_anchor=self.pad_anchor,
+            )
         return list(self.model.forward_features(x))

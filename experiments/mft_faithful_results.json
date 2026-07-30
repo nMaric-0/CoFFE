@@ -1,0 +1,1848 @@
+{
+  "generated_at": "2026-06-12T19:45:08",
+  "experiments_root": "experiments",
+  "selector": "mft_original_{dataset}_{variant}_faithful",
+  "datasets": [
+    "houston",
+    "muufl",
+    "trento"
+  ],
+  "variants": [
+    "spatial",
+    "mae"
+  ],
+  "num_experiments": 6,
+  "num_evaluations": 6,
+  "missing": [],
+  "summary": [
+    {
+      "experiment": "mft_original_houston_spatial_faithful",
+      "dataset": "houston",
+      "variant": "spatial",
+      "eval_name": "mft_original_houston_spatial_faithful_eval",
+      "model_type": "MFTOriginalCosine",
+      "distance_metric": "euclidean",
+      "n_way": 15,
+      "k_shot": 5,
+      "k_query": 100,
+      "num_episodes": 1000,
+      "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_houston_spatial_faithful/checkpoints/checkpoint_epoch_950.pth",
+      "OA_mean": 67.49253333333333,
+      "OA_std": 2.9914288343718143,
+      "OA_ci_95": 0.18563217593629494,
+      "AA_mean": 67.49253333333333,
+      "AA_std": 2.9914288343718143,
+      "AA_ci_95": 0.18563217593629494,
+      "Kappa_mean": 65.17057142857144,
+      "Kappa_std": 3.205102322541229,
+      "Kappa_ci_95": 0.1988916170746017
+    },
+    {
+      "experiment": "mft_original_houston_mae_faithful",
+      "dataset": "houston",
+      "variant": "mae",
+      "eval_name": "mft_original_houston_mae_faithful_eval",
+      "model_type": "MFTOriginalCosine",
+      "distance_metric": "euclidean",
+      "n_way": 15,
+      "k_shot": 5,
+      "k_query": 100,
+      "num_episodes": 1000,
+      "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_houston_mae_faithful/checkpoints/checkpoint_epoch_950.pth",
+      "OA_mean": 51.967533333333336,
+      "OA_std": 2.997455091684722,
+      "OA_ci_95": 0.1860061334394431,
+      "AA_mean": 51.967533333333336,
+      "AA_std": 2.997455091684722,
+      "AA_ci_95": 0.1860061334394431,
+      "Kappa_mean": 48.53664285714286,
+      "Kappa_std": 3.2115590268050593,
+      "Kappa_ci_95": 0.19929228582797476
+    },
+    {
+      "experiment": "mft_original_muufl_spatial_faithful",
+      "dataset": "muufl",
+      "variant": "spatial",
+      "eval_name": "mft_original_muufl_spatial_faithful_eval",
+      "model_type": "MFTOriginalCosine",
+      "distance_metric": "euclidean",
+      "n_way": 11,
+      "k_shot": 5,
+      "k_query": 100,
+      "num_episodes": 1000,
+      "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_muufl_spatial_faithful/checkpoints/checkpoint_epoch_950.pth",
+      "OA_mean": 59.052454545454545,
+      "OA_std": 3.4225480708852962,
+      "OA_ci_95": 0.212385144632205,
+      "AA_mean": 59.052454545454545,
+      "AA_std": 3.4225480708852962,
+      "AA_ci_95": 0.212385144632205,
+      "Kappa_mean": 54.957699999999996,
+      "Kappa_std": 3.764802877973826,
+      "Kappa_ci_95": 0.2336236590954255
+    },
+    {
+      "experiment": "mft_original_muufl_mae_faithful",
+      "dataset": "muufl",
+      "variant": "mae",
+      "eval_name": "mft_original_muufl_mae_faithful_eval",
+      "model_type": "MFTOriginalCosine",
+      "distance_metric": "euclidean",
+      "n_way": 11,
+      "k_shot": 5,
+      "k_query": 100,
+      "num_episodes": 1000,
+      "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_muufl_mae_faithful/checkpoints/checkpoint_epoch_950.pth",
+      "OA_mean": 45.773909090909086,
+      "OA_std": 2.5365002097475937,
+      "OA_ci_95": 0.1574017231458531,
+      "AA_mean": 45.77390909090909,
+      "AA_std": 2.5365002097475937,
+      "AA_ci_95": 0.1574017231458531,
+      "Kappa_mean": 40.3513,
+      "Kappa_std": 2.790150230722353,
+      "Kappa_ci_95": 0.1731418954604384
+    },
+    {
+      "experiment": "mft_original_trento_spatial_faithful",
+      "dataset": "trento",
+      "variant": "spatial",
+      "eval_name": "mft_original_trento_spatial_faithful_eval",
+      "model_type": "MFTOriginalCosine",
+      "distance_metric": "euclidean",
+      "n_way": 6,
+      "k_shot": 5,
+      "k_query": 100,
+      "num_episodes": 1000,
+      "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_trento_spatial_faithful/checkpoints/checkpoint_epoch_950.pth",
+      "OA_mean": 88.224,
+      "OA_std": 3.1282035313152696,
+      "OA_ci_95": 0.1941196867588523,
+      "AA_mean": 88.224,
+      "AA_std": 3.1282035313152714,
+      "AA_ci_95": 0.1941196867588524,
+      "Kappa_mean": 85.86880000000001,
+      "Kappa_std": 3.753844237578325,
+      "Kappa_ci_95": 0.23294362411062286
+    },
+    {
+      "experiment": "mft_original_trento_mae_faithful",
+      "dataset": "trento",
+      "variant": "mae",
+      "eval_name": "mft_original_trento_mae_faithful_eval",
+      "model_type": "MFTOriginalCosine",
+      "distance_metric": "euclidean",
+      "n_way": 6,
+      "k_shot": 5,
+      "k_query": 100,
+      "num_episodes": 1000,
+      "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_trento_mae_faithful/checkpoints/checkpoint_epoch_950.pth",
+      "OA_mean": 81.04816666666666,
+      "OA_std": 5.04814454087396,
+      "OA_ci_95": 0.31326102255751903,
+      "AA_mean": 81.04816666666666,
+      "AA_std": 5.048144540873959,
+      "AA_ci_95": 0.313261022557519,
+      "Kappa_mean": 77.25780000000002,
+      "Kappa_std": 6.05777344904875,
+      "Kappa_ci_95": 0.37591322706902275
+    }
+  ],
+  "experiments": {
+    "mft_original_houston_spatial_faithful": {
+      "name": "mft_original_houston_spatial_faithful",
+      "dataset": "houston",
+      "variant": "spatial",
+      "path": "experiments/mft_original_houston_spatial_faithful",
+      "metadata": {
+        "base_config_path": "configs/pretrain/mft_original_houston_spatial.yaml",
+        "cuda_device_name": "NVIDIA GeForce RTX 4090",
+        "description": "'Spatial' masking+loss pretraining (spatial_mask_ratio=0.75, MLP decoder, center-weighted MSE, no projection head) of the original MFT (channel tokenization, mCrossPA) on houston; HSI+LiDAR.",
+        "finished_at": "2026-06-10T23:14:06",
+        "git_sha": "08b592987d56d1d94aace857ba6a0d200215c7ae",
+        "history": {
+          "best_val_loss": Infinity,
+          "epochs_run": 3000,
+          "final_train_loss": 0.00015585570375143518
+        },
+        "name": "mft_original_houston_spatial_faithful",
+        "overrides": {
+          "hardware": {
+            "device": "cuda:0"
+          }
+        },
+        "resolved_device": "cuda:0",
+        "started_at": "2026-06-10T21:08:04",
+        "status": "complete",
+        "wallclock_seconds": 7562.25
+      },
+      "config": {
+        "model": {
+          "name": "mft_original",
+          "embed_dim": 64,
+          "num_heads": 8,
+          "num_layers": 2,
+          "mlp_dim": 512,
+          "dropout": 0.1,
+          "attention_type": "mcross",
+          "use_projection": false,
+          "use_aux": true
+        },
+        "data": {
+          "patch_size": 11,
+          "num_workers": 4
+        },
+        "pretrain": {
+          "datasets": [
+            "houston"
+          ],
+          "objective": "enhanced",
+          "epochs": 3000,
+          "batch_size": 64,
+          "val_split": 0.0,
+          "lr": 0.00015,
+          "min_lr": 1e-06,
+          "weight_decay": 0.05,
+          "warmup_epochs": 100,
+          "grad_clip": 1.0,
+          "band_mask_ratio": 0.0,
+          "spatial_mask_ratio": 0.75,
+          "decoder_hidden_dim": 256,
+          "recon_center_sigma": 1.0,
+          "pool_center_sigma": 1.0,
+          "save_interval": 50,
+          "val_interval": 50000,
+          "log_interval": 1,
+          "use_amp": false
+        },
+        "paths": {
+          "data_root": "./data/raw",
+          "checkpoint_dir": "./checkpoints/pretrained/mft_original_houston_spatial",
+          "log_dir": "./logs/pretrain/mft_original_houston_spatial"
+        },
+        "hardware": {
+          "device": "cuda:0",
+          "seed": 42,
+          "deterministic": true
+        }
+      },
+      "num_evaluations": 1,
+      "evaluations": {
+        "mft_original_houston_spatial_faithful_eval": {
+          "config": {
+            "arch_from_pretrain": {
+              "attention_type": "mcross",
+              "dropout": 0.1,
+              "embed_dim": 64,
+              "mlp_dim": 512,
+              "name": "mft_original",
+              "num_heads": 8,
+              "num_layers": 2,
+              "patch_size": 11,
+              "use_aux": true,
+              "use_projection": false
+            },
+            "attention_type": "mcross",
+            "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_houston_spatial_faithful/checkpoints/checkpoint_epoch_950.pth",
+            "dataset": "houston",
+            "device": "cuda:0",
+            "distance_metric": "euclidean",
+            "dropout": 0.1,
+            "embed_dim": 64,
+            "epoch": null,
+            "k_query": 100,
+            "k_shot": 5,
+            "max_tsne_samples": 100,
+            "mlp_dim": 512,
+            "name": "mft_original",
+            "num_episodes": 1000,
+            "num_example_episodes": 1,
+            "num_heads": 8,
+            "num_layers": 2,
+            "patch_size": 11,
+            "pool_sigma": null,
+            "prototype_mode": "mean_features",
+            "seed": 42,
+            "split": "all",
+            "temperature": 10.0,
+            "use_aux": true,
+            "use_projection": false
+          },
+          "metadata": {
+            "eval_name": "mft_original_houston_spatial_faithful_eval",
+            "experiment": "mft_original_houston_spatial_faithful",
+            "finished_at": "2026-06-10T23:16:00",
+            "git_sha": "08b592987d56d1d94aace857ba6a0d200215c7ae",
+            "started_at": "2026-06-10T23:14:06",
+            "status": "complete",
+            "summary": {
+              "AA": {
+                "ci_95": 0.18563217593629494,
+                "mean": 67.49253333333333,
+                "std": 2.9914288343718143
+              },
+              "Kappa": {
+                "ci_95": 0.1988916170746017,
+                "mean": 65.17057142857144,
+                "std": 3.205102322541229
+              },
+              "OA": {
+                "ci_95": 0.18563217593629494,
+                "mean": 67.49253333333333,
+                "std": 2.9914288343718143
+              },
+              "num_episodes": 1000
+            },
+            "wallclock_seconds": 113.27
+          },
+          "results": {
+            "model_type": "MFTOriginalCosine",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_houston_spatial_faithful/checkpoints/checkpoint_epoch_950.pth",
+            "dataset": "houston",
+            "split": "all",
+            "n_way": 15,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 1000,
+            "seed": 42,
+            "OA": {
+              "mean": 67.49253333333333,
+              "std": 2.9914288343718143,
+              "ci_95": 0.18563217593629494
+            },
+            "AA": {
+              "mean": 67.49253333333333,
+              "std": 2.9914288343718143,
+              "ci_95": 0.18563217593629494
+            },
+            "Kappa": {
+              "mean": 65.17057142857144,
+              "std": 3.205102322541229,
+              "ci_95": 0.1988916170746017
+            },
+            "per_class": {
+              "1": {
+                "accuracy": 76.665,
+                "pooled_accuracy": 76.665,
+                "std": 23.65237355953943,
+                "ci_95": 1.4677406059159712,
+                "total_samples": 100000,
+                "correct_samples": 76665
+              },
+              "2": {
+                "accuracy": 72.09,
+                "pooled_accuracy": 72.09,
+                "std": 18.999471045268603,
+                "ci_95": 1.1790062030716764,
+                "total_samples": 100000,
+                "correct_samples": 72090
+              },
+              "3": {
+                "accuracy": 95.647,
+                "pooled_accuracy": 95.647,
+                "std": 5.2033057761388575,
+                "ci_95": 0.32288950423565155,
+                "total_samples": 100000,
+                "correct_samples": 95647
+              },
+              "4": {
+                "accuracy": 85.552,
+                "pooled_accuracy": 85.55199999999999,
+                "std": 8.76739961448091,
+                "ci_95": 0.5440582269712909,
+                "total_samples": 100000,
+                "correct_samples": 85552
+              },
+              "5": {
+                "accuracy": 94.812,
+                "pooled_accuracy": 94.812,
+                "std": 5.190438902443607,
+                "ci_95": 0.32209105443330205,
+                "total_samples": 100000,
+                "correct_samples": 94812
+              },
+              "6": {
+                "accuracy": 69.632,
+                "pooled_accuracy": 69.632,
+                "std": 13.449036247999334,
+                "ci_95": 0.8345757165526851,
+                "total_samples": 100000,
+                "correct_samples": 69632
+              },
+              "7": {
+                "accuracy": 64.67,
+                "pooled_accuracy": 64.67,
+                "std": 15.507775469099364,
+                "ci_95": 0.9623301317361722,
+                "total_samples": 100000,
+                "correct_samples": 64670
+              },
+              "8": {
+                "accuracy": 36.184,
+                "pooled_accuracy": 36.184,
+                "std": 11.532221988844995,
+                "ci_95": 0.7156284102674403,
+                "total_samples": 100000,
+                "correct_samples": 36184
+              },
+              "9": {
+                "accuracy": 63.757,
+                "pooled_accuracy": 63.757,
+                "std": 15.841968027994502,
+                "ci_95": 0.983068345922187,
+                "total_samples": 100000,
+                "correct_samples": 63757
+              },
+              "10": {
+                "accuracy": 30.406,
+                "pooled_accuracy": 30.406,
+                "std": 11.487347996818064,
+                "ci_95": 0.7128437687987234,
+                "total_samples": 100000,
+                "correct_samples": 30406
+              },
+              "11": {
+                "accuracy": 47.979,
+                "pooled_accuracy": 47.979,
+                "std": 13.174845691695975,
+                "ci_95": 0.8175609077753725,
+                "total_samples": 100000,
+                "correct_samples": 47979
+              },
+              "12": {
+                "accuracy": 37.736,
+                "pooled_accuracy": 37.736,
+                "std": 10.019795606697773,
+                "ci_95": 0.6217752665671643,
+                "total_samples": 100000,
+                "correct_samples": 37736
+              },
+              "13": {
+                "accuracy": 44.154,
+                "pooled_accuracy": 44.153999999999996,
+                "std": 10.515620951707987,
+                "ci_95": 0.6525435524849332,
+                "total_samples": 100000,
+                "correct_samples": 44154
+              },
+              "14": {
+                "accuracy": 95.793,
+                "pooled_accuracy": 95.79299999999999,
+                "std": 5.741093188583512,
+                "ci_95": 0.3562617330569382,
+                "total_samples": 100000,
+                "correct_samples": 95793
+              },
+              "15": {
+                "accuracy": 97.311,
+                "pooled_accuracy": 97.311,
+                "std": 2.9567345163203274,
+                "ci_95": 0.18347923093605867,
+                "total_samples": 100000,
+                "correct_samples": 97311
+              }
+            },
+            "class_names": [
+              "Healthy grass",
+              "Stressed grass",
+              "Synthetic grass",
+              "Trees",
+              "Soil",
+              "Water",
+              "Residential",
+              "Commercial",
+              "Road",
+              "Highway",
+              "Railway",
+              "Parking Lot 1",
+              "Parking Lot 2",
+              "Tennis Court",
+              "Running Track"
+            ]
+          },
+          "path": "experiments/mft_original_houston_spatial_faithful/evaluations/mft_original_houston_spatial_faithful_eval"
+        }
+      }
+    },
+    "mft_original_houston_mae_faithful": {
+      "name": "mft_original_houston_mae_faithful",
+      "dataset": "houston",
+      "variant": "mae",
+      "path": "experiments/mft_original_houston_mae_faithful",
+      "metadata": {
+        "base_config_path": "configs/pretrain/mft_original_houston_mae.yaml",
+        "cuda_device_name": "NVIDIA GeForce RTX 4090",
+        "description": "Standard-MAE pretraining (mask_ratio=0.75, transformer decoder, no projection head) of the original MFT (channel tokenization, mCrossPA) on houston; HSI+LiDAR.",
+        "finished_at": "2026-06-11T01:23:02",
+        "git_sha": "08b592987d56d1d94aace857ba6a0d200215c7ae",
+        "history": {
+          "best_val_loss": Infinity,
+          "epochs_run": 3000,
+          "final_train_loss": 0.0075785631978581855
+        },
+        "name": "mft_original_houston_mae_faithful",
+        "overrides": {
+          "hardware": {
+            "device": "cuda:0"
+          }
+        },
+        "resolved_device": "cuda:0",
+        "started_at": "2026-06-10T21:07:34",
+        "status": "complete",
+        "wallclock_seconds": 15328.24
+      },
+      "config": {
+        "model": {
+          "name": "mft_original",
+          "embed_dim": 64,
+          "num_heads": 8,
+          "num_layers": 2,
+          "mlp_dim": 512,
+          "dropout": 0.1,
+          "attention_type": "mcross",
+          "use_projection": false,
+          "use_aux": true
+        },
+        "data": {
+          "patch_size": 11,
+          "num_workers": 4
+        },
+        "pretrain": {
+          "datasets": [
+            "houston"
+          ],
+          "objective": "mae",
+          "epochs": 3000,
+          "batch_size": 64,
+          "val_split": 0.0,
+          "lr": 0.00015,
+          "min_lr": 1e-06,
+          "weight_decay": 0.05,
+          "warmup_epochs": 100,
+          "grad_clip": 1.0,
+          "mask_ratio": 0.75,
+          "decoder_dim": 64,
+          "decoder_depth": 4,
+          "decoder_heads": 4,
+          "norm_pix_loss": true,
+          "recon_center_sigma": null,
+          "save_interval": 50,
+          "val_interval": 50000,
+          "log_interval": 1,
+          "use_amp": false
+        },
+        "paths": {
+          "data_root": "./data/raw",
+          "checkpoint_dir": "./checkpoints/pretrained/mft_original_houston_mae",
+          "log_dir": "./logs/pretrain/mft_original_houston_mae"
+        },
+        "hardware": {
+          "device": "cuda:0",
+          "seed": 42,
+          "deterministic": true
+        }
+      },
+      "num_evaluations": 1,
+      "evaluations": {
+        "mft_original_houston_mae_faithful_eval": {
+          "config": {
+            "arch_from_pretrain": {
+              "attention_type": "mcross",
+              "dropout": 0.1,
+              "embed_dim": 64,
+              "mlp_dim": 512,
+              "name": "mft_original",
+              "num_heads": 8,
+              "num_layers": 2,
+              "patch_size": 11,
+              "use_aux": true,
+              "use_projection": false
+            },
+            "attention_type": "mcross",
+            "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_houston_mae_faithful/checkpoints/checkpoint_epoch_950.pth",
+            "dataset": "houston",
+            "device": "cuda:0",
+            "distance_metric": "euclidean",
+            "dropout": 0.1,
+            "embed_dim": 64,
+            "epoch": null,
+            "k_query": 100,
+            "k_shot": 5,
+            "max_tsne_samples": 100,
+            "mlp_dim": 512,
+            "name": "mft_original",
+            "num_episodes": 1000,
+            "num_example_episodes": 1,
+            "num_heads": 8,
+            "num_layers": 2,
+            "patch_size": 11,
+            "pool_sigma": null,
+            "prototype_mode": "mean_features",
+            "seed": 42,
+            "split": "all",
+            "temperature": 10.0,
+            "use_aux": true,
+            "use_projection": false
+          },
+          "metadata": {
+            "eval_name": "mft_original_houston_mae_faithful_eval",
+            "experiment": "mft_original_houston_mae_faithful",
+            "finished_at": "2026-06-11T01:24:55",
+            "git_sha": "08b592987d56d1d94aace857ba6a0d200215c7ae",
+            "started_at": "2026-06-11T01:23:02",
+            "status": "complete",
+            "summary": {
+              "AA": {
+                "ci_95": 0.1860061334394431,
+                "mean": 51.967533333333336,
+                "std": 2.997455091684722
+              },
+              "Kappa": {
+                "ci_95": 0.19929228582797476,
+                "mean": 48.53664285714286,
+                "std": 3.2115590268050593
+              },
+              "OA": {
+                "ci_95": 0.1860061334394431,
+                "mean": 51.967533333333336,
+                "std": 2.997455091684722
+              },
+              "num_episodes": 1000
+            },
+            "wallclock_seconds": 112.07
+          },
+          "results": {
+            "model_type": "MFTOriginalCosine",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_houston_mae_faithful/checkpoints/checkpoint_epoch_950.pth",
+            "dataset": "houston",
+            "split": "all",
+            "n_way": 15,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 1000,
+            "seed": 42,
+            "OA": {
+              "mean": 51.967533333333336,
+              "std": 2.997455091684722,
+              "ci_95": 0.1860061334394431
+            },
+            "AA": {
+              "mean": 51.967533333333336,
+              "std": 2.997455091684722,
+              "ci_95": 0.1860061334394431
+            },
+            "Kappa": {
+              "mean": 48.53664285714286,
+              "std": 3.2115590268050593,
+              "ci_95": 0.19929228582797476
+            },
+            "per_class": {
+              "1": {
+                "accuracy": 34.781,
+                "pooled_accuracy": 34.781,
+                "std": 12.598295083065805,
+                "ci_95": 0.7817832410003283,
+                "total_samples": 100000,
+                "correct_samples": 34781
+              },
+              "2": {
+                "accuracy": 21.171,
+                "pooled_accuracy": 21.171,
+                "std": 9.618199363706287,
+                "ci_95": 0.596854337953462,
+                "total_samples": 100000,
+                "correct_samples": 21171
+              },
+              "3": {
+                "accuracy": 95.122,
+                "pooled_accuracy": 95.122,
+                "std": 4.53575969381095,
+                "ci_95": 0.2814651419454817,
+                "total_samples": 100000,
+                "correct_samples": 95122
+              },
+              "4": {
+                "accuracy": 51.224,
+                "pooled_accuracy": 51.224000000000004,
+                "std": 12.513345835546941,
+                "ci_95": 0.7765117421500509,
+                "total_samples": 100000,
+                "correct_samples": 51224
+              },
+              "5": {
+                "accuracy": 41.385,
+                "pooled_accuracy": 41.385,
+                "std": 12.579696935936097,
+                "ci_95": 0.7806291388266772,
+                "total_samples": 100000,
+                "correct_samples": 41385
+              },
+              "6": {
+                "accuracy": 61.32,
+                "pooled_accuracy": 61.31999999999999,
+                "std": 15.655529374633105,
+                "ci_95": 0.9714989538963937,
+                "total_samples": 100000,
+                "correct_samples": 61320
+              },
+              "7": {
+                "accuracy": 48.219,
+                "pooled_accuracy": 48.219,
+                "std": 9.781668518202812,
+                "ci_95": 0.6069983649478493,
+                "total_samples": 100000,
+                "correct_samples": 48219
+              },
+              "8": {
+                "accuracy": 72.622,
+                "pooled_accuracy": 72.622,
+                "std": 12.247902514308317,
+                "ci_95": 0.760039740294914,
+                "total_samples": 100000,
+                "correct_samples": 72622
+              },
+              "9": {
+                "accuracy": 25.99,
+                "pooled_accuracy": 25.990000000000002,
+                "std": 8.194016109332468,
+                "ci_95": 0.5084770938071999,
+                "total_samples": 100000,
+                "correct_samples": 25990
+              },
+              "10": {
+                "accuracy": 30.715,
+                "pooled_accuracy": 30.714999999999996,
+                "std": 19.47834117680456,
+                "ci_95": 1.208722338547313,
+                "total_samples": 100000,
+                "correct_samples": 30715
+              },
+              "11": {
+                "accuracy": 57.739,
+                "pooled_accuracy": 57.739,
+                "std": 12.812996487941454,
+                "ci_95": 0.7951064691867062,
+                "total_samples": 100000,
+                "correct_samples": 57739
+              },
+              "12": {
+                "accuracy": 11.883,
+                "pooled_accuracy": 11.883000000000001,
+                "std": 17.00021502805185,
+                "ci_95": 1.054942999406124,
+                "total_samples": 100000,
+                "correct_samples": 11883
+              },
+              "13": {
+                "accuracy": 75.001,
+                "pooled_accuracy": 75.00099999999999,
+                "std": 11.291456903340684,
+                "ci_95": 0.7006878085729866,
+                "total_samples": 100000,
+                "correct_samples": 75001
+              },
+              "14": {
+                "accuracy": 74.391,
+                "pooled_accuracy": 74.39099999999999,
+                "std": 19.359961750995275,
+                "ci_95": 1.2013763404922795,
+                "total_samples": 100000,
+                "correct_samples": 74391
+              },
+              "15": {
+                "accuracy": 77.95,
+                "pooled_accuracy": 77.95,
+                "std": 13.247924365726126,
+                "ci_95": 0.8220957819194217,
+                "total_samples": 100000,
+                "correct_samples": 77950
+              }
+            },
+            "class_names": [
+              "Healthy grass",
+              "Stressed grass",
+              "Synthetic grass",
+              "Trees",
+              "Soil",
+              "Water",
+              "Residential",
+              "Commercial",
+              "Road",
+              "Highway",
+              "Railway",
+              "Parking Lot 1",
+              "Parking Lot 2",
+              "Tennis Court",
+              "Running Track"
+            ]
+          },
+          "path": "experiments/mft_original_houston_mae_faithful/evaluations/mft_original_houston_mae_faithful_eval"
+        }
+      }
+    },
+    "mft_original_muufl_spatial_faithful": {
+      "name": "mft_original_muufl_spatial_faithful",
+      "dataset": "muufl",
+      "variant": "spatial",
+      "path": "experiments/mft_original_muufl_spatial_faithful",
+      "metadata": {
+        "base_config_path": "configs/pretrain/mft_original_muufl_spatial.yaml",
+        "cuda_device_name": "NVIDIA GeForce RTX 4090",
+        "description": "'Spatial' masking+loss pretraining (spatial_mask_ratio=0.75, MLP decoder, center-weighted MSE, no projection head) of the original MFT (channel tokenization, mCrossPA) on muufl; HSI+LiDAR.",
+        "finished_at": "2026-06-11T04:12:41",
+        "git_sha": "08b592987d56d1d94aace857ba6a0d200215c7ae",
+        "history": {
+          "best_val_loss": Infinity,
+          "epochs_run": 1500,
+          "final_train_loss": 0.0009704610101683043
+        },
+        "name": "mft_original_muufl_spatial_faithful",
+        "overrides": {
+          "hardware": {
+            "device": "cuda:0"
+          }
+        },
+        "resolved_device": "cuda:0",
+        "started_at": "2026-06-11T00:59:30",
+        "status": "complete",
+        "wallclock_seconds": 11591.23
+      },
+      "config": {
+        "model": {
+          "name": "mft_original",
+          "embed_dim": 64,
+          "num_heads": 8,
+          "num_layers": 2,
+          "mlp_dim": 512,
+          "dropout": 0.1,
+          "attention_type": "mcross",
+          "use_projection": false,
+          "use_aux": true
+        },
+        "data": {
+          "patch_size": 11,
+          "num_workers": 4
+        },
+        "pretrain": {
+          "datasets": [
+            "muufl"
+          ],
+          "objective": "enhanced",
+          "epochs": 1500,
+          "batch_size": 64,
+          "val_split": 0.0,
+          "lr": 0.00015,
+          "min_lr": 1e-06,
+          "weight_decay": 0.05,
+          "warmup_epochs": 100,
+          "grad_clip": 1.0,
+          "band_mask_ratio": 0.0,
+          "spatial_mask_ratio": 0.75,
+          "decoder_hidden_dim": 256,
+          "recon_center_sigma": 1.0,
+          "pool_center_sigma": 1.0,
+          "save_interval": 50,
+          "val_interval": 50000,
+          "log_interval": 1,
+          "use_amp": false
+        },
+        "paths": {
+          "data_root": "./data/raw",
+          "checkpoint_dir": "./checkpoints/pretrained/mft_original_muufl_spatial",
+          "log_dir": "./logs/pretrain/mft_original_muufl_spatial"
+        },
+        "hardware": {
+          "device": "cuda:0",
+          "seed": 42,
+          "deterministic": true
+        }
+      },
+      "num_evaluations": 1,
+      "evaluations": {
+        "mft_original_muufl_spatial_faithful_eval": {
+          "config": {
+            "arch_from_pretrain": {
+              "attention_type": "mcross",
+              "dropout": 0.1,
+              "embed_dim": 64,
+              "mlp_dim": 512,
+              "name": "mft_original",
+              "num_heads": 8,
+              "num_layers": 2,
+              "patch_size": 11,
+              "use_aux": true,
+              "use_projection": false
+            },
+            "attention_type": "mcross",
+            "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_muufl_spatial_faithful/checkpoints/checkpoint_epoch_950.pth",
+            "dataset": "muufl",
+            "device": "cuda:0",
+            "distance_metric": "euclidean",
+            "dropout": 0.1,
+            "embed_dim": 64,
+            "epoch": null,
+            "k_query": 100,
+            "k_shot": 5,
+            "max_tsne_samples": 100,
+            "mlp_dim": 512,
+            "name": "mft_original",
+            "num_episodes": 1000,
+            "num_example_episodes": 1,
+            "num_heads": 8,
+            "num_layers": 2,
+            "patch_size": 11,
+            "pool_sigma": null,
+            "prototype_mode": "mean_features",
+            "seed": 42,
+            "split": "all",
+            "temperature": 10.0,
+            "use_aux": true,
+            "use_projection": false
+          },
+          "metadata": {
+            "eval_name": "mft_original_muufl_spatial_faithful_eval",
+            "experiment": "mft_original_muufl_spatial_faithful",
+            "finished_at": "2026-06-11T04:13:35",
+            "git_sha": "08b592987d56d1d94aace857ba6a0d200215c7ae",
+            "started_at": "2026-06-11T04:12:41",
+            "status": "complete",
+            "summary": {
+              "AA": {
+                "ci_95": 0.212385144632205,
+                "mean": 59.052454545454545,
+                "std": 3.4225480708852962
+              },
+              "Kappa": {
+                "ci_95": 0.2336236590954255,
+                "mean": 54.957699999999996,
+                "std": 3.764802877973826
+              },
+              "OA": {
+                "ci_95": 0.212385144632205,
+                "mean": 59.052454545454545,
+                "std": 3.4225480708852962
+              },
+              "num_episodes": 1000
+            },
+            "wallclock_seconds": 53.65
+          },
+          "results": {
+            "model_type": "MFTOriginalCosine",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_muufl_spatial_faithful/checkpoints/checkpoint_epoch_950.pth",
+            "dataset": "muufl",
+            "split": "all",
+            "n_way": 11,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 1000,
+            "seed": 42,
+            "OA": {
+              "mean": 59.052454545454545,
+              "std": 3.4225480708852962,
+              "ci_95": 0.212385144632205
+            },
+            "AA": {
+              "mean": 59.052454545454545,
+              "std": 3.4225480708852962,
+              "ci_95": 0.212385144632205
+            },
+            "Kappa": {
+              "mean": 54.957699999999996,
+              "std": 3.764802877973826,
+              "ci_95": 0.2336236590954255
+            },
+            "per_class": {
+              "1": {
+                "accuracy": 50.592,
+                "pooled_accuracy": 50.592000000000006,
+                "std": 10.101165081316115,
+                "ci_95": 0.6268246237354312,
+                "total_samples": 100000,
+                "correct_samples": 50592
+              },
+              "2": {
+                "accuracy": 68.095,
+                "pooled_accuracy": 68.095,
+                "std": 14.655237118518418,
+                "ci_95": 0.9094261323934252,
+                "total_samples": 100000,
+                "correct_samples": 68095
+              },
+              "3": {
+                "accuracy": 54.521,
+                "pooled_accuracy": 54.521,
+                "std": 14.815652499974476,
+                "ci_95": 0.9193806584617654,
+                "total_samples": 100000,
+                "correct_samples": 54521
+              },
+              "4": {
+                "accuracy": 55.834,
+                "pooled_accuracy": 55.833999999999996,
+                "std": 16.791499158800562,
+                "ci_95": 1.0419912017513124,
+                "total_samples": 100000,
+                "correct_samples": 55834
+              },
+              "5": {
+                "accuracy": 73.253,
+                "pooled_accuracy": 73.253,
+                "std": 11.418274431804482,
+                "ci_95": 0.7085574304356579,
+                "total_samples": 100000,
+                "correct_samples": 73253
+              },
+              "6": {
+                "accuracy": 70.862,
+                "pooled_accuracy": 70.86200000000001,
+                "std": 21.22090846311722,
+                "ci_95": 1.3168568037088595,
+                "total_samples": 100000,
+                "correct_samples": 70862
+              },
+              "7": {
+                "accuracy": 57.549,
+                "pooled_accuracy": 57.54899999999999,
+                "std": 21.369267629004042,
+                "ci_95": 1.3260631851100229,
+                "total_samples": 100000,
+                "correct_samples": 57549
+              },
+              "8": {
+                "accuracy": 49.674,
+                "pooled_accuracy": 49.674,
+                "std": 15.109656647323261,
+                "ci_95": 0.9376249934028341,
+                "total_samples": 100000,
+                "correct_samples": 49674
+              },
+              "9": {
+                "accuracy": 35.664,
+                "pooled_accuracy": 35.664,
+                "std": 10.357562647650267,
+                "ci_95": 0.6427352941135799,
+                "total_samples": 100000,
+                "correct_samples": 35664
+              },
+              "10": {
+                "accuracy": 49.995,
+                "pooled_accuracy": 49.995,
+                "std": 12.165647331728797,
+                "ci_95": 0.7549354207975457,
+                "total_samples": 100000,
+                "correct_samples": 49995
+              },
+              "11": {
+                "accuracy": 83.538,
+                "pooled_accuracy": 83.538,
+                "std": 9.347649758094278,
+                "ci_95": 0.5800654672267378,
+                "total_samples": 100000,
+                "correct_samples": 83538
+              }
+            },
+            "class_names": [
+              "Trees",
+              "Mostly grass",
+              "Mixed ground surface",
+              "Dirt and sand",
+              "Road",
+              "Water",
+              "Building shadow",
+              "Building",
+              "Sidewalk",
+              "Yellow curb",
+              "Cloth panels"
+            ]
+          },
+          "path": "experiments/mft_original_muufl_spatial_faithful/evaluations/mft_original_muufl_spatial_faithful_eval"
+        }
+      }
+    },
+    "mft_original_muufl_mae_faithful": {
+      "name": "mft_original_muufl_mae_faithful",
+      "dataset": "muufl",
+      "variant": "mae",
+      "path": "experiments/mft_original_muufl_mae_faithful",
+      "metadata": {
+        "base_config_path": "configs/pretrain/mft_original_muufl_mae.yaml",
+        "cuda_device_name": "NVIDIA GeForce RTX 4090",
+        "description": "Standard-MAE pretraining (mask_ratio=0.75, transformer decoder, no projection head) of the original MFT (channel tokenization, mCrossPA) on muufl; HSI+LiDAR.",
+        "finished_at": "2026-06-11T11:10:55",
+        "git_sha": "08b592987d56d1d94aace857ba6a0d200215c7ae",
+        "history": {
+          "best_val_loss": Infinity,
+          "epochs_run": 1500,
+          "final_train_loss": 0.011125653792119324
+        },
+        "name": "mft_original_muufl_mae_faithful",
+        "overrides": {
+          "hardware": {
+            "device": "cuda:0"
+          }
+        },
+        "resolved_device": "cuda:0",
+        "started_at": "2026-06-11T04:58:58",
+        "status": "complete",
+        "wallclock_seconds": 22317.08
+      },
+      "config": {
+        "model": {
+          "name": "mft_original",
+          "embed_dim": 64,
+          "num_heads": 8,
+          "num_layers": 2,
+          "mlp_dim": 512,
+          "dropout": 0.1,
+          "attention_type": "mcross",
+          "use_projection": false,
+          "use_aux": true
+        },
+        "data": {
+          "patch_size": 11,
+          "num_workers": 4
+        },
+        "pretrain": {
+          "datasets": [
+            "muufl"
+          ],
+          "objective": "mae",
+          "epochs": 1500,
+          "batch_size": 64,
+          "val_split": 0.0,
+          "lr": 0.00015,
+          "min_lr": 1e-06,
+          "weight_decay": 0.05,
+          "warmup_epochs": 100,
+          "grad_clip": 1.0,
+          "mask_ratio": 0.75,
+          "decoder_dim": 64,
+          "decoder_depth": 4,
+          "decoder_heads": 4,
+          "norm_pix_loss": true,
+          "recon_center_sigma": null,
+          "save_interval": 50,
+          "val_interval": 50000,
+          "log_interval": 1,
+          "use_amp": false
+        },
+        "paths": {
+          "data_root": "./data/raw",
+          "checkpoint_dir": "./checkpoints/pretrained/mft_original_muufl_mae",
+          "log_dir": "./logs/pretrain/mft_original_muufl_mae"
+        },
+        "hardware": {
+          "device": "cuda:0",
+          "seed": 42,
+          "deterministic": true
+        }
+      },
+      "num_evaluations": 1,
+      "evaluations": {
+        "mft_original_muufl_mae_faithful_eval": {
+          "config": {
+            "arch_from_pretrain": {
+              "attention_type": "mcross",
+              "dropout": 0.1,
+              "embed_dim": 64,
+              "mlp_dim": 512,
+              "name": "mft_original",
+              "num_heads": 8,
+              "num_layers": 2,
+              "patch_size": 11,
+              "use_aux": true,
+              "use_projection": false
+            },
+            "attention_type": "mcross",
+            "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_muufl_mae_faithful/checkpoints/checkpoint_epoch_950.pth",
+            "dataset": "muufl",
+            "device": "cuda:0",
+            "distance_metric": "euclidean",
+            "dropout": 0.1,
+            "embed_dim": 64,
+            "epoch": null,
+            "k_query": 100,
+            "k_shot": 5,
+            "max_tsne_samples": 100,
+            "mlp_dim": 512,
+            "name": "mft_original",
+            "num_episodes": 1000,
+            "num_example_episodes": 1,
+            "num_heads": 8,
+            "num_layers": 2,
+            "patch_size": 11,
+            "pool_sigma": null,
+            "prototype_mode": "mean_features",
+            "seed": 42,
+            "split": "all",
+            "temperature": 10.0,
+            "use_aux": true,
+            "use_projection": false
+          },
+          "metadata": {
+            "eval_name": "mft_original_muufl_mae_faithful_eval",
+            "experiment": "mft_original_muufl_mae_faithful",
+            "finished_at": "2026-06-11T11:11:54",
+            "git_sha": "08b592987d56d1d94aace857ba6a0d200215c7ae",
+            "started_at": "2026-06-11T11:10:55",
+            "status": "complete",
+            "summary": {
+              "AA": {
+                "ci_95": 0.1574017231458531,
+                "mean": 45.77390909090909,
+                "std": 2.5365002097475937
+              },
+              "Kappa": {
+                "ci_95": 0.1731418954604384,
+                "mean": 40.3513,
+                "std": 2.790150230722353
+              },
+              "OA": {
+                "ci_95": 0.1574017231458531,
+                "mean": 45.773909090909086,
+                "std": 2.5365002097475937
+              },
+              "num_episodes": 1000
+            },
+            "wallclock_seconds": 58.71
+          },
+          "results": {
+            "model_type": "MFTOriginalCosine",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_muufl_mae_faithful/checkpoints/checkpoint_epoch_950.pth",
+            "dataset": "muufl",
+            "split": "all",
+            "n_way": 11,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 1000,
+            "seed": 42,
+            "OA": {
+              "mean": 45.773909090909086,
+              "std": 2.5365002097475937,
+              "ci_95": 0.1574017231458531
+            },
+            "AA": {
+              "mean": 45.77390909090909,
+              "std": 2.5365002097475937,
+              "ci_95": 0.1574017231458531
+            },
+            "Kappa": {
+              "mean": 40.3513,
+              "std": 2.790150230722353,
+              "ci_95": 0.1731418954604384
+            },
+            "per_class": {
+              "1": {
+                "accuracy": 33.712,
+                "pooled_accuracy": 33.711999999999996,
+                "std": 9.986443611216156,
+                "ci_95": 0.6197056189720309,
+                "total_samples": 100000,
+                "correct_samples": 33712
+              },
+              "2": {
+                "accuracy": 29.261,
+                "pooled_accuracy": 29.261,
+                "std": 11.276119855695043,
+                "ci_95": 0.6997360729026654,
+                "total_samples": 100000,
+                "correct_samples": 29261
+              },
+              "3": {
+                "accuracy": 16.87,
+                "pooled_accuracy": 16.869999999999997,
+                "std": 8.66828125985769,
+                "ci_95": 0.53790746863383,
+                "total_samples": 100000,
+                "correct_samples": 16870
+              },
+              "4": {
+                "accuracy": 25.33,
+                "pooled_accuracy": 25.330000000000002,
+                "std": 9.787292781969894,
+                "ci_95": 0.6073473768678812,
+                "total_samples": 100000,
+                "correct_samples": 25330
+              },
+              "5": {
+                "accuracy": 54.438,
+                "pooled_accuracy": 54.437999999999995,
+                "std": 14.063362186902532,
+                "ci_95": 0.8726975195728314,
+                "total_samples": 100000,
+                "correct_samples": 54438
+              },
+              "6": {
+                "accuracy": 94.231,
+                "pooled_accuracy": 94.231,
+                "std": 5.781318102301585,
+                "ci_95": 0.35875787743267545,
+                "total_samples": 100000,
+                "correct_samples": 94231
+              },
+              "7": {
+                "accuracy": 34.102,
+                "pooled_accuracy": 34.102,
+                "std": 10.235213529770641,
+                "ci_95": 0.6351429580650272,
+                "total_samples": 100000,
+                "correct_samples": 34102
+              },
+              "8": {
+                "accuracy": 51.753,
+                "pooled_accuracy": 51.75300000000001,
+                "std": 12.870974749411948,
+                "ci_95": 0.7987042919763068,
+                "total_samples": 100000,
+                "correct_samples": 51753
+              },
+              "9": {
+                "accuracy": 31.424,
+                "pooled_accuracy": 31.424000000000003,
+                "std": 16.58210553578767,
+                "ci_95": 1.0289973462998823,
+                "total_samples": 100000,
+                "correct_samples": 31424
+              },
+              "10": {
+                "accuracy": 46.312,
+                "pooled_accuracy": 46.312,
+                "std": 10.982197230062845,
+                "ci_95": 0.6814967967660923,
+                "total_samples": 100000,
+                "correct_samples": 46312
+              },
+              "11": {
+                "accuracy": 86.08,
+                "pooled_accuracy": 86.08,
+                "std": 11.911658154933761,
+                "ci_95": 0.7391742022751496,
+                "total_samples": 100000,
+                "correct_samples": 86080
+              }
+            },
+            "class_names": [
+              "Trees",
+              "Mostly grass",
+              "Mixed ground surface",
+              "Dirt and sand",
+              "Road",
+              "Water",
+              "Building shadow",
+              "Building",
+              "Sidewalk",
+              "Yellow curb",
+              "Cloth panels"
+            ]
+          },
+          "path": "experiments/mft_original_muufl_mae_faithful/evaluations/mft_original_muufl_mae_faithful_eval"
+        }
+      }
+    },
+    "mft_original_trento_spatial_faithful": {
+      "name": "mft_original_trento_spatial_faithful",
+      "dataset": "trento",
+      "variant": "spatial",
+      "path": "experiments/mft_original_trento_spatial_faithful",
+      "metadata": {
+        "base_config_path": "configs/pretrain/mft_original_trento_spatial.yaml",
+        "cuda_device_name": "NVIDIA GeForce RTX 4090",
+        "description": "'Spatial' masking+loss pretraining (spatial_mask_ratio=0.75, MLP decoder, center-weighted MSE, no projection head) of the original MFT (channel tokenization, mCrossPA) on trento; HSI+LiDAR.",
+        "finished_at": "2026-06-11T00:59:03",
+        "git_sha": "08b592987d56d1d94aace857ba6a0d200215c7ae",
+        "history": {
+          "best_val_loss": Infinity,
+          "epochs_run": 1500,
+          "final_train_loss": 0.0012310158796273014
+        },
+        "name": "mft_original_trento_spatial_faithful",
+        "overrides": {
+          "hardware": {
+            "device": "cuda:0"
+          }
+        },
+        "resolved_device": "cuda:0",
+        "started_at": "2026-06-10T23:16:00",
+        "status": "complete",
+        "wallclock_seconds": 6183.69
+      },
+      "config": {
+        "model": {
+          "name": "mft_original",
+          "embed_dim": 64,
+          "num_heads": 8,
+          "num_layers": 2,
+          "mlp_dim": 512,
+          "dropout": 0.1,
+          "attention_type": "mcross",
+          "use_projection": false,
+          "use_aux": true
+        },
+        "data": {
+          "patch_size": 11,
+          "num_workers": 4
+        },
+        "pretrain": {
+          "datasets": [
+            "trento"
+          ],
+          "objective": "enhanced",
+          "epochs": 1500,
+          "batch_size": 64,
+          "val_split": 0.0,
+          "lr": 0.00015,
+          "min_lr": 1e-06,
+          "weight_decay": 0.05,
+          "warmup_epochs": 100,
+          "grad_clip": 1.0,
+          "band_mask_ratio": 0.0,
+          "spatial_mask_ratio": 0.75,
+          "decoder_hidden_dim": 256,
+          "recon_center_sigma": 1.0,
+          "pool_center_sigma": 1.0,
+          "save_interval": 50,
+          "val_interval": 50000,
+          "log_interval": 1,
+          "use_amp": false
+        },
+        "paths": {
+          "data_root": "./data/raw",
+          "checkpoint_dir": "./checkpoints/pretrained/mft_original_trento_spatial",
+          "log_dir": "./logs/pretrain/mft_original_trento_spatial"
+        },
+        "hardware": {
+          "device": "cuda:0",
+          "seed": 42,
+          "deterministic": true
+        }
+      },
+      "num_evaluations": 1,
+      "evaluations": {
+        "mft_original_trento_spatial_faithful_eval": {
+          "config": {
+            "arch_from_pretrain": {
+              "attention_type": "mcross",
+              "dropout": 0.1,
+              "embed_dim": 64,
+              "mlp_dim": 512,
+              "name": "mft_original",
+              "num_heads": 8,
+              "num_layers": 2,
+              "patch_size": 11,
+              "use_aux": true,
+              "use_projection": false
+            },
+            "attention_type": "mcross",
+            "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_trento_spatial_faithful/checkpoints/checkpoint_epoch_950.pth",
+            "dataset": "trento",
+            "device": "cuda:0",
+            "distance_metric": "euclidean",
+            "dropout": 0.1,
+            "embed_dim": 64,
+            "epoch": null,
+            "k_query": 100,
+            "k_shot": 5,
+            "max_tsne_samples": 100,
+            "mlp_dim": 512,
+            "name": "mft_original",
+            "num_episodes": 1000,
+            "num_example_episodes": 1,
+            "num_heads": 8,
+            "num_layers": 2,
+            "patch_size": 11,
+            "pool_sigma": null,
+            "prototype_mode": "mean_features",
+            "seed": 42,
+            "split": "all",
+            "temperature": 10.0,
+            "use_aux": true,
+            "use_projection": false
+          },
+          "metadata": {
+            "eval_name": "mft_original_trento_spatial_faithful_eval",
+            "experiment": "mft_original_trento_spatial_faithful",
+            "finished_at": "2026-06-11T00:59:30",
+            "git_sha": "08b592987d56d1d94aace857ba6a0d200215c7ae",
+            "started_at": "2026-06-11T00:59:03",
+            "status": "complete",
+            "summary": {
+              "AA": {
+                "ci_95": 0.1941196867588524,
+                "mean": 88.224,
+                "std": 3.1282035313152714
+              },
+              "Kappa": {
+                "ci_95": 0.23294362411062286,
+                "mean": 85.86880000000001,
+                "std": 3.753844237578325
+              },
+              "OA": {
+                "ci_95": 0.1941196867588523,
+                "mean": 88.224,
+                "std": 3.1282035313152696
+              },
+              "num_episodes": 1000
+            },
+            "wallclock_seconds": 26.65
+          },
+          "results": {
+            "model_type": "MFTOriginalCosine",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_trento_spatial_faithful/checkpoints/checkpoint_epoch_950.pth",
+            "dataset": "trento",
+            "split": "all",
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 1000,
+            "seed": 42,
+            "OA": {
+              "mean": 88.224,
+              "std": 3.1282035313152696,
+              "ci_95": 0.1941196867588523
+            },
+            "AA": {
+              "mean": 88.224,
+              "std": 3.1282035313152714,
+              "ci_95": 0.1941196867588524
+            },
+            "Kappa": {
+              "mean": 85.86880000000001,
+              "std": 3.753844237578325,
+              "ci_95": 0.23294362411062286
+            },
+            "per_class": {
+              "1": {
+                "accuracy": 97.544,
+                "pooled_accuracy": 97.544,
+                "std": 3.0036750822950204,
+                "ci_95": 0.18639211300145916,
+                "total_samples": 100000,
+                "correct_samples": 97544
+              },
+              "2": {
+                "accuracy": 93.356,
+                "pooled_accuracy": 93.356,
+                "std": 5.356609375341831,
+                "ci_95": 0.3324027108919248,
+                "total_samples": 100000,
+                "correct_samples": 93356
+              },
+              "3": {
+                "accuracy": 96.42,
+                "pooled_accuracy": 96.41999999999999,
+                "std": 3.1454093533274805,
+                "ci_95": 0.19518738863502616,
+                "total_samples": 100000,
+                "correct_samples": 96420
+              },
+              "4": {
+                "accuracy": 95.082,
+                "pooled_accuracy": 95.082,
+                "std": 4.632847504505194,
+                "ci_95": 0.28748989551774856,
+                "total_samples": 100000,
+                "correct_samples": 95082
+              },
+              "5": {
+                "accuracy": 69.867,
+                "pooled_accuracy": 69.867,
+                "std": 15.048565081096601,
+                "ci_95": 0.933833975465283,
+                "total_samples": 100000,
+                "correct_samples": 69867
+              },
+              "6": {
+                "accuracy": 77.075,
+                "pooled_accuracy": 77.075,
+                "std": 12.604260192490475,
+                "ci_95": 0.7821534039904942,
+                "total_samples": 100000,
+                "correct_samples": 77075
+              }
+            },
+            "class_names": [
+              "Apple trees",
+              "Buildings",
+              "Ground",
+              "Woods",
+              "Vineyard",
+              "Roads"
+            ]
+          },
+          "path": "experiments/mft_original_trento_spatial_faithful/evaluations/mft_original_trento_spatial_faithful_eval"
+        }
+      }
+    },
+    "mft_original_trento_mae_faithful": {
+      "name": "mft_original_trento_mae_faithful",
+      "dataset": "trento",
+      "variant": "mae",
+      "path": "experiments/mft_original_trento_mae_faithful",
+      "metadata": {
+        "base_config_path": "configs/pretrain/mft_original_trento_mae.yaml",
+        "cuda_device_name": "NVIDIA GeForce RTX 4090",
+        "description": "Standard-MAE pretraining (mask_ratio=0.75, transformer decoder, no projection head) of the original MFT (channel tokenization, mCrossPA) on trento; HSI+LiDAR.",
+        "finished_at": "2026-06-11T04:58:33",
+        "git_sha": "08b592987d56d1d94aace857ba6a0d200215c7ae",
+        "history": {
+          "best_val_loss": Infinity,
+          "epochs_run": 1500,
+          "final_train_loss": 0.01307506293208354
+        },
+        "name": "mft_original_trento_mae_faithful",
+        "overrides": {
+          "hardware": {
+            "device": "cuda:0"
+          }
+        },
+        "resolved_device": "cuda:0",
+        "started_at": "2026-06-11T01:24:55",
+        "status": "complete",
+        "wallclock_seconds": 12818.2
+      },
+      "config": {
+        "model": {
+          "name": "mft_original",
+          "embed_dim": 64,
+          "num_heads": 8,
+          "num_layers": 2,
+          "mlp_dim": 512,
+          "dropout": 0.1,
+          "attention_type": "mcross",
+          "use_projection": false,
+          "use_aux": true
+        },
+        "data": {
+          "patch_size": 11,
+          "num_workers": 4
+        },
+        "pretrain": {
+          "datasets": [
+            "trento"
+          ],
+          "objective": "mae",
+          "epochs": 1500,
+          "batch_size": 64,
+          "val_split": 0.0,
+          "lr": 0.00015,
+          "min_lr": 1e-06,
+          "weight_decay": 0.05,
+          "warmup_epochs": 100,
+          "grad_clip": 1.0,
+          "mask_ratio": 0.75,
+          "decoder_dim": 64,
+          "decoder_depth": 4,
+          "decoder_heads": 4,
+          "norm_pix_loss": true,
+          "recon_center_sigma": null,
+          "save_interval": 50,
+          "val_interval": 50000,
+          "log_interval": 1,
+          "use_amp": false
+        },
+        "paths": {
+          "data_root": "./data/raw",
+          "checkpoint_dir": "./checkpoints/pretrained/mft_original_trento_mae",
+          "log_dir": "./logs/pretrain/mft_original_trento_mae"
+        },
+        "hardware": {
+          "device": "cuda:0",
+          "seed": 42,
+          "deterministic": true
+        }
+      },
+      "num_evaluations": 1,
+      "evaluations": {
+        "mft_original_trento_mae_faithful_eval": {
+          "config": {
+            "arch_from_pretrain": {
+              "attention_type": "mcross",
+              "dropout": 0.1,
+              "embed_dim": 64,
+              "mlp_dim": 512,
+              "name": "mft_original",
+              "num_heads": 8,
+              "num_layers": 2,
+              "patch_size": 11,
+              "use_aux": true,
+              "use_projection": false
+            },
+            "attention_type": "mcross",
+            "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_trento_mae_faithful/checkpoints/checkpoint_epoch_950.pth",
+            "dataset": "trento",
+            "device": "cuda:0",
+            "distance_metric": "euclidean",
+            "dropout": 0.1,
+            "embed_dim": 64,
+            "epoch": null,
+            "k_query": 100,
+            "k_shot": 5,
+            "max_tsne_samples": 100,
+            "mlp_dim": 512,
+            "name": "mft_original",
+            "num_episodes": 1000,
+            "num_example_episodes": 1,
+            "num_heads": 8,
+            "num_layers": 2,
+            "patch_size": 11,
+            "pool_sigma": null,
+            "prototype_mode": "mean_features",
+            "seed": 42,
+            "split": "all",
+            "temperature": 10.0,
+            "use_aux": true,
+            "use_projection": false
+          },
+          "metadata": {
+            "eval_name": "mft_original_trento_mae_faithful_eval",
+            "experiment": "mft_original_trento_mae_faithful",
+            "finished_at": "2026-06-11T04:58:58",
+            "git_sha": "08b592987d56d1d94aace857ba6a0d200215c7ae",
+            "started_at": "2026-06-11T04:58:33",
+            "status": "complete",
+            "summary": {
+              "AA": {
+                "ci_95": 0.313261022557519,
+                "mean": 81.04816666666666,
+                "std": 5.048144540873959
+              },
+              "Kappa": {
+                "ci_95": 0.37591322706902275,
+                "mean": 77.25780000000002,
+                "std": 6.05777344904875
+              },
+              "OA": {
+                "ci_95": 0.31326102255751903,
+                "mean": 81.04816666666666,
+                "std": 5.04814454087396
+              },
+              "num_episodes": 1000
+            },
+            "wallclock_seconds": 25.65
+          },
+          "results": {
+            "model_type": "MFTOriginalCosine",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_trento_mae_faithful/checkpoints/checkpoint_epoch_950.pth",
+            "dataset": "trento",
+            "split": "all",
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 1000,
+            "seed": 42,
+            "OA": {
+              "mean": 81.04816666666666,
+              "std": 5.04814454087396,
+              "ci_95": 0.31326102255751903
+            },
+            "AA": {
+              "mean": 81.04816666666666,
+              "std": 5.048144540873959,
+              "ci_95": 0.313261022557519
+            },
+            "Kappa": {
+              "mean": 77.25780000000002,
+              "std": 6.05777344904875,
+              "ci_95": 0.37591322706902275
+            },
+            "per_class": {
+              "1": {
+                "accuracy": 87.309,
+                "pooled_accuracy": 87.309,
+                "std": 15.600881994297628,
+                "ci_95": 0.9681078278885364,
+                "total_samples": 100000,
+                "correct_samples": 87309
+              },
+              "2": {
+                "accuracy": 63.093,
+                "pooled_accuracy": 63.092999999999996,
+                "std": 11.832343428078818,
+                "ci_95": 0.7342523518334132,
+                "total_samples": 100000,
+                "correct_samples": 63093
+              },
+              "3": {
+                "accuracy": 83.754,
+                "pooled_accuracy": 83.75399999999999,
+                "std": 7.6363266038063085,
+                "ci_95": 0.47386984685612976,
+                "total_samples": 100000,
+                "correct_samples": 83754
+              },
+              "4": {
+                "accuracy": 94.537,
+                "pooled_accuracy": 94.537,
+                "std": 4.915143029454993,
+                "ci_95": 0.3050076555765514,
+                "total_samples": 100000,
+                "correct_samples": 94537
+              },
+              "5": {
+                "accuracy": 90.287,
+                "pooled_accuracy": 90.28699999999999,
+                "std": 14.18762245762129,
+                "ci_95": 0.8804084516100296,
+                "total_samples": 100000,
+                "correct_samples": 90287
+              },
+              "6": {
+                "accuracy": 67.309,
+                "pooled_accuracy": 67.309,
+                "std": 15.50011351571336,
+                "ci_95": 0.9618546716274028,
+                "total_samples": 100000,
+                "correct_samples": 67309
+              }
+            },
+            "class_names": [
+              "Apple trees",
+              "Buildings",
+              "Ground",
+              "Woods",
+              "Vineyard",
+              "Roads"
+            ]
+          },
+          "path": "experiments/mft_original_trento_mae_faithful/evaluations/mft_original_trento_mae_faithful_eval"
+        }
+      }
+    }
+  }
+}

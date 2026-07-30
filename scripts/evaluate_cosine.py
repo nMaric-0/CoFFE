@@ -49,7 +49,7 @@ from data.datasets import (
     MUUFLPatchedDataset,
 )
 from data.samplers.patched_episode_sampler import PatchedEpisodeSampler
-from models import MFTCPEACosine
+from models import MFTCPEACosine, MFTOriginalCosine
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -143,28 +143,47 @@ def load_model_with_checkpoint(
     model_config: dict,
     device: str
 ):
-    """Load MFTCPEACosine model with proper checkpoint handling."""
+    """Load the few-shot model (MFT-CPEA-Cosine, or the original-MFT baseline
+    when model_config['name'] == 'mft_original') with checkpoint handling."""
     specs = DATASET_SPECS[dataset_name]
+    model_name = model_config.get("name", "mft_cpea")
 
-    model = MFTCPEACosine(
-        hsi_channels=specs["hsi_channels"],
-        aux_channels=specs["aux_channels"],
-        use_aux=model_config.get("use_aux", True),
-        embed_dim=model_config.get("embed_dim", 128),
-        num_heads=model_config.get("num_heads", 8),
-        num_layers=model_config.get("num_layers", 4),
-        patch_size=model_config.get("patch_size", 11),
-        lambda_factor=model_config.get("lambda_factor", 2.0),
-        dropout=model_config.get("dropout", 0.1),
-        use_projection=model_config.get("use_projection", False),
-        proj_hidden_dim=model_config.get("proj_hidden_dim", None),
-        proj_num_layers=model_config.get("proj_num_layers", 2),
-        proj_l2_normalize=model_config.get("proj_l2_normalize", True),
-        distance_metric=model_config.get("distance_metric", "cosine"),
-        temperature=model_config.get("temperature", 10.0),
-        prototype_mode=model_config.get("prototype_mode", "mean_features"),
-        pool_sigma=model_config.get("pool_sigma", None)
-    )
+    if model_name == "mft_original":
+        model = MFTOriginalCosine(
+            hsi_channels=specs["hsi_channels"],
+            aux_channels=specs["aux_channels"],
+            use_aux=model_config.get("use_aux", True),
+            embed_dim=model_config.get("embed_dim", 64),
+            num_heads=model_config.get("num_heads", 8),
+            num_layers=model_config.get("num_layers", 2),
+            mlp_dim=model_config.get("mlp_dim", 512),
+            patch_size=model_config.get("patch_size", 11),
+            dropout=model_config.get("dropout", 0.1),
+            attention_type=model_config.get("attention_type", "mcross"),
+            distance_metric=model_config.get("distance_metric", "cosine"),
+            temperature=model_config.get("temperature", 10.0),
+            prototype_mode=model_config.get("prototype_mode", "mean_features"),
+        )
+    else:
+        model = MFTCPEACosine(
+            hsi_channels=specs["hsi_channels"],
+            aux_channels=specs["aux_channels"],
+            use_aux=model_config.get("use_aux", True),
+            embed_dim=model_config.get("embed_dim", 128),
+            num_heads=model_config.get("num_heads", 8),
+            num_layers=model_config.get("num_layers", 4),
+            patch_size=model_config.get("patch_size", 11),
+            lambda_factor=model_config.get("lambda_factor", 2.0),
+            dropout=model_config.get("dropout", 0.1),
+            use_projection=model_config.get("use_projection", False),
+            proj_hidden_dim=model_config.get("proj_hidden_dim", None),
+            proj_num_layers=model_config.get("proj_num_layers", 2),
+            proj_l2_normalize=model_config.get("proj_l2_normalize", True),
+            distance_metric=model_config.get("distance_metric", "cosine"),
+            temperature=model_config.get("temperature", 10.0),
+            prototype_mode=model_config.get("prototype_mode", "mean_features"),
+            pool_sigma=model_config.get("pool_sigma", None)
+        )
 
     if checkpoint_path.lower() in ['none', 'null', 'random']:
         logger.info("Using random initialization (no pretrained weights)")
@@ -182,26 +201,35 @@ def load_model_with_checkpoint(
     model_state = model.state_dict()
     fixed_state = fix_state_dict_keys(state_dict, model_state)
 
-    # Fail loudly on a checkpoint <-> dataset band-count mismatch. The channel
-    # tokenizer is a 1x1 Conv2d whose weight is [embed_dim, total_bands, 1, 1],
-    # so weight.shape[1] is the number of input bands (HSI + aux) the checkpoint
-    # was trained on. If it differs from the bands the selected dataset provides,
-    # the input projection cannot load and would be left randomly initialized,
-    # silently producing meaningless results (e.g. evaluating a 64-band Trento
-    # checkpoint on 145-band Houston). Raise instead of silently degrading.
-    ckpt_w = fixed_state.get("channel_tokenizer.conv.0.weight")
-    model_w = model_state.get("channel_tokenizer.conv.0.weight")
-    if ckpt_w is not None and model_w is not None and ckpt_w.shape[1] != model_w.shape[1]:
-        ckpt_bands = ckpt_w.shape[1]
-        expected_bands = model_w.shape[1]
-        raise ValueError(
-            f"Band-count mismatch: checkpoint was trained on {ckpt_bands} input bands "
-            f"but dataset '{dataset_name}' provides {expected_bands} "
-            f"({specs['hsi_channels']} HSI + {specs['aux_channels']} aux). "
-            f"The channel tokenizer cannot load and would be left randomly initialized. "
-            f"This usually means the checkpoint and --dataset don't match "
-            f"(e.g. a Trento checkpoint evaluated on Houston). "
-            f"Set --dataset to the dataset this checkpoint was pretrained on."
+    # Fail loudly on a checkpoint <-> dataset band-count mismatch, so an input
+    # projection can never be silently left randomly initialized (e.g. a 64-band
+    # Trento checkpoint evaluated on 145-band Houston). The weight whose shape[1]
+    # encodes the input band count differs by architecture:
+    #   - MFT-CPEA: channel_tokenizer.conv.0.weight = [embed_dim, HSI+aux, 1, 1].
+    #   - original MFT: separate HSI/aux front-ends. hsi_hetconv.gwconv.weight
+    #     (grouped conv over the 3D-conv output) has shape[1] = 8*(HSI-8)/groups,
+    #     which is monotonic in the HSI band count, and aux_conv.0.weight has
+    #     shape[1] == aux bands. Both still detect a checkpoint/dataset mismatch.
+    def _assert_band_count(key, expected, what):
+        ckpt_w = fixed_state.get(key)
+        model_w = model_state.get(key)
+        if ckpt_w is not None and model_w is not None and ckpt_w.shape[1] != model_w.shape[1]:
+            raise ValueError(
+                f"Band-count mismatch ({what}): checkpoint expects {ckpt_w.shape[1]} "
+                f"but dataset '{dataset_name}' provides {model_w.shape[1]} ({expected}). "
+                f"The input projection cannot load and would be left randomly "
+                f"initialized. This usually means the checkpoint and --dataset don't "
+                f"match. Set --dataset to the dataset this checkpoint was pretrained on."
+            )
+
+    if model_name == "mft_original":
+        _assert_band_count("hsi_hetconv.gwconv.weight", f"{specs['hsi_channels']} HSI", "HSI")
+        _assert_band_count("aux_conv.0.weight", f"{specs['aux_channels']} aux", "aux")
+    else:
+        _assert_band_count(
+            "channel_tokenizer.conv.0.weight",
+            f"{specs['hsi_channels']} HSI + {specs['aux_channels']} aux",
+            "HSI+aux",
         )
 
     compatible_state = {}
@@ -655,8 +683,10 @@ def generate_plots(results, dataset_name, n_way, k_shot, output_dir,
             q_labels=ep_data["q_labels"],
             q_preds=ep_data["q_preds"],
             class_names=ep_class_names,
-            title=f"Episode {i+1} Feature Space \u2013 {tag}",
-            save_path=str(output_dir / f"{dataset_name}_episode_{i+1:03d}_features.png"),
+            title=f"Episode {i+1}",
+            save_path=str(output_dir / f"{dataset_name}_episode_{i+1:03d}_features.svg"),
+            legend_save_path=str(output_dir / f"{dataset_name}_episode_{i+1:03d}_legend.svg"),
+            dataset_label=dataset_name,
         )
 
     # 7. Aggregated feature space t-SNE (across all episodes)
@@ -733,6 +763,9 @@ def main(args):
     logger.info(f"Loaded {dataset_name} ({args.split}): {len(dataset)} samples")
 
     model_config = {
+        "name": getattr(args, "name", "mft_cpea"),
+        "attention_type": getattr(args, "attention_type", "mcross"),
+        "mlp_dim": getattr(args, "mlp_dim", 512),
         "embed_dim": args.embed_dim,
         "num_heads": args.num_heads,
         "num_layers": args.num_layers,
@@ -753,7 +786,8 @@ def main(args):
         "pool_sigma": args.pool_sigma,
     }
 
-    logger.info(f"Loading MFT-CPEA-Cosine (distance={args.distance_metric}, temp={args.temperature}, mode={args.prototype_mode})")
+    _model_label = "original-MFT" if getattr(args, "name", "mft_cpea") == "mft_original" else "MFT-CPEA-Cosine"
+    logger.info(f"Loading {_model_label} (distance={args.distance_metric}, temp={args.temperature}, mode={args.prototype_mode})")
     model = load_model_with_checkpoint(args.checkpoint, dataset_name, model_config, device)
 
     total_params = sum(p.numel() for p in model.parameters())
@@ -786,7 +820,7 @@ def main(args):
 
     if args.output:
         output_data = {
-            "model_type": "MFTCPEACosine",
+            "model_type": "MFTOriginalCosine" if getattr(args, "name", "mft_cpea") == "mft_original" else "MFTCPEACosine",
             "distance_metric": args.distance_metric,
             "temperature": args.temperature,
             "prototype_mode": args.prototype_mode,
@@ -847,6 +881,10 @@ _DEFAULT_ARGS = {
     "data_root": "./data/raw",
     "split": "test",
     "patch_size": 11,
+    # Model selection: "mft_cpea" (default) or "mft_original" (faithful-MFT baseline).
+    "name": "mft_cpea",
+    "attention_type": "mcross",
+    "mlp_dim": 512,
     "embed_dim": 128,
     "num_heads": 8,
     "num_layers": 4,

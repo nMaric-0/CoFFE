@@ -1,0 +1,75 @@
+# MUUFL native-geometry MAE SEM-tuning config -- PADDED input variant.
+#
+# Same recipe as the Houston pad config (frozen native-geometry encoders,
+# adapt_mode="sem_only", fit 11x11 -> 64x64 by centered ZERO-PADDING), for the
+# MUUFL dataset (64 HSI bands; the 2 LiDAR aux channels are not used by the
+# HSI-only spatial/spectral front-end).
+#
+# Spatial 100-channel front-end: MUUFL (64 bands) CANNOT reach 100 PCA
+# components, so native_pca_spat_path is null and the dual spectrally
+# resamples raw bands -> 100 on the fly (SpectralResample). No PCA fit needed.
+#
+# Run:
+#   python scripts/adapt_hypersigma.py \
+#       --config configs/pretrain/hypersigma_muufl_adapt_native_sem_pad.yaml
+#
+# Driven for all three datasets by scripts/run_native_sem_pad_experiments.sh.
+
+model:
+  name: "hypersigma_dual"
+  adapt_mode: "sem_only"
+  hsi_channels: 64
+  spat_patch_k: 3               # ignored under native_geometry (uses patch-8); kept for API parity
+  embed_dim: 768
+  num_tokens: 100
+  dr_dim: 128
+  num_stages: 4
+  # --- Native geometry knobs ---
+  native_geometry: true
+  input_fit: "pad"              # PAD 11->64 (zero canvas) | "upscale" interpolates
+  pad_anchor: "center"
+  interp_mode: "bicubic"        # unused for input_fit=pad; kept for API parity
+
+data:
+  dataset: "muufl"
+  data_root: "./data/raw"
+  patch_size: 11
+  num_workers: 4
+
+paths:
+  # 64 < 100: no 100-band PCA possible -> null triggers SpectralResample bands->100.
+  native_pca_spat_path: null
+  pca_spat_path: "checkpoints/hypersigma/pca_muufl_3band.pkl"
+  pca_stats_path: "checkpoints/hypersigma/pca_muufl_3band_stats.pkl"
+  spat_ckpt: "checkpoints/hypersigma/spat-vit-base.pth"
+  spec_ckpt: "checkpoints/hypersigma/spec-vit-base.pth"
+  checkpoint_dir: "checkpoints/hypersigma_adapted/muufl_native_sem_pad"
+  log_dir: "logs/hypersigma_adapted/muufl_native_sem_pad"
+
+pretrain:
+  epochs: 2000
+  batch_size: 64
+  val_split: 0.01
+
+  lr: 1.5e-4
+  min_lr: 1.0e-6
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+
+  mask_ratio: 0.75
+  spat_decoder_hidden: 256
+  spec_decoder_hidden: 256
+  fused_decoder_hidden: 512
+  decoder_dropout: 0.0
+
+  save_interval: 400
+  checkpoint_milestones: [5, 10, 20, 50]
+  val_interval: 50
+  log_interval: 1
+  use_amp: False
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: False

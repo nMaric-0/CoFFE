@@ -1,0 +1,77 @@
+# Houston Level-2 MAE adaptation config for HyperSIGMA — 100-band SpatViT variant.
+#
+# Same as hypersigma_houston_adapt.yaml, but the spatial branch is fed
+# PCA->100 components instead of 3, while KEEPING the adapted 11x11 patch
+# geometry (spat_patch_k=3). This is the input variant closest to the
+# original HyperSIGMA spatial encoder (pretrained on 100 channels). Because
+# the patch size (3) differs from the pretrained one (8), patch_embed.proj is
+# reinitialized + trained regardless, so in_chans is a free choice and
+# auto-follows the PCA component count (-> Conv2d(100, 768, 3, 3)).
+#
+# Fit the PCA first (CPU):
+#   python scripts/fit_pca_hypersigma.py --dataset houston --n-components 100
+# Then run:
+#   python scripts/adapt_hypersigma.py \
+#       --config configs/pretrain/hypersigma_houston_adapt_pca100.yaml
+#
+# This mirrors the notebook notebooks/evaluate_hypersigma_pca100.ipynb.
+
+model:
+  name: "hypersigma_dual"
+  # spatial_only | spectral_only | joint_sem (see hypersigma_houston_adapt.yaml).
+  adapt_mode: "joint_sem"
+  hsi_channels: 144
+  spat_patch_k: 3
+  embed_dim: 768
+  num_tokens: 100
+  dr_dim: 128
+  num_stages: 4
+  # Always feed the spatial branch this many channels. Houston (144 bands) has a
+  # fitted PCA->100 pickle (pca_spat_path below) so it uses PCA. Datasets with
+  # fewer bands than this and NO matching pickle (Trento 63, MUUFL 64) spectrally
+  # resample their bands UP to 100 instead — set paths.pca_spat_path to a
+  # non-existent pca_<ds>_100band.pkl (or just omit the fit) and the dual resamples.
+  spat_resample_to: 100
+
+data:
+  dataset: "houston"
+  data_root: "./data/raw"
+  patch_size: 11
+  num_workers: 4
+
+paths:
+  # 100-band spatial PCA (vs the 3-band default in hypersigma_houston_adapt.yaml).
+  pca_spat_path: "checkpoints/hypersigma/pca_houston_100band.pkl"
+  pca_stats_path: "checkpoints/hypersigma/pca_houston_100band_stats.pkl"
+  spat_ckpt: "checkpoints/hypersigma/spat-vit-base.pth"
+  spec_ckpt: "checkpoints/hypersigma/spec-vit-base.pth"
+  checkpoint_dir: "checkpoints/hypersigma_adapted/houston_pca100"
+  log_dir: "logs/hypersigma_adapted/houston_pca100"
+
+pretrain:
+  epochs: 3000
+  batch_size: 64
+  val_split: 0.01
+
+  lr: 1.5e-4
+  min_lr: 1.0e-6
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+
+  mask_ratio: 0.75
+  spat_decoder_hidden: 256
+  spec_decoder_hidden: 256
+  fused_decoder_hidden: 512
+  decoder_dropout: 0.0
+
+  save_interval: 100
+  checkpoint_milestones: [5, 10, 20, 50]
+  val_interval: 50
+  log_interval: 1
+  use_amp: False
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: False

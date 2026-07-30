@@ -37,9 +37,11 @@ from data.datasets import (
     TrentoPatchedDataset,
     MUUFLPatchedDataset,
 )
-from models import MFTCPEACosine
+from models import MFTCPEACosine, MFTOriginalCosine
 from pretrain.masked_modeling_enhanced import EnhancedMaskedSpectralSpatialModel
 from pretrain.mae_pretrain import MAEPretrainModel
+from pretrain.mft_mae import MFTMAEPretrainModel
+from pretrain.mft_spatial_mae import MFTSpatialMaskPretrainModel
 from trainers.pretrain_trainer import PretrainTrainer
 
 
@@ -288,9 +290,11 @@ def run_pretrain(
     else:
         logger.info(f"Validation samples: {len(val_dataset)}")
 
-    # Create encoder (MFT-CPEA-Cosine model)
+    # Create encoder. Default is the unified MFT-CPEA-Cosine model; model.name
+    # "mft_original" selects the faithful original-MFT baseline instead.
     model_config = config.get("model", {})
     embed_dim = model_config.get("embed_dim", 128)
+    model_name = model_config.get("name", "mft_cpea")
 
     # Pretraining objective: "enhanced" (default; unified band/spatial masking +
     # MLP decoder) or "mae" (original MAE recipe: remove 75% of tokens, encode
@@ -304,24 +308,97 @@ def run_pretrain(
         logger.info("objective=mae: forcing use_projection=False (no projection head)")
         use_projection = False
 
-    encoder = MFTCPEACosine(
-        hsi_channels=hsi_channels,
-        aux_channels=aux_channels,
-        use_aux=use_aux,
-        embed_dim=embed_dim,
-        num_heads=model_config.get("num_heads", 8),
-        num_layers=model_config.get("num_layers", 4),
-        patch_size=data_config.get("patch_size", 11),
-        lambda_factor=model_config.get("lambda_factor", 2.0),
-        dropout=model_config.get("dropout", 0.1),
-        # Projection head settings (trained for few-shot transfer)
-        use_projection=use_projection,
-        proj_hidden_dim=model_config.get("proj_hidden_dim", embed_dim * 4),
-        proj_num_layers=model_config.get("proj_num_layers", 2),
-        proj_l2_normalize=model_config.get("proj_l2_normalize", False),
-    )
+    if model_name == "mft_original":
+        # Faithful original-MFT baseline. It has no projection head (eval rebuilds
+        # the bare encoder). Two objectives are supported:
+        #   "mae"      -> standard MAE (pretrain/mft_mae.py)
+        #   "enhanced" -> the team's "Spatial" masking+loss (pretrain/mft_spatial_mae.py)
+        if objective not in ("mae", "enhanced"):
+            raise ValueError(
+                f"model.name='mft_original' supports objective in {{'mae','enhanced'}}, "
+                f"got objective={objective!r}"
+            )
+        encoder = MFTOriginalCosine(
+            hsi_channels=hsi_channels,
+            aux_channels=aux_channels,
+            use_aux=use_aux,
+            embed_dim=embed_dim,
+            num_heads=model_config.get("num_heads", 8),
+            num_layers=model_config.get("num_layers", 2),
+            mlp_dim=model_config.get("mlp_dim", 512),
+            patch_size=data_config.get("patch_size", 11),
+            dropout=model_config.get("dropout", 0.1),
+            attention_type=model_config.get("attention_type", "mcross"),
+        )
+    else:
+        encoder = MFTCPEACosine(
+            hsi_channels=hsi_channels,
+            aux_channels=aux_channels,
+            use_aux=use_aux,
+            embed_dim=embed_dim,
+            num_heads=model_config.get("num_heads", 8),
+            num_layers=model_config.get("num_layers", 4),
+            patch_size=data_config.get("patch_size", 11),
+            lambda_factor=model_config.get("lambda_factor", 2.0),
+            dropout=model_config.get("dropout", 0.1),
+            # Projection head settings (trained for few-shot transfer)
+            use_projection=use_projection,
+            proj_hidden_dim=model_config.get("proj_hidden_dim", embed_dim * 4),
+            proj_num_layers=model_config.get("proj_num_layers", 2),
+            proj_l2_normalize=model_config.get("proj_l2_normalize", False),
+        )
 
-    if objective == "mae":
+    if model_name == "mft_original" and objective == "mae":
+        pretrain_model = MFTMAEPretrainModel(
+            encoder=encoder,
+            hsi_channels=hsi_channels,
+            aux_channels=aux_channels,
+            use_aux=use_aux,
+            patch_size=data_config.get("patch_size", 11),
+            embed_dim=embed_dim,
+            mask_ratio=pretrain_config.get("mask_ratio", 0.75),
+            decoder_dim=pretrain_config.get("decoder_dim", 64),
+            decoder_depth=pretrain_config.get("decoder_depth", 4),
+            decoder_heads=pretrain_config.get("decoder_heads", 4),
+            decoder_mlp_ratio=pretrain_config.get("decoder_mlp_ratio", 4.0),
+            norm_pix_loss=pretrain_config.get("norm_pix_loss", True),
+            recon_sigma=pretrain_config.get("recon_center_sigma", None),
+        )
+
+        total_params = sum(p.numel() for p in pretrain_model.parameters())
+        encoder_params = sum(p.numel() for p in encoder.parameters())
+        logger.info("Model: original-MFT baseline (channel tokenization, mCrossPA)")
+        logger.info("Objective: standard MAE (transformer decoder, cross-attn to encoded CLS)")
+        logger.info(f"Total parameters: {total_params:,}")
+        logger.info(f"Encoder parameters: {encoder_params:,}")
+        logger.info(f"Mask ratio: {pretrain_model.mask_ratio} "
+                    f"({pretrain_model.len_keep}/{pretrain_model.num_tokens} tokens visible)")
+    elif model_name == "mft_original" and objective == "enhanced":
+        spatial_mask_ratio = pretrain_config.get("spatial_mask_ratio", 0.75)
+        pretrain_model = MFTSpatialMaskPretrainModel(
+            encoder=encoder,
+            hsi_channels=hsi_channels,
+            aux_channels=aux_channels,
+            use_aux=use_aux,
+            patch_size=data_config.get("patch_size", 11),
+            embed_dim=embed_dim,
+            decoder_hidden_dim=pretrain_config.get("decoder_hidden_dim", 256),
+            spatial_mask_ratio=spatial_mask_ratio,
+            recon_sigma=pretrain_config.get("recon_center_sigma", None),
+        )
+
+        total_params = sum(p.numel() for p in pretrain_model.parameters())
+        encoder_params = sum(p.numel() for p in encoder.parameters())
+        logger.info("Model: original-MFT baseline (channel tokenization, mCrossPA)")
+        logger.info("Objective: Spatial mask (in-place token masking + MLP decoder, "
+                    "CLS-injection, center-weighted MSE)")
+        logger.info(f"Total parameters: {total_params:,}")
+        logger.info(f"Encoder parameters: {encoder_params:,}")
+        logger.info(f"Spatial mask ratio: {spatial_mask_ratio}")
+        if pretrain_config.get("band_mask_ratio", 0.0):
+            logger.warning("band_mask_ratio is ignored for model.name='mft_original' "
+                           "(only spatial masking is supported).")
+    elif objective == "mae":
         mask_ratio = pretrain_config.get("mask_ratio", 0.75)
         decoder_dim = pretrain_config.get("decoder_dim", 64)
         decoder_depth = pretrain_config.get("decoder_depth", 4)
@@ -373,6 +450,7 @@ def run_pretrain(
             band_mask_ratio=band_mask_ratio,
             spatial_mask_ratio=spatial_mask_ratio,
             recon_sigma=pretrain_config.get("recon_center_sigma", None),
+            recon_loss=pretrain_config.get("recon_loss", "mse"),
         )
 
         total_params = sum(p.numel() for p in pretrain_model.parameters())

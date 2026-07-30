@@ -44,9 +44,24 @@ def main() -> None:
     parser.add_argument("--data-root", type=str, default="./data/raw")
     parser.add_argument("--out-dir", type=str, default="checkpoints/hypersigma")
     parser.add_argument("--patch-size", type=int, default=11)
+    parser.add_argument(
+        "--n-components", type=int, default=None,
+        help="Number of PCA components. Default: the dataset's spat_components "
+             "(3, headline adapt pipeline). Use 100 to fit the native-geometry "
+             "spatial PCA (pca_<ds>_100band.pkl). Must be <= the band count.",
+    )
     args = parser.parse_args()
 
     spec = get_spec(args.dataset)
+    n_components = args.n_components if args.n_components is not None else spec.spat_components
+    if n_components > spec.hsi_channels:
+        raise ValueError(
+            f"--n-components={n_components} exceeds {args.dataset}'s {spec.hsi_channels} "
+            "bands; PCA cannot produce more components than bands. For native geometry, "
+            "below-100-band datasets are handled by on-the-fly spectral resampling at "
+            "eval time (no PCA fit needed)."
+        )
+
     dataset = spec.patched_cls(
         data_root=args.data_root,
         patch_size=args.patch_size,
@@ -55,14 +70,14 @@ def main() -> None:
     )
     logger.info("Loaded %s (split=all): %d samples", args.dataset, len(dataset))
 
-    # Paths follow the registry convention so adapt/eval pick them up
-    # automatically. We also fit the per-channel output stats used to
-    # standardize the SpatViT input (mean=0/std=1), matching Houston.
-    pca_path = spec.pca_spat_path(args.out_dir)
-    stats_path = spec.pca_stats_path(args.out_dir)
+    # Paths follow the registry convention (pca_<ds>_<n>band[.|_stats.]pkl) so
+    # adapt/eval pick them up automatically. We also fit the per-channel output
+    # stats used to standardize the SpatViT input (mean=0/std=1).
+    pca_path = f"{args.out_dir}/pca_{args.dataset}_{n_components}band.pkl"
+    stats_path = f"{args.out_dir}/pca_{args.dataset}_{n_components}band_stats.pkl"
     pca = fit_dataset_pca(
         dataset=dataset,
-        n_components=spec.spat_components,
+        n_components=n_components,
         save_path=pca_path,
     )
     fit_pca_output_stats(dataset=dataset, pca=pca, save_path=stats_path)

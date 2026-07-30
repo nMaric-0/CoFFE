@@ -46,7 +46,7 @@ pretrain:
   val_split: 0.00
 
   # Optimizer (MAE settings)
-  lr: 1.5e-4
+  lr: 1.5e-5
   min_lr: 1.0e-6
   weight_decay: 0.05
   warmup_epochs: 100
@@ -59,12 +59,12 @@ pretrain:
   # include both HSI channels and LiDAR/aux channels. 0.9 means ~90% of all
   # values are hidden, with LiDAR masked at the same rate as HSI. Set to 0 to
   # disable.
-  band_mask_ratio: 0.9
+  band_mask_ratio: 0.0
 
   # MAE-style spatial token masking: fraction of whole pixel tokens (all bands
   # at once) replaced with a learnable mask token after tokenization. Set to 0
   # to disable. Composes with band_mask_ratio when both > 0.
-  spatial_mask_ratio: 0.0
+  spatial_mask_ratio: 0.75
 
   # Center-weighted reconstruction loss (Gaussian sigma)
   # Emphasizes center pixel reconstruction; larger = more uniform
@@ -74,7 +74,7 @@ pretrain:
   pool_center_sigma: 1.0
 
   # Checkpointing
-  save_interval: 50
+  save_interval: 200
   val_interval: 50000             # Validate every 50 epochs
   log_interval: 1
   use_amp: False

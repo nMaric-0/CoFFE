@@ -337,6 +337,30 @@ def _get_class_colors(n_classes: int):
     return [cmap(i / max(n_classes - 1, 1)) for i in range(n_classes)]
 
 
+# Fixed class -> tab20 color index per dataset, so every class keeps the same
+# color across episodes and the standalone legend is reproducible. The Houston
+# assignment is pinned to the published legend image. Insertion order here also
+# defines the order classes appear in the legend.
+_FIXED_COLOR_IDX = {
+    "houston": {
+        "Healthy grass": 5, "Stressed grass": 12, "Synthetic grass": 17,
+        "Trees": 14, "Soil": 11, "Water": 1, "Residential": 0,
+        "Commercial": 2, "Road": 4, "Highway": 7, "Railway": 15,
+        "Parking Lot 1": 18, "Parking Lot 2": 10, "Tennis Court": 19,
+        "Running Track": 8,
+    },
+}
+
+
+def _fixed_color_map(dataset_label: Optional[str]):
+    """Return an ordered {class_name: rgba} map pinned for the dataset, else None."""
+    idx_map = _FIXED_COLOR_IDX.get((dataset_label or "").lower())
+    if idx_map is None:
+        return None
+    tab20 = matplotlib.colormaps.get_cmap("tab20").colors
+    return {name: tab20[i] for name, i in idx_map.items()}
+
+
 def plot_episode_feature_space(
     s_features: np.ndarray,
     q_features: np.ndarray,
@@ -347,6 +371,8 @@ def plot_episode_feature_space(
     class_names: list,
     title: str = "Episode Feature Space",
     save_path: Optional[str] = None,
+    legend_save_path: Optional[str] = None,
+    dataset_label: Optional[str] = None,
 ):
     """t-SNE scatter plot of prototypes, support, and query samples for one episode.
 
@@ -360,6 +386,8 @@ def plot_episode_feature_space(
         class_names: Display names for the N classes in this episode.
         title: Plot title.
         save_path: If provided, save figure to this path.
+        legend_save_path: If provided, save the legend as a separate image here.
+        dataset_label: Dataset name used in the legend heading ("<dataset> classes").
     """
     from sklearn.manifold import TSNE
 
@@ -379,8 +407,13 @@ def plot_episode_feature_space(
     support_coords = coords_2d[n_classes:n_classes + n_support]
     query_coords = coords_2d[n_classes + n_support:]
 
-    colors = _get_class_colors(n_classes)
-    fig, ax = plt.subplots(figsize=(10, 9))
+    fixed_map = _fixed_color_map(dataset_label)
+    use_fixed = fixed_map is not None and all(n in fixed_map for n in class_names)
+    if use_fixed:
+        colors = [fixed_map[n] for n in class_names]
+    else:
+        colors = _get_class_colors(n_classes)
+    fig, ax = plt.subplots(figsize=(11, 10))
 
     # Plot support samples (medium circles)
     for c in range(n_classes):
@@ -423,41 +456,57 @@ def plot_episode_feature_space(
     # Build legend
     from matplotlib.lines import Line2D
     legend_elements = []
-    for c in range(n_classes):
+    if use_fixed:
+        # All dataset classes, in the fixed order, so the legend is reproducible.
+        legend_class_items = list(fixed_map.items())
+    else:
+        legend_class_items = [(class_names[c], colors[c]) for c in range(n_classes)]
+    for name, col in legend_class_items:
         legend_elements.append(
-            Line2D([0], [0], marker="o", color="w", markerfacecolor=colors[c],
-                   markersize=8, label=class_names[c])
+            Line2D([0], [0], marker="o", color="w", markerfacecolor=col,
+                   markersize=14, label=name)
         )
     legend_elements.append(
         Line2D([0], [0], marker="*", color="w", markerfacecolor="gray",
-               markeredgecolor="black", markersize=14, label="Prototype")
+               markeredgecolor="black", markersize=22, label="Prototype")
     )
     legend_elements.append(
         Line2D([0], [0], marker="o", color="w", markerfacecolor="gray",
-               markersize=7, label="Support")
+               markersize=13, label="Support")
     )
     legend_elements.append(
         Line2D([0], [0], marker="s", color="w", markerfacecolor="gray",
-               markersize=6, label="Query (correct)")
+               markersize=12, label="Query (correct)")
     )
     legend_elements.append(
         Line2D([0], [0], marker="X", color="w", markerfacecolor="gray",
-               markeredgecolor="red", markersize=8, label="Query (wrong)")
+               markeredgecolor="red", markersize=14, label="Query (wrong)")
     )
-    ax.legend(handles=legend_elements, fontsize=8, loc="best",
-              framealpha=0.8, ncol=1)
+    # Legend is rendered as a separate image (see below), so the t-SNE plot
+    # itself stays clean with no inset legend.
 
     n_correct = int(correct_mask.sum())
     acc = n_correct / n_query * 100 if n_query > 0 else 0
-    ax.set_title(f"{title}  (acc={acc:.1f}%, {n_correct}/{n_query})", fontsize=13)
-    ax.set_xlabel("t-SNE dim 1", fontsize=10)
-    ax.set_ylabel("t-SNE dim 2", fontsize=10)
+    ax.set_title(f"{title}  (acc={acc:.1f}%, {n_correct}/{n_query})", fontsize=20)
+    ax.tick_params(axis="both", labelsize=16)
     ax.grid(alpha=0.2)
 
     plt.tight_layout()
     if save_path:
         fig.savefig(save_path, dpi=200, bbox_inches="tight")
         plt.close(fig)
+
+    # Save the legend as a standalone image with a "<dataset> classes" heading.
+    if legend_save_path:
+        heading = f"{dataset_label.capitalize()} classes" if dataset_label else "Classes"
+        ncol = min(len(legend_elements), 5)
+        fig_leg = plt.figure(figsize=(max(6, 2.2 * ncol), 3))
+        leg = fig_leg.legend(handles=legend_elements, loc="center", fontsize=16,
+                             ncol=ncol, framealpha=1.0, title=heading)
+        leg.get_title().set_fontsize(20)
+        fig_leg.savefig(legend_save_path, dpi=200, bbox_inches="tight")
+        plt.close(fig_leg)
+
     return fig
 
 

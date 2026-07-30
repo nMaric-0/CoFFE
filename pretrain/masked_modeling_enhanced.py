@@ -62,6 +62,8 @@ class EnhancedMaskedSpectralSpatialModel(nn.Module):
                             Set to 0 to disable.
         recon_sigma: Optional Gaussian sigma for center-weighted reconstruction
                      loss. None = uniform weighting.
+        recon_loss: Reconstruction loss on masked entries. One of "mse"
+                    (default), "l1", or "smooth_l1"/"huber" (SmoothL1, beta=1.0).
     """
 
     def __init__(
@@ -76,8 +78,16 @@ class EnhancedMaskedSpectralSpatialModel(nn.Module):
         band_mask_ratio: float = 0.9,
         spatial_mask_ratio: float = 0.0,
         recon_sigma: Optional[float] = None,
+        recon_loss: str = "mse",
     ):
         super().__init__()
+
+        recon_loss = (recon_loss or "mse").lower()
+        if recon_loss not in ("mse", "l1", "smooth_l1", "huber"):
+            raise ValueError(
+                f"recon_loss must be one of mse/l1/smooth_l1/huber, got {recon_loss!r}"
+            )
+        self.recon_loss = recon_loss
 
         if band_mask_ratio <= 0 and spatial_mask_ratio <= 0:
             raise ValueError(
@@ -201,8 +211,14 @@ class EnhancedMaskedSpectralSpatialModel(nn.Module):
             spatial_entry = token_mask.unsqueeze(-1).expand(-1, -1, self.total_channels)
             mask_per_entry = torch.maximum(mask_per_entry, spatial_entry)
 
-        # 8. MSE loss on masked entries only.
-        sq = (pred - target) ** 2                               # [B, N, C_total]
+        # 8. Reconstruction loss on masked entries only (per-element error,
+        #    then optional center-weighting, then masked mean).
+        if self.recon_loss == "mse":
+            sq = (pred - target) ** 2                           # [B, N, C_total]
+        elif self.recon_loss == "l1":
+            sq = (pred - target).abs()
+        else:  # smooth_l1 / huber (beta=1.0)
+            sq = nn.functional.smooth_l1_loss(pred, target, reduction="none", beta=1.0)
         if self.recon_sigma is not None:
             sq = sq * self._recon_center_weights.view(1, N, 1)
         denom = mask_per_entry.sum().clamp_min(1.0)

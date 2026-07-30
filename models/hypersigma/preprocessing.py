@@ -1,11 +1,19 @@
 """Spatial PCA preprocessor for the HyperSIGMA SpatViT branch.
 
-The SpatViT branch was pretrained on 3-channel RGB-like inputs. We
-reduce the dataset's HSI bands to 3 components using PCA fitted on the
-already-normalized patches (per-channel [0,1] from
+We reduce the dataset's HSI bands to ``n_components`` via a PCA fitted on
+the already-normalized patches (per-channel [0,1] from
 ``PatchedMultimodalDataset._normalize``). The PCA is wrapped as a
 frozen 1x1 ``nn.Conv2d`` so it can sit inside the encoder graph and
 autograd handles backprop correctly.
+
+NOTE: the released SpatViT-B checkpoint was pretrained on **100-channel**
+input (``patch_embed.proj`` is ``(768, 100, 8, 8)``), NOT 3 channels. In
+the adapted geometry the patch size (3) differs from the pretrained one
+(8), so ``patch_embed.proj`` is reinitialized and trained regardless,
+making the input-channel count a free choice. The headline pipeline uses
+3 components (PCA->3 already captures ~99% of the spectral variance); the
+100-component variant (closer to the pretraining width) lives in
+``notebooks/evaluate_hypersigma_pca100.ipynb``.
 
 NOTE: There is **no spectral PCA** in this pipeline. The SpecViT
 branch ingests raw bands and uses its built-in
@@ -140,6 +148,42 @@ def fit_pca_output_stats(
 def load_pca_output_stats(path: str) -> dict:
     with open(path, "rb") as f:
         return pickle.load(f)
+
+
+class SpectralResample(nn.Module):
+    """Resample the band (channel) axis to a fixed count via 1-D interpolation.
+
+    Used by the native-geometry ablation for the spatial branch on
+    datasets whose band count is below the pretrained SpatViT
+    ``in_chans`` (100): Trento (63) and MUUFL (64) cannot reach 100
+    components via PCA, so we instead linearly interpolate the raw
+    normalized bands ``[B, C, H, W] -> [B, out_channels, H, W]``. This
+    is a parameterless, frozen front-end (no learned weights). When the
+    input already has ``out_channels`` bands it is a no-op.
+
+    Mirrors :class:`PCAPreprocessor`'s ``out_channels`` attribute so the
+    dual encoder can read the channel count uniformly.
+    """
+
+    def __init__(self, out_channels: int, mode: str = "linear"):
+        super().__init__()
+        self.out_channels = out_channels
+        self.mode = mode
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        B, C, H, W = x.shape
+        if C == self.out_channels:
+            return x
+        # Interpolate along the band axis: fold (B,H,W) into the batch and
+        # treat each pixel's spectrum as a length-C 1-D signal.
+        sig = x.permute(0, 2, 3, 1).reshape(B * H * W, 1, C)
+        sig = torch.nn.functional.interpolate(
+            sig, size=self.out_channels, mode=self.mode, align_corners=False
+        )
+        return sig.reshape(B, H, W, self.out_channels).permute(0, 3, 1, 2).contiguous()
+
+    def extra_repr(self) -> str:
+        return f"out_channels={self.out_channels}, mode={self.mode}"
 
 
 class PCAStandardize(nn.Module):

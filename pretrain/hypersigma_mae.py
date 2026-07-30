@@ -44,7 +44,7 @@ from models.hypersigma.hypersigma_dual import HyperSIGMADual
 logger = logging.getLogger(__name__)
 
 
-_SUPPORTED_MODES = ("spatial_only", "spectral_only", "joint_sem")
+_SUPPORTED_MODES = ("spatial_only", "spectral_only", "joint_sem", "sem_only")
 _EPS = 1e-6
 
 
@@ -107,15 +107,26 @@ class HyperSIGMAMaskedAdaptation(nn.Module):
         self.patch_size = patch_size
         self.mask_ratio = mask_ratio
 
+        # `use_*` gate the per-branch reconstruction decoders + which branch
+        # weights stay trainable. `sem_only` (native-geometry SEM tuning) trains
+        # ONLY the fusion path: it builds no per-branch decoder (use_spat/use_spec
+        # False) but still masks both branch inputs (mask_spat/mask_spec) and keeps
+        # the SEM + fused decoder (use_sem True).
         self.use_spat = adapt_mode in ("spatial_only", "joint_sem")
         self.use_spec = adapt_mode in ("spectral_only", "joint_sem")
-        self.use_sem = adapt_mode == "joint_sem"
+        self.use_sem = adapt_mode in ("joint_sem", "sem_only")
+        self.sem_only = adapt_mode == "sem_only"
+        # Which branch inputs get token-masked (drives the hooks + mask sampling).
+        self.mask_spat = self.use_spat or self.sem_only
+        self.mask_spec = self.use_spec or self.sem_only
 
         embed_dim = dual.embed_dim
 
         # --- Spatial side -------------------------------------------------
         if self.use_spat:
-            self.num_spat_tokens = (dual.spat.pad_to // dual.spat.new_patch_size) ** 2
+            # Read the actual patch grid from patch_embed so this is correct for
+            # both the adapted geometry (12/3 -> 16) and native (64/8 -> 64).
+            self.num_spat_tokens = dual.spat.model.patch_embed.num_patches
             self.spat_in_chans = dual.spat.in_chans
             self.spat_patch_k = dual.spat.new_patch_size
             self.spat_token_pixels = self.spat_in_chans * self.spat_patch_k * self.spat_patch_k
@@ -173,17 +184,33 @@ class HyperSIGMAMaskedAdaptation(nn.Module):
             for p in dual.sem.parameters():
                 p.requires_grad_(False)
 
+        # --- sem_only: mask both inputs, but only the fusion path trains -------
+        # Both branches were frozen above (use_spat/use_spec False). We still need
+        # the mask tokens + token grids to mask the (frozen) branch inputs, and we
+        # unfreeze the spectral l1 projection (768->128, random — absent from the
+        # checkpoint) since the SEM consumes it via `spec_first`. Net trainable:
+        # SEM + fused_decoder + l1 + the two mask tokens.
+        if self.sem_only:
+            self.num_spat_tokens = dual.spat.model.patch_embed.num_patches
+            self.num_spec_tokens = dual.num_tokens
+            self.spat_mask_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
+            nn.init.normal_(self.spat_mask_token, std=0.02)
+            self.spec_mask_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
+            nn.init.normal_(self.spec_mask_token, std=0.02)
+            for p in dual.spec.model.l1.parameters():
+                p.requires_grad_(True)
+
         # Mask cache slots, populated inside forward() so hooks can read them.
         self._pending_spat_mask: Optional[torch.Tensor] = None
         self._pending_spec_mask: Optional[torch.Tensor] = None
 
         # Attach forward hooks for mask-token substitution.
         self._hook_handles: List = []
-        if self.use_spat:
+        if self.mask_spat:
             self._hook_handles.append(
                 dual.spat.model.patch_embed.register_forward_hook(self._spat_patch_embed_hook)
             )
-        if self.use_spec:
+        if self.mask_spec:
             self._hook_handles.append(
                 dual.spec.model.spat_map.register_forward_hook(self._spec_spat_map_hook)
             )
@@ -298,13 +325,25 @@ class HyperSIGMAMaskedAdaptation(nn.Module):
         loss_fused = zero
         out: Dict[str, torch.Tensor] = {}
 
-        if self.use_spat:
+        if self.mask_spat:
             self._pending_spat_mask = self._sample_mask(B, self.num_spat_tokens, device, dtype)
-        if self.use_spec:
+        if self.mask_spec:
             self._pending_spec_mask = self._sample_mask(B, self.num_spec_tokens, device, dtype)
 
         try:
-            if self.adapt_mode == "spatial_only":
+            if self.adapt_mode == "sem_only":
+                # Encoder frozen; mask both inputs, fuse, reconstruct the original
+                # 11x11 PCA cube. Trains SEM + fused_decoder + l1 + mask tokens.
+                dual_out = self.dual(hsi)
+                pred_fused_flat = self.fused_decoder(dual_out["fused"])
+                pred_fused = pred_fused_flat.view(
+                    B, self.fused_out_chans, self.patch_size, self.patch_size
+                )
+                tgt_fused = self._fused_target(hsi)
+                loss_fused = F.mse_loss(pred_fused, tgt_fused)
+                out.update(pred_fused=pred_fused, target_fused=tgt_fused)
+
+            elif self.adapt_mode == "spatial_only":
                 x = self.dual.pca_spat(hsi)
                 x = self.dual.pca_standardize(x)
                 spat_features = self.dual.spat(x)

@@ -101,6 +101,15 @@ def _build_model(config: dict, dataset_name: str) -> HyperSIGMAMaskedAdaptation:
         dr_dim=model_cfg.get("dr_dim", 128),
         num_stages=model_cfg.get("num_stages", 4),
         pca_stats_path=paths.get("pca_stats_path", spec.pca_stats_path()),
+        # PCA-100 variant: target a fixed spatial channel count; datasets below it
+        # (Trento 63, MUUFL 64) spectrally resample up to it (default None = off).
+        spat_resample_to=model_cfg.get("spat_resample_to", None),
+        # Native-geometry SEM-tuning ablation (default off -> existing behavior).
+        native_geometry=model_cfg.get("native_geometry", False),
+        input_fit=model_cfg.get("input_fit", "upscale"),
+        pad_anchor=model_cfg.get("pad_anchor", "center"),
+        interp_mode=model_cfg.get("interp_mode", "bicubic"),
+        native_pca_spat_path=paths.get("native_pca_spat_path", None),
     )
     dual.log_sanity()
 

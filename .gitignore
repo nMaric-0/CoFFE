@@ -52,6 +52,7 @@ coverage.xml
 env/
 venv/
 ENV/
+.claude/
 
 # IDE
 .idea/

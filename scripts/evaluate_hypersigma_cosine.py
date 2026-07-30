@@ -93,9 +93,17 @@ def _build_dual(
     num_stages: int = 4,
     pca_stats_path: Optional[str] = None,
     mode: str = "fused",
+    spat_resample_to: Optional[int] = None,
+    native_geometry: bool = False,
+    input_fit: str = "upscale",
+    pad_anchor: str = "center",
+    interp_mode: str = "bicubic",
+    native_pca_spat_path: Optional[str] = None,
 ) -> HyperSIGMADual:
     specs = DATASET_SPECS[dataset_name]
     branches = _MODE_BRANCHES.get(mode, _MODE_BRANCHES["fused"])
+    # native_geometry composes with any mode: spat_pool / spec_pool (single-branch
+    # unadapted ablation) or fused (the SEM-tuning ablation, with an adapted ckpt).
     dual = HyperSIGMADual(
         pca_spat_path=pca_spat_path,
         spat_ckpt=spat_ckpt,
@@ -108,6 +116,12 @@ def _build_dual(
         dr_dim=dr_dim,
         num_stages=num_stages,
         pca_stats_path=pca_stats_path,
+        spat_resample_to=spat_resample_to,
+        native_geometry=native_geometry,
+        input_fit=input_fit,
+        pad_anchor=pad_anchor,
+        interp_mode=interp_mode,
+        native_pca_spat_path=native_pca_spat_path,
         **branches,
     )
     dual.log_sanity()
@@ -161,7 +175,22 @@ def load_model(
     distance_metric: str,
     device: str,
     pca_stats_path: Optional[str] = None,
+    spat_resample_to: Optional[int] = None,
+    native_geometry: bool = False,
+    input_fit: str = "upscale",
+    pad_anchor: str = "center",
+    interp_mode: str = "bicubic",
+    native_pca_spat_path: Optional[str] = None,
 ) -> HyperSIGMACosine:
+    has_adapted = bool(
+        adapted_checkpoint and adapted_checkpoint.lower() not in ("none", "null", "random")
+    )
+    # Native geometry can be evaluated unadapted (Ablation 1) OR with a
+    # native-trained adapted checkpoint (Ablation 2, SEM tuning). A checkpoint
+    # trained at the *small adapted* geometry is shape-incompatible with the
+    # native encoder — `_load_adapted_checkpoint` loads strict=False and logs the
+    # resulting missing/unexpected keys, which is the signal that you mixed
+    # geometries (expect missing≈0 / unexpected≈0 for a matched native checkpoint).
     dual = _build_dual(
         dataset_name=dataset_name,
         pca_spat_path=pca_spat_path,
@@ -170,6 +199,12 @@ def load_model(
         spat_patch_k=spat_patch_k,
         pca_stats_path=pca_stats_path,
         mode=mode,
+        spat_resample_to=spat_resample_to,
+        native_geometry=native_geometry,
+        input_fit=input_fit,
+        pad_anchor=pad_anchor,
+        interp_mode=interp_mode,
+        native_pca_spat_path=native_pca_spat_path,
     )
     model = HyperSIGMACosine(
         dual=dual,
@@ -179,8 +214,13 @@ def load_model(
         prototype_mode=prototype_mode,
     )
 
-    if adapted_checkpoint and adapted_checkpoint.lower() not in ("none", "null", "random"):
+    if has_adapted:
         _load_adapted_checkpoint(model, adapted_checkpoint)
+    elif native_geometry:
+        logger.info(
+            "[HyperSIGMA] Running NATIVE-GEOMETRY ablation (mode=%s, input_fit=%s, unadapted)",
+            mode, input_fit,
+        )
     else:
         logger.info("[HyperSIGMA] Running UNADAPTED ablation (no Houston adaptation applied)")
 
@@ -508,6 +548,12 @@ def _write_results_json(
         "model_type": "HyperSIGMADual",
         "mode": args.mode,
         "spat_patch_k": args.spat_patch_k,
+        "spat_resample_to": getattr(args, "spat_resample_to", None),
+        "native_geometry": getattr(args, "native_geometry", False),
+        "input_fit": getattr(args, "input_fit", "upscale"),
+        "pad_anchor": getattr(args, "pad_anchor", "center"),
+        "interp_mode": getattr(args, "interp_mode", "bicubic"),
+        "native_pca_spat_path": getattr(args, "native_pca_spat_path", None),
         "adapted_checkpoint": args.adapted_checkpoint,
         "pca_spat_path": args.pca_spat_path,
         "pca_stats_path": getattr(args, "pca_stats_path", None),
@@ -590,6 +636,15 @@ def _resolve_dataset_paths(args, dataset_name: str) -> None:
         # Only standardize if the stats file actually exists; otherwise
         # fall back to raw PCA output (None), matching prior behavior.
         args.pca_stats_path = conv if Path(conv).exists() else None
+    # Native-geometry spatial front-end: the pretrained SpatViT patch_embed
+    # needs 100 channels. Use the 100-band PCA pickle if it exists (Houston,
+    # 144->100); otherwise the dual spectrally resamples raw bands -> 100
+    # (Trento 63, MUUFL 64). Leave None to trigger resampling.
+    if getattr(args, "native_geometry", False) and not getattr(args, "native_pca_spat_path", None):
+        conv100 = spec.pca_spat_path().replace(
+            f"_{spec.spat_components}band.pkl", "_100band.pkl"
+        )
+        args.native_pca_spat_path = conv100 if Path(conv100).exists() else None
     if getattr(args, "adapted_checkpoint", None) and args.adapted_checkpoint.lower() == "auto":
         args.adapted_checkpoint = str(
             Path(spec.adapt_ckpt_dir(args.spat_patch_k)) / "checkpoint.pth"
@@ -649,6 +704,12 @@ def main(args):
         distance_metric=args.distance_metric,
         device=device,
         pca_stats_path=getattr(args, "pca_stats_path", None),
+        spat_resample_to=getattr(args, "spat_resample_to", None),
+        native_geometry=getattr(args, "native_geometry", False),
+        input_fit=getattr(args, "input_fit", "upscale"),
+        pad_anchor=getattr(args, "pad_anchor", "center"),
+        interp_mode=getattr(args, "interp_mode", "bicubic"),
+        native_pca_spat_path=getattr(args, "native_pca_spat_path", None),
     )
 
     num_total = DATASET_SPECS[dataset_name]["num_classes"]
@@ -745,6 +806,14 @@ _DEFAULT_ARGS = {
     "spec_ckpt": "checkpoints/hypersigma/spec-vit-base.pth",
     "adapted_checkpoint": None,
     "mode": "fused",
+    # PCA-100 variant: fixed spatial channel width; sub-target datasets resample up.
+    "spat_resample_to": None,
+    # Native-geometry single-branch ablation (default off -> existing behavior).
+    "native_geometry": False,
+    "input_fit": "upscale",
+    "pad_anchor": "center",
+    "interp_mode": "bicubic",
+    "native_pca_spat_path": None,
 }
 
 
@@ -770,6 +839,26 @@ if __name__ == "__main__":
     parser.add_argument("--mode", type=str, default="fused",
                         choices=list(HyperSIGMACosine.SUPPORTED_MODES))
     parser.add_argument("--spat-patch-k", type=int, default=3, choices=[1, 3])
+    parser.add_argument("--spat-resample-to", type=int, default=None,
+                        help="Fixed spatial channel width (e.g. 100). Datasets with "
+                             "fewer bands than this and no matching PCA pickle spectrally "
+                             "resample their bands up to it (Trento 63 / MUUFL 64 -> 100); "
+                             "datasets with a PCA pickle (Houston 144->100) use PCA.")
+    parser.add_argument("--native-geometry", action="store_true", default=False,
+                        help="Native-geometry ablation: keep the encoder at its "
+                             "pretrained input size (SpatViT 64x64/patch-8/100ch, "
+                             "SpecViT 64x64) so the pretrained projections load, and "
+                             "resize the 11x11 input up to it. Single-branch + unadapted only.")
+    parser.add_argument("--input-fit", type=str, default="upscale", choices=["upscale", "pad"],
+                        help="How to fit 11x11 to the native input size (native-geometry only).")
+    parser.add_argument("--pad-anchor", type=str, default="center", choices=["center", "top-left"],
+                        help="Placement for --input-fit pad (native-geometry only).")
+    parser.add_argument("--interp-mode", type=str, default="bicubic", choices=["bicubic", "bilinear"],
+                        help="Interpolation for --input-fit upscale (native-geometry only).")
+    parser.add_argument("--native-pca-spat-path", type=str, default=None,
+                        help="100-band spatial PCA pickle for native geometry. If omitted, "
+                             "derived from --dataset (pca_<ds>_100band.pkl); if absent, the "
+                             "spatial branch spectrally resamples raw bands -> 100.")
     parser.add_argument("--pca-spat-path", type=str, default=None,
                         help="Spatial PCA pickle. If omitted, derived from "
                              "--dataset (checkpoints/hypersigma/pca_<ds>_3band.pkl).")

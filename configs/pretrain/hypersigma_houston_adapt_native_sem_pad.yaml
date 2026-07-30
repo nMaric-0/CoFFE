@@ -1,0 +1,82 @@
+# Houston native-geometry MAE SEM-tuning config -- PADDED input variant.
+#
+# Same recipe as hypersigma_houston_adapt_native_sem.yaml (keep BOTH encoders
+# at their native pretrained geometry: SpatViT 64x64 / patch-8 / 100ch,
+# SpecViT 64x64; the pretrained patch_embed / spat_map / pos_embed LOAD from
+# the checkpoint, and MAE-tune ONLY the fusion path on the frozen encoder),
+# but FIT the 11x11 patch to 64x64 by ZERO-PADDING (centered) instead of
+# bicubic upscaling:
+#   input_fit = "pad", pad_anchor = "center"  (vs. "upscale" in the sibling config)
+#   trained   = SEM + fused_decoder + spectral l1 + mask tokens
+#   frozen    = both pretrained branch bodies + input projections + PCA
+#   loss      = fused reconstruction only
+#
+# Spatial 100-channel front-end: Houston (144 bands) uses PCA 144->100.
+# Fit it first (CPU, one-off) if missing:
+#   python scripts/fit_pca_hypersigma.py --dataset houston --n-components 100
+# Then run:
+#   python scripts/adapt_hypersigma.py \
+#       --config configs/pretrain/hypersigma_houston_adapt_native_sem_pad.yaml
+#
+# Driven for all three datasets by scripts/run_native_sem_pad_experiments.sh.
+
+model:
+  name: "hypersigma_dual"
+  adapt_mode: "sem_only"        # native-geometry SEM tuning (fusion path only)
+  hsi_channels: 144
+  spat_patch_k: 3               # ignored under native_geometry (uses patch-8); kept for API parity
+  embed_dim: 768
+  num_tokens: 100
+  dr_dim: 128
+  num_stages: 4
+  # --- Native geometry knobs ---
+  native_geometry: true
+  input_fit: "pad"              # PAD 11->64 (zero canvas) | "upscale" interpolates
+  pad_anchor: "center"          # patch sits centered in the 64x64 canvas
+  interp_mode: "bicubic"        # unused for input_fit=pad; kept for API parity
+
+data:
+  dataset: "houston"
+  data_root: "./data/raw"
+  patch_size: 11
+  num_workers: 4
+
+paths:
+  # Spatial 100-band front-end. For Houston this is a fitted PCA 144->100.
+  native_pca_spat_path: "checkpoints/hypersigma/pca_houston_100band.pkl"
+  # pca_spat_path / pca_stats_path are unused under native_geometry (the dual
+  # uses native_pca_spat_path), but kept for clarity / non-native fallback.
+  pca_spat_path: "checkpoints/hypersigma/pca_houston_100band.pkl"
+  pca_stats_path: "checkpoints/hypersigma/pca_houston_100band_stats.pkl"
+  spat_ckpt: "checkpoints/hypersigma/spat-vit-base.pth"
+  spec_ckpt: "checkpoints/hypersigma/spec-vit-base.pth"
+  checkpoint_dir: "checkpoints/hypersigma_adapted/houston_native_sem_pad"
+  log_dir: "logs/hypersigma_adapted/houston_native_sem_pad"
+
+pretrain:
+  epochs: 2000
+  batch_size: 64
+  val_split: 0.01
+
+  lr: 1.5e-4
+  min_lr: 1.0e-6
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+
+  mask_ratio: 0.75
+  spat_decoder_hidden: 256
+  spec_decoder_hidden: 256
+  fused_decoder_hidden: 512
+  decoder_dropout: 0.0
+
+  save_interval: 400
+  checkpoint_milestones: [5, 10, 20, 50]
+  val_interval: 50
+  log_interval: 1
+  use_amp: False
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: False

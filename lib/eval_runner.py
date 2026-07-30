@@ -31,6 +31,9 @@ if str(REPO_ROOT) not in sys.path:
 # Keys read from the pretrain experiment's saved config to seed eval defaults.
 # Eval-time overrides in `eval_params` still win.
 _ARCH_KEYS_FROM_MODEL = (
+    "name",            # selects the eval model (mft_cpea | mft_original)
+    "attention_type",  # original-MFT: mcross | standard
+    "mlp_dim",         # original-MFT feed-forward width (faithful: 512)
     "embed_dim",
     "num_heads",
     "num_layers",

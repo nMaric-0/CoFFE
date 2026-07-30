@@ -27,8 +27,15 @@ from .patched import (
 # lockstep with the defaults baked into the scripts and configs.
 DEFAULT_PCA_DIR = "checkpoints/hypersigma"
 DEFAULT_ADAPT_DIR = "checkpoints/hypersigma_adapted"
-# The SpatViT branch was pretrained on 3-channel inputs, so the spatial
-# PCA always reduces to 3 components regardless of dataset band count.
+# Default spatial-PCA width for the adapted pipeline. NOTE: the released
+# SpatViT-B checkpoint was actually pretrained on 100-channel input
+# (patch_embed.proj is (768, 100, 8, 8)) — NOT 3 channels. In the adapted
+# geometry the patch size (3) differs from the pretrained one (8), so
+# patch_embed.proj is reinitialized and trained regardless, which makes the
+# input-channel count a free choice. 3 is chosen because PCA->3 already
+# captures ~99% of the spectral variance (Houston 98.97%, MUUFL 99.21%,
+# Trento 95.46%). See notebooks/evaluate_hypersigma_pca100.ipynb for the
+# 100-component variant that feeds the branch closer to its pretraining width.
 SPAT_COMPONENTS = 3
 
 

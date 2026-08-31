@@ -65,3 +65,81 @@ errors; 88 non-Python files. `scripts/` alone is 39 files / 8,053 LOC.
    is a hint, not proof): `data/transforms/augmentations.py` 0 %,
    `data/samplers/patched_episode_sampler.py` 13 %, `models/backbones/*`
    16–17 %, `models/wrappers/pretrain_wrapper.py` 22 %.
+
+---
+
+## Phase 1 — audit (closure, D1–D12 verdicts, manifest)
+
+**Changed:** only `docs/refactor/` and `tools/refactor/`. No behavior touched.
+
+- Added `tools/refactor/closure.py` — static import-closure tracer over named
+  root sets; parses `.ipynb` code cells; follows ancestor package `__init__.py`
+  edges. Deterministic; re-runnable.
+- Added `tools/refactor/build_manifest.py` — encodes the audit verdicts into
+  `docs/refactor/manifest.json` so it can be regenerated and diffed.
+- Added `docs/refactor/closure.json` (raw closure data),
+  `docs/refactor/manifest.json` (213 records), `docs/refactor/AUDIT.md`
+  (narrative + D1–D16 verdicts + risk register + DO-NOT-RENAME list).
+
+**Verification:** `pytest -q` → **62 passed** (unchanged from the phase-0
+baseline). Both new tools byte-deterministic across reruns. `gpu`/`data`
+markers still unregistered (phase-0 E3 stands; phase 2 fixes it).
+
+**Closure result:** 126 traceable files; PAPER union closure = 79.
+Classification: PAPER 124, INFRA 36, EXPLORATORY 19, VENDORED 13, DEAD 11,
+DUPLICATE 10. Verdicts: 158 keep, 42 delete, 13 rename.
+
+**Load-bearing negative result:** `exploratory − PAPER = ∅` for library code.
+The ablation/combo/bestcfg scripts and every notebook reach no module the paper
+routes do not already reach, so the D9 decision cannot orphan library code.
+
+**Headline findings**
+
+1. **Table 2 is a two-source composite.** Means come from single canonical runs
+   evaluated at **epoch 950 (Houston) / 975 (Trento, MUUFL)**; the ± column is
+   the across-seed std from a *separate* 5-seed experiment trained fresh to
+   **700** epochs. All 30 cells matched exactly, both columns. Nothing in the
+   repo states this. (D1)
+2. **D3 λ is LIVE.** The paper eval feature is
+   `z = mean_j(patch_emb_j) + 0.5·cls_emb`, not "patch tokens pooled" —
+   `scripts/evaluate_cosine.py:392-393` → `models/mft_cpea_cosine.py:294`, with
+   `lambda_factor: 0.5` in every Table 2 CoFFE eval config. Behavior stays;
+   this is a paper↔code description gap.
+3. **D8 correction — `experiments/significance_report copy.json` is NOT junk.**
+   It is the only source of the ± for the 12 `enhanced` (HSI+LiDAR) Table 2
+   cells, including all three headline numbers. Verdict changed to `rename`.
+4. **D10 partly refuted.** `pretrain/masked_modeling.py`, `mae_pretrain.py`,
+   `decoders.py` and `trainers/pretrain_trainer.py` are all LIVE.
+   `models/backbones/*` + `models/wrappers/*` are DEAD, but only provably so
+   via symbol-level analysis — a package `__init__` re-export makes them
+   import-reachable.
+5. **D12 refuted as stated.** `utils/metrics.py` holds only `accuracy` and
+   `confusion_matrix`; AA/κ live in `scripts/evaluate_cosine.py:277-322`.
+6. **Paper §2 invariant verified exactly:** Houston eval encoder =
+   **579,328** parameters (delta 0).
+
+**New surprises (reported, not fixed)**
+
+- **D13** — the committed `configs/` do **not** reproduce the paper runs
+  (Trento band rate 0.9 vs the 0.85 that ran; Houston 3000 vs 1500 epochs;
+  HyperSIGMA PCA-100 3000/64/1.5e-4 vs the 2000/128/1e-5 that ran). The paper's
+  own stated mask rates are correct — `configs/` is the stale artifact.
+- **D14** — Table 2's headline Houston 75.30 comes from
+  `houston_enhanced_spatial_mask_test_run1_seed52`, which
+  `scripts/compile_results.py:35` deliberately filters out as a scratch run
+  (hence its absence from `RESULTS.json`). The `seed52` in the name is a
+  misnomer; the run used seed 42.
+- **D15** — `PAPER_CANON` §7.2 points the state_dict key-map shim at
+  `utils/checkpoints.py`, which is dead; the live logic is in
+  `scripts/evaluate_cosine.py:107`.
+- **D16** — `model_type` is written into `results.json` and read back by
+  compilers; renaming its CoFFE/MFT values is a writer change needing reader
+  aliases first.
+- **D2 sub-finding** — Table 3 used **2000** episodes, Table 2 used **1000**,
+  while `PAPER_CANON` §4 states 1000 as law for both; and one Table 3 cell
+  (Houston 11×11 spectral) used `k_query=30`.
+
+**Open questions for the gate:** see the phase-1 gate checklist — D1 recipe
+wording, D3 acknowledgement, D9 disposition, D11, notebook keep-list, the
+`significance_report copy.json` rescue, and R2 (`utils/checkpoints.py` vs
+canon §7.2).

@@ -1,0 +1,1952 @@
+{
+  "phase": 1,
+  "generated_by": "tools/refactor/build_manifest.py",
+  "note": "verdicts are PROPOSALS until 'approved': true is set at the phase-1 gate",
+  "summary": {
+    "files": 213,
+    "by_class": {
+      "DEAD": 11,
+      "DUPLICATE": 10,
+      "EXPLORATORY": 19,
+      "INFRA": 36,
+      "PAPER": 124,
+      "VENDORED": 13
+    },
+    "by_verdict": {
+      "delete": 42,
+      "keep": 158,
+      "rename": 13
+    }
+  },
+  "files": [
+    {
+      "path": ".gitignore",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "D5: the bare lib/ rule is already neutralised by the negations at :78-84 (verified with git check-ignore at phase 0)",
+      "notes": "cosmetic removal of the shadowed rule in phase 5",
+      "approved": false
+    },
+    {
+      "path": "CLAUDE.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "repo instructions; 'Environment facts' are wrong (phase-0 E1)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "LICENSE",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "repo license",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "PAPER_CANON.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "the source of truth itself",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "README.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "D7 confirmed: wrong title/branding, 'cosine ... prototypical network', n_way: 5 example, omits MFT and HyperSIGMA routes",
+      "notes": "rewrite in phase 8 against PAPER_CANON \u00a76",
+      "approved": false
+    },
+    {
+      "path": "SPLIT.md",
+      "class": "INFRA",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "documents extraction from the private parent repo mft-cpea, naming an internal branch (SPLIT.md:3); internal-only",
+      "notes": "D11 - Nikola's call: delete | keep",
+      "approved": false
+    },
+    {
+      "path": "WORKFLOW.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "developer workflow doc; audit for legacy vocabulary in phase 4",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/eval/hypersigma_houston.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/base.yaml",
+      "class": "DEAD",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "referenced by nothing; utils/io.py:10 load_config is a flat OmegaConf load with no inheritance, and no config declares a base",
+      "notes": "D4: also stale (8 heads/4 layers/lambda=2.0/800 ep vs paper 2/2)",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/houston_pretrain_enhanced.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/houston_pretrain_hsi_only.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/houston_pretrain_mae.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/houston_pretrain_mae_hsi_only.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/hypersigma_houston_adapt.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/hypersigma_houston_adapt_native_sem.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/hypersigma_houston_adapt_native_sem_pad.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/hypersigma_houston_adapt_pca100.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/hypersigma_muufl_adapt.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/hypersigma_muufl_adapt_native_sem_pad.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/hypersigma_trento_adapt.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/hypersigma_trento_adapt_native_sem_pad.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/mft_original_houston_mae.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/mft_original_houston_spatial.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/mft_original_muufl_mae.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/mft_original_muufl_spatial.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/mft_original_trento_mae.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/mft_original_trento_spatial.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/muufl_pretrain_enhanced.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/muufl_pretrain_hsi_only.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/muufl_pretrain_mae.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/muufl_pretrain_mae_hsi_only.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/trento_pretrain_enhanced.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/trento_pretrain_hsi_only.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/trento_pretrain_mae.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/pretrain/trento_pretrain_mae_hsi_only.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "data/__init__.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "data/datasets/__init__.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "data/datasets/base.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "data/datasets/houston.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "data/datasets/muufl.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "data/datasets/patched.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "data/datasets/registry.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "data/datasets/trento.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "data/samplers/__init__.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "data/samplers/episode_sampler.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "data/samplers/patched_episode_sampler.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "data/transforms/__init__.py",
+      "class": "DEAD",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "closure.json unreached; no in-repo importer of data.transforms (AUDIT.md \u00a72.2)",
+      "notes": "0% coverage at baseline",
+      "approved": false
+    },
+    {
+      "path": "data/transforms/augmentations.py",
+      "class": "DEAD",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "closure.json unreached; notebook 'Compose' hits are unrelated prose (verified)",
+      "notes": "sole torchvision consumer; its removal drops that dependency (D6)",
+      "approved": false
+    },
+    {
+      "path": "docs/COSINE_VARIANT.md",
+      "class": "INFRA",
+      "verdict": "rename",
+      "target": "docs/EVAL_PROTOCOL.md",
+      "evidence": "'Cosine' in a doc name is retired by PAPER_CANON \u00a71; protocol is Euclidean NCM",
+      "notes": "content rewrite in phase 6/8",
+      "approved": false,
+      "provisional": true
+    },
+    {
+      "path": "docs/ENHANCED_PRETRAINING.md",
+      "class": "INFRA",
+      "verdict": "rename",
+      "target": "docs/PRETRAINING.md",
+      "evidence": "objective 'enhanced' -> 'simmim' per PAPER_CANON \u00a71",
+      "notes": "",
+      "approved": false,
+      "provisional": true
+    },
+    {
+      "path": "docs/presentation/PROJECT_OVERVIEW.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "internal overview; audit for legacy vocabulary in phase 4",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "docs/presentation/RESULTS.json",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "same generation as RESULTS.md; missing the headline Houston SimMIM-token HSI+LiDAR row (filtered by compile_results.py:35)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "docs/presentation/RESULTS.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "D2: its HyperSIGMA rows are a superseded generation (joint_sem @600 episodes, cosine+euclidean) that no Table 3 cell uses; its CoFFE rows carry within-run CI, not the paper's across-seed std",
+      "notes": "must be marked superseded, not silently updated",
+      "approved": false
+    },
+    {
+      "path": "docs/refactor/BASELINE.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "refactor record",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "docs/refactor/ENV.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "refactor record",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "docs/refactor/LOG.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "refactor record",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "docs/refactor/baseline_pytest.txt",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "refactor record",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "docs/refactor/inventory.json",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "refactor record",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "docs/refactor/packages.txt",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "refactor record",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "experiments/_example/README.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "example experiment tree used as a layout reference",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "experiments/_example/evaluations/houston_5way_5shot_cosine_t10/eval_config.json",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "example experiment tree used as a layout reference",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "experiments/_example/evaluations/houston_5way_5shot_cosine_t10/eval_metadata.json",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "example experiment tree used as a layout reference",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "experiments/_example/evaluations/houston_5way_5shot_cosine_t10/results.json",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "example experiment tree used as a layout reference",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "experiments/_example/pretrain_config.yaml",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "example experiment tree used as a layout reference",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "experiments/_example/pretrain_metadata.json",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "example experiment tree used as a layout reference",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "experiments/_report_raw.json",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "holds 20 of 24 Table 3 cells with exact mean+CI match (AUDIT.md \u00a73 D2)",
+      "notes": "rename proposed but deferred: leading underscore is load-bearing for no reader",
+      "approved": false
+    },
+    {
+      "path": "experiments/ablation_report.json",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "report of an exploratory pipeline; no Table 2/3 cell traces to it",
+      "notes": "D9 - Nikola's call",
+      "approved": false
+    },
+    {
+      "path": "experiments/aggregated_results.json",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "holds the single-run OA means for 21 of 30 Table 2 cells",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "experiments/bestcfg_report.json",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "report of an exploratory pipeline; no Table 2/3 cell traces to it",
+      "notes": "D9 - Nikola's call",
+      "approved": false
+    },
+    {
+      "path": "experiments/combo_report.json",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "report of an exploratory pipeline; no Table 2/3 cell traces to it",
+      "notes": "D9 - Nikola's call",
+      "approved": false
+    },
+    {
+      "path": "experiments/experiment_metadata.json",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-run distilled metadata; second source for Table 2 means",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "experiments/gathered_results.json",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "output of scripts/gather_requested_results.py (paper_compile root)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "experiments/hypersigma_native_sem_pca100_report.json",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "canon-named Table 3 report; its coverage_gaps_and_anomalies list is corroborated by AUDIT.md \u00a73 D2/D13",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "experiments/mft_faithful_results.json",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "sole source of the 6 MFT-row means in Table 2 (epoch-950 checkpoints)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "experiments/significance_report copy.json",
+      "class": "PAPER",
+      "verdict": "rename",
+      "target": "experiments/significance_report_enhanced_v1.json",
+      "evidence": "NOT junk: supplies the across-seed std for the 12 'enhanced' (HSI+LiDAR) Table 2 cells, which significance_report.json does not contain (its groups list omits 'enhanced')",
+      "notes": "RESCUE from the D8 delete list - see gate item",
+      "approved": false
+    },
+    {
+      "path": "experiments/significance_report.json",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "supplies the across-seed std for 18 of 30 Table 2 cells (AUDIT.md \u00a73 D1 table)",
+      "notes": "5-seed, EPOCHS=700, eval_name=sig_eval_epoch700",
+      "approved": false
+    },
+    {
+      "path": "lib/__init__.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "lib/adapt_runner.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "lib/eval_runner.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "lib/experiments.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "lib/pretrain_runner.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "models/__init__.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "models/backbones/__init__.py",
+      "class": "DEAD",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "closed island: reachable only via models/__init__.py:5,12 re-export; no symbol used outside the island (AUDIT.md \u00a72.2)",
+      "notes": "delete with models/__init__.py:5-11 re-export block",
+      "approved": false
+    },
+    {
+      "path": "models/backbones/base.py",
+      "class": "DEAD",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "closed island: reachable only via models/__init__.py:5,12 re-export; no symbol used outside the island (AUDIT.md \u00a72.2)",
+      "notes": "delete with models/__init__.py:5-11 re-export block",
+      "approved": false
+    },
+    {
+      "path": "models/backbones/hsi_baseline.py",
+      "class": "DEAD",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "closed island: reachable only via models/__init__.py:5,12 re-export; no symbol used outside the island (AUDIT.md \u00a72.2)",
+      "notes": "delete with models/__init__.py:5-11 re-export block",
+      "approved": false
+    },
+    {
+      "path": "models/backbones/mft_channel.py",
+      "class": "DEAD",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "closed island: reachable only via models/__init__.py:5,12 re-export; no symbol used outside the island (AUDIT.md \u00a72.2)",
+      "notes": "delete with models/__init__.py:5-11 re-export block",
+      "approved": false
+    },
+    {
+      "path": "models/backbones/mft_pixel.py",
+      "class": "DEAD",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "closed island: reachable only via models/__init__.py:5,12 re-export; no symbol used outside the island (AUDIT.md \u00a72.2)",
+      "notes": "delete with models/__init__.py:5-11 re-export block",
+      "approved": false
+    },
+    {
+      "path": "models/components/__init__.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "models/components/mft_blocks.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "models/components/projection.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "models/components/tokenizers.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "models/components/transformer.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "models/hypersigma/__init__.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "models/hypersigma/_input_fit.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "models/hypersigma/hypersigma_cosine.py",
+      "class": "PAPER",
+      "verdict": "rename",
+      "target": "coffe/models/hypersigma/hypersigma_fewshot.py",
+      "evidence": "PAPER_CANON \u00a71: HyperSIGMACosine -> HyperSIGMAFewShot",
+      "notes": "",
+      "approved": false,
+      "provisional": true
+    },
+    {
+      "path": "models/hypersigma/hypersigma_dual.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "models/hypersigma/preprocessing.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "models/hypersigma/sem.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "models/hypersigma/spat_vit_branch.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "models/hypersigma/spec_vit_branch.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "models/mft_cpea_cosine.py",
+      "class": "PAPER",
+      "verdict": "rename",
+      "target": "coffe/models/coffe.py",
+      "evidence": "PAPER_CANON \u00a71: module rename; class MFTCPEACosine -> CoFFE",
+      "notes": "nn.Module ATTRIBUTE names stay frozen (\u00a77.2)",
+      "approved": false,
+      "provisional": true
+    },
+    {
+      "path": "models/mft_original.py",
+      "class": "PAPER",
+      "verdict": "rename",
+      "target": "coffe/models/mft_original.py",
+      "evidence": "PAPER_CANON \u00a71: class MFTOriginalCosine -> MFTOriginal",
+      "notes": "",
+      "approved": false,
+      "provisional": true
+    },
+    {
+      "path": "models/wrappers/__init__.py",
+      "class": "DEAD",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "closed island: reachable only via models/__init__.py:5,12 re-export; no symbol used outside the island (AUDIT.md \u00a72.2)",
+      "notes": "delete with models/__init__.py:12 re-export",
+      "approved": false
+    },
+    {
+      "path": "models/wrappers/pretrain_wrapper.py",
+      "class": "DEAD",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "closed island: reachable only via models/__init__.py:5,12 re-export; no symbol used outside the island (AUDIT.md \u00a72.2)",
+      "notes": "holds ContrastiveHead / MAEDecoder; no contrastive learning in the paper (D10)",
+      "approved": false
+    },
+    {
+      "path": "notebooks/adapt_hypersigma_native_sem.ipynb",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "kept notebook (paper route driver)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "notebooks/compare.ipynb",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "kept notebook (paper route driver)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "notebooks/evaluate.ipynb",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "kept notebook (paper route driver)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "notebooks/evaluate_hypersigma copy 2.ipynb",
+      "class": "DUPLICATE",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
+      "notes": "D8 (count is 9 with pretrain_run2, not 7)",
+      "approved": false
+    },
+    {
+      "path": "notebooks/evaluate_hypersigma copy 3.ipynb",
+      "class": "DUPLICATE",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
+      "notes": "D8 (count is 9 with pretrain_run2, not 7)",
+      "approved": false
+    },
+    {
+      "path": "notebooks/evaluate_hypersigma copy.ipynb",
+      "class": "DUPLICATE",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
+      "notes": "D8 (count is 9 with pretrain_run2, not 7)",
+      "approved": false
+    },
+    {
+      "path": "notebooks/evaluate_hypersigma.ipynb",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "kept notebook (paper route driver)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "notebooks/evaluate_hypersigma_native.ipynb",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "kept notebook (paper route driver)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "notebooks/evaluate_hypersigma_pca100 copy 3.ipynb",
+      "class": "DUPLICATE",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
+      "notes": "D8 (count is 9 with pretrain_run2, not 7)",
+      "approved": false
+    },
+    {
+      "path": "notebooks/evaluate_hypersigma_pca100 copy.ipynb",
+      "class": "DUPLICATE",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
+      "notes": "D8 (count is 9 with pretrain_run2, not 7)",
+      "approved": false
+    },
+    {
+      "path": "notebooks/evaluate_hypersigma_pca100.ipynb",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "kept notebook (paper route driver)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "notebooks/pretrain copy 2.ipynb",
+      "class": "DUPLICATE",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
+      "notes": "D8 (count is 9 with pretrain_run2, not 7)",
+      "approved": false
+    },
+    {
+      "path": "notebooks/pretrain copy 3.ipynb",
+      "class": "DUPLICATE",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
+      "notes": "D8 (count is 9 with pretrain_run2, not 7)",
+      "approved": false
+    },
+    {
+      "path": "notebooks/pretrain copy.ipynb",
+      "class": "DUPLICATE",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
+      "notes": "D8 (count is 9 with pretrain_run2, not 7)",
+      "approved": false
+    },
+    {
+      "path": "notebooks/pretrain.ipynb",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "kept notebook (paper route driver)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "notebooks/pretrain_run2.ipynb",
+      "class": "DUPLICATE",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
+      "notes": "D8 (count is 9 with pretrain_run2, not 7)",
+      "approved": false
+    },
+    {
+      "path": "pretrain/__init__.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "pretrain/decoders.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "pretrain/hypersigma_mae.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "pretrain/mae_pretrain.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "pretrain/masked_modeling.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "pretrain/masked_modeling_enhanced.py",
+      "class": "PAPER",
+      "verdict": "rename",
+      "target": "coffe/pretrain/simmim.py",
+      "evidence": "PAPER_CANON \u00a71: EnhancedMaskedSpectralSpatialModel -> SimMIMPretrainModel",
+      "notes": "",
+      "approved": false,
+      "provisional": true
+    },
+    {
+      "path": "pretrain/mft_mae.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "pretrain/mft_spatial_mae.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "pyproject.toml",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "no gpu/data pytest markers registered (phase-0 E3); addopts forces --cov on every run",
+      "notes": "phase 2 registers the markers",
+      "approved": false
+    },
+    {
+      "path": "requirements.txt",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "true third-party import set is torch, numpy, scipy, omegaconf, sklearn, matplotlib, seaborn, tqdm, PyYAML, tensorboard(soft), pytest",
+      "notes": "D6: prune hydra-core, h5py, scikit-image, spectral, rasterio, timm, einops, wandb, torchvision; ADD PyYAML (imported by 9 files, currently undeclared)",
+      "approved": false
+    },
+    {
+      "path": "scripts/__init__.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/ablation_config.py",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
+      "notes": "D9 - Nikola's call: delete | archive/ | keep",
+      "approved": false
+    },
+    {
+      "path": "scripts/ablation_eval_worker.py",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
+      "notes": "D9 - Nikola's call: delete | archive/ | keep",
+      "approved": false
+    },
+    {
+      "path": "scripts/ablation_pretrain_worker.py",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
+      "notes": "D9 - Nikola's call: delete | archive/ | keep",
+      "approved": false
+    },
+    {
+      "path": "scripts/adapt_hypersigma.py",
+      "class": "PAPER",
+      "verdict": "rename",
+      "target": "coffe/cli/adapt_hypersigma.py",
+      "evidence": "PAPER_CANON \u00a79 CLI verb 'adapt-hypersigma'",
+      "notes": "",
+      "approved": false,
+      "provisional": true
+    },
+    {
+      "path": "scripts/adapt_hypersigma_houston.py",
+      "class": "DUPLICATE",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "shim re-exporting scripts.adapt_hypersigma; no live importer (lib/adapt_runner.py:86 imports the real module)",
+      "notes": "only markdown prose + captured log output mention it (D8)",
+      "approved": false
+    },
+    {
+      "path": "scripts/aggregate_ablation.py",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
+      "notes": "D9 - Nikola's call: delete | archive/ | keep",
+      "approved": false
+    },
+    {
+      "path": "scripts/aggregate_bestcfg.py",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
+      "notes": "D9 - Nikola's call: delete | archive/ | keep",
+      "approved": false
+    },
+    {
+      "path": "scripts/aggregate_combo.py",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
+      "notes": "D9 - Nikola's call: delete | archive/ | keep",
+      "approved": false
+    },
+    {
+      "path": "scripts/aggregate_experiment_results.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/aggregate_significance.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/bestcfg_config.py",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
+      "notes": "D9 - Nikola's call: delete | archive/ | keep",
+      "approved": false
+    },
+    {
+      "path": "scripts/bestcfg_eval_worker.py",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
+      "notes": "D9 - Nikola's call: delete | archive/ | keep",
+      "approved": false
+    },
+    {
+      "path": "scripts/bestcfg_pretrain_worker.py",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
+      "notes": "D9 - Nikola's call: delete | archive/ | keep",
+      "approved": false
+    },
+    {
+      "path": "scripts/build_experiment_metadata.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/build_native_pca100_report.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/combo_config.py",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
+      "notes": "D9 - Nikola's call: delete | archive/ | keep",
+      "approved": false
+    },
+    {
+      "path": "scripts/combo_eval_worker.py",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
+      "notes": "D9 - Nikola's call: delete | archive/ | keep",
+      "approved": false
+    },
+    {
+      "path": "scripts/combo_pretrain_worker.py",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
+      "notes": "D9 - Nikola's call: delete | archive/ | keep",
+      "approved": false
+    },
+    {
+      "path": "scripts/compile_mft_faithful_results.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/compile_results.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/download_data.sh",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/download_hypersigma_checkpoints.sh",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/evaluate_cosine.py",
+      "class": "PAPER",
+      "verdict": "rename",
+      "target": "coffe/cli/evaluate.py",
+      "evidence": "PAPER_CANON \u00a71 drops 'Cosine' from names; \u00a79 CLI verb 'evaluate'",
+      "notes": "also holds the live AA/kappa maths (:277-322) and the live fix_state_dict_keys (:107); user-facing labels at :789,823 rename per \u00a71",
+      "approved": false,
+      "provisional": true
+    },
+    {
+      "path": "scripts/evaluate_hypersigma_cosine.py",
+      "class": "PAPER",
+      "verdict": "rename",
+      "target": "coffe/cli/evaluate_hypersigma.py",
+      "evidence": "PAPER_CANON \u00a71 drops 'Cosine'",
+      "notes": "",
+      "approved": false,
+      "provisional": true
+    },
+    {
+      "path": "scripts/fit_pca_hypersigma.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/gather_native_pca100_raw.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/gather_requested_results.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/pretrain_enhanced.py",
+      "class": "PAPER",
+      "verdict": "rename",
+      "target": "coffe/cli/pretrain.py",
+      "evidence": "PAPER_CANON \u00a71 'enhanced' -> 'simmim'; \u00a79 CLI verb 'pretrain'",
+      "notes": "",
+      "approved": false,
+      "provisional": true
+    },
+    {
+      "path": "scripts/rerun_mft_faithful_eval_ep1500.sh",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "its epoch-1500 evals are NOT in Table 2 (67.70 vs the paper's 67.49 for Houston MFT SimMIM token); superseded by the epoch-950 evals",
+      "notes": "D1 - keeping it would document the wrong recipe",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_ablation.py",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
+      "notes": "D9 - Nikola's call: delete | archive/ | keep",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_bestcfg.py",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
+      "notes": "D9 - Nikola's call: delete | archive/ | keep",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_combo.py",
+      "class": "EXPLORATORY",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
+      "notes": "D9 - Nikola's call: delete | archive/ | keep",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_cosine_eval.sh",
+      "class": "PAPER",
+      "verdict": "rename",
+      "target": "scripts/run_eval.sh",
+      "evidence": "PAPER_CANON \u00a71 drops 'Cosine' from script names",
+      "notes": "",
+      "approved": false,
+      "provisional": true
+    },
+    {
+      "path": "scripts/run_hsi_only_experiments.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_hsi_only_experiments.sh",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_hypersigma_spatial_pca100.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_hypersigma_spatial_pca100.sh",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_mae_experiments.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_mae_experiments.sh",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_mft_original_mae_experiments.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_mft_original_mae_experiments.sh",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_mft_original_spatial_experiments.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_mft_original_spatial_experiments.sh",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_native_sem_pad_experiments.sh",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_significance_experiment.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_trento_cosine_eval.sh",
+      "class": "PAPER",
+      "verdict": "rename",
+      "target": "scripts/run_eval_trento.sh",
+      "evidence": "PAPER_CANON \u00a71 drops 'Cosine'",
+      "notes": "",
+      "approved": false,
+      "provisional": true
+    },
+    {
+      "path": "scripts/sig_eval_worker.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/sig_pretrain_worker.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/sig_significance_config.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "setup.py",
+      "class": "INFRA",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "closure.json unreached; placeholder metadata (name 'mft-cpea', author_email 'nikola@example.com', url 'yourusername'); install_requires lists einops/timm which nothing imports",
+      "notes": "fold real packaging into pyproject.toml in phase 6",
+      "approved": false
+    },
+    {
+      "path": "tests/__init__.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "test suite",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/test_data.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "test suite",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/test_hypersigma_native_shapes.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "test suite",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/test_hypersigma_shapes.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "test suite",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/test_mft_original_shapes.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "test suite",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/test_models.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "test suite",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/test_pretrain_enhanced.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "test suite",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/test_spatial_weights.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "test suite",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "third_party/HyperSIGMA/ImageClassification/__init__.py",
+      "class": "VENDORED",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "PAPER_CANON \u00a77.4: vendored, contents never modified",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "third_party/HyperSIGMA/ImageClassification/model/SpatViT_fusion_patch.py",
+      "class": "VENDORED",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "PAPER_CANON \u00a77.4: vendored, contents never modified",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "third_party/HyperSIGMA/ImageClassification/model/SpecViT_fusion.py",
+      "class": "VENDORED",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "PAPER_CANON \u00a77.4: vendored, contents never modified",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "third_party/HyperSIGMA/ImageClassification/model/__init__.py",
+      "class": "VENDORED",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "PAPER_CANON \u00a77.4: vendored, contents never modified",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "third_party/HyperSIGMA/ImageClassification/model/_compat.py",
+      "class": "VENDORED",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "PAPER_CANON \u00a77.4: vendored, contents never modified",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "third_party/HyperSIGMA/ImageClassification/model/ss_fusion_cls.py",
+      "class": "VENDORED",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "PAPER_CANON \u00a77.4: vendored, contents never modified",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "third_party/HyperSIGMA/LICENSE",
+      "class": "VENDORED",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "PAPER_CANON \u00a77.4: vendored, contents never modified",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "third_party/HyperSIGMA/NOTICE",
+      "class": "VENDORED",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "PAPER_CANON \u00a77.4: vendored, contents never modified",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "third_party/HyperSIGMA/Pretrain/__init__.py",
+      "class": "VENDORED",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "PAPER_CANON \u00a77.4: vendored, contents never modified",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "third_party/HyperSIGMA/Pretrain/util/__init__.py",
+      "class": "VENDORED",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "PAPER_CANON \u00a77.4: vendored, contents never modified",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "third_party/HyperSIGMA/Pretrain/util/pos_embed.py",
+      "class": "VENDORED",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "PAPER_CANON \u00a77.4: vendored, contents never modified",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "third_party/HyperSIGMA/__init__.py",
+      "class": "VENDORED",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "PAPER_CANON \u00a77.4: vendored, contents never modified",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "third_party/__init__.py",
+      "class": "VENDORED",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "PAPER_CANON \u00a77.4: vendored, contents never modified",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tools/refactor/inventory.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "refactor tooling (this phase)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "trainers/__init__.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "PretrainTrainer used by scripts/pretrain_enhanced.py:45 (D10 refuted)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "trainers/pretrain_trainer.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "PretrainTrainer used by scripts/pretrain_enhanced.py:45 (D10 refuted)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "utils/__init__.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "utils/checkpoints.py",
+      "class": "DEAD",
+      "verdict": "delete",
+      "target": null,
+      "evidence": "no importer; live twin is scripts/evaluate_cosine.py:107 fix_state_dict_keys",
+      "notes": "RISK: PAPER_CANON \u00a77.2 names this file as the key-map shim location - see AUDIT.md risk R2 before deleting",
+      "approved": false
+    },
+    {
+      "path": "utils/io.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "utils/logging.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "utils/metrics.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "utils/seed.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "utils/spatial_weights.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "utils/visualization.py",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    }
+  ]
+}

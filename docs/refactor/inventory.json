@@ -1,0 +1,8742 @@
+{
+  "root": "CoFFE",
+  "skipped_dirs": [
+    ".egg-info",
+    ".git",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    "__pycache__",
+    "node_modules",
+    "third_party",
+    "venv"
+  ],
+  "skipped_subtrees": [
+    "experiments/*/"
+  ],
+  "summary": {
+    "python_files": 108,
+    "python_loc": 19889,
+    "top_level_functions": 260,
+    "top_level_classes": 82,
+    "parse_errors": [],
+    "other_files": 88,
+    "other_by_suffix": {
+      ".ipynb": 16,
+      ".json": 13,
+      ".md": 20,
+      ".sh": 11,
+      ".yaml": 28
+    }
+  },
+  "python": [
+    {
+      "path": "setup.py",
+      "loc": 32,
+      "bytes": 1070,
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "setuptools",
+          "line": 1,
+          "relative": false,
+          "names": [
+            "setup",
+            "find_packages"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "data/__init__.py",
+      "loc": 10,
+      "bytes": 246,
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "data.datasets",
+          "line": 2,
+          "relative": true,
+          "names": [
+            "HoustonDataset",
+            "TrentoDataset",
+            "MUUFLDataset"
+          ],
+          "resolved": "data/datasets/__init__.py"
+        },
+        {
+          "module": "data.samplers",
+          "line": 3,
+          "relative": true,
+          "names": [
+            "EpisodeSampler"
+          ],
+          "resolved": "data/samplers/__init__.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "data/datasets/__init__.py",
+      "loc": 28,
+      "bytes": 759,
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "data.datasets.base",
+          "line": 2,
+          "relative": true,
+          "names": [
+            "MultimodalEODataset"
+          ],
+          "resolved": "data/datasets/base.py"
+        },
+        {
+          "module": "data.datasets.houston",
+          "line": 3,
+          "relative": true,
+          "names": [
+            "HoustonDataset"
+          ],
+          "resolved": "data/datasets/houston.py"
+        },
+        {
+          "module": "data.datasets.trento",
+          "line": 4,
+          "relative": true,
+          "names": [
+            "TrentoDataset"
+          ],
+          "resolved": "data/datasets/trento.py"
+        },
+        {
+          "module": "data.datasets.muufl",
+          "line": 5,
+          "relative": true,
+          "names": [
+            "MUUFLDataset"
+          ],
+          "resolved": "data/datasets/muufl.py"
+        },
+        {
+          "module": "data.datasets.patched",
+          "line": 6,
+          "relative": true,
+          "names": [
+            "PatchedMultimodalDataset",
+            "HoustonPatchedDataset",
+            "TrentoPatchedDataset",
+            "MUUFLPatchedDataset"
+          ],
+          "resolved": "data/datasets/patched.py"
+        },
+        {
+          "module": "data.datasets.registry",
+          "line": 12,
+          "relative": true,
+          "names": [
+            "DATASET_REGISTRY",
+            "DatasetSpec",
+            "get_spec"
+          ],
+          "resolved": "data/datasets/registry.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "data/datasets/base.py",
+      "loc": 127,
+      "bytes": 4091,
+      "functions": [],
+      "classes": [
+        {
+          "name": "MultimodalEODataset",
+          "line": 10,
+          "methods": [
+            "__init__",
+            "_load_data",
+            "num_classes",
+            "hsi_channels",
+            "aux_channels",
+            "_normalize",
+            "_build_class_indices",
+            "extract_patch",
+            "__len__",
+            "__getitem__"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "numpy",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.utils.data",
+          "line": 4,
+          "relative": false,
+          "names": [
+            "Dataset"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "abc",
+          "line": 5,
+          "relative": false,
+          "names": [
+            "ABC",
+            "abstractmethod"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 6,
+          "relative": false,
+          "names": [
+            "Dict",
+            "Tuple",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scipy.io",
+          "line": 7,
+          "relative": false,
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "data/datasets/houston.py",
+      "loc": 87,
+      "bytes": 2994,
+      "functions": [],
+      "classes": [
+        {
+          "name": "HoustonDataset",
+          "line": 8,
+          "methods": [
+            "num_classes",
+            "hsi_channels",
+            "aux_channels",
+            "_load_data",
+            "_load_mft_format",
+            "_extract_array"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "os",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "scipy.io",
+          "line": 4,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "data.datasets.base",
+          "line": 5,
+          "relative": true,
+          "names": [
+            "MultimodalEODataset"
+          ],
+          "resolved": "data/datasets/base.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "data/datasets/muufl.py",
+      "loc": 64,
+      "bytes": 1935,
+      "functions": [],
+      "classes": [
+        {
+          "name": "MUUFLDataset",
+          "line": 8,
+          "methods": [
+            "num_classes",
+            "hsi_channels",
+            "aux_channels",
+            "_load_data",
+            "_load_mft_format",
+            "_get_array"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "os",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "scipy.io",
+          "line": 4,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "data.datasets.base",
+          "line": 5,
+          "relative": true,
+          "names": [
+            "MultimodalEODataset"
+          ],
+          "resolved": "data/datasets/base.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "data/datasets/patched.py",
+      "loc": 289,
+      "bytes": 9128,
+      "functions": [],
+      "classes": [
+        {
+          "name": "PatchedMultimodalDataset",
+          "line": 11,
+          "methods": [
+            "__init__",
+            "folder_name",
+            "num_classes",
+            "hsi_channels",
+            "aux_channels",
+            "_load_data",
+            "_load_split",
+            "_extract_array",
+            "_ensure_nchw",
+            "_ensure_1d",
+            "_normalize",
+            "_build_class_indices",
+            "extract_patch",
+            "__len__",
+            "__getitem__"
+          ]
+        },
+        {
+          "name": "HoustonPatchedDataset",
+          "line": 208,
+          "methods": [
+            "folder_name",
+            "num_classes",
+            "hsi_channels",
+            "aux_channels"
+          ]
+        },
+        {
+          "name": "TrentoPatchedDataset",
+          "line": 236,
+          "methods": [
+            "folder_name",
+            "num_classes",
+            "hsi_channels",
+            "aux_channels"
+          ]
+        },
+        {
+          "name": "MUUFLPatchedDataset",
+          "line": 264,
+          "methods": [
+            "folder_name",
+            "num_classes",
+            "hsi_channels",
+            "aux_channels"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "numpy",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.utils.data",
+          "line": 4,
+          "relative": false,
+          "names": [
+            "Dataset"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "abc",
+          "line": 5,
+          "relative": false,
+          "names": [
+            "ABC",
+            "abstractmethod"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 6,
+          "relative": false,
+          "names": [
+            "Dict",
+            "Tuple",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scipy.io",
+          "line": 7,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "os",
+          "line": 8,
+          "relative": false,
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "data/datasets/registry.py",
+      "loc": 79,
+      "bytes": 3277,
+      "functions": [
+        {
+          "name": "get_spec",
+          "line": 72
+        }
+      ],
+      "classes": [
+        {
+          "name": "DatasetSpec",
+          "line": 43,
+          "methods": [
+            "pca_spat_path",
+            "pca_stats_path",
+            "adapt_ckpt_dir"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 14,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "dataclasses",
+          "line": 16,
+          "relative": false,
+          "names": [
+            "dataclass"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 17,
+          "relative": false,
+          "names": [
+            "Dict",
+            "Type"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "data.datasets.patched",
+          "line": 19,
+          "relative": true,
+          "names": [
+            "PatchedMultimodalDataset",
+            "HoustonPatchedDataset",
+            "TrentoPatchedDataset",
+            "MUUFLPatchedDataset"
+          ],
+          "resolved": "data/datasets/patched.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "data/datasets/trento.py",
+      "loc": 78,
+      "bytes": 2239,
+      "functions": [],
+      "classes": [
+        {
+          "name": "TrentoDataset",
+          "line": 8,
+          "methods": [
+            "num_classes",
+            "hsi_channels",
+            "aux_channels",
+            "_load_data",
+            "_load_mft_format",
+            "_get_array"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "os",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "scipy.io",
+          "line": 4,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "data.datasets.base",
+          "line": 5,
+          "relative": true,
+          "names": [
+            "MultimodalEODataset"
+          ],
+          "resolved": "data/datasets/base.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "data/samplers/__init__.py",
+      "loc": 9,
+      "bytes": 277,
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "data.samplers.episode_sampler",
+          "line": 2,
+          "relative": true,
+          "names": [
+            "EpisodeSampler"
+          ],
+          "resolved": "data/samplers/episode_sampler.py"
+        },
+        {
+          "module": "data.samplers.patched_episode_sampler",
+          "line": 3,
+          "relative": true,
+          "names": [
+            "PatchedEpisodeSampler",
+            "CrossDatasetEpisodeSampler"
+          ],
+          "resolved": "data/samplers/patched_episode_sampler.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "data/samplers/episode_sampler.py",
+      "loc": 93,
+      "bytes": 3126,
+      "functions": [],
+      "classes": [
+        {
+          "name": "EpisodeSampler",
+          "line": 8,
+          "methods": [
+            "__init__",
+            "sample_episode",
+            "__iter__",
+            "__len__"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "numpy",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 4,
+          "relative": false,
+          "names": [
+            "Dict",
+            "Optional",
+            "List"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "data.datasets.base",
+          "line": 5,
+          "relative": true,
+          "names": [
+            "MultimodalEODataset"
+          ],
+          "resolved": "data/datasets/base.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "data/samplers/patched_episode_sampler.py",
+      "loc": 337,
+      "bytes": 13019,
+      "functions": [],
+      "classes": [
+        {
+          "name": "PatchedEpisodeSampler",
+          "line": 8,
+          "methods": [
+            "__init__",
+            "_select_fixed_support_indices",
+            "_build_class_indices",
+            "sample_episode",
+            "__iter__",
+            "__len__",
+            "get_class_info"
+          ]
+        },
+        {
+          "name": "CrossDatasetEpisodeSampler",
+          "line": 218,
+          "methods": [
+            "__init__",
+            "_build_class_indices",
+            "sample_episode",
+            "__iter__",
+            "__len__"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "numpy",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 4,
+          "relative": false,
+          "names": [
+            "Dict",
+            "Optional",
+            "List",
+            "Iterator"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch.utils.data",
+          "line": 5,
+          "relative": false,
+          "names": [
+            "Dataset"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch.utils.data",
+          "line": 250,
+          "relative": false,
+          "names": [
+            "ConcatDataset"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "data/transforms/__init__.py",
+      "loc": 20,
+      "bytes": 368,
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "data.transforms.augmentations",
+          "line": 2,
+          "relative": true,
+          "names": [
+            "RandomFlip",
+            "RandomRotation",
+            "SpectralJitter",
+            "GaussianNoise",
+            "Compose",
+            "RandomBandWindow",
+            "RandomResizedCropHSI"
+          ],
+          "resolved": "data/transforms/augmentations.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "data/transforms/augmentations.py",
+      "loc": 153,
+      "bytes": 4941,
+      "functions": [],
+      "classes": [
+        {
+          "name": "Compose",
+          "line": 7,
+          "methods": [
+            "__init__",
+            "__call__"
+          ]
+        },
+        {
+          "name": "RandomFlip",
+          "line": 19,
+          "methods": [
+            "__init__",
+            "__call__"
+          ]
+        },
+        {
+          "name": "RandomRotation",
+          "line": 37,
+          "methods": [
+            "__init__",
+            "__call__"
+          ]
+        },
+        {
+          "name": "SpectralJitter",
+          "line": 52,
+          "methods": [
+            "__init__",
+            "__call__"
+          ]
+        },
+        {
+          "name": "GaussianNoise",
+          "line": 64,
+          "methods": [
+            "__init__",
+            "__call__"
+          ]
+        },
+        {
+          "name": "RandomBandWindow",
+          "line": 76,
+          "methods": [
+            "__init__",
+            "__call__"
+          ]
+        },
+        {
+          "name": "RandomResizedCropHSI",
+          "line": 104,
+          "methods": [
+            "__init__",
+            "__call__"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 4,
+          "relative": false,
+          "names": [
+            "Dict",
+            "List",
+            "Callable"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "lib/__init__.py",
+      "loc": 19,
+      "bytes": 449,
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "lib.experiments",
+          "line": 7,
+          "relative": true,
+          "names": [
+            "ExperimentLogger",
+            "PretrainExperiment",
+            "EvalRun",
+            "load_all_evaluations"
+          ],
+          "resolved": "lib/experiments.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "lib/adapt_runner.py",
+      "loc": 137,
+      "bytes": 5128,
+      "functions": [
+        {
+          "name": "_load_config",
+          "line": 42
+        },
+        {
+          "name": "_deep_merge",
+          "line": 49
+        },
+        {
+          "name": "run_adapt_hypersigma",
+          "line": 59
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 19,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 21,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 22,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 24,
+          "relative": false,
+          "names": [
+            "Any",
+            "Dict",
+            "Optional",
+            "Union"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "yaml",
+          "line": 26,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "lib.experiments",
+          "line": 28,
+          "relative": true,
+          "names": [
+            "DEFAULT_EXPERIMENTS_ROOT",
+            "ExperimentLogger",
+            "PretrainExperiment",
+            "attach_file_logger",
+            "detach_file_logger"
+          ],
+          "resolved": "lib/experiments.py"
+        },
+        {
+          "module": "scripts.adapt_hypersigma",
+          "line": 86,
+          "relative": false,
+          "names": [
+            "run_adapt"
+          ],
+          "resolved": "scripts/adapt_hypersigma.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "lib/eval_runner.py",
+      "loc": 281,
+      "bytes": 10019,
+      "functions": [
+        {
+          "name": "load_pretrain_config",
+          "line": 51
+        },
+        {
+          "name": "_arch_defaults_from_pretrain",
+          "line": 66
+        },
+        {
+          "name": "find_checkpoint",
+          "line": 80
+        },
+        {
+          "name": "run_hypersigma_evaluation",
+          "line": 112
+        },
+        {
+          "name": "run_evaluation",
+          "line": 183
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 8,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 10,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 11,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 12,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 13,
+          "relative": false,
+          "names": [
+            "Any",
+            "Dict",
+            "Optional",
+            "Union"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "yaml",
+          "line": 15,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "lib.experiments",
+          "line": 17,
+          "relative": true,
+          "names": [
+            "DEFAULT_EXPERIMENTS_ROOT",
+            "EvalRun",
+            "ExperimentLogger",
+            "attach_file_logger",
+            "detach_file_logger"
+          ],
+          "resolved": "lib/experiments.py"
+        },
+        {
+          "module": "scripts.evaluate_hypersigma_cosine",
+          "line": 128,
+          "relative": false,
+          "names": [
+            "run_evaluation"
+          ],
+          "resolved": "scripts/evaluate_hypersigma_cosine.py"
+        },
+        {
+          "module": "scripts.evaluate_cosine",
+          "line": 209,
+          "relative": false,
+          "names": [
+            "run_evaluation"
+          ],
+          "resolved": "scripts/evaluate_cosine.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "lib/experiments.py",
+      "loc": 447,
+      "bytes": 15803,
+      "functions": [
+        {
+          "name": "_git_sha",
+          "line": 44
+        },
+        {
+          "name": "_now_iso",
+          "line": 55
+        },
+        {
+          "name": "_slugify",
+          "line": 59
+        },
+        {
+          "name": "_write_json",
+          "line": 67
+        },
+        {
+          "name": "_write_yaml",
+          "line": 73
+        },
+        {
+          "name": "_read_json",
+          "line": 79
+        },
+        {
+          "name": "_read_yaml",
+          "line": 84
+        },
+        {
+          "name": "load_all_evaluations",
+          "line": 391
+        },
+        {
+          "name": "attach_file_logger",
+          "line": 431
+        },
+        {
+          "name": "detach_file_logger",
+          "line": 445
+        }
+      ],
+      "classes": [
+        {
+          "name": "PretrainExperiment",
+          "line": 90,
+          "methods": [
+            "checkpoints_dir",
+            "log_file",
+            "config_path",
+            "metadata_path",
+            "readme_path",
+            "evaluations_dir",
+            "finalize",
+            "mark_failed"
+          ]
+        },
+        {
+          "name": "EvalRun",
+          "line": 154,
+          "methods": [
+            "config_path",
+            "metadata_path",
+            "results_path",
+            "log_file",
+            "plots_dir",
+            "finalize",
+            "mark_failed"
+          ]
+        },
+        {
+          "name": "ExperimentLogger",
+          "line": 212,
+          "methods": [
+            "__init__",
+            "_git_sha",
+            "_experiment_dir",
+            "start_pretrain",
+            "start_eval",
+            "get_experiment",
+            "list_experiments",
+            "list_evaluations"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 26,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "datetime",
+          "line": 28,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 29,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 30,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "os",
+          "line": 31,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "subprocess",
+          "line": 32,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "time",
+          "line": 33,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "dataclasses",
+          "line": 34,
+          "relative": false,
+          "names": [
+            "dataclass",
+            "field"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 35,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 36,
+          "relative": false,
+          "names": [
+            "Any",
+            "Dict",
+            "List",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "yaml",
+          "line": 38,
+          "relative": false,
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "lib/pretrain_runner.py",
+      "loc": 111,
+      "bytes": 3626,
+      "functions": [
+        {
+          "name": "_load_config",
+          "line": 32
+        },
+        {
+          "name": "run_pretrain",
+          "line": 39
+        },
+        {
+          "name": "_deep_merge",
+          "line": 104
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 9,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 11,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 12,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 13,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 14,
+          "relative": false,
+          "names": [
+            "Any",
+            "Dict",
+            "Optional",
+            "Union"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "yaml",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "lib.experiments",
+          "line": 18,
+          "relative": true,
+          "names": [
+            "DEFAULT_EXPERIMENTS_ROOT",
+            "ExperimentLogger",
+            "PretrainExperiment",
+            "attach_file_logger",
+            "detach_file_logger"
+          ],
+          "resolved": "lib/experiments.py"
+        },
+        {
+          "module": "scripts.pretrain_enhanced",
+          "line": 64,
+          "relative": false,
+          "names": [
+            "run_pretrain"
+          ],
+          "resolved": "scripts/pretrain_enhanced.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/__init__.py",
+      "loc": 22,
+      "bytes": 451,
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "models.mft_cpea_cosine",
+          "line": 2,
+          "relative": true,
+          "names": [
+            "MFTCPEACosine"
+          ],
+          "resolved": "models/mft_cpea_cosine.py"
+        },
+        {
+          "module": "models.mft_original",
+          "line": 3,
+          "relative": true,
+          "names": [
+            "MFTOriginalCosine"
+          ],
+          "resolved": "models/mft_original.py"
+        },
+        {
+          "module": "models.backbones",
+          "line": 5,
+          "relative": true,
+          "names": [
+            "BackboneBase",
+            "MFTChannelBackbone",
+            "MFTPixelBackbone",
+            "HSIBaselineBackbone"
+          ],
+          "resolved": "models/backbones/__init__.py"
+        },
+        {
+          "module": "models.wrappers",
+          "line": 12,
+          "relative": true,
+          "names": [
+            "PretrainWrapper"
+          ],
+          "resolved": "models/wrappers/__init__.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/mft_cpea_cosine.py",
+      "loc": 472,
+      "bytes": 17450,
+      "functions": [],
+      "classes": [
+        {
+          "name": "MFTCPEACosine",
+          "line": 39,
+          "methods": [
+            "__init__",
+            "_init_weights",
+            "get_trainable_param_count",
+            "tokenize",
+            "forward_features",
+            "adapt_embeddings",
+            "compute_prototypes",
+            "forward_episode",
+            "_forward_mean_features",
+            "_forward_mean_distances",
+            "forward"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 29,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 30,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 31,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 32,
+          "relative": false,
+          "names": [
+            "Dict",
+            "Optional",
+            "Tuple"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "models.components.tokenizers",
+          "line": 33,
+          "relative": true,
+          "names": [
+            "ChannelTokenizer",
+            "SpatialTokenizer"
+          ],
+          "resolved": "models/components/tokenizers.py"
+        },
+        {
+          "module": "models.components.transformer",
+          "line": 34,
+          "relative": true,
+          "names": [
+            "TransformerEncoder"
+          ],
+          "resolved": "models/components/transformer.py"
+        },
+        {
+          "module": "models.components.projection",
+          "line": 35,
+          "relative": true,
+          "names": [
+            "ProjectionHead"
+          ],
+          "resolved": "models/components/projection.py"
+        },
+        {
+          "module": "utils.spatial_weights",
+          "line": 36,
+          "relative": false,
+          "names": [
+            "make_center_weights",
+            "center_weighted_pool"
+          ],
+          "resolved": "utils/spatial_weights.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/mft_original.py",
+      "loc": 307,
+      "bytes": 13726,
+      "functions": [],
+      "classes": [
+        {
+          "name": "MFTOriginalCosine",
+          "line": 47,
+          "methods": [
+            "__init__",
+            "_init_weights",
+            "tokenize",
+            "make_cls",
+            "forward_features",
+            "adapt_embeddings",
+            "compute_prototypes",
+            "_forward_mean_features",
+            "_forward_mean_distances",
+            "get_trainable_param_count",
+            "forward"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 39,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 40,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 41,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 42,
+          "relative": false,
+          "names": [
+            "Dict",
+            "Optional",
+            "Tuple"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "models.components.mft_blocks",
+          "line": 44,
+          "relative": true,
+          "names": [
+            "HetConv",
+            "LearnableTokenizer",
+            "MFTEncoder"
+          ],
+          "resolved": "models/components/mft_blocks.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/backbones/__init__.py",
+      "loc": 23,
+      "bytes": 650,
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "models.backbones.base",
+          "line": 13,
+          "relative": true,
+          "names": [
+            "BackboneBase"
+          ],
+          "resolved": "models/backbones/base.py"
+        },
+        {
+          "module": "models.backbones.mft_channel",
+          "line": 14,
+          "relative": true,
+          "names": [
+            "MFTChannelBackbone"
+          ],
+          "resolved": "models/backbones/mft_channel.py"
+        },
+        {
+          "module": "models.backbones.mft_pixel",
+          "line": 15,
+          "relative": true,
+          "names": [
+            "MFTPixelBackbone"
+          ],
+          "resolved": "models/backbones/mft_pixel.py"
+        },
+        {
+          "module": "models.backbones.hsi_baseline",
+          "line": 16,
+          "relative": true,
+          "names": [
+            "HSIBaselineBackbone"
+          ],
+          "resolved": "models/backbones/hsi_baseline.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/backbones/base.py",
+      "loc": 135,
+      "bytes": 4248,
+      "functions": [],
+      "classes": [
+        {
+          "name": "BackboneBase",
+          "line": 15,
+          "methods": [
+            "__init__",
+            "forward_features",
+            "forward_tokens_only",
+            "forward",
+            "freeze_backbone",
+            "unfreeze_backbone",
+            "get_trainable_param_count",
+            "get_output_info"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 9,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 10,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "abc",
+          "line": 11,
+          "relative": false,
+          "names": [
+            "ABC",
+            "abstractmethod"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 12,
+          "relative": false,
+          "names": [
+            "Tuple",
+            "Dict",
+            "Optional"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/backbones/hsi_baseline.py",
+      "loc": 288,
+      "bytes": 9229,
+      "functions": [],
+      "classes": [
+        {
+          "name": "HSIBaselineBackbone",
+          "line": 29,
+          "methods": [
+            "__init__",
+            "_init_weights",
+            "extract_hsi_features",
+            "forward_tokens_only",
+            "forward_with_mask",
+            "forward_features",
+            "forward_hsi_only"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 17,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 18,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 19,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 20,
+          "relative": false,
+          "names": [
+            "Tuple",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "models.backbones.base",
+          "line": 22,
+          "relative": true,
+          "names": [
+            "BackboneBase"
+          ],
+          "resolved": "models/backbones/base.py"
+        },
+        {
+          "module": "models.components.mft_blocks",
+          "line": 23,
+          "relative": true,
+          "names": [
+            "HSI3DConv",
+            "HetConv",
+            "LearnableTokenizer",
+            "MFTEncoder"
+          ],
+          "resolved": "models/components/mft_blocks.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/backbones/mft_channel.py",
+      "loc": 326,
+      "bytes": 11115,
+      "functions": [],
+      "classes": [
+        {
+          "name": "MFTChannelBackbone",
+          "line": 27,
+          "methods": [
+            "__init__",
+            "_init_weights",
+            "extract_hsi_features",
+            "extract_aux_features",
+            "forward_tokens_only",
+            "forward_with_mask",
+            "forward_features"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 15,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 17,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 18,
+          "relative": false,
+          "names": [
+            "Tuple",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "models.backbones.base",
+          "line": 20,
+          "relative": true,
+          "names": [
+            "BackboneBase"
+          ],
+          "resolved": "models/backbones/base.py"
+        },
+        {
+          "module": "models.components.mft_blocks",
+          "line": 21,
+          "relative": true,
+          "names": [
+            "HSI3DConv",
+            "HetConv",
+            "LearnableTokenizer",
+            "MFTEncoder"
+          ],
+          "resolved": "models/components/mft_blocks.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/backbones/mft_pixel.py",
+      "loc": 306,
+      "bytes": 9857,
+      "functions": [],
+      "classes": [
+        {
+          "name": "MFTPixelBackbone",
+          "line": 28,
+          "methods": [
+            "__init__",
+            "_init_weights",
+            "extract_hsi_features",
+            "extract_aux_features",
+            "forward_tokens_only",
+            "forward_with_mask",
+            "forward_features"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 17,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 18,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 19,
+          "relative": false,
+          "names": [
+            "Tuple",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "models.backbones.base",
+          "line": 21,
+          "relative": true,
+          "names": [
+            "BackboneBase"
+          ],
+          "resolved": "models/backbones/base.py"
+        },
+        {
+          "module": "models.components.mft_blocks",
+          "line": 22,
+          "relative": true,
+          "names": [
+            "HSI3DConv",
+            "HetConv",
+            "LearnableTokenizer",
+            "MFTEncoder"
+          ],
+          "resolved": "models/components/mft_blocks.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/components/__init__.py",
+      "loc": 32,
+      "bytes": 723,
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "models.components.tokenizers",
+          "line": 2,
+          "relative": true,
+          "names": [
+            "ChannelTokenizer",
+            "SpatialTokenizer",
+            "AuxTokenizer",
+            "SpatialAuxTokenizer"
+          ],
+          "resolved": "models/components/tokenizers.py"
+        },
+        {
+          "module": "models.components.transformer",
+          "line": 3,
+          "relative": true,
+          "names": [
+            "TransformerEncoder",
+            "TransformerLayer"
+          ],
+          "resolved": "models/components/transformer.py"
+        },
+        {
+          "module": "models.components.projection",
+          "line": 4,
+          "relative": true,
+          "names": [
+            "ProjectionHead"
+          ],
+          "resolved": "models/components/projection.py"
+        },
+        {
+          "module": "models.components.mft_blocks",
+          "line": 5,
+          "relative": true,
+          "names": [
+            "HetConv",
+            "MCrossAttention",
+            "StandardSelfAttention",
+            "MLP",
+            "MFTBlock",
+            "MFTEncoder",
+            "LearnableTokenizer",
+            "HSI3DConv"
+          ],
+          "resolved": "models/components/mft_blocks.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/components/mft_blocks.py",
+      "loc": 438,
+      "bytes": 13187,
+      "functions": [],
+      "classes": [
+        {
+          "name": "HetConv",
+          "line": 19,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "MCrossAttention",
+          "line": 78,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "StandardSelfAttention",
+          "line": 150,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "MLP",
+          "line": 198,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "MFTBlock",
+          "line": 230,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "MFTEncoder",
+          "line": 269,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "LearnableTokenizer",
+          "line": 304,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "HSI3DConv",
+          "line": 392,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 12,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 13,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 14,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 15,
+          "relative": false,
+          "names": [
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "math",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/components/projection.py",
+      "loc": 194,
+      "bytes": 6322,
+      "functions": [],
+      "classes": [
+        {
+          "name": "ProjectionHead",
+          "line": 8,
+          "methods": [
+            "__init__",
+            "_init_weights",
+            "forward"
+          ]
+        },
+        {
+          "name": "_BatchNorm1dFor3D",
+          "line": 105,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "ModalitySpecificProjection",
+          "line": 130,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 4,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 5,
+          "relative": false,
+          "names": [
+            "Optional"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/components/tokenizers.py",
+      "loc": 120,
+      "bytes": 3587,
+      "functions": [],
+      "classes": [
+        {
+          "name": "ChannelTokenizer",
+          "line": 6,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "SpatialTokenizer",
+          "line": 30,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "AuxTokenizer",
+          "line": 57,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "SpatialAuxTokenizer",
+          "line": 88,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/components/transformer.py",
+      "loc": 77,
+      "bytes": 1946,
+      "functions": [],
+      "classes": [
+        {
+          "name": "TransformerLayer",
+          "line": 7,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "TransformerEncoder",
+          "line": 52,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 4,
+          "relative": false,
+          "names": [
+            "Optional"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/hypersigma/__init__.py",
+      "loc": 35,
+      "bytes": 983,
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "models.hypersigma.preprocessing",
+          "line": 13,
+          "relative": true,
+          "names": [
+            "PCAPreprocessor",
+            "DATASET_PCA_CONFIG",
+            "fit_dataset_pca",
+            "load_pca"
+          ],
+          "resolved": "models/hypersigma/preprocessing.py"
+        },
+        {
+          "module": "models.hypersigma.sem",
+          "line": 19,
+          "relative": true,
+          "names": [
+            "SEM"
+          ],
+          "resolved": "models/hypersigma/sem.py"
+        },
+        {
+          "module": "models.hypersigma.spat_vit_branch",
+          "line": 20,
+          "relative": true,
+          "names": [
+            "SpatViTBranch"
+          ],
+          "resolved": "models/hypersigma/spat_vit_branch.py"
+        },
+        {
+          "module": "models.hypersigma.spec_vit_branch",
+          "line": 21,
+          "relative": true,
+          "names": [
+            "SpecViTBranch"
+          ],
+          "resolved": "models/hypersigma/spec_vit_branch.py"
+        },
+        {
+          "module": "models.hypersigma.hypersigma_dual",
+          "line": 22,
+          "relative": true,
+          "names": [
+            "HyperSIGMADual"
+          ],
+          "resolved": "models/hypersigma/hypersigma_dual.py"
+        },
+        {
+          "module": "models.hypersigma.hypersigma_cosine",
+          "line": 23,
+          "relative": true,
+          "names": [
+            "HyperSIGMACosine"
+          ],
+          "resolved": "models/hypersigma/hypersigma_cosine.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/hypersigma/_input_fit.py",
+      "loc": 68,
+      "bytes": 2382,
+      "functions": [
+        {
+          "name": "fit_input",
+          "line": 22
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 16,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 18,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 19,
+          "relative": false,
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/hypersigma/hypersigma_cosine.py",
+      "loc": 168,
+      "bytes": 6720,
+      "functions": [],
+      "classes": [
+        {
+          "name": "HyperSIGMACosine",
+          "line": 34,
+          "methods": [
+            "__init__",
+            "_extract",
+            "forward_features",
+            "adapt_embeddings",
+            "compute_prototypes",
+            "_forward_mean_features",
+            "_forward_mean_distances"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 25,
+          "relative": false,
+          "names": [
+            "Optional",
+            "Tuple"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 27,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 28,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 29,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "models.hypersigma.hypersigma_dual",
+          "line": 31,
+          "relative": true,
+          "names": [
+            "HyperSIGMADual"
+          ],
+          "resolved": "models/hypersigma/hypersigma_dual.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/hypersigma/hypersigma_dual.py",
+      "loc": 377,
+      "bytes": 16576,
+      "functions": [],
+      "classes": [
+        {
+          "name": "HyperSIGMADual",
+          "line": 36,
+          "methods": [
+            "__init__",
+            "_build_native_spat_front_end",
+            "parameter_counts",
+            "log_sanity",
+            "forward"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 13,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 15,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 16,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 17,
+          "relative": false,
+          "names": [
+            "Dict",
+            "List",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 19,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 20,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "models.hypersigma.preprocessing",
+          "line": 22,
+          "relative": true,
+          "names": [
+            "PCAPreprocessor",
+            "PCAStandardize",
+            "SpectralResample",
+            "load_pca",
+            "load_pca_output_stats"
+          ],
+          "resolved": "models/hypersigma/preprocessing.py"
+        },
+        {
+          "module": "models.hypersigma.sem",
+          "line": 29,
+          "relative": true,
+          "names": [
+            "SEM"
+          ],
+          "resolved": "models/hypersigma/sem.py"
+        },
+        {
+          "module": "models.hypersigma.spat_vit_branch",
+          "line": 30,
+          "relative": true,
+          "names": [
+            "SpatViTBranch"
+          ],
+          "resolved": "models/hypersigma/spat_vit_branch.py"
+        },
+        {
+          "module": "models.hypersigma.spec_vit_branch",
+          "line": 31,
+          "relative": true,
+          "names": [
+            "SpecViTBranch"
+          ],
+          "resolved": "models/hypersigma/spec_vit_branch.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/hypersigma/preprocessing.py",
+      "loc": 245,
+      "bytes": 8908,
+      "functions": [
+        {
+          "name": "fit_dataset_pca",
+          "line": 49
+        },
+        {
+          "name": "load_pca",
+          "line": 91
+        },
+        {
+          "name": "cumulative_explained_variance",
+          "line": 96
+        },
+        {
+          "name": "fit_pca_output_stats",
+          "line": 100
+        },
+        {
+          "name": "load_pca_output_stats",
+          "line": 148
+        }
+      ],
+      "classes": [
+        {
+          "name": "SpectralResample",
+          "line": 153,
+          "methods": [
+            "__init__",
+            "forward",
+            "extra_repr"
+          ]
+        },
+        {
+          "name": "PCAStandardize",
+          "line": 189,
+          "methods": [
+            "__init__",
+            "forward",
+            "extra_repr"
+          ]
+        },
+        {
+          "name": "PCAPreprocessor",
+          "line": 219,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 24,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 26,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pickle",
+          "line": 27,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 28,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 29,
+          "relative": false,
+          "names": [
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 31,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 32,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 33,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sklearn.decomposition",
+          "line": 34,
+          "relative": false,
+          "names": [
+            "PCA"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "data.datasets.registry",
+          "line": 41,
+          "relative": false,
+          "names": [
+            "DATASET_REGISTRY"
+          ],
+          "resolved": "data/datasets/registry.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/hypersigma/sem.py",
+      "loc": 95,
+      "bytes": 3337,
+      "functions": [],
+      "classes": [
+        {
+          "name": "SEM",
+          "line": 21,
+          "methods": [
+            "__init__",
+            "_init_weights",
+            "forward"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 12,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 14,
+          "relative": false,
+          "names": [
+            "List"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 17,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 18,
+          "relative": false,
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/hypersigma/spat_vit_branch.py",
+      "loc": 334,
+      "bytes": 13997,
+      "functions": [
+        {
+          "name": "_looks_like_dropped_key",
+          "line": 67
+        },
+        {
+          "name": "_strip_state_dict_prefix",
+          "line": 71
+        },
+        {
+          "name": "_extract_state_dict",
+          "line": 83
+        }
+      ],
+      "classes": [
+        {
+          "name": "SpatViTBranch",
+          "line": 92,
+          "methods": [
+            "__init__",
+            "_load_checkpoint",
+            "_assert_native_loaded",
+            "_load_pos_embed",
+            "_log_load_summary",
+            "_freeze_body",
+            "trainable_parameter_names",
+            "forward"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 25,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 26,
+          "relative": false,
+          "names": [
+            "Dict",
+            "List",
+            "Tuple"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 28,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 29,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 30,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "third_party.HyperSIGMA.ImageClassification.model",
+          "line": 32,
+          "relative": false,
+          "names": [
+            "SpatViT_fusion_patch"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "models.hypersigma._input_fit",
+          "line": 34,
+          "relative": true,
+          "names": [
+            "fit_input"
+          ],
+          "resolved": "models/hypersigma/_input_fit.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/hypersigma/spec_vit_branch.py",
+      "loc": 322,
+      "bytes": 12982,
+      "functions": [
+        {
+          "name": "_looks_like_dropped_key",
+          "line": 67
+        },
+        {
+          "name": "_strip_state_dict_prefix",
+          "line": 71
+        },
+        {
+          "name": "_extract_state_dict",
+          "line": 82
+        }
+      ],
+      "classes": [
+        {
+          "name": "SpecViTBranch",
+          "line": 91,
+          "methods": [
+            "__init__",
+            "_load_checkpoint",
+            "_assert_native_loaded",
+            "_load_pos_embed",
+            "_log_load_summary",
+            "_freeze_body",
+            "trainable_parameter_names",
+            "forward"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 24,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 26,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 27,
+          "relative": false,
+          "names": [
+            "Dict",
+            "List",
+            "Optional",
+            "Tuple"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 29,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 30,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 31,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "third_party.HyperSIGMA.ImageClassification.model",
+          "line": 33,
+          "relative": false,
+          "names": [
+            "SpecViT_fusion"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "models.hypersigma._input_fit",
+          "line": 35,
+          "relative": true,
+          "names": [
+            "fit_input"
+          ],
+          "resolved": "models/hypersigma/_input_fit.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/wrappers/__init__.py",
+      "loc": 11,
+      "bytes": 255,
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "models.wrappers.pretrain_wrapper",
+          "line": 5,
+          "relative": true,
+          "names": [
+            "PretrainWrapper",
+            "MAEDecoder",
+            "ContrastiveHead"
+          ],
+          "resolved": "models/wrappers/pretrain_wrapper.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "models/wrappers/pretrain_wrapper.py",
+      "loc": 357,
+      "bytes": 11676,
+      "functions": [],
+      "classes": [
+        {
+          "name": "MAEDecoder",
+          "line": 20,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "ContrastiveHead",
+          "line": 119,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "PretrainWrapper",
+          "line": 157,
+          "methods": [
+            "__init__",
+            "generate_mask",
+            "forward_masked",
+            "forward_contrastive",
+            "forward",
+            "get_backbone"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 11,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 12,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 13,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 14,
+          "relative": false,
+          "names": [
+            "Tuple",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "random",
+          "line": 15,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "models.backbones.base",
+          "line": 17,
+          "relative": true,
+          "names": [
+            "BackboneBase"
+          ],
+          "resolved": "models/backbones/base.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "pretrain/__init__.py",
+      "loc": 46,
+      "bytes": 1203,
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "pretrain.masked_modeling",
+          "line": 16,
+          "relative": true,
+          "names": [
+            "UnifiedBandMasking",
+            "SpatialTokenMasking",
+            "MLPDecoder",
+            "PretrainDataset",
+            "CombinedPretrainDataset"
+          ],
+          "resolved": "pretrain/masked_modeling.py"
+        },
+        {
+          "module": "pretrain.masked_modeling_enhanced",
+          "line": 24,
+          "relative": true,
+          "names": [
+            "EnhancedMaskedSpectralSpatialModel"
+          ],
+          "resolved": "pretrain/masked_modeling_enhanced.py"
+        },
+        {
+          "module": "pretrain.decoders",
+          "line": 28,
+          "relative": true,
+          "names": [
+            "TransformerDecoder",
+            "SimpleMLPDecoder",
+            "TwoLayerMLPDecoder",
+            "build_decoder"
+          ],
+          "resolved": "pretrain/decoders.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "pretrain/decoders.py",
+      "loc": 411,
+      "bytes": 12192,
+      "functions": [
+        {
+          "name": "build_decoder",
+          "line": 358
+        }
+      ],
+      "classes": [
+        {
+          "name": "TransformerDecoderLayer",
+          "line": 19,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "TransformerDecoder",
+          "line": 100,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "SimpleMLPDecoder",
+          "line": 213,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "TwoLayerMLPDecoder",
+          "line": 281,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 12,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 13,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 14,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 15,
+          "relative": false,
+          "names": [
+            "Optional",
+            "Tuple"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "math",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "pretrain/hypersigma_mae.py",
+      "loc": 433,
+      "bytes": 19699,
+      "functions": [
+        {
+          "name": "_per_token_zscore",
+          "line": 51
+        },
+        {
+          "name": "_masked_token_mse",
+          "line": 58
+        },
+        {
+          "name": "_build_per_token_mlp",
+          "line": 70
+        }
+      ],
+      "classes": [
+        {
+          "name": "HyperSIGMAMaskedAdaptation",
+          "line": 79,
+          "methods": [
+            "__init__",
+            "remove_hooks",
+            "__del__",
+            "_spat_patch_embed_hook",
+            "_spec_spat_map_hook",
+            "_sample_mask",
+            "_spat_target",
+            "_spec_target",
+            "_fused_target",
+            "forward",
+            "parameter_counts"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 33,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 35,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 36,
+          "relative": false,
+          "names": [
+            "Dict",
+            "List",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 38,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 39,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 40,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "models.hypersigma.hypersigma_dual",
+          "line": 42,
+          "relative": false,
+          "names": [
+            "HyperSIGMADual"
+          ],
+          "resolved": "models/hypersigma/hypersigma_dual.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "pretrain/mae_pretrain.py",
+      "loc": 260,
+      "bytes": 11140,
+      "functions": [],
+      "classes": [
+        {
+          "name": "MAEPretrainModel",
+          "line": 39,
+          "methods": [
+            "__init__",
+            "random_masking",
+            "forward",
+            "get_encoder"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 31,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 32,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 33,
+          "relative": false,
+          "names": [
+            "Tuple",
+            "Optional",
+            "Dict"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "pretrain.decoders",
+          "line": 35,
+          "relative": true,
+          "names": [
+            "TransformerDecoder"
+          ],
+          "resolved": "pretrain/decoders.py"
+        },
+        {
+          "module": "utils.spatial_weights",
+          "line": 36,
+          "relative": false,
+          "names": [
+            "make_center_weights"
+          ],
+          "resolved": "utils/spatial_weights.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "pretrain/masked_modeling.py",
+      "loc": 274,
+      "bytes": 9465,
+      "functions": [],
+      "classes": [
+        {
+          "name": "UnifiedBandMasking",
+          "line": 28,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "SpatialTokenMasking",
+          "line": 68,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "MLPDecoder",
+          "line": 110,
+          "methods": [
+            "__init__",
+            "forward"
+          ]
+        },
+        {
+          "name": "PretrainDataset",
+          "line": 151,
+          "methods": [
+            "__init__",
+            "__len__",
+            "__getitem__"
+          ]
+        },
+        {
+          "name": "CombinedPretrainDataset",
+          "line": 195,
+          "methods": [
+            "__init__",
+            "__len__",
+            "_find_dataset",
+            "_pad_or_truncate",
+            "__getitem__"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 19,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 20,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 21,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 22,
+          "relative": false,
+          "names": [
+            "Tuple",
+            "Optional",
+            "Dict"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "math",
+          "line": 23,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "utils.spatial_weights",
+          "line": 25,
+          "relative": false,
+          "names": [
+            "make_center_weights"
+          ],
+          "resolved": "utils/spatial_weights.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "pretrain/masked_modeling_enhanced.py",
+      "loc": 243,
+      "bytes": 9799,
+      "functions": [],
+      "classes": [
+        {
+          "name": "EnhancedMaskedSpectralSpatialModel",
+          "line": 30,
+          "methods": [
+            "__init__",
+            "forward_combined",
+            "forward",
+            "get_encoder"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 22,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 23,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 24,
+          "relative": false,
+          "names": [
+            "Tuple",
+            "Optional",
+            "Dict"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "pretrain.masked_modeling",
+          "line": 26,
+          "relative": true,
+          "names": [
+            "UnifiedBandMasking",
+            "SpatialTokenMasking",
+            "MLPDecoder"
+          ],
+          "resolved": "pretrain/masked_modeling.py"
+        },
+        {
+          "module": "utils.spatial_weights",
+          "line": 27,
+          "relative": false,
+          "names": [
+            "make_center_weights"
+          ],
+          "resolved": "utils/spatial_weights.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "pretrain/mft_mae.py",
+      "loc": 240,
+      "bytes": 10537,
+      "functions": [],
+      "classes": [
+        {
+          "name": "MFTMAEPretrainModel",
+          "line": 40,
+          "methods": [
+            "__init__",
+            "random_masking",
+            "forward",
+            "get_encoder"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 32,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 33,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 34,
+          "relative": false,
+          "names": [
+            "Tuple",
+            "Optional",
+            "Dict"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "pretrain.decoders",
+          "line": 36,
+          "relative": true,
+          "names": [
+            "TransformerDecoder"
+          ],
+          "resolved": "pretrain/decoders.py"
+        },
+        {
+          "module": "utils.spatial_weights",
+          "line": 37,
+          "relative": false,
+          "names": [
+            "make_center_weights"
+          ],
+          "resolved": "utils/spatial_weights.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "pretrain/mft_spatial_mae.py",
+      "loc": 183,
+      "bytes": 8073,
+      "functions": [],
+      "classes": [
+        {
+          "name": "MFTSpatialMaskPretrainModel",
+          "line": 53,
+          "methods": [
+            "__init__",
+            "forward",
+            "get_encoder"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 45,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 46,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 47,
+          "relative": false,
+          "names": [
+            "Tuple",
+            "Optional",
+            "Dict"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "pretrain.masked_modeling",
+          "line": 49,
+          "relative": true,
+          "names": [
+            "SpatialTokenMasking",
+            "MLPDecoder"
+          ],
+          "resolved": "pretrain/masked_modeling.py"
+        },
+        {
+          "module": "utils.spatial_weights",
+          "line": 50,
+          "relative": false,
+          "names": [
+            "make_center_weights"
+          ],
+          "resolved": "utils/spatial_weights.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/__init__.py",
+      "loc": 1,
+      "bytes": 74,
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/ablation_config.py",
+      "loc": 179,
+      "bytes": 7206,
+      "functions": [
+        {
+          "name": "eval_name_for_epoch",
+          "line": 51
+        },
+        {
+          "name": "_deep_merge",
+          "line": 112
+        },
+        {
+          "name": "baseline_pretrain_overrides",
+          "line": 122
+        },
+        {
+          "name": "variant_override",
+          "line": 135
+        },
+        {
+          "name": "experiment_name",
+          "line": 141
+        },
+        {
+          "name": "build_overrides",
+          "line": 145
+        },
+        {
+          "name": "runs",
+          "line": 158
+        },
+        {
+          "name": "eval_params",
+          "line": 165
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 16,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "copy",
+          "line": 18,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 19,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 20,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 21,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 22,
+          "relative": false,
+          "names": [
+            "Any",
+            "Dict",
+            "List",
+            "Optional",
+            "Tuple"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/ablation_eval_worker.py",
+      "loc": 62,
+      "bytes": 2010,
+      "functions": [
+        {
+          "name": "main",
+          "line": 27
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 14,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 17,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 18,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 24,
+          "relative": false,
+          "names": [
+            "ablation_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        },
+        {
+          "module": "lib.eval_runner",
+          "line": 48,
+          "relative": false,
+          "names": [
+            "run_evaluation"
+          ],
+          "resolved": "lib/eval_runner.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/ablation_pretrain_worker.py",
+      "loc": 65,
+      "bytes": 2163,
+      "functions": [
+        {
+          "name": "main",
+          "line": 26
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 13,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 15,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 17,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "ablation_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        },
+        {
+          "module": "lib.pretrain_runner",
+          "line": 51,
+          "relative": false,
+          "names": [
+            "run_pretrain"
+          ],
+          "resolved": "lib/pretrain_runner.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/adapt_hypersigma.py",
+      "loc": 399,
+      "bytes": 16107,
+      "functions": [
+        {
+          "name": "_build_dataset",
+          "line": 53
+        },
+        {
+          "name": "_resolve_hsi_channels",
+          "line": 67
+        },
+        {
+          "name": "_build_model",
+          "line": 85
+        },
+        {
+          "name": "_build_loaders",
+          "line": 129
+        },
+        {
+          "name": "_trainable_parameter_groups",
+          "line": 157
+        },
+        {
+          "name": "run_adapt",
+          "line": 162
+        },
+        {
+          "name": "main",
+          "line": 374
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 25,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 27,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 28,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 29,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "time",
+          "line": 30,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 31,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 33,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 34,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.optim",
+          "line": 35,
+          "relative": false,
+          "names": [
+            "AdamW"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch.optim.lr_scheduler",
+          "line": 36,
+          "relative": false,
+          "names": [
+            "CosineAnnealingLR",
+            "LinearLR",
+            "SequentialLR"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch.utils.data",
+          "line": 37,
+          "relative": false,
+          "names": [
+            "DataLoader",
+            "Subset"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "tqdm",
+          "line": 38,
+          "relative": false,
+          "names": [
+            "tqdm"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "data.datasets",
+          "line": 44,
+          "relative": false,
+          "names": [
+            "get_spec"
+          ],
+          "resolved": "data/datasets/__init__.py"
+        },
+        {
+          "module": "models.hypersigma.hypersigma_dual",
+          "line": 45,
+          "relative": false,
+          "names": [
+            "HyperSIGMADual"
+          ],
+          "resolved": "models/hypersigma/hypersigma_dual.py"
+        },
+        {
+          "module": "pretrain.hypersigma_mae",
+          "line": 46,
+          "relative": false,
+          "names": [
+            "HyperSIGMAMaskedAdaptation"
+          ],
+          "resolved": "pretrain/hypersigma_mae.py"
+        },
+        {
+          "module": "utils.io",
+          "line": 47,
+          "relative": false,
+          "names": [
+            "load_config"
+          ],
+          "resolved": "utils/io.py"
+        },
+        {
+          "module": "utils.seed",
+          "line": 48,
+          "relative": false,
+          "names": [
+            "set_seed"
+          ],
+          "resolved": "utils/seed.py"
+        },
+        {
+          "module": "sklearn.model_selection",
+          "line": 130,
+          "relative": false,
+          "names": [
+            "StratifiedShuffleSplit"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/adapt_hypersigma_houston.py",
+      "loc": 20,
+      "bytes": 791,
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "scripts.adapt_hypersigma",
+          "line": 11,
+          "relative": false,
+          "names": [
+            "main",
+            "run_adapt"
+          ],
+          "resolved": "scripts/adapt_hypersigma.py"
+        },
+        {
+          "module": "argparse",
+          "line": 14,
+          "relative": false,
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/aggregate_ablation.py",
+      "loc": 136,
+      "bytes": 5008,
+      "functions": [
+        {
+          "name": "_read_means",
+          "line": 28
+        },
+        {
+          "name": "_stats",
+          "line": 43
+        },
+        {
+          "name": "main",
+          "line": 55
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 10,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 12,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 13,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 14,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 15,
+          "relative": false,
+          "names": [
+            "Dict",
+            "List",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 17,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "ablation_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        },
+        {
+          "module": "scipy.stats",
+          "line": 50,
+          "relative": false,
+          "names": [
+            "t"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/aggregate_bestcfg.py",
+      "loc": 110,
+      "bytes": 4168,
+      "functions": [
+        {
+          "name": "_read_means",
+          "line": 28
+        },
+        {
+          "name": "_stats",
+          "line": 38
+        },
+        {
+          "name": "main",
+          "line": 50
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 9,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 11,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 12,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 13,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 14,
+          "relative": false,
+          "names": [
+            "Dict",
+            "List",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 22,
+          "relative": false,
+          "names": [
+            "bestcfg_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        },
+        {
+          "module": "scipy.stats",
+          "line": 45,
+          "relative": false,
+          "names": [
+            "t"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/aggregate_combo.py",
+      "loc": 184,
+      "bytes": 7651,
+      "functions": [
+        {
+          "name": "_read_means",
+          "line": 32
+        },
+        {
+          "name": "_stats",
+          "line": 43
+        },
+        {
+          "name": "_load_ofat",
+          "line": 55
+        },
+        {
+          "name": "main",
+          "line": 74
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 14,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 17,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 18,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 19,
+          "relative": false,
+          "names": [
+            "Dict",
+            "List",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 21,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 27,
+          "relative": false,
+          "names": [
+            "combo_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        },
+        {
+          "module": "scipy.stats",
+          "line": 50,
+          "relative": false,
+          "names": [
+            "t"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/aggregate_experiment_results.py",
+      "loc": 131,
+      "bytes": 4122,
+      "functions": [
+        {
+          "name": "_read_json",
+          "line": 33
+        },
+        {
+          "name": "_read_yaml",
+          "line": 40
+        },
+        {
+          "name": "_is_example",
+          "line": 47
+        },
+        {
+          "name": "collect",
+          "line": 55
+        },
+        {
+          "name": "main",
+          "line": 103
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 22,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 24,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "datetime",
+          "line": 25,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 26,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 27,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 28,
+          "relative": false,
+          "names": [
+            "Any",
+            "Dict",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "yaml",
+          "line": 30,
+          "relative": false,
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/aggregate_significance.py",
+      "loc": 144,
+      "bytes": 5123,
+      "functions": [
+        {
+          "name": "_results_path",
+          "line": 33
+        },
+        {
+          "name": "_read_metric_means",
+          "line": 37
+        },
+        {
+          "name": "_ci95",
+          "line": 52
+        },
+        {
+          "name": "main",
+          "line": 62
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 14,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 17,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 18,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 19,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 20,
+          "relative": false,
+          "names": [
+            "Dict",
+            "List",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 22,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 28,
+          "relative": false,
+          "names": [
+            "sig_significance_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        },
+        {
+          "module": "scipy.stats",
+          "line": 57,
+          "relative": false,
+          "names": [
+            "t"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/bestcfg_config.py",
+      "loc": 94,
+      "bytes": 3604,
+      "functions": [
+        {
+          "name": "experiment_name",
+          "line": 58
+        },
+        {
+          "name": "base_config",
+          "line": 63
+        },
+        {
+          "name": "cells",
+          "line": 67
+        },
+        {
+          "name": "runs",
+          "line": 74
+        },
+        {
+          "name": "build_overrides",
+          "line": 80
+        },
+        {
+          "name": "eval_params",
+          "line": 93
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 19,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 21,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 22,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "Any",
+            "Dict",
+            "List",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 29,
+          "relative": false,
+          "names": [
+            "sig_significance_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/bestcfg_eval_worker.py",
+      "loc": 63,
+      "bytes": 2087,
+      "functions": [
+        {
+          "name": "main",
+          "line": 27
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 14,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 17,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 18,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 24,
+          "relative": false,
+          "names": [
+            "bestcfg_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        },
+        {
+          "module": "lib.eval_runner",
+          "line": 49,
+          "relative": false,
+          "names": [
+            "run_evaluation"
+          ],
+          "resolved": "lib/eval_runner.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/bestcfg_pretrain_worker.py",
+      "loc": 84,
+      "bytes": 3094,
+      "functions": [
+        {
+          "name": "main",
+          "line": 27
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 14,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 17,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 18,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 24,
+          "relative": false,
+          "names": [
+            "bestcfg_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        },
+        {
+          "module": "lib.pretrain_runner",
+          "line": 69,
+          "relative": false,
+          "names": [
+            "run_pretrain"
+          ],
+          "resolved": "lib/pretrain_runner.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/build_experiment_metadata.py",
+      "loc": 462,
+      "bytes": 16982,
+      "functions": [
+        {
+          "name": "_read_json",
+          "line": 44
+        },
+        {
+          "name": "_read_yaml",
+          "line": 51
+        },
+        {
+          "name": "_clean",
+          "line": 58
+        },
+        {
+          "name": "_parse_iso",
+          "line": 69
+        },
+        {
+          "name": "_round",
+          "line": 78
+        },
+        {
+          "name": "_is_example",
+          "line": 85
+        },
+        {
+          "name": "_method_family",
+          "line": 93
+        },
+        {
+          "name": "_checkpoint_epoch",
+          "line": 136
+        },
+        {
+          "name": "_estimate_runtime",
+          "line": 148
+        },
+        {
+          "name": "_metric_block",
+          "line": 178
+        },
+        {
+          "name": "_distill_eval",
+          "line": 191
+        },
+        {
+          "name": "_distill_experiment",
+          "line": 281
+        },
+        {
+          "name": "build",
+          "line": 353
+        },
+        {
+          "name": "main",
+          "line": 436
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 28,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 30,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "datetime",
+          "line": 31,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 32,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "math",
+          "line": 33,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "re",
+          "line": 34,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 35,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 36,
+          "relative": false,
+          "names": [
+            "Any",
+            "Dict",
+            "List",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "yaml",
+          "line": 38,
+          "relative": false,
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/build_native_pca100_report.py",
+      "loc": 344,
+      "bytes": 18615,
+      "functions": [
+        {
+          "name": "load_json",
+          "line": 245
+        },
+        {
+          "name": "normalize_acc",
+          "line": 250
+        },
+        {
+          "name": "main",
+          "line": 256
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 12,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "datetime",
+          "line": 14,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "glob",
+          "line": 15,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 17,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 18,
+          "relative": false,
+          "names": [
+            "Any",
+            "Dict",
+            "List",
+            "Optional"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/combo_config.py",
+      "loc": 131,
+      "bytes": 4850,
+      "functions": [
+        {
+          "name": "_canonical",
+          "line": 77
+        },
+        {
+          "name": "combo_name",
+          "line": 83
+        },
+        {
+          "name": "experiment_name",
+          "line": 88
+        },
+        {
+          "name": "stage_combos",
+          "line": 92
+        },
+        {
+          "name": "all_combos",
+          "line": 105
+        },
+        {
+          "name": "runs",
+          "line": 115
+        },
+        {
+          "name": "build_overrides",
+          "line": 122
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 25,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 27,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "itertools",
+          "line": 28,
+          "relative": false,
+          "names": [
+            "combinations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 29,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 30,
+          "relative": false,
+          "names": [
+            "Any",
+            "Dict",
+            "List",
+            "Optional",
+            "Tuple"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 36,
+          "relative": false,
+          "names": [
+            "ablation_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/combo_eval_worker.py",
+      "loc": 71,
+      "bytes": 2253,
+      "functions": [
+        {
+          "name": "_parse_factors",
+          "line": 27
+        },
+        {
+          "name": "main",
+          "line": 35
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 14,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 17,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 18,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 24,
+          "relative": false,
+          "names": [
+            "combo_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        },
+        {
+          "module": "lib.eval_runner",
+          "line": 57,
+          "relative": false,
+          "names": [
+            "run_evaluation"
+          ],
+          "resolved": "lib/eval_runner.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/combo_pretrain_worker.py",
+      "loc": 75,
+      "bytes": 2395,
+      "functions": [
+        {
+          "name": "_parse_factors",
+          "line": 27
+        },
+        {
+          "name": "main",
+          "line": 35
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 14,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 17,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 18,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 24,
+          "relative": false,
+          "names": [
+            "combo_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        },
+        {
+          "module": "lib.pretrain_runner",
+          "line": 61,
+          "relative": false,
+          "names": [
+            "run_pretrain"
+          ],
+          "resolved": "lib/pretrain_runner.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/compile_mft_faithful_results.py",
+      "loc": 182,
+      "bytes": 6506,
+      "functions": [
+        {
+          "name": "_read_json",
+          "line": 37
+        },
+        {
+          "name": "_read_yaml",
+          "line": 44
+        },
+        {
+          "name": "_metric_block",
+          "line": 51
+        },
+        {
+          "name": "collect",
+          "line": 57
+        },
+        {
+          "name": "main",
+          "line": 145
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 25,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "datetime",
+          "line": 26,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 27,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 28,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 29,
+          "relative": false,
+          "names": [
+            "Any",
+            "Dict",
+            "List",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "yaml",
+          "line": 31,
+          "relative": false,
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/compile_results.py",
+      "loc": 244,
+      "bytes": 9393,
+      "functions": [
+        {
+          "name": "_metric_block",
+          "line": 38
+        },
+        {
+          "name": "classify",
+          "line": 50
+        },
+        {
+          "name": "metrics_of",
+          "line": 98
+        },
+        {
+          "name": "main",
+          "line": 116
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 20,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 22,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "datetime",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "datetime"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 24,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/evaluate_cosine.py",
+      "loc": 1004,
+      "bytes": 41266,
+      "functions": [
+        {
+          "name": "load_checkpoint_with_key_mapping",
+          "line": 87
+        },
+        {
+          "name": "fix_state_dict_keys",
+          "line": 107
+        },
+        {
+          "name": "load_model_with_checkpoint",
+          "line": 140
+        },
+        {
+          "name": "compute_kappa",
+          "line": 277
+        },
+        {
+          "name": "compute_metrics_from_confusion_matrix",
+          "line": 293
+        },
+        {
+          "name": "evaluate",
+          "line": 325
+        },
+        {
+          "name": "print_results_table",
+          "line": 536
+        },
+        {
+          "name": "run_single_seed",
+          "line": 574
+        },
+        {
+          "name": "generate_plots",
+          "line": 601
+        },
+        {
+          "name": "_resolve_eval_device",
+          "line": 707
+        },
+        {
+          "name": "main",
+          "line": 739
+        },
+        {
+          "name": "run_evaluation",
+          "line": 914
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "argparse",
+          "line": 29,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 30,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 31,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 32,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "collections",
+          "line": 33,
+          "relative": false,
+          "names": [
+            "defaultdict"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 38,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 39,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 40,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "tqdm",
+          "line": 41,
+          "relative": false,
+          "names": [
+            "tqdm"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 42,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "utils.spatial_weights",
+          "line": 44,
+          "relative": false,
+          "names": [
+            "center_weighted_pool"
+          ],
+          "resolved": "utils/spatial_weights.py"
+        },
+        {
+          "module": "data.datasets",
+          "line": 46,
+          "relative": false,
+          "names": [
+            "HoustonPatchedDataset",
+            "TrentoPatchedDataset",
+            "MUUFLPatchedDataset"
+          ],
+          "resolved": "data/datasets/__init__.py"
+        },
+        {
+          "module": "data.samplers.patched_episode_sampler",
+          "line": 51,
+          "relative": false,
+          "names": [
+            "PatchedEpisodeSampler"
+          ],
+          "resolved": "data/samplers/patched_episode_sampler.py"
+        },
+        {
+          "module": "models",
+          "line": 52,
+          "relative": false,
+          "names": [
+            "MFTCPEACosine",
+            "MFTOriginalCosine"
+          ],
+          "resolved": "models/__init__.py"
+        },
+        {
+          "module": "scipy.stats",
+          "line": 480,
+          "relative": false,
+          "names": [
+            "t"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "utils.seed",
+          "line": 576,
+          "relative": false,
+          "names": [
+            "set_seed"
+          ],
+          "resolved": "utils/seed.py"
+        },
+        {
+          "module": "utils.visualization",
+          "line": 604,
+          "relative": false,
+          "names": [
+            "plot_confusion_matrix",
+            "plot_per_class_accuracy",
+            "plot_episode_distributions",
+            "plot_per_class_boxplots",
+            "plot_pairwise_confusion_rate",
+            "plot_episode_feature_space",
+            "plot_aggregated_feature_space"
+          ],
+          "resolved": "utils/visualization.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/evaluate_hypersigma_cosine.py",
+      "loc": 895,
+      "bytes": 36892,
+      "functions": [
+        {
+          "name": "_build_dual",
+          "line": 84
+        },
+        {
+          "name": "_load_adapted_checkpoint",
+          "line": 131
+        },
+        {
+          "name": "load_model",
+          "line": 165
+        },
+        {
+          "name": "_compute_logits",
+          "line": 237
+        },
+        {
+          "name": "evaluate",
+          "line": 267
+        },
+        {
+          "name": "_to_json_friendly",
+          "line": 518
+        },
+        {
+          "name": "_write_results_json",
+          "line": 535
+        },
+        {
+          "name": "_shape_for_plots",
+          "line": 593
+        },
+        {
+          "name": "_resolve_dataset_paths",
+          "line": 618
+        },
+        {
+          "name": "_resolve_device",
+          "line": 654
+        },
+        {
+          "name": "main",
+          "line": 674
+        },
+        {
+          "name": "run_evaluation",
+          "line": 820
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 26,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 28,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 29,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 30,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "os",
+          "line": 31,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 32,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "time",
+          "line": 33,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "collections",
+          "line": 34,
+          "relative": false,
+          "names": [
+            "defaultdict"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 35,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 36,
+          "relative": false,
+          "names": [
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 38,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 39,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn.functional",
+          "line": 40,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "tqdm",
+          "line": 41,
+          "relative": false,
+          "names": [
+            "tqdm"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "data.datasets",
+          "line": 47,
+          "relative": false,
+          "names": [
+            "DATASET_REGISTRY",
+            "get_spec"
+          ],
+          "resolved": "data/datasets/__init__.py"
+        },
+        {
+          "module": "data.samplers.patched_episode_sampler",
+          "line": 48,
+          "relative": false,
+          "names": [
+            "PatchedEpisodeSampler"
+          ],
+          "resolved": "data/samplers/patched_episode_sampler.py"
+        },
+        {
+          "module": "models.hypersigma",
+          "line": 49,
+          "relative": false,
+          "names": [
+            "HyperSIGMADual",
+            "HyperSIGMACosine"
+          ],
+          "resolved": "models/hypersigma/__init__.py"
+        },
+        {
+          "module": "scripts.evaluate_cosine",
+          "line": 50,
+          "relative": false,
+          "names": [
+            "CLASS_NAMES",
+            "compute_metrics_from_confusion_matrix",
+            "generate_plots"
+          ],
+          "resolved": "scripts/evaluate_cosine.py"
+        },
+        {
+          "module": "utils.seed",
+          "line": 55,
+          "relative": false,
+          "names": [
+            "set_seed"
+          ],
+          "resolved": "utils/seed.py"
+        },
+        {
+          "module": "scipy.stats",
+          "line": 463,
+          "relative": false,
+          "names": [
+            "t"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/fit_pca_hypersigma.py",
+      "loc": 87,
+      "bytes": 3345,
+      "functions": [
+        {
+          "name": "main",
+          "line": 41
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 18,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 20,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 21,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 22,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "data.datasets",
+          "line": 29,
+          "relative": false,
+          "names": [
+            "DATASET_REGISTRY",
+            "get_spec"
+          ],
+          "resolved": "data/datasets/__init__.py"
+        },
+        {
+          "module": "models.hypersigma.preprocessing",
+          "line": 30,
+          "relative": false,
+          "names": [
+            "fit_dataset_pca",
+            "fit_pca_output_stats"
+          ],
+          "resolved": "models/hypersigma/preprocessing.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/gather_native_pca100_raw.py",
+      "loc": 151,
+      "bytes": 5536,
+      "functions": [
+        {
+          "name": "read_json",
+          "line": 59
+        },
+        {
+          "name": "read_yaml",
+          "line": 66
+        },
+        {
+          "name": "read_text",
+          "line": 73
+        },
+        {
+          "name": "list_checkpoints",
+          "line": 79
+        },
+        {
+          "name": "collect_experiment",
+          "line": 99
+        },
+        {
+          "name": "main",
+          "line": 127
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 14,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 17,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 18,
+          "relative": false,
+          "names": [
+            "Any",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "yaml",
+          "line": 20,
+          "relative": false,
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/gather_requested_results.py",
+      "loc": 229,
+      "bytes": 10533,
+      "functions": [
+        {
+          "name": "read_json",
+          "line": 29
+        },
+        {
+          "name": "metrics_only",
+          "line": 39
+        },
+        {
+          "name": "load_eval",
+          "line": 49
+        },
+        {
+          "name": "placeholder",
+          "line": 78
+        },
+        {
+          "name": "exp_metadata",
+          "line": 84
+        },
+        {
+          "name": "walk",
+          "line": 217
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 17,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "datetime",
+          "line": 19,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 20,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "os",
+          "line": 21,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 22,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "Any",
+            "Dict",
+            "Optional"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/pretrain_enhanced.py",
+      "loc": 541,
+      "bytes": 22643,
+      "functions": [
+        {
+          "name": "_log_gpu_diagnostics",
+          "line": 94
+        },
+        {
+          "name": "_resolve_device",
+          "line": 111
+        },
+        {
+          "name": "run_pretrain",
+          "line": 158
+        },
+        {
+          "name": "main",
+          "line": 506
+        }
+      ],
+      "classes": [
+        {
+          "name": "CombinedPatchedDataset",
+          "line": 56,
+          "methods": [
+            "__init__",
+            "__getitem__"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "argparse",
+          "line": 20,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 21,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 22,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 24,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 30,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.utils.data",
+          "line": 31,
+          "relative": false,
+          "names": [
+            "DataLoader"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "utils.io",
+          "line": 33,
+          "relative": false,
+          "names": [
+            "load_config"
+          ],
+          "resolved": "utils/io.py"
+        },
+        {
+          "module": "utils.logging",
+          "line": 34,
+          "relative": false,
+          "names": [
+            "setup_logging"
+          ],
+          "resolved": "utils/logging.py"
+        },
+        {
+          "module": "data.datasets",
+          "line": 35,
+          "relative": false,
+          "names": [
+            "HoustonPatchedDataset",
+            "TrentoPatchedDataset",
+            "MUUFLPatchedDataset"
+          ],
+          "resolved": "data/datasets/__init__.py"
+        },
+        {
+          "module": "models",
+          "line": 40,
+          "relative": false,
+          "names": [
+            "MFTCPEACosine",
+            "MFTOriginalCosine"
+          ],
+          "resolved": "models/__init__.py"
+        },
+        {
+          "module": "pretrain.masked_modeling_enhanced",
+          "line": 41,
+          "relative": false,
+          "names": [
+            "EnhancedMaskedSpectralSpatialModel"
+          ],
+          "resolved": "pretrain/masked_modeling_enhanced.py"
+        },
+        {
+          "module": "pretrain.mae_pretrain",
+          "line": 42,
+          "relative": false,
+          "names": [
+            "MAEPretrainModel"
+          ],
+          "resolved": "pretrain/mae_pretrain.py"
+        },
+        {
+          "module": "pretrain.mft_mae",
+          "line": 43,
+          "relative": false,
+          "names": [
+            "MFTMAEPretrainModel"
+          ],
+          "resolved": "pretrain/mft_mae.py"
+        },
+        {
+          "module": "pretrain.mft_spatial_mae",
+          "line": 44,
+          "relative": false,
+          "names": [
+            "MFTSpatialMaskPretrainModel"
+          ],
+          "resolved": "pretrain/mft_spatial_mae.py"
+        },
+        {
+          "module": "trainers.pretrain_trainer",
+          "line": 45,
+          "relative": false,
+          "names": [
+            "PretrainTrainer"
+          ],
+          "resolved": "trainers/pretrain_trainer.py"
+        },
+        {
+          "module": "utils.seed",
+          "line": 174,
+          "relative": false,
+          "names": [
+            "set_seed"
+          ],
+          "resolved": "utils/seed.py"
+        },
+        {
+          "module": "sklearn.model_selection",
+          "line": 246,
+          "relative": false,
+          "names": [
+            "StratifiedShuffleSplit"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/run_ablation.py",
+      "loc": 162,
+      "bytes": 6175,
+      "functions": [
+        {
+          "name": "build_jobs",
+          "line": 42
+        },
+        {
+          "name": "run_global",
+          "line": 62
+        },
+        {
+          "name": "print_schedule",
+          "line": 107
+        },
+        {
+          "name": "summarize",
+          "line": 116
+        },
+        {
+          "name": "main",
+          "line": 124
+        }
+      ],
+      "classes": [
+        {
+          "name": "Job",
+          "line": 35,
+          "methods": [
+            "__init__"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 17,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 19,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "subprocess",
+          "line": 20,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 21,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "time",
+          "line": 22,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 24,
+          "relative": false,
+          "names": [
+            "List",
+            "Optional",
+            "Tuple"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 30,
+          "relative": false,
+          "names": [
+            "ablation_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/run_bestcfg.py",
+      "loc": 150,
+      "bytes": 5869,
+      "functions": [
+        {
+          "name": "build_jobs",
+          "line": 42
+        },
+        {
+          "name": "run_global",
+          "line": 54
+        },
+        {
+          "name": "print_schedule",
+          "line": 93
+        },
+        {
+          "name": "summarize",
+          "line": 102
+        },
+        {
+          "name": "main",
+          "line": 110
+        }
+      ],
+      "classes": [
+        {
+          "name": "Job",
+          "line": 34,
+          "methods": [
+            "__init__"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 13,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 15,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "subprocess",
+          "line": 16,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 17,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "time",
+          "line": 18,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 19,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 20,
+          "relative": false,
+          "names": [
+            "List",
+            "Optional",
+            "Tuple"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 26,
+          "relative": false,
+          "names": [
+            "bestcfg_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/run_combo.py",
+      "loc": 156,
+      "bytes": 6115,
+      "functions": [
+        {
+          "name": "_stages",
+          "line": 42
+        },
+        {
+          "name": "build_jobs",
+          "line": 46
+        },
+        {
+          "name": "run_global",
+          "line": 64
+        },
+        {
+          "name": "print_schedule",
+          "line": 103
+        },
+        {
+          "name": "summarize",
+          "line": 111
+        },
+        {
+          "name": "main",
+          "line": 119
+        }
+      ],
+      "classes": [
+        {
+          "name": "Job",
+          "line": 35,
+          "methods": [
+            "__init__"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 17,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 19,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "subprocess",
+          "line": 20,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 21,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "time",
+          "line": 22,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 24,
+          "relative": false,
+          "names": [
+            "List",
+            "Optional",
+            "Tuple"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 30,
+          "relative": false,
+          "names": [
+            "combo_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/run_hsi_only_experiments.py",
+      "loc": 175,
+      "bytes": 6743,
+      "functions": [
+        {
+          "name": "main",
+          "line": 87
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 31,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 33,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 34,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "time",
+          "line": 35,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "traceback",
+          "line": 36,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 37,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "lib.pretrain_runner",
+          "line": 43,
+          "relative": false,
+          "names": [
+            "run_pretrain"
+          ],
+          "resolved": "lib/pretrain_runner.py"
+        },
+        {
+          "module": "lib.eval_runner",
+          "line": 44,
+          "relative": false,
+          "names": [
+            "run_evaluation"
+          ],
+          "resolved": "lib/eval_runner.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/run_hypersigma_spatial_pca100.py",
+      "loc": 235,
+      "bytes": 9576,
+      "functions": [
+        {
+          "name": "run_dataset",
+          "line": 57
+        },
+        {
+          "name": "main",
+          "line": 199
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 35,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 37,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 38,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 39,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 40,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "data.datasets",
+          "line": 46,
+          "relative": false,
+          "names": [
+            "get_spec"
+          ],
+          "resolved": "data/datasets/__init__.py"
+        },
+        {
+          "module": "lib.adapt_runner",
+          "line": 47,
+          "relative": false,
+          "names": [
+            "run_adapt_hypersigma"
+          ],
+          "resolved": "lib/adapt_runner.py"
+        },
+        {
+          "module": "lib.eval_runner",
+          "line": 48,
+          "relative": false,
+          "names": [
+            "run_hypersigma_evaluation"
+          ],
+          "resolved": "lib/eval_runner.py"
+        },
+        {
+          "module": "lib.experiments",
+          "line": 49,
+          "relative": false,
+          "names": [
+            "ExperimentLogger"
+          ],
+          "resolved": "lib/experiments.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/run_mae_experiments.py",
+      "loc": 187,
+      "bytes": 7209,
+      "functions": [
+        {
+          "name": "main",
+          "line": 96
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 35,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 37,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "os",
+          "line": 38,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 39,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "time",
+          "line": 40,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "traceback",
+          "line": 41,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 42,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "lib.pretrain_runner",
+          "line": 48,
+          "relative": false,
+          "names": [
+            "run_pretrain"
+          ],
+          "resolved": "lib/pretrain_runner.py"
+        },
+        {
+          "module": "lib.eval_runner",
+          "line": 49,
+          "relative": false,
+          "names": [
+            "run_evaluation"
+          ],
+          "resolved": "lib/eval_runner.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/run_mft_original_mae_experiments.py",
+      "loc": 165,
+      "bytes": 6586,
+      "functions": [
+        {
+          "name": "main",
+          "line": 83
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 37,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 39,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "os",
+          "line": 40,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 41,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "time",
+          "line": 42,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "traceback",
+          "line": 43,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 44,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "lib.pretrain_runner",
+          "line": 50,
+          "relative": false,
+          "names": [
+            "run_pretrain"
+          ],
+          "resolved": "lib/pretrain_runner.py"
+        },
+        {
+          "module": "lib.eval_runner",
+          "line": 51,
+          "relative": false,
+          "names": [
+            "run_evaluation"
+          ],
+          "resolved": "lib/eval_runner.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/run_mft_original_spatial_experiments.py",
+      "loc": 164,
+      "bytes": 6511,
+      "functions": [
+        {
+          "name": "main",
+          "line": 82
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 35,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 37,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "os",
+          "line": 38,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 39,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "time",
+          "line": 40,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "traceback",
+          "line": 41,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 42,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "lib.pretrain_runner",
+          "line": 48,
+          "relative": false,
+          "names": [
+            "run_pretrain"
+          ],
+          "resolved": "lib/pretrain_runner.py"
+        },
+        {
+          "module": "lib.eval_runner",
+          "line": 49,
+          "relative": false,
+          "names": [
+            "run_evaluation"
+          ],
+          "resolved": "lib/eval_runner.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/run_significance_experiment.py",
+      "loc": 186,
+      "bytes": 7302,
+      "functions": [
+        {
+          "name": "_dataset_rank",
+          "line": 52
+        },
+        {
+          "name": "build_jobs",
+          "line": 56
+        },
+        {
+          "name": "run_global",
+          "line": 76
+        },
+        {
+          "name": "print_schedule",
+          "line": 126
+        },
+        {
+          "name": "summarize",
+          "line": 135
+        },
+        {
+          "name": "main",
+          "line": 143
+        }
+      ],
+      "classes": [
+        {
+          "name": "Job",
+          "line": 42,
+          "methods": [
+            "__init__"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 24,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 26,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "subprocess",
+          "line": 27,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 28,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "time",
+          "line": 29,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 30,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 31,
+          "relative": false,
+          "names": [
+            "List",
+            "Optional",
+            "Tuple"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 37,
+          "relative": false,
+          "names": [
+            "sig_significance_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/sig_eval_worker.py",
+      "loc": 73,
+      "bytes": 2574,
+      "functions": [
+        {
+          "name": "main",
+          "line": 30
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 17,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 19,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 20,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 21,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 27,
+          "relative": false,
+          "names": [
+            "sig_significance_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        },
+        {
+          "module": "lib.eval_runner",
+          "line": 59,
+          "relative": false,
+          "names": [
+            "run_evaluation"
+          ],
+          "resolved": "lib/eval_runner.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/sig_pretrain_worker.py",
+      "loc": 85,
+      "bytes": 3106,
+      "functions": [
+        {
+          "name": "main",
+          "line": 30
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 17,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 19,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 20,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 21,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scripts",
+          "line": 27,
+          "relative": false,
+          "names": [
+            "sig_significance_config"
+          ],
+          "resolved": "scripts/__init__.py"
+        },
+        {
+          "module": "lib.pretrain_runner",
+          "line": 71,
+          "relative": false,
+          "names": [
+            "run_pretrain"
+          ],
+          "resolved": "lib/pretrain_runner.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "scripts/sig_significance_config.py",
+      "loc": 227,
+      "bytes": 8952,
+      "functions": [
+        {
+          "name": "cells",
+          "line": 157
+        },
+        {
+          "name": "runs",
+          "line": 166
+        },
+        {
+          "name": "canonical_pretrain_overrides",
+          "line": 175
+        },
+        {
+          "name": "eval_params",
+          "line": 202
+        }
+      ],
+      "classes": [
+        {
+          "name": "Group",
+          "line": 85,
+          "methods": [
+            "__init__",
+            "experiment_name",
+            "canonical_dir"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 25,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 26,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 27,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 28,
+          "relative": false,
+          "names": [
+            "Any",
+            "Callable",
+            "Dict",
+            "List",
+            "Optional"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "tests/__init__.py",
+      "loc": 1,
+      "bytes": 26,
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "parse_error": null
+    },
+    {
+      "path": "tests/test_data.py",
+      "loc": 55,
+      "bytes": 1817,
+      "functions": [],
+      "classes": [
+        {
+          "name": "MockDataset",
+          "line": 8,
+          "methods": [
+            "__init__",
+            "_build_indices",
+            "extract_patch"
+          ]
+        },
+        {
+          "name": "TestEpisodeSampler",
+          "line": 42,
+          "methods": [
+            "test_sample_episode"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "pytest",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 4,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "data.samplers",
+          "line": 5,
+          "relative": false,
+          "names": [
+            "EpisodeSampler"
+          ],
+          "resolved": "data/samplers/__init__.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "tests/test_hypersigma_native_shapes.py",
+      "loc": 282,
+      "bytes": 11798,
+      "functions": [
+        {
+          "name": "_make_dummy_pca",
+          "line": 38
+        },
+        {
+          "name": "test_fit_input_shapes",
+          "line": 55
+        },
+        {
+          "name": "test_fit_input_pad_centered_zero",
+          "line": 61
+        },
+        {
+          "name": "test_fit_input_pad_reflect_rejected",
+          "line": 70
+        },
+        {
+          "name": "test_spectral_resample_to_100",
+          "line": 76
+        },
+        {
+          "name": "test_native_spatial_forward",
+          "line": 93
+        },
+        {
+          "name": "test_native_spectral_forward",
+          "line": 122
+        },
+        {
+          "name": "test_native_pca_front_end_selected",
+          "line": 144
+        },
+        {
+          "name": "test_adapted_pca100_resample_when_under_100_bands",
+          "line": 168
+        },
+        {
+          "name": "test_adapted_pca100_uses_pca_when_available",
+          "line": 185
+        },
+        {
+          "name": "test_native_sem_only_adaptation",
+          "line": 204
+        },
+        {
+          "name": "test_native_fused_forward_runs",
+          "line": 243
+        },
+        {
+          "name": "test_native_spatial_loads_pretrained",
+          "line": 259
+        },
+        {
+          "name": "test_native_spectral_loads_pretrained",
+          "line": 273
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 18,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "pickle",
+          "line": 20,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 21,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 23,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pytest",
+          "line": 24,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sklearn.decomposition",
+          "line": 28,
+          "relative": false,
+          "names": [
+            "PCA"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "models.hypersigma",
+          "line": 30,
+          "relative": false,
+          "names": [
+            "HyperSIGMACosine",
+            "HyperSIGMADual"
+          ],
+          "resolved": "models/hypersigma/__init__.py"
+        },
+        {
+          "module": "models.hypersigma._input_fit",
+          "line": 31,
+          "relative": false,
+          "names": [
+            "fit_input"
+          ],
+          "resolved": "models/hypersigma/_input_fit.py"
+        },
+        {
+          "module": "models.hypersigma.preprocessing",
+          "line": 32,
+          "relative": false,
+          "names": [
+            "SpectralResample"
+          ],
+          "resolved": "models/hypersigma/preprocessing.py"
+        },
+        {
+          "module": "models.hypersigma.preprocessing",
+          "line": 152,
+          "relative": false,
+          "names": [
+            "PCAPreprocessor"
+          ],
+          "resolved": "models/hypersigma/preprocessing.py"
+        },
+        {
+          "module": "models.hypersigma.preprocessing",
+          "line": 186,
+          "relative": false,
+          "names": [
+            "PCAPreprocessor"
+          ],
+          "resolved": "models/hypersigma/preprocessing.py"
+        },
+        {
+          "module": "pretrain.hypersigma_mae",
+          "line": 205,
+          "relative": false,
+          "names": [
+            "HyperSIGMAMaskedAdaptation"
+          ],
+          "resolved": "pretrain/hypersigma_mae.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "tests/test_hypersigma_shapes.py",
+      "loc": 117,
+      "bytes": 3872,
+      "functions": [
+        {
+          "name": "_make_dummy_pca",
+          "line": 32
+        },
+        {
+          "name": "test_sem_shape",
+          "line": 43
+        },
+        {
+          "name": "test_dual_forward_shapes_random_init",
+          "line": 51
+        },
+        {
+          "name": "test_cosine_wrapper_modes",
+          "line": 72
+        },
+        {
+          "name": "test_trainable_components_present",
+          "line": 95
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 13,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "pickle",
+          "line": 15,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 16,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 18,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pytest",
+          "line": 19,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sklearn.decomposition",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "PCA"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "models.hypersigma",
+          "line": 25,
+          "relative": false,
+          "names": [
+            "HyperSIGMACosine",
+            "HyperSIGMADual",
+            "SEM"
+          ],
+          "resolved": "models/hypersigma/__init__.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "tests/test_mft_original_shapes.py",
+      "loc": 224,
+      "bytes": 9707,
+      "functions": [
+        {
+          "name": "_encoder",
+          "line": 40
+        },
+        {
+          "name": "test_tokenize_and_cls_shapes",
+          "line": 52
+        },
+        {
+          "name": "test_forward_features_contract",
+          "line": 64
+        },
+        {
+          "name": "test_hsi_only_rejected",
+          "line": 79
+        },
+        {
+          "name": "test_mae_forward_loss_and_len_keep",
+          "line": 84
+        },
+        {
+          "name": "test_mae_trains_mcrosspa_attention",
+          "line": 105
+        },
+        {
+          "name": "test_checkpoint_keys_round_trip",
+          "line": 135
+        },
+        {
+          "name": "_spatial_mae",
+          "line": 165
+        },
+        {
+          "name": "test_spatial_forward_loss_and_mask",
+          "line": 174
+        },
+        {
+          "name": "test_spatial_trains_mcrosspa_attention_via_cls_injection",
+          "line": 190
+        },
+        {
+          "name": "test_spatial_checkpoint_keys_round_trip",
+          "line": 210
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "pytest",
+          "line": 25,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "models.mft_original",
+          "line": 29,
+          "relative": false,
+          "names": [
+            "MFTOriginalCosine"
+          ],
+          "resolved": "models/mft_original.py"
+        },
+        {
+          "module": "pretrain.mft_mae",
+          "line": 30,
+          "relative": false,
+          "names": [
+            "MFTMAEPretrainModel"
+          ],
+          "resolved": "pretrain/mft_mae.py"
+        },
+        {
+          "module": "pretrain.mft_spatial_mae",
+          "line": 31,
+          "relative": false,
+          "names": [
+            "MFTSpatialMaskPretrainModel"
+          ],
+          "resolved": "pretrain/mft_spatial_mae.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "tests/test_models.py",
+      "loc": 27,
+      "bytes": 768,
+      "functions": [],
+      "classes": [
+        {
+          "name": "TestTokenizers",
+          "line": 10,
+          "methods": [
+            "test_channel_tokenizer",
+            "test_spatial_tokenizer",
+            "test_aux_tokenizer"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "models.components",
+          "line": 3,
+          "relative": false,
+          "names": [
+            "ChannelTokenizer",
+            "SpatialTokenizer",
+            "AuxTokenizer"
+          ],
+          "resolved": "models/components/__init__.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "tests/test_pretrain_enhanced.py",
+      "loc": 196,
+      "bytes": 6232,
+      "functions": [
+        {
+          "name": "_make_encoder",
+          "line": 25
+        },
+        {
+          "name": "_run_and_check",
+          "line": 42
+        },
+        {
+          "name": "test_unified_band_masking",
+          "line": 68
+        },
+        {
+          "name": "test_enhanced_model_band_only",
+          "line": 95
+        },
+        {
+          "name": "test_enhanced_model_spatial_only",
+          "line": 122
+        },
+        {
+          "name": "test_enhanced_model_combined",
+          "line": 152
+        },
+        {
+          "name": "main",
+          "line": 176
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "sys",
+          "line": 12,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 13,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 18,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "models",
+          "line": 20,
+          "relative": false,
+          "names": [
+            "MFTCPEACosine"
+          ],
+          "resolved": "models/__init__.py"
+        },
+        {
+          "module": "pretrain.masked_modeling",
+          "line": 21,
+          "relative": false,
+          "names": [
+            "UnifiedBandMasking"
+          ],
+          "resolved": "pretrain/masked_modeling.py"
+        },
+        {
+          "module": "pretrain.masked_modeling_enhanced",
+          "line": 22,
+          "relative": false,
+          "names": [
+            "EnhancedMaskedSpectralSpatialModel"
+          ],
+          "resolved": "pretrain/masked_modeling_enhanced.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "tests/test_spatial_weights.py",
+      "loc": 92,
+      "bytes": 3811,
+      "functions": [],
+      "classes": [
+        {
+          "name": "TestMakeCenterWeights",
+          "line": 9,
+          "methods": [
+            "test_normalized_weights_sum_to_one",
+            "test_unnormalized_weights_do_not_sum_to_one",
+            "test_center_pixel_has_max_weight",
+            "test_large_sigma_approximates_uniform",
+            "test_small_sigma_concentrates_on_center",
+            "test_different_patch_sizes",
+            "test_weights_are_symmetric"
+          ]
+        },
+        {
+          "name": "TestCenterWeightedPool",
+          "line": 52,
+          "methods": [
+            "test_output_shape",
+            "test_uniform_weights_match_mean",
+            "test_single_pixel_weight",
+            "test_device_handling",
+            "test_gradient_flows"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pytest",
+          "line": 4,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "utils.spatial_weights",
+          "line": 6,
+          "relative": false,
+          "names": [
+            "make_center_weights",
+            "center_weighted_pool"
+          ],
+          "resolved": "utils/spatial_weights.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "tools/refactor/inventory.py",
+      "loc": 228,
+      "bytes": 7736,
+      "functions": [
+        {
+          "name": "should_skip_dir",
+          "line": 46
+        },
+        {
+          "name": "iter_files",
+          "line": 57
+        },
+        {
+          "name": "module_index",
+          "line": 65
+        },
+        {
+          "name": "resolve",
+          "line": 81
+        },
+        {
+          "name": "absolutise",
+          "line": 91
+        },
+        {
+          "name": "scan_python",
+          "line": 101
+        },
+        {
+          "name": "main",
+          "line": 170
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 17,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "argparse",
+          "line": 19,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "ast",
+          "line": 20,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 21,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "os",
+          "line": 22,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 23,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "trainers/__init__.py",
+      "loc": 7,
+      "bytes": 172,
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "trainers.pretrain_trainer",
+          "line": 2,
+          "relative": true,
+          "names": [
+            "PretrainTrainer",
+            "create_pretrain_dataloaders"
+          ],
+          "resolved": "trainers/pretrain_trainer.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "trainers/pretrain_trainer.py",
+      "loc": 521,
+      "bytes": 17993,
+      "functions": [
+        {
+          "name": "create_pretrain_dataloaders",
+          "line": 452
+        }
+      ],
+      "classes": [
+        {
+          "name": "PretrainTrainer",
+          "line": 30,
+          "methods": [
+            "__init__",
+            "train_epoch",
+            "validate",
+            "save_checkpoint",
+            "load_checkpoint",
+            "save_encoder",
+            "train"
+          ]
+        }
+      ],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 11,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.nn",
+          "line": 12,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "torch.optim",
+          "line": 13,
+          "relative": false,
+          "names": [
+            "AdamW"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch.optim.lr_scheduler",
+          "line": 14,
+          "relative": false,
+          "names": [
+            "CosineAnnealingLR",
+            "LinearLR",
+            "SequentialLR"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch.utils.data",
+          "line": 15,
+          "relative": false,
+          "names": [
+            "DataLoader"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 16,
+          "relative": false,
+          "names": [
+            "Dict",
+            "Optional",
+            "Callable"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "tqdm",
+          "line": 17,
+          "relative": false,
+          "names": [
+            "tqdm"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 18,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "os",
+          "line": 19,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 20,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch.utils.tensorboard",
+          "line": 133,
+          "relative": false,
+          "names": [
+            "SummaryWriter"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "trainers.masked_modeling",
+          "line": 472,
+          "relative": true,
+          "names": [
+            "PretrainDataset",
+            "CombinedPretrainDataset"
+          ],
+          "resolved": "trainers/__init__.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "utils/__init__.py",
+      "loc": 5,
+      "bytes": 190,
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "module": "utils.metrics",
+          "line": 2,
+          "relative": true,
+          "names": [
+            "accuracy",
+            "confusion_matrix"
+          ],
+          "resolved": "utils/metrics.py"
+        },
+        {
+          "module": "utils.io",
+          "line": 3,
+          "relative": true,
+          "names": [
+            "load_config",
+            "save_results"
+          ],
+          "resolved": "utils/io.py"
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "utils/checkpoints.py",
+      "loc": 88,
+      "bytes": 2805,
+      "functions": [
+        {
+          "name": "load_checkpoint_state",
+          "line": 8
+        },
+        {
+          "name": "fix_state_dict_keys",
+          "line": 31
+        },
+        {
+          "name": "filter_compatible_state",
+          "line": 69
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "__future__",
+          "line": 2,
+          "relative": false,
+          "names": [
+            "annotations"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 4,
+          "relative": false,
+          "names": [
+            "Dict",
+            "Tuple",
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "torch",
+          "line": 5,
+          "relative": false,
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "utils/io.py",
+      "loc": 19,
+      "bytes": 560,
+      "functions": [
+        {
+          "name": "load_config",
+          "line": 9
+        },
+        {
+          "name": "save_results",
+          "line": 15
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "yaml",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "json",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 4,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 5,
+          "relative": false,
+          "names": [
+            "Dict",
+            "Any"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "omegaconf",
+          "line": 6,
+          "relative": false,
+          "names": [
+            "OmegaConf"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "utils/logging.py",
+      "loc": 19,
+      "bytes": 532,
+      "functions": [
+        {
+          "name": "setup_logging",
+          "line": 7
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "logging",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sys",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "pathlib",
+          "line": 4,
+          "relative": false,
+          "names": [
+            "Path"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "utils/metrics.py",
+      "loc": 14,
+      "bytes": 420,
+      "functions": [
+        {
+          "name": "accuracy",
+          "line": 7
+        },
+        {
+          "name": "confusion_matrix",
+          "line": 12
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "sklearn.metrics",
+          "line": 4,
+          "relative": false,
+          "names": [
+            "confusion_matrix"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "utils/seed.py",
+      "loc": 29,
+      "bytes": 838,
+      "functions": [
+        {
+          "name": "set_seed",
+          "line": 10
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 3,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "random",
+          "line": 4,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "logging",
+          "line": 5,
+          "relative": false,
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "utils/spatial_weights.py",
+      "loc": 65,
+      "bytes": 2075,
+      "functions": [
+        {
+          "name": "make_center_weights",
+          "line": 17
+        },
+        {
+          "name": "center_weighted_pool",
+          "line": 49
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "torch",
+          "line": 14,
+          "relative": false,
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    },
+    {
+      "path": "utils/visualization.py",
+      "loc": 604,
+      "bytes": 20807,
+      "functions": [
+        {
+          "name": "plot_confusion_matrix",
+          "line": 10
+        },
+        {
+          "name": "plot_embeddings",
+          "line": 61
+        },
+        {
+          "name": "plot_per_class_accuracy",
+          "line": 87
+        },
+        {
+          "name": "plot_episode_distributions",
+          "line": 138
+        },
+        {
+          "name": "plot_per_class_boxplots",
+          "line": 199
+        },
+        {
+          "name": "plot_pairwise_confusion_rate",
+          "line": 251
+        },
+        {
+          "name": "_get_class_colors",
+          "line": 331
+        },
+        {
+          "name": "_fixed_color_map",
+          "line": 355
+        },
+        {
+          "name": "plot_episode_feature_space",
+          "line": 364
+        },
+        {
+          "name": "plot_aggregated_feature_space",
+          "line": 513
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "module": "matplotlib",
+          "line": 2,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "matplotlib.pyplot",
+          "line": 4,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "numpy",
+          "line": 5,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "seaborn",
+          "line": 6,
+          "relative": false,
+          "resolved": null
+        },
+        {
+          "module": "typing",
+          "line": 7,
+          "relative": false,
+          "names": [
+            "Optional"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "sklearn.manifold",
+          "line": 67,
+          "relative": false,
+          "names": [
+            "TSNE"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "scipy.stats",
+          "line": 173,
+          "relative": false,
+          "names": [
+            "gaussian_kde"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "sklearn.manifold",
+          "line": 392,
+          "relative": false,
+          "names": [
+            "TSNE"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "matplotlib.lines",
+          "line": 457,
+          "relative": false,
+          "names": [
+            "Line2D"
+          ],
+          "resolved": null
+        },
+        {
+          "module": "sklearn.manifold",
+          "line": 532,
+          "relative": false,
+          "names": [
+            "TSNE"
+          ],
+          "resolved": null
+        }
+      ],
+      "parse_error": null
+    }
+  ],
+  "other": [
+    {
+      "path": "CLAUDE.md",
+      "suffix": ".md",
+      "bytes": 3964
+    },
+    {
+      "path": "PAPER_CANON.md",
+      "suffix": ".md",
+      "bytes": 15225
+    },
+    {
+      "path": "README.md",
+      "suffix": ".md",
+      "bytes": 5829
+    },
+    {
+      "path": "SPLIT.md",
+      "suffix": ".md",
+      "bytes": 3059
+    },
+    {
+      "path": "WORKFLOW.md",
+      "suffix": ".md",
+      "bytes": 8263
+    },
+    {
+      "path": ".claude/settings.local.json",
+      "suffix": ".json",
+      "bytes": 11110
+    },
+    {
+      "path": ".claude/agents/canon-reviewer.md",
+      "suffix": ".md",
+      "bytes": 3357
+    },
+    {
+      "path": ".claude/agents/verifier.md",
+      "suffix": ".md",
+      "bytes": 2983
+    },
+    {
+      "path": ".claude/skills/phase0-baseline/SKILL.md",
+      "suffix": ".md",
+      "bytes": 3174
+    },
+    {
+      "path": ".claude/skills/phase1-audit/SKILL.md",
+      "suffix": ".md",
+      "bytes": 6078
+    },
+    {
+      "path": ".claude/skills/phase2-harness/SKILL.md",
+      "suffix": ".md",
+      "bytes": 6549
+    },
+    {
+      "path": ".claude/skills/phase3-prune/SKILL.md",
+      "suffix": ".md",
+      "bytes": 3084
+    },
+    {
+      "path": ".claude/skills/phase4-rename/SKILL.md",
+      "suffix": ".md",
+      "bytes": 6175
+    },
+    {
+      "path": ".claude/skills/phase5-restructure/SKILL.md",
+      "suffix": ".md",
+      "bytes": 6266
+    },
+    {
+      "path": ".claude/skills/phase6-quality/SKILL.md",
+      "suffix": ".md",
+      "bytes": 4286
+    },
+    {
+      "path": ".claude/skills/phase7-tests/SKILL.md",
+      "suffix": ".md",
+      "bytes": 5624
+    },
+    {
+      "path": ".claude/skills/phase8-release/SKILL.md",
+      "suffix": ".md",
+      "bytes": 5870
+    },
+    {
+      "path": "configs/eval/hypersigma_houston.yaml",
+      "suffix": ".yaml",
+      "bytes": 1058
+    },
+    {
+      "path": "configs/pretrain/base.yaml",
+      "suffix": ".yaml",
+      "bytes": 2550
+    },
+    {
+      "path": "configs/pretrain/houston_pretrain_enhanced.yaml",
+      "suffix": ".yaml",
+      "bytes": 2657
+    },
+    {
+      "path": "configs/pretrain/houston_pretrain_hsi_only.yaml",
+      "suffix": ".yaml",
+      "bytes": 2444
+    },
+    {
+      "path": "configs/pretrain/houston_pretrain_mae.yaml",
+      "suffix": ".yaml",
+      "bytes": 2873
+    },
+    {
+      "path": "configs/pretrain/houston_pretrain_mae_hsi_only.yaml",
+      "suffix": ".yaml",
+      "bytes": 2096
+    },
+    {
+      "path": "configs/pretrain/hypersigma_houston_adapt.yaml",
+      "suffix": ".yaml",
+      "bytes": 3380
+    },
+    {
+      "path": "configs/pretrain/hypersigma_houston_adapt_native_sem.yaml",
+      "suffix": ".yaml",
+      "bytes": 3159
+    },
+    {
+      "path": "configs/pretrain/hypersigma_houston_adapt_native_sem_pad.yaml",
+      "suffix": ".yaml",
+      "bytes": 2973
+    },
+    {
+      "path": "configs/pretrain/hypersigma_houston_adapt_pca100.yaml",
+      "suffix": ".yaml",
+      "bytes": 2575
+    },
+    {
+      "path": "configs/pretrain/hypersigma_muufl_adapt.yaml",
+      "suffix": ".yaml",
+      "bytes": 1709
+    },
+    {
+      "path": "configs/pretrain/hypersigma_muufl_adapt_native_sem_pad.yaml",
+      "suffix": ".yaml",
+      "bytes": 2295
+    },
+    {
+      "path": "configs/pretrain/hypersigma_trento_adapt.yaml",
+      "suffix": ".yaml",
+      "bytes": 1612
+    },
+    {
+      "path": "configs/pretrain/hypersigma_trento_adapt_native_sem_pad.yaml",
+      "suffix": ".yaml",
+      "bytes": 2220
+    },
+    {
+      "path": "configs/pretrain/mft_original_houston_mae.yaml",
+      "suffix": ".yaml",
+      "bytes": 2345
+    },
+    {
+      "path": "configs/pretrain/mft_original_houston_spatial.yaml",
+      "suffix": ".yaml",
+      "bytes": 2565
+    },
+    {
+      "path": "configs/pretrain/mft_original_muufl_mae.yaml",
+      "suffix": ".yaml",
+      "bytes": 1296
+    },
+    {
+      "path": "configs/pretrain/mft_original_muufl_spatial.yaml",
+      "suffix": ".yaml",
+      "bytes": 1330
+    },
+    {
+      "path": "configs/pretrain/mft_original_trento_mae.yaml",
+      "suffix": ".yaml",
+      "bytes": 1291
+    },
+    {
+      "path": "configs/pretrain/mft_original_trento_spatial.yaml",
+      "suffix": ".yaml",
+      "bytes": 1325
+    },
+    {
+      "path": "configs/pretrain/muufl_pretrain_enhanced.yaml",
+      "suffix": ".yaml",
+      "bytes": 2219
+    },
+    {
+      "path": "configs/pretrain/muufl_pretrain_hsi_only.yaml",
+      "suffix": ".yaml",
+      "bytes": 2198
+    },
+    {
+      "path": "configs/pretrain/muufl_pretrain_mae.yaml",
+      "suffix": ".yaml",
+      "bytes": 2160
+    },
+    {
+      "path": "configs/pretrain/muufl_pretrain_mae_hsi_only.yaml",
+      "suffix": ".yaml",
+      "bytes": 2007
+    },
+    {
+      "path": "configs/pretrain/trento_pretrain_enhanced.yaml",
+      "suffix": ".yaml",
+      "bytes": 2648
+    },
+    {
+      "path": "configs/pretrain/trento_pretrain_hsi_only.yaml",
+      "suffix": ".yaml",
+      "bytes": 2306
+    },
+    {
+      "path": "configs/pretrain/trento_pretrain_mae.yaml",
+      "suffix": ".yaml",
+      "bytes": 2164
+    },
+    {
+      "path": "configs/pretrain/trento_pretrain_mae_hsi_only.yaml",
+      "suffix": ".yaml",
+      "bytes": 2013
+    },
+    {
+      "path": "docs/COSINE_VARIANT.md",
+      "suffix": ".md",
+      "bytes": 9874
+    },
+    {
+      "path": "docs/ENHANCED_PRETRAINING.md",
+      "suffix": ".md",
+      "bytes": 8705
+    },
+    {
+      "path": "docs/presentation/PROJECT_OVERVIEW.md",
+      "suffix": ".md",
+      "bytes": 11815
+    },
+    {
+      "path": "docs/presentation/RESULTS.json",
+      "suffix": ".json",
+      "bytes": 27967
+    },
+    {
+      "path": "docs/presentation/RESULTS.md",
+      "suffix": ".md",
+      "bytes": 7527
+    },
+    {
+      "path": "experiments/_report_raw.json",
+      "suffix": ".json",
+      "bytes": 331587
+    },
+    {
+      "path": "experiments/ablation_report.json",
+      "suffix": ".json",
+      "bytes": 66067
+    },
+    {
+      "path": "experiments/aggregated_results.json",
+      "suffix": ".json",
+      "bytes": 535383
+    },
+    {
+      "path": "experiments/bestcfg_report.json",
+      "suffix": ".json",
+      "bytes": 24035
+    },
+    {
+      "path": "experiments/combo_report.json",
+      "suffix": ".json",
+      "bytes": 113956
+    },
+    {
+      "path": "experiments/experiment_metadata.json",
+      "suffix": ".json",
+      "bytes": 388076
+    },
+    {
+      "path": "experiments/gathered_results.json",
+      "suffix": ".json",
+      "bytes": 118089
+    },
+    {
+      "path": "experiments/hypersigma_native_sem_pca100_report.json",
+      "suffix": ".json",
+      "bytes": 508715
+    },
+    {
+      "path": "experiments/mft_faithful_results.json",
+      "suffix": ".json",
+      "bytes": 63166
+    },
+    {
+      "path": "experiments/significance_report copy.json",
+      "suffix": ".json",
+      "bytes": 11519
+    },
+    {
+      "path": "experiments/significance_report.json",
+      "suffix": ".json",
+      "bytes": 28253
+    },
+    {
+      "path": "notebooks/adapt_hypersigma_native_sem.ipynb",
+      "suffix": ".ipynb",
+      "bytes": 14112
+    },
+    {
+      "path": "notebooks/compare.ipynb",
+      "suffix": ".ipynb",
+      "bytes": 3896
+    },
+    {
+      "path": "notebooks/evaluate.ipynb",
+      "suffix": ".ipynb",
+      "bytes": 19006
+    },
+    {
+      "path": "notebooks/evaluate_hypersigma copy 2.ipynb",
+      "suffix": ".ipynb",
+      "bytes": 78751
+    },
+    {
+      "path": "notebooks/evaluate_hypersigma copy 3.ipynb",
+      "suffix": ".ipynb",
+      "bytes": 194886
+    },
+    {
+      "path": "notebooks/evaluate_hypersigma copy.ipynb",
+      "suffix": ".ipynb",
+      "bytes": 185846
+    },
+    {
+      "path": "notebooks/evaluate_hypersigma.ipynb",
+      "suffix": ".ipynb",
+      "bytes": 190818
+    },
+    {
+      "path": "notebooks/evaluate_hypersigma_native.ipynb",
+      "suffix": ".ipynb",
+      "bytes": 34939
+    },
+    {
+      "path": "notebooks/evaluate_hypersigma_pca100 copy 3.ipynb",
+      "suffix": ".ipynb",
+      "bytes": 73369
+    },
+    {
+      "path": "notebooks/evaluate_hypersigma_pca100 copy.ipynb",
+      "suffix": ".ipynb",
+      "bytes": 84496
+    },
+    {
+      "path": "notebooks/evaluate_hypersigma_pca100.ipynb",
+      "suffix": ".ipynb",
+      "bytes": 101362
+    },
+    {
+      "path": "notebooks/pretrain copy 2.ipynb",
+      "suffix": ".ipynb",
+      "bytes": 14896
+    },
+    {
+      "path": "notebooks/pretrain copy 3.ipynb",
+      "suffix": ".ipynb",
+      "bytes": 14017
+    },
+    {
+      "path": "notebooks/pretrain copy.ipynb",
+      "suffix": ".ipynb",
+      "bytes": 14873
+    },
+    {
+      "path": "notebooks/pretrain.ipynb",
+      "suffix": ".ipynb",
+      "bytes": 13848
+    },
+    {
+      "path": "notebooks/pretrain_run2.ipynb",
+      "suffix": ".ipynb",
+      "bytes": 11099
+    },
+    {
+      "path": "scripts/download_data.sh",
+      "suffix": ".sh",
+      "bytes": 958
+    },
+    {
+      "path": "scripts/download_hypersigma_checkpoints.sh",
+      "suffix": ".sh",
+      "bytes": 1581
+    },
+    {
+      "path": "scripts/rerun_mft_faithful_eval_ep1500.sh",
+      "suffix": ".sh",
+      "bytes": 4430
+    },
+    {
+      "path": "scripts/run_cosine_eval.sh",
+      "suffix": ".sh",
+      "bytes": 4401
+    },
+    {
+      "path": "scripts/run_hsi_only_experiments.sh",
+      "suffix": ".sh",
+      "bytes": 515
+    },
+    {
+      "path": "scripts/run_hypersigma_spatial_pca100.sh",
+      "suffix": ".sh",
+      "bytes": 4353
+    },
+    {
+      "path": "scripts/run_mae_experiments.sh",
+      "suffix": ".sh",
+      "bytes": 637
+    },
+    {
+      "path": "scripts/run_mft_original_mae_experiments.sh",
+      "suffix": ".sh",
+      "bytes": 703
+    },
+    {
+      "path": "scripts/run_mft_original_spatial_experiments.sh",
+      "suffix": ".sh",
+      "bytes": 720
+    },
+    {
+      "path": "scripts/run_native_sem_pad_experiments.sh",
+      "suffix": ".sh",
+      "bytes": 5538
+    },
+    {
+      "path": "scripts/run_trento_cosine_eval.sh",
+      "suffix": ".sh",
+      "bytes": 4337
+    }
+  ]
+}

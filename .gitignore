@@ -101,3 +101,11 @@ old_outputs/
 old_models/
 old*
 exploration_results/
+# Bulk artefacts archived to /ceph/home/nmaric/CoFFE (2026-08-28).
+# These paths are now symlinks, so the directory-only rules above no longer match them.
+/checkpoints
+/logs
+/data/raw
+/experiments/*
+!/experiments/_example/
+!/experiments/*.json

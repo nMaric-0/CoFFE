@@ -1,0 +1,71 @@
+{
+  "batch_size": 16,
+  "description": "Per-epoch mean pretraining loss for every objective in PAPER_CANON Table 2, via scripts.pretrain_enhanced.run_pretrain on houston_mini.",
+  "entries": {
+    "mft_cpea:mae": {
+      "epochs_run": 3,
+      "final_train_loss": 0.99504811,
+      "train_losses": [
+        1.36893222,
+        1.10129146,
+        0.99504811
+      ]
+    },
+    "mft_cpea:simmim_band": {
+      "epochs_run": 3,
+      "final_train_loss": 0.17387143,
+      "train_losses": [
+        0.28056244,
+        0.25151582,
+        0.17387143
+      ]
+    },
+    "mft_cpea:simmim_band_token": {
+      "epochs_run": 3,
+      "final_train_loss": 0.18668022,
+      "train_losses": [
+        0.29210404,
+        0.25915995,
+        0.18668022
+      ]
+    },
+    "mft_cpea:simmim_band_token_houston_run": {
+      "epochs_run": 3,
+      "final_train_loss": 0.18665753,
+      "train_losses": [
+        0.29195578,
+        0.25901069,
+        0.18665753
+      ]
+    },
+    "mft_cpea:simmim_token": {
+      "epochs_run": 3,
+      "final_train_loss": 0.17531213,
+      "train_losses": [
+        0.28343718,
+        0.24682918,
+        0.17531213
+      ]
+    },
+    "mft_original:mae": {
+      "epochs_run": 3,
+      "final_train_loss": 1.00688558,
+      "train_losses": [
+        1.38666304,
+        1.11726131,
+        1.00688558
+      ]
+    },
+    "mft_original:simmim_token": {
+      "epochs_run": 3,
+      "final_train_loss": 0.05781645,
+      "train_losses": [
+        0.41689019,
+        0.19445543,
+        0.05781645
+      ]
+    }
+  },
+  "epochs": 3,
+  "scene": "houston_mini"
+}

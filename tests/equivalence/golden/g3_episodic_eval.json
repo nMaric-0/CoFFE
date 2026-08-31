@@ -1,0 +1,90 @@
+{
+  "description": "Episodic eval via scripts.evaluate_cosine.run_evaluation against the committed pre-refactor fixtures: OA to 6 decimals plus a SHA-256 over the full per-episode per-query argmin assignment matrix.",
+  "entries": {
+    "coffe": {
+      "OA": {
+        "ci_95": 1.310812,
+        "mean": 82.333333,
+        "num_episodes": 20,
+        "std": 2.800794
+      },
+      "assignment_hash": "b39e6f975712017f1c26476e0839d930628f2208366c8b6ea3c4efcbf152ecf5",
+      "key_report": {
+        "after_fix_keys": 45,
+        "checkpoint_keys": 52,
+        "missing": [],
+        "model_keys": 42,
+        "unexpected": [
+          "_recon_center_weights",
+          "encoder.projection.net.0.bias",
+          "encoder.projection.net.0.weight"
+        ]
+      },
+      "loaded_feature": {
+        "abs_sum": 301.6927937124856,
+        "norm": 16.551859816963074,
+        "shape": [
+          4,
+          128
+        ],
+        "sum": -0.329621787648648
+      },
+      "n_way": 15
+    },
+    "mft_original": {
+      "OA": {
+        "ci_95": 1.361002,
+        "mean": 18.9,
+        "num_episodes": 20,
+        "std": 2.908035
+      },
+      "assignment_hash": "8b584fb471e4bee5322f2b235a304f319ee8d54eaf04e1de9dee3b5a4ee039d2",
+      "key_report": {
+        "after_fix_keys": 50,
+        "checkpoint_keys": 55,
+        "missing": [],
+        "model_keys": 49,
+        "unexpected": [
+          "_recon_center_weights"
+        ]
+      },
+      "loaded_feature": {
+        "abs_sum": 203.793086303398,
+        "norm": 16.01379654281714,
+        "shape": [
+          4,
+          64
+        ],
+        "sum": 0.3449993897229433
+      },
+      "n_way": 15
+    }
+  },
+  "fixtures": {
+    "coffe": {
+      "bytes": 2755015,
+      "model_name": "mft_cpea",
+      "num_keys": 52,
+      "objective": "simmim_token",
+      "path": "tests/equivalence/fixtures/coffe_houston_mini_simmim_token_ep3.pth.fixture"
+    },
+    "mft_original": {
+      "bytes": 1549321,
+      "model_name": "mft_original",
+      "num_keys": 55,
+      "objective": "simmim_token",
+      "path": "tests/equivalence/fixtures/mft_original_houston_mini_simmim_token_ep3.pth.fixture"
+    }
+  },
+  "protocol": {
+    "distance_metric": "euclidean",
+    "k_query": 10,
+    "k_shot": 5,
+    "n_way": "full-class",
+    "num_episodes": 20,
+    "pool_sigma": null,
+    "seed": 42,
+    "use_projection": false
+  },
+  "scene": "houston_mini"
+}

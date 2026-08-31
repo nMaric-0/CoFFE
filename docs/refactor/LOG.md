@@ -205,3 +205,202 @@ the remaining 24-entry delete list.
 **Phase 5 prerequisite created by the D9 decision:** `archive/` must be added to
 `.gitignore` so the archived tree is present on disk but untracked
 ("non-traceable"), as requested.
+
+---
+
+## Phase 2 — equivalence harness (goldens G1–G5 + checkpoint fixtures)
+
+**Changed:** `tests/equivalence/` (new), `pyproject.toml` (pytest `markers`
+only), `docs/refactor/LOG.md`. No behavior touched — nothing under `models/`,
+`pretrain/`, `scripts/`, `lib/`, `data/`, `trainers/`, `utils/` or
+`third_party/` was modified. Goldens were generated on top of `4d42f64`
+(`[phase 1]`), i.e. before any prune/rename/restructure commit exists.
+
+### What was built
+
+```
+tests/equivalence/
+├── README.md               # what is pinned, and how to re-baseline
+├── _harness.py             # scene factory, config builders, fingerprints
+├── conftest.py             # determinism contract, session scene fixture
+├── make_golden.py          # guarded golden generator
+├── golden/                 # 5 committed JSONs + meta.json
+├── fixtures/               # 2 committed pre-refactor checkpoints
+└── test_equivalence.py     # 32 tests
+```
+
+The harness drives the **real paper entry points** — `run_pretrain` from
+`scripts/pretrain_enhanced.py` and `run_evaluation` /
+`load_model_with_checkpoint` from `scripts/evaluate_cosine.py` (the same
+implementations `lib/pretrain_runner.py` and `lib/eval_runner.py` wrap). No
+preprocessing, masking, training or eval logic is reimplemented in the harness.
+
+**Synthetic scenes go through the repo's own dataset code.** Rather than
+building tensors, the harness writes `.mat` files in the exact on-disk layout of
+the real pre-patched scenes (verified against `data/raw/*`: HSI `[N,11,11,C]`
+float64, LiDAR `[N,11,11,C_aux]` float64, labels `[1,N]` int64 valued 1..N), so
+`_load_split` / `_extract_array` / `_ensure_nchw` / `_ensure_1d` / `_normalize`
+/ `_build_class_indices` all execute unmodified. Three mini-scenes:
+`houston_mini` (144/1/15), `trento_mini` (63/1/6), `muufl_mini` (64/2/11),
+30 px/class, 11×11 patches. No datasets and no HyperSIGMA checkpoints are
+required (canon §7.5).
+
+**R10 discharged.** The eval feature is captured off the **live** path
+(`forward_features` → `adapt_embeddings` → mean, mirroring
+`scripts/evaluate_cosine.py:389-400`), not off the dead
+`MFTCPEACosine.forward_episode`. A dedicated test
+(`test_dead_forward_episode_still_matches_live_path`) records that the two still
+agree, so a later phase that prunes the dead one can show it is
+behavior-preserving.
+
+**Configs come from the frozen run configs** (`experiments/*/pretrain_config.yaml`),
+not from the stale `configs/` (D13). Only the schedule is scaled: 3 epochs
+instead of 1500–3000, batch 16, `warmup_epochs` 1 (required — `CosineAnnealingLR`
+gets `T_max = epochs - warmup`), and 20 episodes at `k_query=10` instead of 1000
+at `k_query=100`. Every semantic knob is the paper's: arch (D=128, 2 heads,
+2 layers, λ=0.5, proj 512/1/L2), mask rates, loss, AdamW settings, and
+`distance_metric: euclidean` / `use_projection: False` / `pool_sigma: None` /
+N-way full-class / K=5.
+
+### Goldens
+
+| Golden | Content |
+|---|---|
+| **G1** `g1_pretrain_loss.json` | Per-epoch mean pretraining loss to 8 decimals, 7 configs: CoFFE × {`simmim_band`, `simmim_token`, `simmim_band_token`, `simmim_band_token_houston_run`, `mae`} and MFTOriginal × {`simmim_token`, `mae`}. |
+| **G2** `g2_encoder_forward.json` | Every state_dict tensor of a freshly-seeded model (`sum`/`abs_sum`/`norm`) plus the pooled eval feature `z`, for CoFFE HSI+LiDAR, CoFFE HSI-only, MFTOriginal, and the HyperSIGMA wrapper in both paper regimes (`patch_native` 11×11, `backbone_native` 64×64 upscale) with random-init ViT bodies. |
+| **G3** `g3_episodic_eval.json` | OA to 6 decimals **and** a SHA-256 over the full per-episode per-query argmin assignment matrix, plus a `key_report` recording exactly which checkpoint keys `fix_state_dict_keys` discards. |
+| **G4** `fixtures/*.pth.fixture` | The two pre-refactor checkpoints, loaded through the live loader on every run. |
+| **G5** `g5_masking.json` | Realized band/token mask rates (4 decimals, exact), union-mask rate, masked reconstruction loss, and the centre-weight mean — pinning Eq. 1. |
+
+G5 builds its pretraining model with the **pretraining** projection setting, not
+the eval one: the projection head sits inside the masked-reconstruction forward
+(`masked_modeling_enhanced.py:196`), so an eval-shaped encoder would have pinned
+a model pretraining never ran. With that corrected the SimMIM masked losses move
+(e.g. `simmim_token` 0.3557 → 0.3214) while MAE's is unchanged at 1.3556 — MAE
+has no projection head, exactly as `run_pretrain` forces
+(`pretrain_enhanced.py:304-309`). Mask rates are unaffected either way.
+
+Sanity anchors that came out right on the first run: the CoFFE eval encoder has
+**579,328** parameters, matching canon §2 exactly; HyperSIGMA is 180.4 M
+(`patch_native`) / 188.3 M (`backbone_native`), matching canon's "~180M"; the
+realized mask rates land on 0.8499 (band 0.85), 0.7521 (token 0.75 →
+`round(0.75·121)=91`, 91/121) and 0.9628 union (analytic
+`1−0.15·0.25 = 0.9625`); centre weights have mean 1.0 to fp32.
+
+Tolerances: eval assignments, realized mask rates and state_dict **key sets** —
+exact; floats — `rtol=1e-6, atol=1e-8`. Nothing was loosened.
+
+### Determinism and stability
+
+CPU only; `random`/`numpy`/`torch` seeded; `torch.use_deterministic_algorithms(True)`
+(raised nothing on any path); `num_workers=0`; no AMP; episode seed 42. The
+switch is restored on teardown so the rest of `tests/` does not inherit it.
+Two no-op env settings were deliberately **not** included: `PYTHONHASHSEED`
+(inert once the interpreter is running) and `TQDM_DISABLE` (tqdm 4.67.3 does not
+read it) — golden JSON is written `sort_keys=True` and every key comparison is
+over a sorted set, so nothing depends on hash ordering.
+
+Stability evidence:
+
+- `pytest tests/equivalence` — **32 passed** twice back-to-back (35.8 s, 36.1 s),
+  and again with the default `addopts` coverage flags on (40.8 s).
+- The goldens are generated in one process and re-derived in another, so every
+  fingerprint already round-trips across process boundaries.
+- Independent check: retraining both fixtures from scratch in a fresh process
+  gives **bit-identical** weights (`torch.equal` on all 52 / 55 tensors).
+- Strongest check: a full `make_golden.py` re-run from scratch reproduced all
+  four golden JSONs *and* both fixture checkpoints **byte-identically**
+  (`md5sum -c`, 6/6 OK).
+- Full suite `pytest tests -q`: **94 passed** = the 62 of the phase-0 baseline
+  plus 32 new. No pre-existing test changed behavior.
+- Marker filters work: `-m "not gpu and not data"` selects all 94;
+  `-m "not slow"` deselects the 2 HyperSIGMA ViT builds.
+
+**The harness demonstrably bites.** Two mutations were applied to the real code,
+run against the goldens, and reverted (`git checkout`, tree verified clean):
+
+| Mutation | Result |
+|---|---|
+| `models/mft_cpea_cosine.py:294`, the λ term scaled by `1.0000001` (relative 1e-7) | **3 failed** — `test_g2_encoder_forward` for both CoFFE variants and `test_g4_fixture_forward[coffe]`. G3 correctly did not fire: 1e-7 flips no argmin. |
+| `pretrain/masked_modeling.py:95`, `int(round(0.75·N))` → `int(0.75·N)` (91 → 90 masked tokens) | **7 failed** — all four G1 trajectories that use token masking, plus the three G5 entries. |
+
+So the fine-grained detectors (G2/G4 fingerprints, G5 rates) catch sub-ULP drift
+while G3's assignment hash catches decision-level change — the intended division
+of labour.
+
+`make_golden.py` guards were tested by deliberately tripping them: a dirty
+tracked file outside the phase-2 scope refuses (`README.md` probe), and an
+extra `[phase 3]` commit refuses with the re-baseline instructions. `--rebaseline`
+waives only the commit-range check, still refuses on an out-of-scope dirty tree,
+and stamps `rebaselined_from` into `meta.json`.
+
+### Optional real-checkpoint fingerprint — captured
+
+`COFFE_EXPERIMENTS_DIR` is unset by default, but the real experiment tree and
+the headline checkpoint are on this machine, so it was worth running:
+
+```
+COFFE_EXPERIMENTS_DIR=./experiments python tests/equivalence/make_golden.py --real
+```
+
+50 fixed-seed episodes (`k_query=100`, 15-way, K=5, euclidean, CPU) on
+`houston_enhanced_spatial_mask_test_run1_seed52/checkpoints/checkpoint_epoch_950.pth`
+— the run behind Table 2's headline Houston cell (D14):
+
+**OA = 74.9493 ± 0.7093** vs. the paper's **75.30** (1000 episodes).
+
+Within the CI, and consistent with phase 1's independent CPU probe (74.85 on
+40 episodes). This is the one measurement that ties the harness's code path to a
+real paper number rather than to a synthetic scene. Written to
+`golden/real_local.json`, excluded by `tests/equivalence/golden/.gitignore`,
+never asserted against (machine-specific).
+
+`golden/meta.json` records python 3.12.3 / torch 2.11.0+cu128 / numpy 2.4.4, the
+git SHA (`4d42f64`) and a **per-group `groups` record**, so a partial
+regeneration (`--only g5`) can no longer erase the provenance of the other
+groups — a flaw the verifier caught and which is now fixed. `"dirty": true` is
+expected and documented in the harness README: the harness is necessarily
+uncommitted when it first generates its own goldens, and `make_golden.py`
+separately refuses if any tracked file *outside* `tests/equivalence/` is
+modified, so the code under test is never dirty. `test_golden_metadata_recorded` fails loudly with re-baseline
+instructions if the torch version ever moves, rather than letting the harness
+drift into tolerance-loosening.
+
+### Surprises reported, not fixed (hard rule 7)
+
+- **D19 (new) — the Houston band+token cell used a mask rate the paper does not
+  state.** `PAPER_CANON` §1 defines SimMIM band+token as `(r_b, r_s) =
+  (0.85, 0.75)`, and D13 records that the paper's rates "match all six canonical
+  run configs". They do not. Five of the six do; the sixth —
+  `experiments/houston_enhanced_spec_spat_combined`, which produces Table 2's
+  CoFFE SimMIM band+token / HSI+LiDAR / Houston = **64.63** — used
+  `band_mask_ratio: 0.75`. Verified across all six:
+
+  | run | band | token |
+  |---|---|---|
+  | `houston_enhanced_spec_spat_combined` | **0.75** | 0.75 |
+  | `trento_enhanced_spectral_spatial_run2` | 0.85 | 0.75 |
+  | `muufl_enhanced_spectral_spatial_run2` | 0.85 | 0.75 |
+  | `houston_enhanced_spectral_spatial_no_lidar` | 0.85 | 0.75 |
+  | `trento_enhanced_spectral_spatial_no_lidar` | 0.85 | 0.75 |
+  | `muufl_enhanced_spectral_spatial_no_lidar` | 0.85 | 0.75 |
+
+  Nothing was changed. The harness pins **both** rates (G1/G5 entries
+  `simmim_band_token` at 0.85 and `simmim_band_token_houston_run` at 0.75) so
+  neither can drift. Needs a decision at the gate: whether the reproduction docs
+  state the per-cell rate, and whether D13's claim in `PAPER_CANON` §8 is
+  corrected.
+
+### Scope note for a later phase
+
+`fixtures/` checkpoints are named `*.pth.fixture`, not `*.pth`, because
+`.gitignore` has a blanket `*.pth` rule that would silently drop them — the same
+trap D5 records for `lib/`. Phase 2 is scoped out of touching `.gitignore`, so
+the workaround stands and is documented in `fixtures/README.md`. **Proposed for
+phase 5:** add `!/tests/equivalence/fixtures/*.pth` and rename them back.
+`golden/real_local.json` is excluded via a nested
+`tests/equivalence/golden/.gitignore` (inside the phase's scope).
+
+### Open question for the gate
+
+Only D19 above. The harness itself has no open questions.

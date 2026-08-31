@@ -15,3 +15,9 @@ line_length = 100
 testpaths = ["tests"]
 python_files = "test_*.py"
 addopts = "-v --cov=models --cov=data --cov-report=term-missing"
+markers = [
+    "equivalence: behaviour-equivalence harness (tests/equivalence); must stay green on every refactor commit",
+    "gpu: requires a CUDA device",
+    "data: requires the real datasets under data/raw/",
+    "slow: takes more than a few seconds",
+]

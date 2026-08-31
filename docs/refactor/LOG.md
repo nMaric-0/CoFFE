@@ -404,3 +404,16 @@ phase 5:** add `!/tests/equivalence/fixtures/*.pth` and rename them back.
 ### Open question for the gate
 
 Only D19 above. The harness itself has no open questions.
+
+### Gate decision (D19), 2026-08-31
+
+Nikola: **correct D13.** Applied to `PAPER_CANON.md`:
+
+- §8 **D13** — the "match all six canonical run configs" claim is narrowed to
+  the band and token rates, and now defers to D19 for band+token.
+- §1 — the `simmim_band_token` row flags that Table 2's Houston cell (64.63)
+  was pretrained at `(0.75, 0.75)`.
+- §8 **D19** added as a canon entry with the six-config verification table.
+
+Still open: whether the reproduction docs state the per-cell band rate instead
+of a single global 0.85 (phase 5/8 scope; D19 records the requirement).

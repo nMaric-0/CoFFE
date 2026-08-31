@@ -27,7 +27,7 @@ vocabulary without changing what it computes.
 | objective `"enhanced"` | `"simmim"` | SimMIM-style in-place masked reconstruction (Xie et al.). |
 | variant `"spectral"` | **SimMIM band** → id `simmim_band` | Band masking of (pixel, band) entries, rates `(r_b, r_s) = (0.85, 0)`. |
 | variant `"spatial"` | **SimMIM token** → id `simmim_token` | Spatial-token masking of whole pixel tokens, `(0, 0.75)`. This is the headline configuration. |
-| variant `"both"` | **SimMIM band+token** → id `simmim_band_token` | `(0.85, 0.75)`. |
+| variant `"both"` | **SimMIM band+token** → id `simmim_band_token` | `(0.85, 0.75)` — but Table 2's Houston band+token cell (64.63) was pretrained at `(0.75, 0.75)`; see **D19**. |
 | `"mae"` / `enhanced_mae` | **MAE** (drop-style baseline, He et al.) → id `mae` | |
 | `hsi_only` (group) | Modality axis: `hsi` vs `hsi_lidar` | Modality is an input regime (`use_aux`), orthogonal to the objective. |
 | `EnhancedMaskedSpectralSpatialModel` | `SimMIMPretrainModel` (or similar under `coffe/pretrain/simmim.py`) | |
@@ -268,8 +268,11 @@ where the paper allows, renaming.
   `houston_pretrain_enhanced.yaml` says `epochs: 3000` where the run used
   **1500**; `hypersigma_houston_adapt_pca100.yaml:52-56` says 3000 epochs /
   batch 64 / lr 1.5e-4 where the run used **2000 / 128 / 1e-5**. The paper's
-  stated mask rates — band `(0.85, 0)`, token `(0, 0.75)` — are **correct** and
-  match all six canonical run configs. `configs/` is the stale artifact.
+  stated mask rates for band `(0.85, 0)` and token `(0, 0.75)` are
+  **correct** and match every canonical run that uses them; the band+token
+  rate does **not** match all six band+token runs — see **D19**, which
+  supersedes the original wording of this entry. `configs/` is the stale
+  artifact.
   Phase 5/8 regenerates `configs/` **from** the frozen run configs, never the
   reverse.
 - **D14 — the headline Houston cell comes from a run the repo filters as
@@ -321,6 +324,23 @@ where the paper allows, renaming.
   — used **`k_query=30`** (and its `eval_config.json` records
   `distance_metric: cosine`, though the quoted value is the `euclidean`
   sub-block). §4's protocol constants must be read per-table.
+- **D19 — the Houston band+token cell used a band mask rate the paper does not
+  state.** §1 gives SimMIM band+token as `(r_b, r_s) = (0.85, 0.75)`, and D13
+  originally claimed the paper's rates match all six canonical run configs.
+  Five of the six do; the sixth —
+  `experiments/houston_enhanced_spec_spat_combined`, which produces Table 2's
+  CoFFE SimMIM band+token / HSI+LiDAR / Houston = **64.63** — used
+  `band_mask_ratio: 0.75` (`pretrain_config.yaml`), i.e. `(0.75, 0.75)`.
+  Verified across all six band+token configs in phase 2:
+  `houston_enhanced_spec_spat_combined` **0.75 / 0.75**;
+  `{trento,muufl}_enhanced_spectral_spatial_run2` and
+  `{houston,trento,muufl}_enhanced_spectral_spatial_no_lidar` all 0.85 / 0.75.
+  Nothing was changed: the number is sound, the paper's stated rate is simply
+  wrong for that one cell. The equivalence harness pins **both** rates (G1/G5
+  entries `simmim_band_token` at 0.85 and `simmim_band_token_houston_run` at
+  0.75) so neither can drift. Reproduction docs must state the per-cell band
+  rate rather than a single global 0.85 — **that half remains open at the
+  phase-2 gate.**
 
 ## 9. Target vocabulary for new artifacts
 

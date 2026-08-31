@@ -201,8 +201,30 @@ where the paper allows, renaming.
   episodes unchanged.** `mean ||cls − mean(cls)|| = 4.50` exceeds the
   patch-pool spread of 4.09, so the class-agnostic token is far from constant
   and Euclidean translation-invariance does **not** make removal free.
-  **Removal is therefore a behavior change barred by §7.1**, and is on hold
-  pending an explicit decision taken against this evidence.
+  **Removal is therefore a behavior change barred by §7.1.**
+
+  **DECIDED 2026-08-31 (Nikola, against the measurement above): KEEP λ and
+  document it honestly.** No computed number moves. The obligations this
+  creates:
+
+  1. The eval feature is documented as
+     **`z = mean_j(patch_emb_j) + 0.5·cls_emb`** — on `adapt_embeddings`
+     itself, and wherever the release describes the protocol. This is
+     documenting what the code computes, not issuing an erratum against the
+     paper.
+  2. `lambda_factor` and `adapt_embeddings` get honest names in phase 4.
+     `lambda_factor` is a plain Python float and appears in **none** of the 42
+     state_dict keys, so both renames are safe under §7.2.
+  3. The `renormalize` branch (`:296-297`) is documented as inert at eval time.
+  4. λ is **CoFFE-only**. `MFTOriginal.adapt_embeddings`
+     (`models/mft_original.py:237-245`) and
+     `HyperSIGMACosine.adapt_embeddings`
+     (`models/hypersigma/hypersigma_cosine.py:109-117`) are both explicit
+     no-op pass-throughs, so Table 3 and the MFT control are unaffected.
+  5. `MFTCPEACosine.forward_episode` (`:326`) is **dead** — a non-executed
+     duplicate of the live eval path in `scripts/evaluate_cosine.py:387-400`.
+     The phase-2 equivalence harness must pin the **live** path, not
+     `forward_episode`.
 
   MFT control: λ is correctly inert there — `models/mft_original.py:237-245`
   overrides `adapt_embeddings` to return `patch_emb` unchanged, and its eval

@@ -173,17 +173,28 @@ behavior-altering change that seems desirable must be reported, not applied.
 Phase 1 is also scoped to `docs/refactor/` + `tools/refactor/` only, so code
 removal could not happen here regardless — it would be a phase-3 action.
 
-Recorded as `D3 HOLD` in the `models/mft_cpea_cosine.py` manifest note,
-`approved: false`. Needs one of:
+**D3 RESOLVED — Nikola chose option 1: keep λ, documented.** `approved: true`.
+No computed number moves. Documentation obligations recorded in
+`PAPER_CANON` §8 D3 and on the manifest record:
 
-1. **Keep λ** (documented honestly as `z = mean(patch) + 0.5·cls`) — no numbers move; or
-2. **Remove λ and re-run the affected evals**, accepting that Table 2's CoFFE
-   column changes and the paper text must follow; or
-3. **Remove λ only from a new, clearly-labelled non-paper code path**, leaving
-   the paper path untouched.
+1. Document the real eval feature `z = mean_j(patch_emb_j) + 0.5·cls_emb` on
+   `adapt_embeddings` and in the release protocol description — documenting what
+   the code computes, not an erratum against the paper.
+2. Honest names for `lambda_factor` / `adapt_embeddings` in phase 4. Verified
+   rename-safe: `lambda_factor` is a plain float and appears in none of the 42
+   state_dict keys.
+3. Document that the `renormalize` branch (`:296-297`) is inert at eval.
 
-Option 3 is the only one that both honours the request and keeps the frozen
-numbers, if the goal is a cleaner released model.
+Two follow-on facts established while scoping the documentation:
+
+- **λ is CoFFE-only.** `MFTOriginal.adapt_embeddings`
+  (`models/mft_original.py:237-245`) and `HyperSIGMACosine.adapt_embeddings`
+  (`models/hypersigma/hypersigma_cosine.py:109-117`) are explicit no-op
+  pass-throughs, so Table 3 and the MFT control are untouched by it.
+- **`MFTCPEACosine.forward_episode` (`:326`) is dead** — a non-executed
+  duplicate of the hand-rolled loop in `scripts/evaluate_cosine.py:387-400`.
+  Added as risk **R10**: the phase-2 equivalence harness must pin the *live*
+  path, or it would certify code the paper never ran.
 
 **Still open (not answered at this gate):** notebook keep-list (default applied:
 pretrain, evaluate, compare, adapt_hypersigma_native_sem), the

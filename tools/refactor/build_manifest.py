@@ -220,19 +220,23 @@ rec("scripts/rerun_mft_faithful_eval_ep1500.sh", "EXPLORATORY", "delete", None,
     "Houston MFT SimMIM token); superseded by the epoch-950 evals",
     "D1 - keeping it would document the wrong recipe")
 
-# ---- D3: requested removal is BLOCKED by the numerics invariant ----------
-# Nikola asked (2026-08-31) to remove the lambda/CPEA adaptation on the grounds
-# that "it does not contribute". tools/refactor/lambda_probe.py measured the
-# opposite on the headline Houston checkpoint: removal flips 5.4% of query
-# predictions and moves OA by -1.70 pp. That makes removal a behavior change,
-# which CLAUDE.md hard rule 1 and PAPER_CANON §7.1 forbid applying without an
-# explicit decision made against this evidence. Verdict stays `keep`, NOT
-# approved, pending re-confirmation at the phase-1 gate.
+# ---- D3 RESOLVED: keep lambda, document it honestly ----------------------
+# Nikola first asked (2026-08-31) to remove the lambda/CPEA adaptation on the
+# grounds that "it does not contribute". tools/refactor/lambda_probe.py measured
+# the opposite on the headline Houston checkpoint: -1.70 pp OA and 5.4% of query
+# predictions flipped. Presented with that, Nikola chose option 1: KEEP it and
+# document it honestly. No numbers move.
 rec("models/mft_cpea_cosine.py", "PAPER", "rename", "coffe/models/coffe.py",
     "PAPER_CANON §1: module rename; class MFTCPEACosine -> CoFFE",
-    "D3 HOLD: requested lambda removal is behavior-altering "
-    "(-1.70 pp OA, 5.4% predictions flipped; tools/refactor/lambda_probe.py). "
-    "nn.Module ATTRIBUTE names stay frozen (§7.2)", True)
+    "D3 DECIDED 2026-08-31 (keep + document). Phase 4/6 must: (a) document the "
+    "real eval feature z = mean_j(patch_emb_j) + 0.5*cls_emb on "
+    "adapt_embeddings (:270-299) and in the eval docs; (b) give lambda_factor "
+    "and adapt_embeddings honest names - lambda_factor is a plain float, NOT a "
+    "state_dict key (42 keys, none matching), so both are rename-safe; "
+    "(c) note the branch at :296-297 is inert at eval (use_projection=False -> "
+    "nn.Identity). Class ATTRIBUTE names that ARE state_dict keys stay frozen "
+    "(§7.2). forward_episode (:326) is DEAD - a non-executed duplicate of the "
+    "live eval path; see R10.", True, approved=True)
 
 # ---------------------------------------------------------------------------
 # Fall-through rules, in order. (prefix, class, verdict, evidence)

@@ -956,8 +956,8 @@
       "verdict": "rename",
       "target": "coffe/models/coffe.py",
       "evidence": "PAPER_CANON \u00a71: module rename; class MFTCPEACosine -> CoFFE",
-      "notes": "D3 HOLD: requested lambda removal is behavior-altering (-1.70 pp OA, 5.4% predictions flipped; tools/refactor/lambda_probe.py). nn.Module ATTRIBUTE names stay frozen (\u00a77.2)",
-      "approved": false,
+      "notes": "D3 DECIDED 2026-08-31 (keep + document). Phase 4/6 must: (a) document the real eval feature z = mean_j(patch_emb_j) + 0.5*cls_emb on adapt_embeddings (:270-299) and in the eval docs; (b) give lambda_factor and adapt_embeddings honest names - lambda_factor is a plain float, NOT a state_dict key (42 keys, none matching), so both are rename-safe; (c) note the branch at :296-297 is inert at eval (use_projection=False -> nn.Identity). Class ATTRIBUTE names that ARE state_dict keys stay frozen (\u00a77.2). forward_episode (:326) is DEAD - a non-executed duplicate of the live eval path; see R10.",
+      "approved": true,
       "provisional": true
     },
     {

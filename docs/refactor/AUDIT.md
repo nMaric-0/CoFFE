@@ -522,6 +522,7 @@ before changing the writer.
 | R7 | Table 3 used 2000 episodes, Table 2 used 1000, while `PAPER_CANON` §4 states 1000 as law (D2). | phase 8 | amend §4 to state the per-table episode count |
 | R8 | One Table 3 cell used `k_query=30` (D2). Reproduction docs must not claim a uniform protocol. | phase 8 | footnote that cell |
 | R9 | `pyproject.toml` `addopts` forces `--cov=models --cov=data` on every pytest run; no `gpu`/`data` markers registered (phase-0 E3). | phase 2 | register markers; make coverage opt-in |
+| R10 | `MFTCPEACosine.forward_episode` (`models/mft_cpea_cosine.py:326`) is **dead** — `scripts/evaluate_cosine.py:387-400` re-implements it by hand ("to capture intermediate embeddings"). Two copies of the same maths, only one executed. A harness that pins `forward_episode` would validate code the paper never ran. | phase 2, 3 | equivalence harness pins the **live** `evaluate_cosine.py` path; `forward_episode` is a behaviour-neutral prune candidate (proposal, not in the manifest as a deletion) |
 
 ## 6. DO-NOT-RENAME — string literals naming on-disk artifacts
 

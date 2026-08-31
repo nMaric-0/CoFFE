@@ -1,4 +1,4 @@
-"""Notebook-friendly wrapper around scripts.adapt_hypersigma_houston.run_adapt.
+"""Notebook-friendly wrapper around scripts.adapt_hypersigma.run_adapt.
 
 Mirrors :mod:`lib.pretrain_runner` so HyperSIGMA Level-2 MAE adaptation
 runs land under ``experiments/<name>/`` with the same packaging:

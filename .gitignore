@@ -109,3 +109,7 @@ exploration_results/
 /experiments/*
 !/experiments/_example/
 !/experiments/*.json
+
+# Exploratory tree archived out of the release (phase 3, D9 decision):
+# present on disk, deliberately untracked.
+/archive/

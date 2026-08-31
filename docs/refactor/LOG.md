@@ -417,3 +417,135 @@ Nikola: **correct D13.** Applied to `PAPER_CANON.md`:
 
 Still open: whether the reproduction docs state the per-cell band rate instead
 of a single global 0.85 (phase 5/8 scope; D19 records the requirement).
+
+---
+
+## Phase 3 — prune (approved manifest set: 24 deletes + 18 archives)
+
+**Changed:** 42 tracked paths removed (24 deleted, 18 moved to an untracked
+`archive/exploratory/`), plus 8 edited files — `.gitignore`, `PAPER_CANON.md`,
+`README.md`, `models/__init__.py`, `lib/adapt_runner.py` (docstring only),
+two notebooks (markdown prose only) and `docs/refactor/manifest.json`. No
+behavior touched: nothing under `pretrain/`, `scripts/` (beyond the two deleted
+files), `data/`, `trainers/`, `utils/` (beyond the deleted `checkpoints.py`) or
+`third_party/` was modified, and the only `models/` edit is the removal of the
+dead re-export block in `__init__.py`.
+
+### Gate blocker found and resolved first
+
+Phase 3's precondition is an approved manifest, but only **20 of 43** actionable
+records carried `approved: true`: the 18 D9 archive records and one delete
+(`SPLIT.md`, D11). The phase-1 log lists "a review of the remaining 24-entry
+delete list" as **not answered at that gate**, so the other 23 deletes were
+proposals, not authorisations (hard rule 6). They were put to Nikola in four
+groups at the start of this session and **all four approved**:
+
+| group | n | contents |
+|---|---|---|
+| duplicate notebooks (D8) | 9 | `pretrain copy{,2,3}`, `evaluate_hypersigma copy{,2,3}`, `evaluate_hypersigma_pca100 copy{,3}`, `pretrain_run2` |
+| dead code (D4, D10) | 10 | `models/backbones/*` (5), `models/wrappers/*` (2), `data/transforms/*` (2), `configs/pretrain/base.yaml` |
+| superseded scripts (D1, D8) | 2 | `scripts/adapt_hypersigma_houston.py`, `scripts/rerun_mft_faithful_eval_ep1500.sh` |
+| infra / dead twin (D15) | 2 | `setup.py`, `utils/checkpoints.py` |
+
+`manifest.json` now records `approved: true` on all 24 delete records with the
+phase-3 gate tag, so the manifest and the executed set agree.
+
+Second gate call: `/archive/` was added to `.gitignore` **now** rather than in
+phase 5, so the archived tree is on disk but untracked immediately and
+`git status` stays clean (18 files would otherwise have sat visibly untracked
+for two phases). `archive/README.md` carries the one-line reason.
+
+### Removed
+
+24 files deleted — DEAD 11, DUPLICATE 10, INFRA 2, EXPLORATORY 1 — and 18
+EXPLORATORY files archived. **3,823 lines** of Python/shell/YAML/Markdown,
+**8,619** lines of notebook JSON and **8,543** lines of archived report JSON,
+20,985 removed lines in total against 29 added. `data/transforms/` was
+`torchvision`'s only consumer, so that dependency is now droppable in phase 6
+(D6).
+
+### Dangling references fixed (nothing else touched)
+
+- `models/__init__.py` — the `backbones` / `wrappers` re-export block and its
+  five `__all__` entries removed; `MFTCPEACosine` / `MFTOriginalCosine` keep
+  their exports unchanged.
+- `lib/adapt_runner.py:1` — docstring said `scripts.adapt_hypersigma_houston`
+  while `:86` already imported the real module; docstring repointed.
+- `README.md` — source-tree line no longer advertises `backbones`; the
+  `SPLIT.md` "Further reading" link removed.
+- `notebooks/evaluate_hypersigma{,_pca100}.ipynb` — one markdown-prose mention
+  of the deleted shim each, repointed to `scripts/adapt_hypersigma.py`.
+- `PAPER_CANON` §7.2 — repointed from the deleted `utils/checkpoints.py` to the
+  live `fix_state_dict_keys` in `scripts/evaluate_cosine.py`, closing **D15**
+  and risk **R2**; §8 D4, D8, D9, D10, D11 and D15 tagged with their phase-3
+  resolution (D8 also corrected: 8 `copy*` notebooks, not 7, and
+  `significance_report copy.json` is explicitly **not** junk — it carries the ±
+  for 12 Table 2 cells and stays for a phase-4 rename).
+
+### Deliberately left alone
+
+- **Captured notebook output.** `evaluate_hypersigma.ipynb` still contains 12
+  `INFO scripts.adapt_hypersigma_houston:` lines inside stored `outputs` — the
+  frozen log text of a real 2026-05-21 run. Rewriting it would falsify a run
+  record; no code cell references the deleted module. Same reasoning as hard
+  rule 3.
+- **`tools/refactor/{closure,build_manifest}.py`** still name the pruned paths.
+  They are phase-1 bookkeeping that *describes the pre-prune tree* (the same
+  class as `docs/refactor/`), so they are an accepted, documented exception to
+  the grep sweep rather than files to edit. Consequence: re-running
+  `tools/refactor/closure.py` unchanged would now fail on the missing
+  `adapt_hypersigma_houston.py` root. **Proposed for phase 8:** either retire
+  `tools/refactor/` from the release or freeze it with a header saying it
+  describes the pre-refactor tree.
+
+### Verification (verifier battery)
+
+- `pytest -q -m "not gpu and not data"`: **94 passed, 0 failed, 0 skipped**
+  (62 baseline + 32 equivalence), no new failures, no collection errors.
+- Equivalence: **32 passed, IDENTICAL** — G3/G5 digests exact, G1/G2 within
+  rtol 1e-6 / atol 1e-8, `golden/` and `fixtures/` unmodified, no re-baseline.
+- Checkpoint compatibility: the G4 fixture-load and fixture-forward tests pass
+  for both `coffe` and `mft_original`.
+- Imports: all 8 package/entry-point imports clean; `compileall` clean over
+  `models data pretrain lib scripts utils trainers tests`.
+- CLI smoke: 17/17 `--help` entry points exit 0 with no traceback.
+- Grep sweep: zero hits for `models.backbones`, `models.wrappers`,
+  `data.transforms`, `utils.checkpoints`, `adapt_hypersigma_houston` across
+  tracked `.py/.sh/.yaml/.toml`, excluding `docs/refactor/` and
+  `tools/refactor/`.
+- All 7 surviving notebooks parse as valid JSON.
+- Lint: N/A (ruff lands in phase 6). Stale-vocabulary grep: 233 cpea-family
+  hits in 56 files — unchanged baseline noise, phase 4's job.
+
+### canon-reviewer: CONCERNS, nothing blocking — all items handled
+
+- **`pip install -e .` in README Quick start became a broken instruction** once
+  `setup.py` was deleted (`pyproject.toml` has `[build-system]` but no
+  `[project]` table). Fixed the honest way for phase 3: the step is removed and
+  the README now says runs happen from the repo root, with packaging metadata
+  deferred to phase 6. **Phase 6 must add a real `[project]` table.**
+- **D10's backbone count was wrong in my first edit** ("4 legacy backbones").
+  Corrected to 3 concrete backbones + the `BackboneBase` ABC + `__init__` = 5
+  files, which is what was deleted.
+- `PAPER_CANON` §7.2 now cites `scripts/evaluate_cosine.py` — a path §1 itself
+  schedules for renaming. Correct today; **phase 4 must re-point the citation**
+  when the file is renamed.
+- `README.md` source-tree line now names `MFTOriginalCosine`, i.e. one more
+  legacy-vocabulary hit for **phase 4's sweep to cover the README code block**.
+- The **phase-8 stale-vocabulary grep must whitelist notebook `outputs`**, or
+  the 12 frozen `adapt_hypersigma_houston` log lines will resurface as false
+  positives forever.
+
+Verified ✓ by the reviewer independently of my account: scope (42 staged
+deletions == the 42 approved manifest records, no `keep`/`rename` record
+touched), no behavior change, no `nn.Module` attribute touched, legacy readers
+and on-disk-name literals intact, and every Table 2/3 artifact still tracked —
+including `experiments/significance_report copy.json`.
+
+### Open questions for the gate
+
+1. `tools/refactor/` disposition (above) — release it, freeze it, or drop it.
+2. `torchvision` can now leave `requirements.txt` (D6, phase 6); phase 6 also
+   inherits the `[project]` table the deleted `setup.py` used to provide.
+3. Still carried from phase 2: whether the reproduction docs state the per-cell
+   band mask rate (D19).

@@ -23,8 +23,11 @@ git clone <repo-url> mft-cpea
 cd mft-cpea
 conda create -n mft-cpea python=3.9 -y && conda activate mft-cpea
 pip install -r requirements.txt
-pip install -e .
 ```
+
+Everything runs from the repository root (`python scripts/...`, notebooks from
+`notebooks/`); there is no editable install step — real packaging metadata lands
+in `pyproject.toml` in phase 6.
 
 Then either:
 
@@ -114,7 +117,7 @@ mft-cpea/
 │   ├── experiments.py       # ExperimentLogger / PretrainExperiment / EvalRun
 │   ├── pretrain_runner.py   # Notebook-friendly pretrain entry point
 │   └── eval_runner.py       # Notebook-friendly eval entry point
-├── models/                  # MFTCPEACosine + backbones + components
+├── models/                  # MFTCPEACosine + MFTOriginalCosine + components
 ├── notebooks/               # pretrain.ipynb, evaluate.ipynb, compare.ipynb
 ├── pretrain/                # Unified masked-modeling pretraining
 ├── scripts/                 # CLI entry points + shell wrappers
@@ -137,7 +140,6 @@ mft-cpea/
   objectives, masking strategy, and configuration.
 - [`docs/COSINE_VARIANT.md`](docs/COSINE_VARIANT.md) — cosine evaluation
   architecture and rationale.
-- [`SPLIT.md`](SPLIT.md) — how this tree was extracted from the parent repo.
 
 ## License
 

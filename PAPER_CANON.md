@@ -138,9 +138,11 @@ adaptation trains 1.13M–8.45M). Headline margins over the best FM config:
 2. **state_dict key contract.** `nn.Module` **attribute names** in `CoFFE`,
    `MFTOriginal`, the HyperSIGMA wrappers, and every pretrain model are frozen,
    because they define checkpoint keys. Renaming classes, files, and configs is
-   free; renaming attributes requires a key-mapping shim in
-   `utils/checkpoints.py` (or its successor) **plus** a loading test against a
-   pre-refactor checkpoint fixture.
+   free; renaming attributes requires a key-mapping shim beside the **live**
+   key-fixing logic, `fix_state_dict_keys` in `scripts/evaluate_cosine.py`
+   (`utils/checkpoints.py`, the dead twin this clause used to name, was deleted
+   in phase 3 — D15/R2), **plus** a loading test against a pre-refactor
+   checkpoint fixture (`tests/equivalence/fixtures/`).
 3. **Frozen artifacts stay readable.** Existing experiment trees on Nikola's
    machines contain `pretrain_config.yaml` with `model.name: "mft_cpea"`,
    objective `"enhanced"`, variant `"spatial"/"spectral"/"both"`, and directory
@@ -230,8 +232,9 @@ where the paper allows, renaming.
   overrides `adapt_embeddings` to return `patch_emb` unchanged, and its eval
   configs record `lambda_factor: None`.
 - **D4 — `configs/pretrain/base.yaml` is stale**: 4 layers / 8 heads /
-  λ=2.0 / 800 epochs vs the paper's 2/2 encoder. Decide whether base.yaml is a
-  real base (then fix to paper defaults) or unused (then prune).
+  λ=2.0 / 800 epochs vs the paper's 2/2 encoder. **RESOLVED phase 3:** unused
+  (no inheritance mechanism exists — `utils/io.py:10` is a flat load), so it was
+  deleted.
 - **D5 — `.gitignore` contains `lib/`** (Python packaging boilerplate) while
   `lib/` holds first-party source; new files there are silently untracked.
   Restructure must eliminate this trap.
@@ -241,22 +244,33 @@ where the paper allows, renaming.
 - **D7 — README is wrong** on: title/branding, "cosine ... prototypical
   network" protocol, the `n_way: 5` example (paper is N-way full-class), OA/AA/
   Kappa metrics, and it omits the MFT control and HyperSIGMA routes entirely.
-- **D8 — Duplicate/junk files**: `notebooks/* copy*.ipynb` (7 files),
+- **D8 — Duplicate/junk files**: `notebooks/* copy*.ipynb` (**8**, not 7),
   `notebooks/pretrain_run2.ipynb`, `experiments/significance_report copy.json`,
   `scripts/adapt_hypersigma_houston.py` vs `scripts/adapt_hypersigma.py`.
+  **RESOLVED phase 3:** the 9 notebooks and the `_houston` shim deleted;
+  `significance_report copy.json` is **not** junk (it carries the ± for 12
+  Table 2 cells) and stays, to be renamed in phase 4.
 - **D9 — Exploratory pipelines** (`ablation_*`, `combo_*`, `bestcfg_*` scripts
   + their report JSONs) appear in no paper table. Default recommendation:
   remove from the release (they remain in git history); Nikola may instead
-  choose `archive/`. His call at the Phase 1 gate.
+  choose `archive/`. **RESOLVED:** Nikola chose `archive/` at the phase-1 gate;
+  phase 3 moved all 18 files to `archive/exploratory/` and added `/archive/` to
+  `.gitignore`, so they are on disk but untracked.
 - **D10 — Legacy pretrain stack overlap.** `pretrain/masked_modeling.py` vs
   `pretrain/masked_modeling_enhanced.py`; `pretrain/mae_pretrain.py`;
   `pretrain/decoders.py` (Transformer decoders vs the paper's 2-layer MLP);
   `trainers/pretrain_trainer.py` vs `lib/pretrain_runner.py`;
-  `models/backbones/*` (3 legacy backbones); `models/wrappers/pretrain_wrapper.py`
-  (`ContrastiveHead` — no contrastive learning in the paper). Trace which are
-  in the paper-run import closure.
+  `models/backbones/*` (3 concrete legacy backbones + their `BackboneBase`
+  ABC + `__init__` = **5 files**);
+  `models/wrappers/pretrain_wrapper.py` (`ContrastiveHead` — no contrastive
+  learning in the paper). **RESOLVED phase 3:** the closure trace (AUDIT §2.2)
+  found `pretrain/masked_modeling.py`, `mae_pretrain.py`, `decoders.py` and
+  `trainers/pretrain_trainer.py` all **live** — kept; `models/backbones/*` and
+  `models/wrappers/*` were a closed island reachable only via
+  `models/__init__.py` re-exports — deleted, re-exports removed.
 - **D11 — `SPLIT.md`** documents extraction from a private parent repo —
-  internal; default: remove from the public release.
+  internal. **RESOLVED phase 3:** deleted, and its README "Further reading"
+  link removed.
 - **D12 — Metrics surface.** `utils/metrics.py` computes AA/κ; paper reports OA
   only (OA=AA by construction). Keeping AA/κ in results JSONs is fine; README
   and docs must lead with OA and state why κ is omitted.
@@ -293,7 +307,9 @@ where the paper allows, renaming.
   The `fix_state_dict_keys` mentions in `pretrain/{mae_pretrain,mft_mae,
   mft_spatial_mae}.py` are docstrings, not calls. Any future key-mapping shim
   must land where the live code is, or `utils/checkpoints.py` must be revived
-  deliberately. **Open at the phase-1 gate.**
+  deliberately. **RESOLVED phase 3:** §7.2 now names
+  `scripts/evaluate_cosine.py`'s `fix_state_dict_keys` (the live logic) and the
+  dead `utils/checkpoints.py` was deleted (risk R2 closed).
 - **D16 — `model_type` is a written-and-read artifact value.**
   `scripts/evaluate_cosine.py:823` writes
   `"model_type": "MFTOriginalCosine" | "MFTCPEACosine"` into eval results;

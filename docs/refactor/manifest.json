@@ -3,18 +3,19 @@
   "generated_by": "tools/refactor/build_manifest.py",
   "note": "verdicts are PROPOSALS until 'approved': true is set at the phase-1 gate",
   "summary": {
-    "files": 213,
+    "files": 219,
     "by_class": {
       "DEAD": 11,
       "DUPLICATE": 10,
       "EXPLORATORY": 19,
-      "INFRA": 36,
+      "INFRA": 42,
       "PAPER": 124,
       "VENDORED": 13
     },
     "by_verdict": {
-      "delete": 42,
-      "keep": 158,
+      "archive": 18,
+      "delete": 24,
+      "keep": 164,
       "rename": 13
     }
   },
@@ -70,8 +71,8 @@
       "verdict": "delete",
       "target": null,
       "evidence": "documents extraction from the private parent repo mft-cpea, naming an internal branch (SPLIT.md:3); internal-only",
-      "notes": "D11 - Nikola's call: delete | keep",
-      "approved": false
+      "notes": "D11 APPROVED 2026-08-31: delete",
+      "approved": true
     },
     {
       "path": "WORKFLOW.md",
@@ -499,6 +500,15 @@
       "approved": false
     },
     {
+      "path": "docs/refactor/AUDIT.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "refactor record",
+      "notes": "",
+      "approved": false
+    },
+    {
       "path": "docs/refactor/BASELINE.md",
       "class": "INFRA",
       "verdict": "keep",
@@ -535,7 +545,25 @@
       "approved": false
     },
     {
+      "path": "docs/refactor/closure.json",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "refactor record",
+      "notes": "",
+      "approved": false
+    },
+    {
       "path": "docs/refactor/inventory.json",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "refactor record",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "docs/refactor/manifest.json",
       "class": "INFRA",
       "verdict": "keep",
       "target": null,
@@ -618,11 +646,11 @@
     {
       "path": "experiments/ablation_report.json",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/ablation_report.json",
       "evidence": "report of an exploratory pipeline; no Table 2/3 cell traces to it",
-      "notes": "D9 - Nikola's call",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive, not delete",
+      "approved": true
     },
     {
       "path": "experiments/aggregated_results.json",
@@ -636,20 +664,20 @@
     {
       "path": "experiments/bestcfg_report.json",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/bestcfg_report.json",
       "evidence": "report of an exploratory pipeline; no Table 2/3 cell traces to it",
-      "notes": "D9 - Nikola's call",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive, not delete",
+      "approved": true
     },
     {
       "path": "experiments/combo_report.json",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/combo_report.json",
       "evidence": "report of an exploratory pipeline; no Table 2/3 cell traces to it",
-      "notes": "D9 - Nikola's call",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive, not delete",
+      "approved": true
     },
     {
       "path": "experiments/experiment_metadata.json",
@@ -928,7 +956,7 @@
       "verdict": "rename",
       "target": "coffe/models/coffe.py",
       "evidence": "PAPER_CANON \u00a71: module rename; class MFTCPEACosine -> CoFFE",
-      "notes": "nn.Module ATTRIBUTE names stay frozen (\u00a77.2)",
+      "notes": "D3 HOLD: requested lambda removal is behavior-altering (-1.70 pp OA, 5.4% predictions flipped; tools/refactor/lambda_probe.py). nn.Module ATTRIBUTE names stay frozen (\u00a77.2)",
       "approved": false,
       "provisional": true
     },
@@ -1207,29 +1235,29 @@
     {
       "path": "scripts/ablation_config.py",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/ablation_config.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 - Nikola's call: delete | archive/ | keep",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
+      "approved": true
     },
     {
       "path": "scripts/ablation_eval_worker.py",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/ablation_eval_worker.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 - Nikola's call: delete | archive/ | keep",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
+      "approved": true
     },
     {
       "path": "scripts/ablation_pretrain_worker.py",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/ablation_pretrain_worker.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 - Nikola's call: delete | archive/ | keep",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
+      "approved": true
     },
     {
       "path": "scripts/adapt_hypersigma.py",
@@ -1253,29 +1281,29 @@
     {
       "path": "scripts/aggregate_ablation.py",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/aggregate_ablation.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 - Nikola's call: delete | archive/ | keep",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
+      "approved": true
     },
     {
       "path": "scripts/aggregate_bestcfg.py",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/aggregate_bestcfg.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 - Nikola's call: delete | archive/ | keep",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
+      "approved": true
     },
     {
       "path": "scripts/aggregate_combo.py",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/aggregate_combo.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 - Nikola's call: delete | archive/ | keep",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
+      "approved": true
     },
     {
       "path": "scripts/aggregate_experiment_results.py",
@@ -1298,29 +1326,29 @@
     {
       "path": "scripts/bestcfg_config.py",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/bestcfg_config.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 - Nikola's call: delete | archive/ | keep",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
+      "approved": true
     },
     {
       "path": "scripts/bestcfg_eval_worker.py",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/bestcfg_eval_worker.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 - Nikola's call: delete | archive/ | keep",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
+      "approved": true
     },
     {
       "path": "scripts/bestcfg_pretrain_worker.py",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/bestcfg_pretrain_worker.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 - Nikola's call: delete | archive/ | keep",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
+      "approved": true
     },
     {
       "path": "scripts/build_experiment_metadata.py",
@@ -1343,29 +1371,29 @@
     {
       "path": "scripts/combo_config.py",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/combo_config.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 - Nikola's call: delete | archive/ | keep",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
+      "approved": true
     },
     {
       "path": "scripts/combo_eval_worker.py",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/combo_eval_worker.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 - Nikola's call: delete | archive/ | keep",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
+      "approved": true
     },
     {
       "path": "scripts/combo_pretrain_worker.py",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/combo_pretrain_worker.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 - Nikola's call: delete | archive/ | keep",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
+      "approved": true
     },
     {
       "path": "scripts/compile_mft_faithful_results.py",
@@ -1472,29 +1500,29 @@
     {
       "path": "scripts/run_ablation.py",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/run_ablation.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 - Nikola's call: delete | archive/ | keep",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
+      "approved": true
     },
     {
       "path": "scripts/run_bestcfg.py",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/run_bestcfg.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 - Nikola's call: delete | archive/ | keep",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
+      "approved": true
     },
     {
       "path": "scripts/run_combo.py",
       "class": "EXPLORATORY",
-      "verdict": "delete",
-      "target": null,
+      "verdict": "archive",
+      "target": "archive/exploratory/run_combo.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 - Nikola's call: delete | archive/ | keep",
-      "approved": false
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
+      "approved": true
     },
     {
       "path": "scripts/run_cosine_eval.sh",
@@ -1850,7 +1878,34 @@
       "approved": false
     },
     {
+      "path": "tools/refactor/build_manifest.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "refactor tooling (this phase)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tools/refactor/closure.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "refactor tooling (this phase)",
+      "notes": "",
+      "approved": false
+    },
+    {
       "path": "tools/refactor/inventory.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "refactor tooling (this phase)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tools/refactor/lambda_probe.py",
       "class": "INFRA",
       "verdict": "keep",
       "target": null,

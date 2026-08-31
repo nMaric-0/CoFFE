@@ -143,3 +143,54 @@ routes do not already reach, so the D9 decision cannot orphan library code.
 wording, D3 acknowledgement, D9 disposition, D11, notebook keep-list, the
 `significance_report copy.json` rescue, and R2 (`utils/checkpoints.py` vs
 canon §7.2).
+
+### Phase 1 gate — Nikola's decisions (2026-08-31)
+
+| Item | Decision | Status |
+|---|---|---|
+| D1 epoch recipe | correct as audited | recorded in canon as **D17** |
+| D3 λ removal | "does not contribute — remove and archive" | **ON HOLD — measured to change numbers** (see below) |
+| D9 exploratory | archive into an untracked tree | 18 records → `verdict: archive`, `target: archive/exploratory/…`, `approved: true` |
+| D11 `SPLIT.md` | delete | `approved: true` |
+| D13–D16 | promote to PAPER_CANON | added to §8, **plus D17 (Table 2 composition) and D18 (episode counts)** |
+
+**D3 is the one item I did not execute.** The stated premise was that λ "does
+not contribute". I measured it instead of assuming, with
+`tools/refactor/lambda_probe.py` (new): the real Houston headline checkpoint
+(epoch 950), the exact `evaluate_cosine.py` episode path, CPU, 40 episodes,
+λ=0.5 vs λ=0:
+
+- OA **74.85 → 73.15**, i.e. **−1.70 pp**
+- **5.4 %** of all query predictions flip (agreement 94.57 %)
+- **0 of 40** episodes unchanged
+- mechanism: `mean ‖cls − mean(cls)‖ = 4.50` > patch-pool spread `4.09`, so the
+  class-agnostic token is not constant and Euclidean translation-invariance
+  does not make removal free
+
+So removal would move every CoFFE cell in Table 2, including the headline
+75.30. `CLAUDE.md` hard rule 1 and `PAPER_CANON` §7.1 both say a
+behavior-altering change that seems desirable must be reported, not applied.
+Phase 1 is also scoped to `docs/refactor/` + `tools/refactor/` only, so code
+removal could not happen here regardless — it would be a phase-3 action.
+
+Recorded as `D3 HOLD` in the `models/mft_cpea_cosine.py` manifest note,
+`approved: false`. Needs one of:
+
+1. **Keep λ** (documented honestly as `z = mean(patch) + 0.5·cls`) — no numbers move; or
+2. **Remove λ and re-run the affected evals**, accepting that Table 2's CoFFE
+   column changes and the paper text must follow; or
+3. **Remove λ only from a new, clearly-labelled non-paper code path**, leaving
+   the paper path untouched.
+
+Option 3 is the only one that both honours the request and keeps the frozen
+numbers, if the goal is a cleaner released model.
+
+**Still open (not answered at this gate):** notebook keep-list (default applied:
+pretrain, evaluate, compare, adapt_hypersigma_native_sem), the
+`significance_report copy.json` rescue (kept as `rename` — it is load-bearing),
+R2 (`utils/checkpoints.py` vs canon §7.2, now recorded as D15), and a review of
+the remaining 24-entry delete list.
+
+**Phase 5 prerequisite created by the D9 decision:** `archive/` must be added to
+`.gitignore` so the archived tree is present on disk but untracked
+("non-traceable"), as requested.

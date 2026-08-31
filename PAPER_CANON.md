@@ -184,6 +184,29 @@ where the paper allows, renaming.
   affect features? If **live**, it stays, gets an honest name and a docstring,
   and is flagged to Nikola as a paper/code description gap. If **dead** on the
   paper path, it is prune-eligible (still requires harness proof).
+
+  **RESOLVED phase 1: LIVE.** Path is `lib/eval_runner.py:209` →
+  `scripts/evaluate_cosine.py:392-393` (`model.adapt_embeddings(...)`, which the
+  episode loop calls instead of `forward_episode`) →
+  `models/mft_cpea_cosine.py:294`. Every Table 2 CoFFE `eval_config.json`
+  records `lambda_factor: 0.5`, `use_projection: false`, `pool_sigma: null`, so
+  the paper's eval feature is
+  **`z = mean_j(patch_emb_j) + 0.5·cls_emb`**, not "patch tokens pooled". The
+  `renormalize` branch (`:296-297`) is inert because `use_projection=False`
+  makes `self.projection = nn.Identity()` (`:164`).
+
+  `tools/refactor/lambda_probe.py` measured what removing it would cost, on the
+  headline Houston checkpoint (epoch 950, 40 episodes, CPU):
+  **OA 74.85 → 73.15 (−1.70 pp), 5.4 % of query predictions flipped, 0 of 40
+  episodes unchanged.** `mean ||cls − mean(cls)|| = 4.50` exceeds the
+  patch-pool spread of 4.09, so the class-agnostic token is far from constant
+  and Euclidean translation-invariance does **not** make removal free.
+  **Removal is therefore a behavior change barred by §7.1**, and is on hold
+  pending an explicit decision taken against this evidence.
+
+  MFT control: λ is correctly inert there — `models/mft_original.py:237-245`
+  overrides `adapt_embeddings` to return `patch_emb` unchanged, and its eval
+  configs record `lambda_factor: None`.
 - **D4 — `configs/pretrain/base.yaml` is stale**: 4 layers / 8 heads /
   λ=2.0 / 800 epochs vs the paper's 2/2 encoder. Decide whether base.yaml is a
   real base (then fix to paper defaults) or unused (then prune).
@@ -215,6 +238,67 @@ where the paper allows, renaming.
 - **D12 — Metrics surface.** `utils/metrics.py` computes AA/κ; paper reports OA
   only (OA=AA by construction). Keeping AA/κ in results JSONs is fine; README
   and docs must lead with OA and state why κ is omitted.
+
+- **D13 — the committed `configs/` do not reproduce the paper runs.** The
+  reproducible recipe lives in the frozen `experiments/*/pretrain_config.yaml`,
+  not in `configs/`. Confirmed divergences: `trento_pretrain_enhanced.yaml`
+  says `band_mask_ratio: 0.9` where the run used **0.85**;
+  `houston_pretrain_enhanced.yaml` says `epochs: 3000` where the run used
+  **1500**; `hypersigma_houston_adapt_pca100.yaml:52-56` says 3000 epochs /
+  batch 64 / lr 1.5e-4 where the run used **2000 / 128 / 1e-5**. The paper's
+  stated mask rates — band `(0.85, 0)`, token `(0, 0.75)` — are **correct** and
+  match all six canonical run configs. `configs/` is the stale artifact.
+  Phase 5/8 regenerates `configs/` **from** the frozen run configs, never the
+  reverse.
+- **D14 — the headline Houston cell comes from a run the repo filters as
+  scratch.** Table 2 CoFFE SimMIM token HSI+LiDAR / Houston = **75.30** comes
+  from `experiments/houston_enhanced_spatial_mask_test_run1_seed52`.
+  `scripts/compile_results.py:35` sets
+  `_TEST_MARKERS = ("test_run", "spatial_mask_test", "_example")` and `:61-62`
+  drops matching experiments as `"scratch/test run"` — which is why
+  `docs/presentation/RESULTS.json` has no Houston "Enhanced: spatial /
+  HSI+LiDAR" entry and why `75.3` appears nowhere under `datasets.houston`.
+  The `seed52` in the directory name is a **misnomer**: the run used seed 42
+  (`pretrain_metadata.json` → `overrides.hardware.seed: 42`). The number is
+  sound; the naming and the compiler filter disagree with the paper's
+  selection. Do not "fix" the filter to include it without Nikola's sign-off.
+- **D15 — §7.2 points the key-map shim at a dead file.** `utils/checkpoints.py`
+  is imported by nothing; the live key-fixing logic is
+  `scripts/evaluate_cosine.py:107` (`fix_state_dict_keys`, called at `:202`).
+  The `fix_state_dict_keys` mentions in `pretrain/{mae_pretrain,mft_mae,
+  mft_spatial_mae}.py` are docstrings, not calls. Any future key-mapping shim
+  must land where the live code is, or `utils/checkpoints.py` must be revived
+  deliberately. **Open at the phase-1 gate.**
+- **D16 — `model_type` is a written-and-read artifact value.**
+  `scripts/evaluate_cosine.py:823` writes
+  `"model_type": "MFTOriginalCosine" | "MFTCPEACosine"` into eval results;
+  `scripts/compile_results.py:58,104` and
+  `scripts/build_experiment_metadata.py:112-115` read it back. Those readers
+  only compare against `"HyperSIGMADual"` / `"HyperSIGMA" in m`, both preserved
+  by §1, so renaming the CoFFE/MFT values is reader-safe — but it changes the
+  content of newly written `results.json`. Phase 4 adds the reader alias map
+  **before** changing the writer.
+- **D17 — Table 2 is a two-source composite; the evaluated epoch is not the
+  schedule length.** Means come from single canonical runs evaluated at
+  **epoch 950 (Houston) / 975 (Trento, MUUFL)** — never the final checkpoint
+  (one cell, Houston SimMIM band HSI+LiDAR, uses epoch 800). The ± column is
+  the **across-seed std of a separate 5-seed experiment trained fresh to 700
+  epochs** (`scripts/sig_significance_config.py:46`), split across
+  `experiments/significance_report.json` (18 cells) and
+  `experiments/significance_report copy.json` (12 `enhanced` cells, including
+  all three headline numbers). All 30 cells verified exact in both columns
+  (`docs/refactor/AUDIT.md` §3 D1). Pretraining schedules are 1500 epochs
+  except Houston MAE and Houston MFT (**3000**) and
+  `houston_enhanced_spectral_run2` (**2000**). The epoch-1500 evals produced by
+  `scripts/rerun_mft_faithful_eval_ep1500.sh` are **not** in Table 2.
+- **D18 — episode counts differ between tables.** §4 states 1000 episodes as
+  law, but Table 3 used **2000** and Table 2 used **1000**. Since Table 3
+  reports ±95 % CI over episodes, this sets the CI width. Additionally one
+  Table 3 cell — Houston 11×11 spectral (21.85 ± 0.10),
+  `experiments/hypersigma_baseline_spectral_only_run1/evaluations/houston_15way_5shot_adapted_spectral_only_run1`
+  — used **`k_query=30`** (and its `eval_config.json` records
+  `distance_metric: cosine`, though the quoted value is the `euclidean`
+  sub-block). §4's protocol constants must be read per-table.
 
 ## 9. Target vocabulary for new artifacts
 

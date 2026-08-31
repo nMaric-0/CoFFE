@@ -32,8 +32,8 @@ from pathlib import Path
 V: dict[str, tuple] = {}
 
 
-def rec(path, cls, verdict, target, evidence, notes="", provisional=False):
-    V[path] = (cls, verdict, target, evidence, notes, provisional)
+def rec(path, cls, verdict, target, evidence, notes="", provisional=False, approved=False):
+    V[path] = (cls, verdict, target, evidence, notes, provisional, approved)
 
 
 # ---- DEAD: closed import islands, reachable only via package re-export -----
@@ -107,12 +107,14 @@ for p in (
     "scripts/bestcfg_pretrain_worker.py", "scripts/bestcfg_eval_worker.py",
     "scripts/aggregate_bestcfg.py",
 ):
-    rec(p, "EXPLORATORY", "delete", None, _EXPL, "D9 - Nikola's call: delete | archive/ | keep")
+    rec(p, "EXPLORATORY", "archive", "archive/exploratory/" + p.split("/")[-1], _EXPL,
+        "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree "
+        "(phase 5 must add 'archive/' to .gitignore)", approved=True)
 for p in ("experiments/ablation_report.json", "experiments/combo_report.json",
           "experiments/bestcfg_report.json"):
-    rec(p, "EXPLORATORY", "delete", None,
+    rec(p, "EXPLORATORY", "archive", "archive/exploratory/" + p.split("/")[-1],
         "report of an exploratory pipeline; no Table 2/3 cell traces to it",
-        "D9 - Nikola's call")
+        "D9 APPROVED 2026-08-31: archive, not delete", approved=True)
 
 # ---- PAPER: report JSONs that provenance Table 2 / Table 3 ---------------
 rec("experiments/significance_report.json", "PAPER", "keep", None,
@@ -143,7 +145,7 @@ rec("experiments/gathered_results.json", "PAPER", "keep", None,
 rec("SPLIT.md", "INFRA", "delete", None,
     "documents extraction from the private parent repo mft-cpea, naming an "
     "internal branch (SPLIT.md:3); internal-only",
-    "D11 - Nikola's call: delete | keep")
+    "D11 APPROVED 2026-08-31: delete", approved=True)
 rec("setup.py", "INFRA", "delete", None,
     "closure.json unreached; placeholder metadata (name 'mft-cpea', "
     "author_email 'nikola@example.com', url 'yourusername'); install_requires "
@@ -218,6 +220,20 @@ rec("scripts/rerun_mft_faithful_eval_ep1500.sh", "EXPLORATORY", "delete", None,
     "Houston MFT SimMIM token); superseded by the epoch-950 evals",
     "D1 - keeping it would document the wrong recipe")
 
+# ---- D3: requested removal is BLOCKED by the numerics invariant ----------
+# Nikola asked (2026-08-31) to remove the lambda/CPEA adaptation on the grounds
+# that "it does not contribute". tools/refactor/lambda_probe.py measured the
+# opposite on the headline Houston checkpoint: removal flips 5.4% of query
+# predictions and moves OA by -1.70 pp. That makes removal a behavior change,
+# which CLAUDE.md hard rule 1 and PAPER_CANON §7.1 forbid applying without an
+# explicit decision made against this evidence. Verdict stays `keep`, NOT
+# approved, pending re-confirmation at the phase-1 gate.
+rec("models/mft_cpea_cosine.py", "PAPER", "rename", "coffe/models/coffe.py",
+    "PAPER_CANON §1: module rename; class MFTCPEACosine -> CoFFE",
+    "D3 HOLD: requested lambda removal is behavior-altering "
+    "(-1.70 pp OA, 5.4% predictions flipped; tools/refactor/lambda_probe.py). "
+    "nn.Module ATTRIBUTE names stay frozen (§7.2)", True)
+
 # ---------------------------------------------------------------------------
 # Fall-through rules, in order. (prefix, class, verdict, evidence)
 # ---------------------------------------------------------------------------
@@ -270,15 +286,16 @@ def main() -> int:
     records = []
     for path in sorted(tracked):
         if path in V:
-            cls, verdict, target, evidence, notes, prov = V[path]
+            cls, verdict, target, evidence, notes, prov, appr = V[path]
         else:
             for prefix, cls, verdict, evidence in RULES:
                 if path.startswith(prefix):
-                    target, notes, prov = None, "", False
+                    target, notes, prov, appr = None, "", False, False
                     break
             else:
-                cls, verdict, target, evidence, notes, prov = (
-                    "INFRA", "keep", None, "repo-root file, not classified by rule", "", False)
+                cls, verdict, target, evidence, notes, prov, appr = (
+                    "INFRA", "keep", None, "repo-root file, not classified by rule",
+                    "", False, False)
         r = {
             "path": path,
             "class": cls,
@@ -286,7 +303,7 @@ def main() -> int:
             "target": target,
             "evidence": evidence,
             "notes": notes,
-            "approved": False,
+            "approved": appr,
         }
         if prov:
             r["provisional"] = True

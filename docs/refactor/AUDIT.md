@@ -299,9 +299,31 @@ z = mean_j(patch_emb_j) + 0.5 · cls_emb
 ```
 
 Because `cls_emb` is per-sample, this is not a constant offset — it genuinely
-changes Euclidean distances and prototypes. λ is **KEPT** (behavior is frozen),
-needs an honest name and docstring in phase 4/6, and is a paper↔code
-description gap for Nikola to acknowledge.
+changes Euclidean distances and prototypes.
+
+**Measured, not argued.** `tools/refactor/lambda_probe.py` replicates this exact
+path on CPU with the headline Houston checkpoint (epoch 950) and compares
+λ=0.5 against λ=0 over 40 episodes:
+
+| | λ = 0.5 (as it ran) | λ = 0 (removal) |
+|---|---|---|
+| OA | **74.85** | **73.15** |
+| per-episode std | 2.42 | 2.62 |
+
+- OA difference: **−1.70 pp**
+- query-prediction agreement: **94.57 %** — removal flips **5.4 %** of predictions
+- episodes with identical OA: **0 of 40**
+- `mean ‖cls − mean(cls)‖ = 4.50` vs patch-pool spread `4.09`
+
+That last line is the mechanism. Euclidean NCM *is* translation-invariant, so if
+`cls_emb` were constant across samples, λ would provably be inert. It is not
+constant — it varies *more* than the pooled patch features do. (Sanity check:
+the probe's λ=0.5 OA of 74.85 over 40 episodes brackets the published 75.30 over
+1000 episodes, so the harness is faithful to the paper path.)
+
+λ is therefore **KEPT**: removing it moves every CoFFE number in Table 2,
+which `CLAUDE.md` hard rule 1 and `PAPER_CANON` §7.1 forbid applying as part of
+a refactor. It needs an honest name and docstring in phase 4/6.
 
 **MFT control: λ is dead there**, correctly. `models/mft_original.py:237-245`
 overrides `adapt_embeddings` to `return patch_emb` unchanged, and

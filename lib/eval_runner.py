@@ -1,4 +1,4 @@
-"""Notebook-friendly wrapper around scripts.evaluate_cosine.run_evaluation.
+"""Notebook-friendly wrapper around scripts.evaluate.run_evaluation.
 
 The runner creates an evaluation subdir under an existing experiment, points
 the evaluator at it for `results.json` and the plots dir, and attaches a file
@@ -27,11 +27,13 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from coffe_compat import normalize_model_name  # noqa: E402
+
 
 # Keys read from the pretrain experiment's saved config to seed eval defaults.
 # Eval-time overrides in `eval_params` still win.
 _ARCH_KEYS_FROM_MODEL = (
-    "name",            # selects the eval model (mft_cpea | mft_original)
+    "name",            # selects the eval model (coffe | mft_original)
     "attention_type",  # original-MFT: mcross | standard
     "mlp_dim",         # original-MFT feed-forward width (faithful: 512)
     "embed_dim",
@@ -64,13 +66,19 @@ def load_pretrain_config(
 
 
 def _arch_defaults_from_pretrain(pretrain_cfg: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract architecture-shaped keys from a pretrain config dict."""
+    """Extract architecture-shaped keys from a pretrain config dict.
+
+    ``model.name`` is normalised: frozen experiments record the pre-paper value
+    and must keep evaluating (PAPER_CANON §7.3).
+    """
     model_cfg = pretrain_cfg.get("model", {}) or {}
     data_cfg = pretrain_cfg.get("data", {}) or {}
     out: Dict[str, Any] = {}
     for k in _ARCH_KEYS_FROM_MODEL:
         if k in model_cfg:
             out[k] = model_cfg[k]
+    if "name" in out:
+        out["name"] = normalize_model_name(out["name"], origin="pretrain_config.yaml")
     for k in _ARCH_KEYS_FROM_DATA:
         if k in data_cfg:
             out[k] = data_cfg[k]
@@ -120,12 +128,12 @@ def run_hypersigma_evaluation(
 ) -> EvalRun:
     """Run HyperSIGMA few-shot evaluation under ``experiments/<name>/``.
 
-    Mirrors :func:`run_evaluation` (MFT-CPEA-Cosine) but dispatches to
-    ``scripts.evaluate_hypersigma_cosine.run_evaluation``. The
+    Mirrors :func:`run_evaluation` (CoFFE / MFT) but dispatches to
+    ``scripts.evaluate_hypersigma.run_evaluation``. The
     ``adapted_checkpoint`` argument can be a path or the literal string
     ``"none"`` (the unadapted ablation).
     """
-    from scripts.evaluate_hypersigma_cosine import run_evaluation as _run
+    from scripts.evaluate_hypersigma import run_evaluation as _run
 
     params = dict(eval_params or {})
     if "dataset" not in params:
@@ -190,7 +198,7 @@ def run_evaluation(
     experiments_root: Union[str, Path] = DEFAULT_EXPERIMENTS_ROOT,
     overwrite: bool = False,
 ) -> EvalRun:
-    """Run cosine few-shot evaluation against a saved experiment.
+    """Run few-shot evaluation (nearest class mean) against a saved experiment.
 
     Args:
         experiment_name: Name of the pretrain experiment to evaluate.
@@ -199,14 +207,14 @@ def run_evaluation(
         checkpoint: Optional explicit checkpoint path (overrides `epoch`).
             Use the string "random" to evaluate an untrained encoder.
         eval_params: Dict of evaluation hyperparameters mirroring the CLI
-            flags of `scripts/evaluate_cosine.py`. Must include at least
+            flags of `scripts/evaluate.py`. Must include at least
             `dataset` (one of "houston", "trento", "muufl").
         experiments_root: Directory containing experiments.
         overwrite: If True, reuse an existing eval directory.
 
     Returns the EvalRun handle with finalized metadata.
     """
-    from scripts.evaluate_cosine import run_evaluation as _run
+    from scripts.evaluate import run_evaluation as _run
 
     user_params = dict(eval_params or {})
     if "dataset" not in user_params:

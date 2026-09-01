@@ -6,8 +6,8 @@ Matrix:  {houston, trento, muufl}  ×  {lidar, no_lidar}   (6 cells)
 Original-MAE recipe (He et al. 2022): remove 75% of the pixel tokens, encode the
 visible 25% (+ CLS) only, and a transformer decoder reconstructs the masked
 tokens. The MLP projection head is removed (use_projection=false). Each cell
-pretrains the unified MFT-CPEA encoder with the per-dataset MAE config
-(lidar -> *_mae.yaml with use_aux=true, no_lidar -> *_mae_hsi_only.yaml with
+pretrains the CoFFE encoder with the per-dataset MAE config
+(lidar -> *_mae.yaml with use_aux=true, no_lidar -> *_mae_hsi.yaml with
 use_aux=false), then runs few-shot cosine/euclidean evaluation on the same
 dataset. Both stages go through the standard runners (lib.pretrain_runner /
 lib.eval_runner), so each lands in experiments/<name>/ and the evaluator
@@ -55,16 +55,16 @@ DEVICE = "cuda:0"
 # dataset -> {lidar setting: MAE config path}
 CONFIGS = {
     "houston": {
-        "lidar":    "configs/pretrain/houston_pretrain_mae.yaml",
-        "no_lidar": "configs/pretrain/houston_pretrain_mae_hsi_only.yaml",
+        "lidar":    "configs/coffe/houston_mae.yaml",
+        "no_lidar": "configs/coffe/houston_mae_hsi.yaml",
     },
     "trento": {
-        "lidar":    "configs/pretrain/trento_pretrain_mae.yaml",
-        "no_lidar": "configs/pretrain/trento_pretrain_mae_hsi_only.yaml",
+        "lidar":    "configs/coffe/trento_mae.yaml",
+        "no_lidar": "configs/coffe/trento_mae_hsi.yaml",
     },
     "muufl": {
-        "lidar":    "configs/pretrain/muufl_pretrain_mae.yaml",
-        "no_lidar": "configs/pretrain/muufl_pretrain_mae_hsi_only.yaml",
+        "lidar":    "configs/coffe/muufl_mae.yaml",
+        "no_lidar": "configs/coffe/muufl_mae_hsi.yaml",
     },
 }
 
@@ -146,7 +146,7 @@ def main():
                 name=exp_name,
                 description=(
                     f"MAE pretraining (mask_ratio=0.75, transformer decoder, "
-                    f"use_projection=false) of MFT-CPEA on {ds}; {label}."
+                    f"use_projection=false) of CoFFE on {ds}; {label}."
                 ),
                 config=CONFIGS[ds][setting],
                 overrides=overrides,

@@ -8,7 +8,7 @@ the release can re-derive it instead of taking `docs/refactor/` on trust.
 nothing from the paper code — they read the tree as text (`ast`, `git ls-files`)
 and write only the JSON at their `--out`. `lambda_probe.py` is the exception on
 both counts: it imports `numpy`, `torch`, `data.datasets.patched`,
-`scripts.evaluate_cosine` and `utils.seed`, and it needs `data/raw/` plus a real
+`scripts.evaluate` and `utils.seed`, and it needs `data/raw/` plus a real
 checkpoint, so it does not run in the default battery.
 
 | script | what it does | default output |

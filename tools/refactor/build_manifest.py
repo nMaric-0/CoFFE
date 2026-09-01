@@ -243,6 +243,149 @@ rec("models/mft_cpea_cosine.py", "PAPER", "rename", "coffe/models/coffe.py",
 # Fall-through rules, in order. (prefix, class, verdict, evidence)
 # ---------------------------------------------------------------------------
 
+
+# ---- Phase 4 EXECUTED: the PAPER_CANON §1 renames ------------------------
+# Phase 4 renamed basenames only; the move into a single ``coffe/`` package is
+# phase 5. Each record below therefore carries the path phase 4 actually
+# produced as ``target``, with the phase-5 destination stated in the notes, and
+# a companion record at the new path so the phase-5 move keeps its evidence.
+# The full old->new table (symbols, files, config values) is CHANGES.md.
+# `approved` stays False on every one of them: canon §1 mandates the renames,
+# but the approval flag is Nikola's to set at the phase-4 gate, not the
+# executor's. `executed_in_phase` is what records that they happened.
+_P5 = "phase-5 target: "
+
+rec("models/mft_cpea_cosine.py", "PAPER", "rename", "models/coffe.py",
+    "PAPER_CANON §1: module rename; class MFTCPEACosine -> CoFFE",
+    "EXECUTED phase 4. " + _P5 + "coffe/models/coffe.py. D3 obligations "
+    "discharged in phase 4: the eval feature z = mean_j(patch_emb_j) + "
+    "0.5*cls_emb is documented on the method, lambda_factor -> cls_token_weight "
+    "and adapt_embeddings -> eval_patch_embeddings (neither is a state_dict "
+    "key), and the renormalize branch is documented as inert at eval. The "
+    "`lambda_factor` CONFIG KEY is unchanged: frozen pretrain_config.yaml / "
+    "eval_config.json record it (§7.3).", True)
+rec("models/hypersigma/hypersigma_cosine.py", "PAPER", "rename",
+    "models/hypersigma/few_shot.py",
+    "PAPER_CANON §1: HyperSIGMACosine -> HyperSIGMAFewShot",
+    "EXECUTED phase 4. " + _P5 + "coffe/models/hypersigma/few_shot.py "
+    "(the phase-4 skill's basename; supersedes the earlier "
+    "'hypersigma_fewshot.py' proposal - inside package `hypersigma/` the "
+    "prefix is redundant).", True)
+rec("pretrain/masked_modeling_enhanced.py", "PAPER", "rename",
+    "pretrain/simmim.py",
+    "PAPER_CANON §1: EnhancedMaskedSpectralSpatialModel -> SimMIMPretrainModel",
+    "EXECUTED phase 4. " + _P5 + "coffe/pretrain/simmim.py", True)
+rec("scripts/evaluate_cosine.py", "PAPER", "rename", "scripts/evaluate.py",
+    "PAPER_CANON §1 drops 'Cosine' from names; §9 CLI verb 'evaluate'",
+    "EXECUTED phase 4. " + _P5 + "coffe/cli/evaluate.py. Still holds the live "
+    "AA/kappa maths, the live fix_state_dict_keys, and the live episode loop.",
+    True)
+rec("scripts/pretrain_enhanced.py", "PAPER", "rename", "scripts/pretrain.py",
+    "PAPER_CANON §1 'enhanced' -> 'simmim'; §9 CLI verb 'pretrain'",
+    "EXECUTED phase 4. " + _P5 + "coffe/cli/pretrain.py", True)
+rec("scripts/evaluate_hypersigma_cosine.py", "PAPER", "rename",
+    "scripts/evaluate_hypersigma.py", "PAPER_CANON §1 drops 'Cosine'",
+    "EXECUTED phase 4. " + _P5 + "coffe/cli/evaluate_hypersigma.py",
+    True)
+rec("scripts/run_cosine_eval.sh", "PAPER", "rename", "scripts/run_eval.sh",
+    "PAPER_CANON §1 drops 'Cosine' from script names",
+    "EXECUTED phase 4.", True)
+rec("scripts/run_trento_cosine_eval.sh", "PAPER", "rename",
+    "scripts/run_eval_trento.sh", "PAPER_CANON §1 drops 'Cosine'",
+    "EXECUTED phase 4.", True)
+rec("docs/COSINE_VARIANT.md", "INFRA", "rename", "docs/EVAL_PROTOCOL.md",
+    "'Cosine' in a doc name is retired by PAPER_CANON §1; protocol is "
+    "Euclidean NCM",
+    "EXECUTED phase 4, with the unverifiable content dropped (it documented a "
+    "DenseSimilarity variant absent from this release, plus invented "
+    "accuracies). Full rewrite still phase 8.", True)
+rec("docs/ENHANCED_PRETRAINING.md", "INFRA", "rename", "docs/PRETRAINING.md",
+    "objective 'enhanced' -> 'simmim' per PAPER_CANON §1",
+    "EXECUTED phase 4, with the superseded multi-task/denoising description "
+    "dropped (that code no longer exists). Full rewrite still phase 8.",
+    True)
+rec("tests/test_pretrain_enhanced.py", "INFRA", "rename",
+    "tests/test_pretrain_simmim.py",
+    "objective 'enhanced' -> 'simmim' per PAPER_CANON §1; test-file basename",
+    "EXECUTED phase 4 (not in the phase-1 rename list; added there because the "
+    "stale-vocabulary grep covers test filenames too).", True)
+
+# The 27 configs moved into configs/{coffe,mft,hypersigma}/ per PAPER_CANON §9.
+# They had rule-based `keep` records at their old paths; recording the rename
+# here keeps the ledger a complete history rather than a snapshot of survivors.
+_CONFIG_RENAMES = {
+    "configs/pretrain/houston_pretrain_enhanced.yaml": "configs/coffe/houston_simmim.yaml",
+    "configs/pretrain/trento_pretrain_enhanced.yaml": "configs/coffe/trento_simmim.yaml",
+    "configs/pretrain/muufl_pretrain_enhanced.yaml": "configs/coffe/muufl_simmim.yaml",
+    "configs/pretrain/houston_pretrain_hsi_only.yaml": "configs/coffe/houston_simmim_hsi.yaml",
+    "configs/pretrain/trento_pretrain_hsi_only.yaml": "configs/coffe/trento_simmim_hsi.yaml",
+    "configs/pretrain/muufl_pretrain_hsi_only.yaml": "configs/coffe/muufl_simmim_hsi.yaml",
+    "configs/pretrain/houston_pretrain_mae.yaml": "configs/coffe/houston_mae.yaml",
+    "configs/pretrain/trento_pretrain_mae.yaml": "configs/coffe/trento_mae.yaml",
+    "configs/pretrain/muufl_pretrain_mae.yaml": "configs/coffe/muufl_mae.yaml",
+    "configs/pretrain/houston_pretrain_mae_hsi_only.yaml": "configs/coffe/houston_mae_hsi.yaml",
+    "configs/pretrain/trento_pretrain_mae_hsi_only.yaml": "configs/coffe/trento_mae_hsi.yaml",
+    "configs/pretrain/muufl_pretrain_mae_hsi_only.yaml": "configs/coffe/muufl_mae_hsi.yaml",
+    "configs/pretrain/mft_original_houston_spatial.yaml": "configs/mft/houston_simmim_token.yaml",
+    "configs/pretrain/mft_original_trento_spatial.yaml": "configs/mft/trento_simmim_token.yaml",
+    "configs/pretrain/mft_original_muufl_spatial.yaml": "configs/mft/muufl_simmim_token.yaml",
+    "configs/pretrain/mft_original_houston_mae.yaml": "configs/mft/houston_mae.yaml",
+    "configs/pretrain/mft_original_trento_mae.yaml": "configs/mft/trento_mae.yaml",
+    "configs/pretrain/mft_original_muufl_mae.yaml": "configs/mft/muufl_mae.yaml",
+    "configs/pretrain/hypersigma_houston_adapt.yaml": "configs/hypersigma/houston_patchnative_joint_sem.yaml",
+    "configs/pretrain/hypersigma_trento_adapt.yaml": "configs/hypersigma/trento_patchnative_joint_sem.yaml",
+    "configs/pretrain/hypersigma_muufl_adapt.yaml": "configs/hypersigma/muufl_patchnative_joint_sem.yaml",
+    "configs/pretrain/hypersigma_houston_adapt_pca100.yaml": "configs/hypersigma/houston_patchnative_pca100_joint_sem.yaml",
+    "configs/pretrain/hypersigma_houston_adapt_native_sem.yaml": "configs/hypersigma/houston_backbonenative_upscale_sem_only.yaml",
+    "configs/pretrain/hypersigma_houston_adapt_native_sem_pad.yaml": "configs/hypersigma/houston_backbonenative_pad_sem_only.yaml",
+    "configs/pretrain/hypersigma_trento_adapt_native_sem_pad.yaml": "configs/hypersigma/trento_backbonenative_pad_sem_only.yaml",
+    "configs/pretrain/hypersigma_muufl_adapt_native_sem_pad.yaml": "configs/hypersigma/muufl_backbonenative_pad_sem_only.yaml",
+}
+for _old, _new in _CONFIG_RENAMES.items():
+    rec(_old, "PAPER", "rename", _new,
+        "PAPER_CANON §9 config layout: configs/{coffe,mft,hypersigma}/",
+        "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; "
+        "every mask rate, schedule, seed and paths: value is byte-identical to the "
+        "pre-rename file. Full table in CHANGES.md.", True)
+
+# Companion records at the phase-4 paths, so the phase-5 package move inherits
+# the evidence instead of falling through to the generic path rules.
+rec("models/coffe.py", "PAPER", "move", "coffe/models/coffe.py",
+    "renamed from models/mft_cpea_cosine.py in phase 4 (PAPER_CANON §1)",
+    "carries the live lambda/class-token adaptation of D3 "
+    "(CoFFE.eval_patch_embeddings) and the DEAD forward_episode (audit R10)")
+rec("models/hypersigma/few_shot.py", "PAPER", "move",
+    "coffe/models/hypersigma/few_shot.py",
+    "renamed from models/hypersigma/hypersigma_cosine.py in phase 4", "")
+rec("pretrain/simmim.py", "PAPER", "move", "coffe/pretrain/simmim.py",
+    "renamed from pretrain/masked_modeling_enhanced.py in phase 4", "")
+rec("scripts/evaluate.py", "PAPER", "move", "coffe/cli/evaluate.py",
+    "renamed from scripts/evaluate_cosine.py in phase 4",
+    "live AA/kappa maths, live fix_state_dict_keys, live episode loop")
+rec("scripts/pretrain.py", "PAPER", "move", "coffe/cli/pretrain.py",
+    "renamed from scripts/pretrain_enhanced.py in phase 4", "")
+rec("scripts/evaluate_hypersigma.py", "PAPER", "move",
+    "coffe/cli/evaluate_hypersigma.py",
+    "renamed from scripts/evaluate_hypersigma_cosine.py in phase 4", "")
+rec("docs/PRETRAINING.md", "INFRA", "keep", None,
+    "renamed from docs/ENHANCED_PRETRAINING.md in phase 4 and rewritten: the "
+    "old content documented weighted multi-task objectives, "
+    "GaussianNoiseAugmentation and LiDARMasking, none of which exist in the "
+    "tree", "full release rewrite in phase 8")
+rec("docs/EVAL_PROTOCOL.md", "INFRA", "keep", None,
+    "renamed from docs/COSINE_VARIANT.md in phase 4 and rewritten: the old "
+    "content compared against a DenseSimilarity variant absent from this "
+    "release and quoted accuracies matching no run in experiments/",
+    "full release rewrite in phase 8")
+rec("tests/test_compat.py", "INFRA", "keep", None,
+    "phase-4 tests for the legacy-vocabulary alias layer (PAPER_CANON §7.3)", "")
+rec("tools/refactor/apply_renames.py", "INFRA", "keep", None,
+    "phase-4 rename migration tool: holds the old->new table, so it "
+    "legitimately spells the retired names", "")
+rec("coffe_compat.py", "INFRA", "move", "coffe/compat.py",
+    "phase-4 legacy-vocabulary alias layer (PAPER_CANON §7.3): the one place "
+    "allowed to spell the retired names", "moves with the package in phase 5")
+
 RULES = [
     ("third_party/", "VENDORED", "keep",
      "PAPER_CANON §7.4: vendored, contents never modified"),
@@ -290,6 +433,11 @@ NOTE = (
     " | phase-3 gate 2026-08-31: the remaining 23 delete records approved by"
     " Nikola in four groups (notebook dups, dead code, superseded scripts,"
     " setup.py + utils/checkpoints.py); all 24 deletes and 18 archives executed."
+    " | phase 4 2026-09-01: the PAPER_CANON §1 renames executed (basenames"
+    " only; the move into a coffe/ package is phase 5). configs/ was"
+    " reorganised into configs/{coffe,mft,hypersigma}/ per §9 - those 26 files"
+    " had rule-based 'keep' records, so the ledger shows them only at their new"
+    " paths; the full old->new table is CHANGES.md."
 )
 
 # Which phase carried out each already-executed verdict. Such a path is no
@@ -299,7 +447,7 @@ NOTE = (
 # deletes and archives; **a later phase that carries out ``rename``/``move``
 # records must add its verdict here**, or ``main()`` exits non-zero rather than
 # letting the record drop out of the ledger.
-EXECUTED_IN_PHASE = {"delete": 3, "archive": 3}
+EXECUTED_IN_PHASE = {"delete": 3, "archive": 3, "rename": 4}
 LEDGER_THROUGH_PHASE = max(EXECUTED_IN_PHASE.values())
 
 

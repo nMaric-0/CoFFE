@@ -47,12 +47,12 @@ EXPERIMENT_DIRS = [
 
 # Base configs referenced by these families, embedded verbatim for provenance.
 BASE_CONFIGS = [
-    "configs/pretrain/hypersigma_houston_adapt.yaml",
-    "configs/pretrain/hypersigma_houston_adapt_native_sem.yaml",
-    "configs/pretrain/hypersigma_houston_adapt_native_sem_pad.yaml",
-    "configs/pretrain/hypersigma_houston_adapt_pca100.yaml",
-    "configs/pretrain/hypersigma_muufl_adapt_native_sem_pad.yaml",
-    "configs/pretrain/hypersigma_trento_adapt_native_sem_pad.yaml",
+    "configs/hypersigma/houston_patchnative_joint_sem.yaml",
+    "configs/hypersigma/houston_backbonenative_upscale_sem_only.yaml",
+    "configs/hypersigma/houston_backbonenative_pad_sem_only.yaml",
+    "configs/hypersigma/houston_patchnative_pca100_joint_sem.yaml",
+    "configs/hypersigma/muufl_backbonenative_pad_sem_only.yaml",
+    "configs/hypersigma/trento_backbonenative_pad_sem_only.yaml",
 ]
 
 

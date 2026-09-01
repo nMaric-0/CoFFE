@@ -21,6 +21,7 @@ against G2/G3) | G5 masking semantics
 from __future__ import annotations
 
 import json
+import tempfile
 from pathlib import Path
 from typing import Any, Dict
 
@@ -35,6 +36,7 @@ from ._harness import (
     OBJECTIVES,
     SCENES,
     assignment_hash,
+    build_all_scenes,
     build_eval_model,
     build_hypersigma_model,
     build_pretrain_model,
@@ -119,7 +121,7 @@ def test_scene_shape_faithful(scene_root: Path, scene_name: str) -> None:
 def test_coffe_param_count_matches_canon() -> None:
     """PAPER_CANON §2: the Houston eval encoder has 579,328 parameters (±1%)."""
     set_determinism()
-    model = build_eval_model(SCENES["houston_mini"], model_name="mft_cpea", use_aux=True)
+    model = build_eval_model(SCENES["houston_mini"], model_name="coffe", use_aux=True)
     count = sum(p.numel() for p in model.parameters())
     assert count == pytest.approx(579_328, rel=0.01), count
 
@@ -131,7 +133,7 @@ def test_coffe_param_count_matches_canon() -> None:
 
 def _g1_cases():
     for objective_id in OBJECTIVES:
-        for model_name in ("mft_cpea", "mft_original"):
+        for model_name in ("coffe", "mft_original"):
             if model_name == "mft_original" and objective_id not in MFT_OBJECTIVES:
                 continue
             yield pytest.param(model_name, objective_id, id=f"{model_name}-{objective_id}")
@@ -141,7 +143,7 @@ def _g1_cases():
 def test_g1_pretrain_loss_trajectory(
     scene_root: Path, tmp_path: Path, model_name: str, objective_id: str
 ) -> None:
-    from scripts.pretrain_enhanced import run_pretrain
+    from scripts.pretrain import run_pretrain
 
     golden = _golden("g1_pretrain_loss")
     key = f"{model_name}:{objective_id}"
@@ -160,6 +162,55 @@ def test_g1_pretrain_loss_trajectory(
         assert_close(float(actual), want, f"G1[{key}] epoch {epoch} mean loss")
 
 
+def test_g1_legacy_vocabulary_config_trains_identically() -> None:
+    """A frozen-style config (model.name "mft_cpea", objective "enhanced") must
+    produce the *same loss trajectory* as its canonical twin.
+
+    The rest of the harness speaks canonical vocabulary, so without this the
+    only thing pinning the compat layer end-to-end would be its unit tests
+    (PAPER_CANON §7.3: frozen experiment trees must stay runnable).
+    """
+    import warnings
+
+    import coffe_compat
+    from scripts.pretrain import run_pretrain
+
+    # The deprecation cache is process-global; clear it so this test does not
+    # depend on which tests ran before it.
+    coffe_compat.reset_deprecation_state()
+
+    golden = _golden("g1_pretrain_loss")
+    objective_id = "simmim_token"
+    expected = golden["entries"][f"coffe:{objective_id}"]
+    spec = SCENES[golden["scene"]]
+
+    with tempfile.TemporaryDirectory(prefix="coffe-legacy-") as tmp:
+        tmp_path = Path(tmp)
+        scene_root = tmp_path / "raw"
+        build_all_scenes(scene_root)
+
+        cfg = pretrain_config(spec, objective_id, data_root=scene_root, model_name="coffe")
+        # Rewrite exactly the two keys a frozen pretrain_config.yaml carries in
+        # the retired vocabulary. Nothing else changes.
+        cfg["model"]["name"] = "mft_cpea"
+        cfg["pretrain"]["objective"] = "enhanced"
+
+        set_determinism()
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always", DeprecationWarning)
+            history = run_pretrain(cfg, str(tmp_path / "checkpoints"), str(tmp_path / "log"))
+
+    for epoch, (actual, want) in enumerate(
+        zip(history["train_losses"], expected["train_losses"]), start=1
+    ):
+        assert_close(float(actual), want, f"G1[legacy-vocab] epoch {epoch} mean loss")
+
+    messages = [str(w.message) for w in caught if issubclass(w.category, DeprecationWarning)]
+    assert any("mft_cpea" in m for m in messages), "no deprecation for the legacy model.name"
+    assert any("enhanced" in m for m in messages), "no deprecation for the legacy objective"
+    coffe_compat.reset_deprecation_state()
+
+
 # ----------------------------------------------------------------------
 # G2 — encoder forward + init
 # ----------------------------------------------------------------------
@@ -168,8 +219,8 @@ def test_g1_pretrain_loss_trajectory(
 @pytest.mark.parametrize(
     "key,model_name,use_aux",
     [
-        ("coffe_hsi_lidar", "mft_cpea", True),
-        ("coffe_hsi", "mft_cpea", False),
+        ("coffe_hsi_lidar", "coffe", True),
+        ("coffe_hsi", "coffe", False),
         ("mft_original", "mft_original", True),
     ],
 )
@@ -218,8 +269,8 @@ def test_g2_hypersigma_forward(tmp_path: Path, regime: str) -> None:
 
 
 def test_dead_forward_episode_still_matches_live_path(scene_root: Path) -> None:
-    """PAPER_CANON §8 D3: ``MFTCPEACosine.forward_episode`` is dead code — the
-    live eval path is the inlined loop in ``scripts/evaluate_cosine.py:387-400``.
+    """PAPER_CANON §8 D3: ``CoFFE.forward_episode`` is dead code — the
+    live eval path is the inlined loop in ``scripts/evaluate.py:387-400``.
 
     The two are meant to be equivalent. This test records that they still are,
     so a phase that edits one and not the other is caught (and so that pruning
@@ -227,7 +278,7 @@ def test_dead_forward_episode_still_matches_live_path(scene_root: Path) -> None:
     """
     spec = SCENES["houston_mini"]
     set_determinism()
-    model = build_eval_model(spec, model_name="mft_cpea", use_aux=True)
+    model = build_eval_model(spec, model_name="coffe", use_aux=True)
     model.distance_metric = "euclidean"
 
     n_way, k_shot, k_query = 4, 2, 3
@@ -269,7 +320,7 @@ def test_g3_episodic_eval(scene_root: Path, key: str) -> None:
     (the live key-mapping code, PAPER_CANON §8 D15), so breaking state_dict keys
     or loader plumbing fails here.
     """
-    from scripts.evaluate_cosine import run_evaluation
+    from scripts.evaluate import run_evaluation
 
     golden = _golden("g3_episodic_eval")
     expected = golden["entries"][key]
@@ -339,7 +390,7 @@ def test_g4_fixture_keys_load_without_gaps(key: str) -> None:
     encoder tensor shows up as *missing* (the rename left a parameter unloaded)
     or as an unexplained *unexpected* key.
     """
-    from scripts.evaluate_cosine import (
+    from scripts.evaluate import (
         fix_state_dict_keys,
         load_checkpoint_with_key_mapping,
     )

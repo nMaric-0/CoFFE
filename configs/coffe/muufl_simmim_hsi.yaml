@@ -1,0 +1,102 @@
+# MUUFL HSI-only Pretraining Configuration (no LiDAR/aux)
+#
+# Ablation of CoFFE with LiDAR removed. Setting
+# model.use_aux=false makes the model HSI-only: the 2 aux/LiDAR bands are never
+# concatenated, so one token per pixel carries the 64 HSI bands alone. The
+# decoder reconstructs a 64-value per-pixel vector; loss is MSE over the
+# masked entries.
+#
+# Identical recipe to muufl_simmim.yaml (2 heads / 2 layers,
+# lambda 0.5, band-only masking, AMP off, deterministic) so the result is a
+# controlled HSI-only-vs-HSI+LiDAR comparison.
+#
+# Run with:
+#   python scripts/pretrain.py --config configs/coffe/muufl_simmim_hsi.yaml
+
+# Model architecture
+#
+# NOTE ON THE REGIME. This is a per-scene SimMIM *base* config: the mask-rate
+# pair below is band 0.9 / token 0.0 -> **SimMIM band**, HSI-only. It is not a per-cell reproduction
+# recipe — the paper's Table 2 cells use per-cell rates (0.85 or 0.75 band,
+# 0.75 token; PAPER_CANON §8 D19), and the 5-seed significance runs clone their
+# rates at runtime from the canonical run dir
+# (scripts/sig_significance_config.py). Set band_mask_ratio /
+# spatial_mask_ratio explicitly to reproduce a specific cell.
+model:
+  name: "coffe"
+  embed_dim: 128
+  num_heads: 2
+  num_layers: 2
+  lambda_factor: 0.5
+  dropout: 0.1
+
+  # HSI-only: ignore aux/LiDAR bands entirely.
+  use_aux: false
+
+  # Projection head (trained for few-shot transfer)
+  use_projection: true
+  proj_hidden_dim: 512
+  proj_num_layers: 1
+  proj_l2_normalize: true
+
+# Data settings
+data:
+  patch_size: 11
+  num_workers: 4
+  # MUUFL-specific (2 LiDAR bands, ignored when use_aux=false)
+  hsi_channels: 64
+  aux_channels: 2
+
+# Pretraining settings
+pretrain:
+  # Single dataset
+  datasets:
+    - muufl
+
+  # Objective: SimMIM-style in-place masked reconstruction. Frozen configs
+  # omit this key (it defaulted to "enhanced"); stated explicitly here.
+  objective: "simmim"
+
+  # Training schedule
+  epochs: 1500
+  batch_size: 64
+  val_split: 0.0
+
+  # Optimizer (MAE settings)
+  lr: 1.5e-4
+  min_lr: 1.0e-6
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+
+  # Decoder
+  decoder_hidden_dim: 256
+
+  # Band-only masking (the Houston HSI+LiDAR config is token-only; these two
+  # regimes are not interchangeable - see the header note). With use_aux=false
+  # the bands are HSI channels only.
+  band_mask_ratio: 0.9
+  spatial_mask_ratio: 0.0
+
+  # Center-weighted reconstruction loss (Gaussian sigma).
+  recon_center_sigma: 1.0
+
+  # Center-weighted prototype pooling (Gaussian sigma, used at evaluation).
+  pool_center_sigma: 1.0
+
+  # Checkpointing
+  save_interval: 25
+  val_interval: 3000
+  log_interval: 1
+  use_amp: false
+
+# Paths - unique for HSI-only MUUFL pretraining
+paths:
+  data_root: "./data/raw"
+  checkpoint_dir: "./checkpoints/pretrained/muufl_hsi_only"
+  log_dir: "./logs/pretrain/muufl_hsi_only"
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: true

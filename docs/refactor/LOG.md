@@ -636,3 +636,408 @@ check of the 79 → 72 closure delta agreed with the tool's measured answer.
 
 No behavior touched: this addendum changes only `tools/refactor/`,
 `PAPER_CANON.md` §8 (D6, D19), `docs/refactor/{LOG.md,manifest.json}`.
+
+---
+
+## Phase 4 — rename to paper canon (CoFFE / Euclidean NCM / SimMIM regimes)
+
+Every name in the release now says what the paper says (PAPER_CANON §1), and
+nothing that reads a frozen artifact broke. **No computed number moved**: the
+equivalence goldens were byte-identical before and after every rename group.
+
+### The compat layer, built first
+
+`coffe_compat.py` (repo root; becomes `coffe/compat.py` in phase 5) holds the
+four alias maps — `model.name`, `pretrain.objective`, masking-regime ids,
+`results.json` `model_type` — plus `normalize_*()` helpers that map a legacy
+value and emit **one** `DeprecationWarning` per (value, origin), naming the
+artifact it came from. Unknown and canonical values pass through untouched and
+silent: validation stays with the caller, so the layer cannot change which
+inputs a script accepts. Legacy class names resolve lazily through the module
+`__getattr__`, so importing a helper never pulls in torch.
+
+Wired into every reader of a frozen artifact **before** any writer changed:
+`scripts/pretrain.py` and `scripts/evaluate.py` (the `model.name` /
+`objective` dispatch chains), `lib/eval_runner.py` (the architecture auto-load
+from `pretrain_config.yaml`), `scripts/compile_results.py` and
+`scripts/build_experiment_metadata.py` (`model_type`). Writers now emit
+canonical values only — the D16 ordering requirement.
+
+The retired class names also still import **from the packages they used to
+live in** — `from models import MFTCPEACosine`, `from models.hypersigma import
+HyperSIGMACosine`, `from pretrain import EnhancedMaskedSpectralSpatialModel` —
+via a module `__getattr__` that defers to the same table, so notebooks outside
+this repo keep working. The alias *is* the canonical class.
+
+`tests/test_compat.py` (25 tests) pins: every alias round-trips; canonical
+values are silent; a frozen-style config dict builds a model with the same
+state_dict keys, parameter count and λ as its canonical twin; the warning fires
+once per origin; each legacy class alias *is* the canonical class, from the
+compat module and from its original package.
+
+### What was renamed
+
+Full old→new table in **`CHANGES.md`** (new, at the repo root). In brief:
+4 classes, 2 methods/arguments, 11 files (9 by `git mv`; the two `docs/`
+files were rewritten in the same commit, so git records them as delete+add),
+the whole `configs/` tree
+into `configs/{coffe,mft,hypersigma}/`, two config values, five categories of
+written label, and the prose terminology ("prototypical network" →
+nearest-class-mean, "5-way" → N-way, "Cosine" out of every name and title).
+
+The mechanical part ran through a new, reviewable tool,
+`tools/refactor/apply_renames.py` (dry-run by default): file renames + path
+references, module paths, and word-boundary symbol renames — 78 files, 342
+substitutions. It deliberately does **not** touch config *values*, prose, or
+`nn.Module` attributes; those were hand-edited, because a word-boundary rewrite
+cannot tell a frozen directory name from vocabulary.
+
+### D3's phase-4 obligations, discharged
+
+- `CoFFE.adapt_embeddings` → **`CoFFE.eval_patch_embeddings`**, and its
+  `lambda_factor` argument / `self.lambda_factor` attribute →
+  **`cls_token_weight`**. Both are safe under §7.2 (λ is a plain float, in none
+  of the 42 state_dict keys), and G4 proves it: the pre-rename fixture still
+  loads.
+- The method's docstring now states the real eval feature,
+  `z = mean_j(patch_emb_j) + 0.5·cls_emb`, says it is the live path, and marks
+  the `renormalize` branch inert at eval. `docs/EVAL_PROTOCOL.md` and
+  `PROJECT_OVERVIEW.md` say the same.
+- `forward_episode` is now labelled dead in its own docstring (audit R10).
+- **The `lambda_factor` CONFIG KEY and `--lambda-factor` flag are unchanged.**
+  Frozen `pretrain_config.yaml` / `eval_config.json` record λ under that name
+  and `lib/eval_runner.py` reads it back; renaming the key would break the
+  frozen tree. The honest name is the code-level one; the boundary is a
+  one-line mapping with a comment at each of the two call sites.
+
+### Docs
+
+`docs/ENHANCED_PRETRAINING.md` → **`docs/PRETRAINING.md`** and
+`docs/COSINE_VARIANT.md` → **`docs/EVAL_PROTOCOL.md`** (uppercase, per the
+manifest's targets and the rest of `docs/`; the skill's illustrative lowercase
+names were not used). Both were **rewritten rather than relabelled**, because
+their content was false, not merely misnamed — see "Surprises" below. They are
+now short and verified against the code; the full release rewrite stays phase 8.
+
+`README.md` took the paper title and lost its wrong claims (cosine/prototypical
+framing, `n_way: 5` example, the missing MFT and HyperSIGMA routes).
+`docs/presentation/{RESULTS.md,RESULTS.json}` were relabelled with exactly the
+mapping `compile_results.py` now emits, and the JSON was checked programmatically:
+**every number identical**. Notebook *sources* were edited as JSON; stored
+outputs were left alone (they are execution records of past runs and still show
+the old log lines).
+
+### Verification
+
+- pytest `-m "not gpu and not data"`: **120 passed** (94 baseline + 25 compat
+  tests + 1 new end-to-end legacy-vocabulary equivalence test), 0 failed.
+- Equivalence harness: **IDENTICAL** on G1/G2/G3/G5, and **G4 — the pre-rename
+  checkpoint fixture — loads through the renamed classes**. Re-run after each
+  rename group, not just at the end.
+- The harness itself moved to canonical vocabulary (`objective: "simmim"`,
+  `model_name: "coffe"`), which renamed five entry keys in
+  `golden/g1_pretrain_loss.json`. Verified mechanically that the mapped entries
+  and every loss value are unchanged; the legacy path it used to exercise is now
+  covered by `tests/test_compat.py` instead.
+- Every config was diffed key-by-key against its pre-rename twin: the only
+  value changes are `model.name` (12×) and `pretrain.objective` (9×, six of them
+  making the previously-implicit default explicit). **No mask rate, schedule,
+  path or seed moved.**
+- CLI smoke on the renamed entry points: all `--help` clean.
+- `tools/refactor/build_manifest.py` gained `"rename": 4` in
+  `EXECUTED_IN_PHASE`, so the ledger keeps every executed rename as a record —
+  the 11 code/doc files **and the 26 configs**, which previously had only
+  rule-based `keep` records and would otherwise have vanished from the history
+  of a phase whose whole job is renames (**276 records**, 37 of them executed in
+  phase 4). Companion `move` records at the new paths carry the evidence forward
+  to phase 5. `approved` stays `false` on all 37: canon §1 licenses the renames,
+  but the flag is the gate's to set — the 42 approved records are still exactly
+  the phase-3 gate's 24 deletes and 18 archives.
+- `closure.py`'s root set was re-pointed at the renamed CLIs and tests, and
+  re-run: **paper closure 73**, whose only difference from the phase-1
+  baseline's 79 is the 7 phase-3-pruned island files leaving and
+  `coffe_compat.py` arriving. Nothing else entered or left the paper's reachable
+  set — an independent check that the rename moved names, not edges.
+
+  ```bash
+  .venv/bin/python tools/refactor/closure.py --out /tmp/closure_p4.json --force
+  ```
+
+### The verifier caught four stale references; all fixed
+
+The first battery pass returned **FAIL** on the stale-vocabulary step, and one
+of its hits was a genuine breakage, not vocabulary:
+
+- `tools/refactor/lambda_probe.py:39` still did
+  `from scripts.evaluate_cosine import ...` — `ModuleNotFoundError`. **Cause:
+  the migration tool excluded its own directory** (`tools/refactor/` was on
+  `EXCLUDED_FILES` because those files legitimately *record* the old names),
+  which also shielded the one file in there that *imports* live code. Fixed by
+  hand, and the lesson is in the exclusion list below: a stale reference inside
+  an excluded file is a broken import, not a cosmetic issue.
+- `configs/eval/hypersigma_houston.yaml:3` — dotted reference
+  `scripts/evaluate_hypersigma_cosine.run_evaluation` (the path rule matched
+  only the `.py` spelling).
+- `tools/refactor/closure.py:58,63` — the root set still named the pre-rename
+  CLIs and `tests/test_pretrain_enhanced.py`.
+- Cosmetic but real: `scripts/run_eval.sh`'s printed banner still said "Cosine
+  Similarity Few-Shot Evaluation" while its default metric is euclidean, and
+  `models/mft_original.py`'s module and class docstring titles still said
+  "cosine few-shot head" after the class lost the suffix.
+
+Stale `__pycache__/*.pyc` for the pre-rename modules were also deleted (nothing
+under `__pycache__` is tracked).
+
+### canon-reviewer: FAIL on the first pass — two real defects of mine
+
+Both were introduced by this phase and are fixed:
+
+1. **`tools/refactor/lambda_probe.py:48` — a rename applied to the wrong side of
+   the boundary.** `MODEL_CFG` is a *config dict* handed to
+   `load_model_with_checkpoint`, which reads `model_config.get("lambda_factor")`;
+   renaming the key there would have silently built the probe's model with
+   λ = 2.0 instead of the run's 0.5, contradicting its own "exactly as the run's
+   eval_config.json records them" comment. The key is back to `lambda_factor` —
+   which is precisely the distinction CHANGES.md draws: the *Python* argument was
+   renamed, the *config key* was not.
+2. **Stored notebook outputs were rewritten, not just sources.** `apply_renames`
+   treats `.ipynb` as text, so three notebooks had past runs' stdout and frozen
+   metadata rewritten — `pretrain.ipynb` showed `"base_config_path":
+   "configs/coffe/houston_simmim.yaml"` beside a `git_sha` at which that path did
+   not exist. That falsifies an execution record, and contradicted this log's own
+   claim. Every `outputs` / `execution_count` field was restored from HEAD, and a
+   check now confirms **each notebook differs from HEAD only in
+   `cells[*].source`**.
+
+Its non-blocking items are handled too: the "Cosine" titles left in
+`lib/eval_runner.run_evaluation`, `models/mft_original`'s module/class
+docstrings and `test_cosine_wrapper_modes`; eleven config headers still
+pointing at `*_pretrain_enhanced.yaml`; CHANGES.md's "any default value" bullet
+versus the four output-path fallbacks it had itself listed (now stated as an
+explicit, reasoned exception); the `git mv` claim for the two rewritten docs;
+`docs/EVAL_PROTOCOL.md` asserting 1000 episodes for every route when D18 records
+2000 for Table 3; `docs/PRETRAINING.md`'s unverifiable "whatever the last run
+used" provenance; and generic manifest evidence on the new `docs/` records.
+
+Two more of its findings are recorded rather than acted on:
+
+- **The 11 phase-4 rename records had `"approved": true` — set by me, not by a
+  gate.** Reverted to `false` on all of them. Canon §1 mandates the renames, so
+  execution is licensed by the canon; the approval flag is Nikola's and belongs
+  to this gate. `executed_in_phase: 4` is what records that they happened.
+  (The 42 approved records are still exactly the phase-3 gate's 24 deletes and
+  18 archives.)
+- **`scripts/compile_results.py` labels MFT-control runs `"CoFFE"`.** Its
+  `classify()` has always lumped both single-metric routes together (the label
+  used to read `"MFT-CPEA"`), so this is not a regression — but the label is now
+  a specific model's name, and the evaluator writes a `model_type` that could
+  disambiguate. Not changed: it alters what a regenerated `RESULTS.json` says
+  about which model produced a row, which is a classification change, not a
+  rename. Gate question 5.
+
+### Coverage the reviewer was right to want
+
+Switching the harness to canonical vocabulary left the legacy path pinned only
+by unit tests. `test_g1_legacy_vocabulary_config_trains_identically` now takes
+the canonical SimMIM-token config, rewrites exactly the two keys a frozen
+`pretrain_config.yaml` carries in the old vocabulary (`model.name: "mft_cpea"`,
+`objective: "enhanced"`), runs it end-to-end through
+`scripts.pretrain.run_pretrain`, and asserts the **loss trajectory matches the
+G1 golden to 8 decimals** and that both deprecations fire.
+
+**One tooling file was edited, disclosed here — and it is `.gitignore`d, so it
+is NOT in the commit and cannot be reviewed from the diff.**
+`.claude/agents/verifier.md` step 6 (the stale-vocabulary grep) now: greps for
+the four retired class names, "prototypical" and "5-way" as well as the
+`cpea` family; delegates its exclusion set to the new
+"Where the retired names still appear" table in `CHANGES.md` (which *is*
+committed and reviewable) plus `__pycache__/` and stored `.ipynb` outputs; and
+states that "a stale *reference* there is a likely broken import, not a
+cosmetic issue". Without an exclusion set,
+`tools/refactor/build_manifest.py`'s 16 ledger entries make the grep
+permanently red and the check meaningless — but note the second review pass
+still found stale references the widened grep missed
+(`tests/equivalence/_harness.py`, four hypersigma config headers), so the check
+is under-tight, not over-tight. Nikola should read the new step-6 wording
+directly, since git will not show it.
+
+### Surprises reported, not fixed (hard rule 7)
+
+1. **D20 (new) — for two Trento cells the ± column was measured at a different
+   band mask rate than the mean.** `_ENHANCED_CANONICAL`
+   (`sig_significance_config.py:66-74`), which supplies the mask rates cloned
+   into the 5-seed significance runs, names `trento_enhanced_spectral_run1`
+   (band **0.75**) and `trento_enhanced_spectral_spatial_run1` (**0.75/0.75**).
+   `AUDIT.md` §3's Table-2 mapping says the *means* for those two cells come
+   from `trento_enhanced_spectral_run2` (**0.85**) and
+   `trento_enhanced_spectral_spatial_run2` (**0.85/0.75**). Checked all nine
+   canonical cells: the other seven match. Affects Table 2's Trento SimMIM band
+   HSI+LiDAR (90.32 ± 0.6) and SimMIM band+token HSI+LiDAR (92.50 ± 1.2) —
+   the numbers are what they are, but the ± is not the spread of the run that
+   produced the mean. Also note D19 verified `trento_enhanced_spectral_spatial_run2`
+   at 0.85/0.75 while the clone source is `run1`; both statements are true of
+   different directories. Reproduce:
+
+   ```bash
+   for d in trento_enhanced_spectral_run1 trento_enhanced_spectral_run2 \
+            trento_enhanced_spectral_spatial_run1 trento_enhanced_spectral_spatial_run2; do
+     grep -H 'band_mask_ratio\|spatial_mask_ratio' experiments/$d/pretrain_config.yaml
+   done
+   ```
+
+2. **The six per-scene SimMIM base configs do not share a regime, and five of
+   them carry a band rate no paper cell used.** Exactly one,
+   `configs/coffe/houston_simmim.yaml`, is 0.0/0.75 — which *is* canon §1's
+   SimMIM-token pair, the headline regime. The other five
+   (`houston_simmim_hsi`, both Trento, both MUUFL) are **0.9**/0.0, and 0.9 is a
+   band rate no Table 2 cell used: the cells are 0.85 or 0.75 (D19). They are
+   templates whose rates the significance runner overrides from the canonical
+   run dir, so nothing is wrong with any published number; but five of the six
+   reproduce no paper cell as written. That is why they are named for the
+   objective (`<scene>_simmim.yaml`) rather than a regime, and why each now
+   states its own pair in a header comment. Reproduce:
+
+   ```bash
+   for f in configs/coffe/*simmim*.yaml; do
+     printf '%-42s ' "$f"; grep -h 'band_mask_ratio:\|spatial_mask_ratio:' "$f" | tr -d ' \n'; echo
+   done
+   ```
+
+3. **`--distance-metric` still defaults to `cosine`.** PAPER_CANON §1 says
+   cosine must never be a default; §7.1 forbids changing what an unflagged run
+   computes. The default was left alone and documented at the flag, in
+   `docs/EVAL_PROTOCOL.md`, and in `CHANGES.md`. **Nikola's call** — see the
+   gate.
+
+4. **`docs/ENHANCED_PRETRAINING.md` documented an implementation that no longer
+   exists**: four weighted objectives (spatial 1.0 / spectral 0.5 / LiDAR 0.3 /
+   denoising 0.2), `GaussianNoiseAugmentation`, `LiDARMasking`, a
+   loss-weight-tuning section and a training schedule for them. Grep finds none
+   of those symbols anywhere in the tree; `pretrain/simmim.py`'s own docstring
+   records that the multi-mask/denoising design was replaced. Likewise
+   `docs/COSINE_VARIANT.md` compared against a DenseSimilarity-MLP model absent
+   from this release and quoted accuracies ("~50% / ~65% / ~70% OA") that
+   correspond to no run in `experiments/`. Both files were replaced with short,
+   verified documents rather than renamed onto false content.
+
+5. **`docs/presentation/RESULTS.json` is a much older generation than the tree.**
+   It records 33 kept / 6 excluded results; the compiler over today's
+   `experiments/` finds 858 / 9, and picks different representative runs. It was
+   only relabelled here, never regenerated — deciding which generation the
+   release ships is phase 8's, and the file is already flagged superseded by D2.
+
+### Second review pass
+
+`canon-reviewer` returned **FAIL** again on the corrected diff, for one factual
+error of mine that had propagated into two release documents: CHANGES.md and
+`docs/PRETRAINING.md` both said the base configs carry "Houston 0.0/0.75, Trento
+and MUUFL 0.9/0.0", which is wrong for `houston_simmim_hsi.yaml` — that one is
+0.9/0.0 too. Since D19 makes per-config mask rates load-bearing for
+reproduction, both now carry an explicit per-file table: **only
+`configs/coffe/houston_simmim.yaml` is token-masking; the other five are
+band-masking at 0.9.** The config headers themselves were already correct.
+
+Its non-blocking list is handled: the `_harness.py` docstring citing a deleted
+file, four hypersigma config headers naming pre-rename siblings, the
+now-self-contradictory "identical recipe … band-only masking" note in
+`houston_simmim_hsi.yaml`, a notebook source comment still saying
+`adapt_embeddings`, stale config references in
+`run_mft_original_mae_experiments.py` / `build_native_pca100_report.py` /
+`run_native_sem_pad_experiments.sh` / `PROJECT_OVERVIEW.md`, the false recipe
+claim in `scripts/adapt_hypersigma.py`'s docstring, `test_enhanced_model_*` →
+`test_simmim_model_*`, the "11 files (git mv)" shorthand, and the new legacy
+test's dependence on process-global warning state (it now resets it). The empty
+`configs/pretrain/` directory left behind by the moves was removed.
+
+A **third** pass found that the same mask-rate error I had corrected in
+CHANGES.md and `docs/PRETRAINING.md` was still sitting in this log's own
+Surprise #2 — including a second mistake, "none carries a paper rate", when
+`houston_simmim.yaml`'s 0.0/0.75 *is* canon §1's SimMIM-token pair. Surprise #2
+above is the corrected text. Its other items are fixed too: two shell-driver
+examples still passing `5`-way after the N-way edit, the `houston_simmim_hsi`
+comparability note (the two files also differ 10× in `lr` and 4× in
+`save_interval`, not only in masking), the same "identical recipe"
+claim in the two Houston MAE configs (their lr is 1.5e-4 against
+`houston_simmim.yaml`'s 1.5e-5), the "band-only, matching the proven Houston
+regime" line in all four band-masking configs that carried it, a dangling
+"the team's" and a self-referential schedule comment in `configs/mft/`,
+`tests/equivalence/fixtures/README.md` naming today's module for a pre-refactor
+run, "enhanced-pretraining" in `lib/pretrain_runner`'s docstring, two runner
+docstrings naming pre-rename config basenames, three `configs/mft/` headers
+still titled "Spatial" masking, a legacy regime word in `RESULTS.md` prose,
+both `(an ``CoFFE``)` instances, a half-edited paragraph in `pretrain.ipynb`,
+and the off-by-one counts in CHANGES.md, this log and the manifest note
+(**26** configs were renamed, not 27; 26 carry a `paths:` block, the eval config
+has none). The notebook-outputs invariant was re-checked after the last notebook
+edit and still holds.
+
+A **fourth** pass found that three of those claims had been written before the
+corresponding edit was complete — the Houston MAE configs, one of the four
+"proven Houston regime" lines, and the second `an ``CoFFE``` — plus a new
+inaccuracy of mine in `pretrain.ipynb` ("lengthen the schedule": the overrides
+in fact *shorten* it, 2000 epochs against the config's 3000, and double the
+batch). All are now actually done, and this paragraph describes the finished
+state. It also flagged three pre-existing claims that this phase's renaming had
+made newly misleading, now corrected: `scripts/run_eval.sh`'s "paper protocol"
+example (the script defaults to `k_query=30` / 600 episodes, not 100 / 1000),
+`scripts/run_eval_trento.sh`'s header (its built-in 8 heads / 4 layers /
+lambda 1.0 / k_query 19 / projection-on defaults are not the paper
+configuration), a stale "the base config uses 8 heads / 4 layers" in
+`PROJECT_OVERVIEW.md` (`configs/pretrain/base.yaml` was deleted in phase 3),
+and the "0.9 means ~90% of all values are hidden" comment sitting above
+`band_mask_ratio: 0.0` in `houston_simmim.yaml`.
+
+A **fifth** pass returned **CONCERNS with nothing blocking** and verified all
+eleven fixes present. Its remaining items are handled: `adapt_hypersigma.py`'s
+recipe line named two keys the HyperSIGMA pipeline does not have; CHANGES.md and
+`coffe_compat.py` said "writers emit canonical only" without disclosing
+`aggregate_significance.py`, which writes the significance experiment's own
+`group`/`variant` dir-name components (now an explicit exception);
+CHANGES.md's "none of the four directories exists" (two of the new fallbacks are
+the parent directories the configs write into); `PROJECT_OVERVIEW.md` asserting
+one `lr=1.5e-4` for both objectives and "Houston trains 3000 epochs" (D17), plus
+two retired regime words two lines below a bullet this phase had canonicalised;
+`docs/EVAL_PROTOCOL.md` saying the shell drivers "wrap this" without the caveat
+the same diff added to those scripts; `run_eval.sh`'s header claiming the paper
+protocol above non-paper episode defaults; and a `docs/PRETRAINING.md` snippet
+that called `torch.load` without importing torch and never loaded the state dict.
+
+Two of its observations are worth the gate's attention rather than a fix: the
+`models/hypersigma/few_shot.py` basename is the phase-4 skill's, not the
+manifest's original `hypersigma_fewshot.py` (the manifest was updated to match —
+ratify or reverse), and `.claude/agents/verifier.md` is `.gitignore`d, so the
+step-6 edit disclosed above cannot be reviewed from the commit.
+
+### Deviations from the phase-4 skill, stated for the record
+
+- Doc targets are `docs/PRETRAINING.md` / `docs/EVAL_PROTOCOL.md` (the
+  manifest's, and the convention of every other file in `docs/`), not the
+  skill's lowercase `docs/pretraining.md` / `docs/evaluation.md`.
+- The HyperSIGMA evaluator module is `models/hypersigma/few_shot.py` (the
+  skill's basename); the manifest's earlier `hypersigma_fewshot.py` target was
+  updated to match, since inside package `hypersigma/` the prefix is redundant.
+- `tests/test_pretrain_enhanced.py` → `tests/test_pretrain_simmim.py` was added
+  to the rename set (not in the phase-1 list) because the stale-vocabulary grep
+  covers test filenames.
+- No `configs/coffe/*band_token*` file was written, so D19's conditional
+  phase-4 obligation ("must carry the rate of the cell it reproduces") did not
+  fire. Per-cell reproduction configs are still owed; see the gate.
+
+### Open questions for the gate
+
+1. **D20** — accept as a documented discrepancy (reproduction docs state which
+   run produced the mean and which produced the ±), or do something else?
+   Nothing was changed.
+2. **`--distance-metric` default** — leave at `cosine` (behaviour frozen, as
+   now) or flip to `euclidean` (canon §1, but it changes what an unflagged
+   invocation computes)? A flip is a one-line change plus a golden re-check.
+3. **Per-cell reproduction configs** — should phase 5/8 add
+   `configs/coffe/<scene>_simmim_{band,token,band_token}[_hsi].yaml` with each
+   cell's exact rates (Houston band+token 0.75/0.75, the rest per D19), so the
+   base configs stop being the only entry point?
+4. **`docs/presentation/RESULTS.{md,json}`** — regenerate against today's
+   `experiments/` at some point, or freeze and mark superseded?
+5. **`compile_results.py`'s model label** — should `classify()` split CoFFE from
+   the MFT control using the `model_type` the evaluator writes, instead of
+   labelling every single-metric run `"CoFFE"`? That changes what a regenerated
+   `RESULTS.json` claims, so it was not done here.

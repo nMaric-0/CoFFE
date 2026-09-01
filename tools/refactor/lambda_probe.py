@@ -6,7 +6,7 @@ Removing it flips 5.4 % of query predictions and moves OA by -1.70 pp.
 Requires data/raw/ + a real checkpoint, so it is a `-m data` style check,
 not part of the default battery.
 
-Replicates scripts/evaluate_cosine.py's episode path exactly (CPU), for a real
+Replicates scripts/evaluate.py's episode path exactly (CPU), for a real
 Table 2 checkpoint, and compares lambda=0.5 (as it ran) against lambda=0.0
 (as removal would give). Reports:
 
@@ -36,7 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from data.datasets.patched import HoustonPatchedDataset
 from data.samplers.patched_episode_sampler import PatchedEpisodeSampler
-from scripts.evaluate_cosine import load_model_with_checkpoint
+from scripts.evaluate import load_model_with_checkpoint
 from utils.seed import set_seed
 
 REPO = Path(__file__).resolve().parents[2]
@@ -44,7 +44,7 @@ REPO = Path(__file__).resolve().parents[2]
 CKPT = str(REPO / "experiments/houston_enhanced_spatial_mask_test_run1_seed52"
                   "/checkpoints/checkpoint_epoch_950.pth")
 # Arch + eval params exactly as the run's eval_config.json records them.
-MODEL_CFG = dict(name="mft_cpea", embed_dim=128, num_heads=2, num_layers=2,
+MODEL_CFG = dict(name="coffe", embed_dim=128, num_heads=2, num_layers=2,
                  patch_size=11, lambda_factor=0.5, dropout=0.1,
                  use_projection=False, proj_hidden_dim=512, proj_num_layers=1,
                  proj_l2_normalize=True, use_aux=True,
@@ -55,7 +55,7 @@ device = "cpu"
 ds = HoustonPatchedDataset(data_root="./data/raw", split="all")
 model = load_model_with_checkpoint(CKPT, "houston", MODEL_CFG, device)
 model.eval()
-print(f"model lambda_factor = {model.lambda_factor}, pool_sigma = {model.pool_sigma}, "
+print(f"model cls_token_weight = {model.cls_token_weight}, pool_sigma = {model.pool_sigma}, "
       f"projection = {type(model.projection).__name__}")
 
 set_seed(42, deterministic=True)

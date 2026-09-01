@@ -29,7 +29,7 @@ _LOSS_ABBREV = {"band_recon": "band"}
 
 class PretrainTrainer:
     """
-    Trainer for self-supervised pretraining of MFT-CPEA encoder.
+    Trainer for self-supervised pretraining of the CoFFE encoder.
     
     Features:
     - AdamW optimizer with configurable weight decay

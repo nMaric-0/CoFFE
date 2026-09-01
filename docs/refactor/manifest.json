@@ -1,26 +1,27 @@
 {
   "phase": 1,
-  "ledger_through_phase": 3,
+  "ledger_through_phase": 4,
   "generated_by": "tools/refactor/build_manifest.py",
-  "note": "verdicts are PROPOSALS until 'approved': true is set at the phase-1 gate | phase-3 gate 2026-08-31: the remaining 23 delete records approved by Nikola in four groups (notebook dups, dead code, superseded scripts, setup.py + utils/checkpoints.py); all 24 deletes and 18 archives executed.",
+  "note": "verdicts are PROPOSALS until 'approved': true is set at the phase-1 gate | phase-3 gate 2026-08-31: the remaining 23 delete records approved by Nikola in four groups (notebook dups, dead code, superseded scripts, setup.py + utils/checkpoints.py); all 24 deletes and 18 archives executed. | phase 4 2026-09-01: the PAPER_CANON \u00a71 renames executed (basenames only; the move into a coffe/ package is phase 5). configs/ was reorganised into configs/{coffe,mft,hypersigma}/ per \u00a79 - those 26 files had rule-based 'keep' records, so the ledger shows them only at their new paths; the full old->new table is CHANGES.md.",
   "summary": {
-    "files": 235,
+    "files": 276,
     "by_class": {
       "DEAD": 11,
       "DUPLICATE": 10,
       "EXPLORATORY": 19,
-      "INFRA": 58,
-      "PAPER": 124,
+      "INFRA": 65,
+      "PAPER": 158,
       "VENDORED": 13
     },
     "by_verdict": {
       "archive": 18,
       "delete": 24,
-      "keep": 180,
-      "rename": 13
+      "keep": 187,
+      "move": 7,
+      "rename": 40
     },
-    "executed": 42,
-    "still_tracked": 193
+    "executed": 79,
+    "still_tracked": 197
   },
   "files": [
     {
@@ -30,6 +31,15 @@
       "target": null,
       "evidence": "D5: the bare lib/ rule is already neutralised by the negations at :78-84 (verified with git check-ignore at phase 0)",
       "notes": "cosmetic removal of the shadowed rule in phase 5; phase 3 added the '/archive/' rule for the D9 archive tree",
+      "approved": false
+    },
+    {
+      "path": "CHANGES.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "repo-root file, not classified by rule",
+      "notes": "",
       "approved": false
     },
     {
@@ -88,7 +98,250 @@
       "approved": false
     },
     {
+      "path": "coffe_compat.py",
+      "class": "INFRA",
+      "verdict": "move",
+      "target": "coffe/compat.py",
+      "evidence": "phase-4 legacy-vocabulary alias layer (PAPER_CANON \u00a77.3): the one place allowed to spell the retired names",
+      "notes": "moves with the package in phase 5",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/houston_mae.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/houston_mae_hsi.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/houston_simmim.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/houston_simmim_hsi.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/muufl_mae.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/muufl_mae_hsi.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/muufl_simmim.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/muufl_simmim_hsi.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/trento_mae.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/trento_mae_hsi.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/trento_simmim.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/trento_simmim_hsi.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
       "path": "configs/eval/hypersigma_houston.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/hypersigma/houston_backbonenative_pad_sem_only.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/hypersigma/houston_backbonenative_upscale_sem_only.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/hypersigma/houston_patchnative_joint_sem.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/hypersigma/houston_patchnative_pca100_joint_sem.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/hypersigma/muufl_backbonenative_pad_sem_only.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/hypersigma/muufl_patchnative_joint_sem.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/hypersigma/trento_backbonenative_pad_sem_only.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/hypersigma/trento_patchnative_joint_sem.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/mft/houston_mae.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/mft/houston_simmim_token.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/mft/muufl_mae.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/mft/muufl_simmim_token.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/mft/trento_mae.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "configs/mft/trento_simmim_token.yaml",
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
@@ -109,236 +362,288 @@
     {
       "path": "configs/pretrain/houston_pretrain_enhanced.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/coffe/houston_simmim.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/houston_pretrain_hsi_only.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/coffe/houston_simmim_hsi.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/houston_pretrain_mae.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/coffe/houston_mae.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/houston_pretrain_mae_hsi_only.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/coffe/houston_mae_hsi.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/hypersigma_houston_adapt.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/hypersigma/houston_patchnative_joint_sem.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/hypersigma_houston_adapt_native_sem.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/hypersigma/houston_backbonenative_upscale_sem_only.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/hypersigma_houston_adapt_native_sem_pad.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/hypersigma/houston_backbonenative_pad_sem_only.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/hypersigma_houston_adapt_pca100.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/hypersigma/houston_patchnative_pca100_joint_sem.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/hypersigma_muufl_adapt.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/hypersigma/muufl_patchnative_joint_sem.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/hypersigma_muufl_adapt_native_sem_pad.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/hypersigma/muufl_backbonenative_pad_sem_only.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/hypersigma_trento_adapt.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/hypersigma/trento_patchnative_joint_sem.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/hypersigma_trento_adapt_native_sem_pad.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/hypersigma/trento_backbonenative_pad_sem_only.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/mft_original_houston_mae.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/mft/houston_mae.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/mft_original_houston_spatial.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/mft/houston_simmim_token.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/mft_original_muufl_mae.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/mft/muufl_mae.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/mft_original_muufl_spatial.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/mft/muufl_simmim_token.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/mft_original_trento_mae.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/mft/trento_mae.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/mft_original_trento_spatial.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/mft/trento_simmim_token.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/muufl_pretrain_enhanced.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/coffe/muufl_simmim.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/muufl_pretrain_hsi_only.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/coffe/muufl_simmim_hsi.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/muufl_pretrain_mae.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/coffe/muufl_mae.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/muufl_pretrain_mae_hsi_only.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/coffe/muufl_mae_hsi.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/trento_pretrain_enhanced.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/coffe/trento_simmim.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/trento_pretrain_hsi_only.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/coffe/trento_simmim_hsi.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/trento_pretrain_mae.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/coffe/trento_mae.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "configs/pretrain/trento_pretrain_mae_hsi_only.yaml",
       "class": "PAPER",
-      "verdict": "keep",
-      "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
-      "approved": false
+      "verdict": "rename",
+      "target": "configs/coffe/trento_mae_hsi.yaml",
+      "evidence": "PAPER_CANON \u00a79 config layout: configs/{coffe,mft,hypersigma}/",
+      "notes": "EXECUTED phase 4. Only model.name and pretrain.objective changed inside; every mask rate, schedule, seed and paths: value is byte-identical to the pre-rename file. Full table in CHANGES.md.",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "data/__init__.py",
@@ -465,9 +770,10 @@
       "verdict": "rename",
       "target": "docs/EVAL_PROTOCOL.md",
       "evidence": "'Cosine' in a doc name is retired by PAPER_CANON \u00a71; protocol is Euclidean NCM",
-      "notes": "content rewrite in phase 6/8",
+      "notes": "EXECUTED phase 4, with the unverifiable content dropped (it documented a DenseSimilarity variant absent from this release, plus invented accuracies). Full rewrite still phase 8.",
       "approved": false,
-      "provisional": true
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "docs/ENHANCED_PRETRAINING.md",
@@ -475,9 +781,28 @@
       "verdict": "rename",
       "target": "docs/PRETRAINING.md",
       "evidence": "objective 'enhanced' -> 'simmim' per PAPER_CANON \u00a71",
-      "notes": "",
+      "notes": "EXECUTED phase 4, with the superseded multi-task/denoising description dropped (that code no longer exists). Full rewrite still phase 8.",
       "approved": false,
-      "provisional": true
+      "provisional": true,
+      "executed_in_phase": 4
+    },
+    {
+      "path": "docs/EVAL_PROTOCOL.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "renamed from docs/COSINE_VARIANT.md in phase 4 and rewritten: the old content compared against a DenseSimilarity variant absent from this release and quoted accuracies matching no run in experiments/",
+      "notes": "full release rewrite in phase 8",
+      "approved": false
+    },
+    {
+      "path": "docs/PRETRAINING.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "renamed from docs/ENHANCED_PRETRAINING.md in phase 4 and rewritten: the old content documented weighted multi-task objectives, GaussianNoiseAugmentation and LiDARMasking, none of which exist in the tree",
+      "notes": "full release rewrite in phase 8",
+      "approved": false
     },
     {
       "path": "docs/presentation/PROJECT_OVERVIEW.md",
@@ -848,6 +1173,15 @@
       "executed_in_phase": 3
     },
     {
+      "path": "models/coffe.py",
+      "class": "PAPER",
+      "verdict": "move",
+      "target": "coffe/models/coffe.py",
+      "evidence": "renamed from models/mft_cpea_cosine.py in phase 4 (PAPER_CANON \u00a71)",
+      "notes": "carries the live lambda/class-token adaptation of D3 (CoFFE.eval_patch_embeddings) and the DEAD forward_episode (audit R10)",
+      "approved": false
+    },
+    {
       "path": "models/components/__init__.py",
       "class": "PAPER",
       "verdict": "keep",
@@ -911,14 +1245,24 @@
       "approved": false
     },
     {
+      "path": "models/hypersigma/few_shot.py",
+      "class": "PAPER",
+      "verdict": "move",
+      "target": "coffe/models/hypersigma/few_shot.py",
+      "evidence": "renamed from models/hypersigma/hypersigma_cosine.py in phase 4",
+      "notes": "",
+      "approved": false
+    },
+    {
       "path": "models/hypersigma/hypersigma_cosine.py",
       "class": "PAPER",
       "verdict": "rename",
-      "target": "coffe/models/hypersigma/hypersigma_fewshot.py",
+      "target": "models/hypersigma/few_shot.py",
       "evidence": "PAPER_CANON \u00a71: HyperSIGMACosine -> HyperSIGMAFewShot",
-      "notes": "",
+      "notes": "EXECUTED phase 4. phase-5 target: coffe/models/hypersigma/few_shot.py (the phase-4 skill's basename; supersedes the earlier 'hypersigma_fewshot.py' proposal - inside package `hypersigma/` the prefix is redundant).",
       "approved": false,
-      "provisional": true
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "models/hypersigma/hypersigma_dual.py",
@@ -969,11 +1313,12 @@
       "path": "models/mft_cpea_cosine.py",
       "class": "PAPER",
       "verdict": "rename",
-      "target": "coffe/models/coffe.py",
+      "target": "models/coffe.py",
       "evidence": "PAPER_CANON \u00a71: module rename; class MFTCPEACosine -> CoFFE",
-      "notes": "D3 DECIDED 2026-08-31 (keep + document). Phase 4/6 must: (a) document the real eval feature z = mean_j(patch_emb_j) + 0.5*cls_emb on adapt_embeddings (:270-299) and in the eval docs; (b) give lambda_factor and adapt_embeddings honest names - lambda_factor is a plain float, NOT a state_dict key (42 keys, none matching), so both are rename-safe; (c) note the branch at :296-297 is inert at eval (use_projection=False -> nn.Identity). Class ATTRIBUTE names that ARE state_dict keys stay frozen (\u00a77.2). forward_episode (:326) is DEAD - a non-executed duplicate of the live eval path; see R10.",
-      "approved": true,
-      "provisional": true
+      "notes": "EXECUTED phase 4. phase-5 target: coffe/models/coffe.py. D3 obligations discharged in phase 4: the eval feature z = mean_j(patch_emb_j) + 0.5*cls_emb is documented on the method, lambda_factor -> cls_token_weight and adapt_embeddings -> eval_patch_embeddings (neither is a state_dict key), and the renormalize branch is documented as inert at eval. The `lambda_factor` CONFIG KEY is unchanged: frozen pretrain_config.yaml / eval_config.json record it (\u00a77.3).",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "models/mft_original.py",
@@ -1207,11 +1552,12 @@
       "path": "pretrain/masked_modeling_enhanced.py",
       "class": "PAPER",
       "verdict": "rename",
-      "target": "coffe/pretrain/simmim.py",
+      "target": "pretrain/simmim.py",
       "evidence": "PAPER_CANON \u00a71: EnhancedMaskedSpectralSpatialModel -> SimMIMPretrainModel",
-      "notes": "",
+      "notes": "EXECUTED phase 4. phase-5 target: coffe/pretrain/simmim.py",
       "approved": false,
-      "provisional": true
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "pretrain/mft_mae.py",
@@ -1228,6 +1574,15 @@
       "verdict": "keep",
       "target": null,
       "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "pretrain/simmim.py",
+      "class": "PAPER",
+      "verdict": "move",
+      "target": "coffe/pretrain/simmim.py",
+      "evidence": "renamed from pretrain/masked_modeling_enhanced.py in phase 4",
       "notes": "",
       "approved": false
     },
@@ -1471,24 +1826,44 @@
       "approved": false
     },
     {
+      "path": "scripts/evaluate.py",
+      "class": "PAPER",
+      "verdict": "move",
+      "target": "coffe/cli/evaluate.py",
+      "evidence": "renamed from scripts/evaluate_cosine.py in phase 4",
+      "notes": "live AA/kappa maths, live fix_state_dict_keys, live episode loop",
+      "approved": false
+    },
+    {
       "path": "scripts/evaluate_cosine.py",
       "class": "PAPER",
       "verdict": "rename",
-      "target": "coffe/cli/evaluate.py",
+      "target": "scripts/evaluate.py",
       "evidence": "PAPER_CANON \u00a71 drops 'Cosine' from names; \u00a79 CLI verb 'evaluate'",
-      "notes": "also holds the live AA/kappa maths (:277-322) and the live fix_state_dict_keys (:107); user-facing labels at :789,823 rename per \u00a71",
+      "notes": "EXECUTED phase 4. phase-5 target: coffe/cli/evaluate.py. Still holds the live AA/kappa maths, the live fix_state_dict_keys, and the live episode loop.",
       "approved": false,
-      "provisional": true
+      "provisional": true,
+      "executed_in_phase": 4
+    },
+    {
+      "path": "scripts/evaluate_hypersigma.py",
+      "class": "PAPER",
+      "verdict": "move",
+      "target": "coffe/cli/evaluate_hypersigma.py",
+      "evidence": "renamed from scripts/evaluate_hypersigma_cosine.py in phase 4",
+      "notes": "",
+      "approved": false
     },
     {
       "path": "scripts/evaluate_hypersigma_cosine.py",
       "class": "PAPER",
       "verdict": "rename",
-      "target": "coffe/cli/evaluate_hypersigma.py",
+      "target": "scripts/evaluate_hypersigma.py",
       "evidence": "PAPER_CANON \u00a71 drops 'Cosine'",
-      "notes": "",
+      "notes": "EXECUTED phase 4. phase-5 target: coffe/cli/evaluate_hypersigma.py",
       "approved": false,
-      "provisional": true
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "scripts/fit_pca_hypersigma.py",
@@ -1518,14 +1893,24 @@
       "approved": false
     },
     {
+      "path": "scripts/pretrain.py",
+      "class": "PAPER",
+      "verdict": "move",
+      "target": "coffe/cli/pretrain.py",
+      "evidence": "renamed from scripts/pretrain_enhanced.py in phase 4",
+      "notes": "",
+      "approved": false
+    },
+    {
       "path": "scripts/pretrain_enhanced.py",
       "class": "PAPER",
       "verdict": "rename",
-      "target": "coffe/cli/pretrain.py",
+      "target": "scripts/pretrain.py",
       "evidence": "PAPER_CANON \u00a71 'enhanced' -> 'simmim'; \u00a79 CLI verb 'pretrain'",
-      "notes": "",
+      "notes": "EXECUTED phase 4. phase-5 target: coffe/cli/pretrain.py",
       "approved": false,
-      "provisional": true
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "scripts/rerun_mft_faithful_eval_ep1500.sh",
@@ -1573,9 +1958,28 @@
       "verdict": "rename",
       "target": "scripts/run_eval.sh",
       "evidence": "PAPER_CANON \u00a71 drops 'Cosine' from script names",
-      "notes": "",
+      "notes": "EXECUTED phase 4.",
       "approved": false,
-      "provisional": true
+      "provisional": true,
+      "executed_in_phase": 4
+    },
+    {
+      "path": "scripts/run_eval.sh",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "scripts/run_eval_trento.sh",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "in a paper root's import closure",
+      "notes": "",
+      "approved": false
     },
     {
       "path": "scripts/run_hsi_only_experiments.py",
@@ -1691,9 +2095,10 @@
       "verdict": "rename",
       "target": "scripts/run_eval_trento.sh",
       "evidence": "PAPER_CANON \u00a71 drops 'Cosine'",
-      "notes": "",
+      "notes": "EXECUTED phase 4.",
       "approved": false,
-      "provisional": true
+      "provisional": true,
+      "executed_in_phase": 4
     },
     {
       "path": "scripts/sig_eval_worker.py",
@@ -1877,6 +2282,15 @@
       "approved": false
     },
     {
+      "path": "tests/test_compat.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-4 tests for the legacy-vocabulary alias layer (PAPER_CANON \u00a77.3)",
+      "notes": "",
+      "approved": false
+    },
+    {
       "path": "tests/test_data.py",
       "class": "INFRA",
       "verdict": "keep",
@@ -1923,6 +2337,17 @@
     },
     {
       "path": "tests/test_pretrain_enhanced.py",
+      "class": "INFRA",
+      "verdict": "rename",
+      "target": "tests/test_pretrain_simmim.py",
+      "evidence": "objective 'enhanced' -> 'simmim' per PAPER_CANON \u00a71; test-file basename",
+      "notes": "EXECUTED phase 4 (not in the phase-1 rename list; added there because the stale-vocabulary grep covers test filenames too).",
+      "approved": false,
+      "provisional": true,
+      "executed_in_phase": 4
+    },
+    {
+      "path": "tests/test_pretrain_simmim.py",
       "class": "INFRA",
       "verdict": "keep",
       "target": null,
@@ -2062,6 +2487,15 @@
       "verdict": "keep",
       "target": null,
       "evidence": "refactor tooling (this phase)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tools/refactor/apply_renames.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-4 rename migration tool: holds the old->new table, so it legitimately spells the retired names",
       "notes": "",
       "approved": false
     },

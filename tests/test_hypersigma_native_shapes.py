@@ -27,7 +27,7 @@ torch = pytest.importorskip("torch")
 
 from sklearn.decomposition import PCA
 
-from models.hypersigma import HyperSIGMACosine, HyperSIGMADual
+from models.hypersigma import HyperSIGMAFewShot, HyperSIGMADual
 from models.hypersigma._input_fit import fit_input
 from models.hypersigma.preprocessing import SpectralResample
 
@@ -105,7 +105,7 @@ def test_native_spatial_forward(fit, bands):
     )
     assert isinstance(dual.pca_spat, SpectralResample)
     assert dual.spat.in_chans == 100
-    model = HyperSIGMACosine(dual=dual, mode="spat_pool", distance_metric="cosine")
+    model = HyperSIGMAFewShot(dual=dual, mode="spat_pool", distance_metric="cosine")
     x = torch.randn(2, bands, 11, 11)
     with torch.no_grad():
         spat_features = dual.spat(dual.pca_spat(x))
@@ -132,7 +132,7 @@ def test_native_spectral_forward(fit, bands):
         build_sem=False,
     )
     assert dual.spec.img_size == 64
-    model = HyperSIGMACosine(dual=dual, mode="spec_pool", distance_metric="cosine")
+    model = HyperSIGMAFewShot(dual=dual, mode="spec_pool", distance_metric="cosine")
     x = torch.randn(2, bands, 11, 11)
     with torch.no_grad():
         spec_features = dual.spec(x)
@@ -248,7 +248,7 @@ def test_native_fused_forward_runs():
         native_pca_spat_path=None,
         build_spat=True, build_spec=True, build_sem=True,
     )
-    model = HyperSIGMACosine(dual=dual, mode="fused", distance_metric="cosine")
+    model = HyperSIGMAFewShot(dual=dual, mode="fused", distance_metric="cosine")
     x = torch.randn(2, 144, 11, 11)
     with torch.no_grad():
         patch, cls, _ = model.forward_features(x, None)

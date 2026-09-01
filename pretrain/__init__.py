@@ -1,5 +1,5 @@
 """
-Self-supervised pretraining module for MFT-CPEA.
+Self-supervised pretraining for CoFFE and the MFT control.
 
 Unified masked autoencoder pretraining: HSI and auxiliary (LiDAR/SAR) bands
 are concatenated along the channel dim, per-(pixel, band) masking hides a
@@ -7,7 +7,7 @@ configurable fraction of entries, and a single decoder reconstructs the full
 combined tensor.
 
 Main components:
-- EnhancedMaskedSpectralSpatialModel: Unified masked pretraining model
+- SimMIMPretrainModel: SimMIM-style in-place masked pretraining model
 - UnifiedBandMasking: Per-(pixel, band) Bernoulli masking over HSI+aux
 - MLPDecoder: Lightweight decoder for reconstruction
 - PretrainDataset, CombinedPretrainDataset: Dataset wrappers
@@ -21,8 +21,8 @@ from .masked_modeling import (
     CombinedPretrainDataset,
 )
 
-from .masked_modeling_enhanced import (
-    EnhancedMaskedSpectralSpatialModel,
+from .simmim import (
+    SimMIMPretrainModel,
 )
 
 from .decoders import (
@@ -33,7 +33,7 @@ from .decoders import (
 )
 
 __all__ = [
-    "EnhancedMaskedSpectralSpatialModel",
+    "SimMIMPretrainModel",
     "UnifiedBandMasking",
     "SpatialTokenMasking",
     "MLPDecoder",
@@ -44,3 +44,22 @@ __all__ = [
     "TwoLayerMLPDecoder",
     "build_decoder",
 ]
+
+
+# Legacy class names (PAPER_CANON §1) still resolve, with a DeprecationWarning,
+# so notebooks and scripts written before the rename keep importing. The alias
+# table lives in one place: coffe_compat.LEGACY_CLASSES.
+_LEGACY_ALIASES = {"EnhancedMaskedSpectralSpatialModel": "SimMIMPretrainModel"}
+
+
+def __getattr__(name):
+    canonical = _LEGACY_ALIASES.get(name)
+    if canonical is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    import coffe_compat
+
+    return getattr(coffe_compat, name)
+
+
+def __dir__():
+    return sorted(set(__all__) | set(_LEGACY_ALIASES))

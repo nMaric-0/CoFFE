@@ -4,7 +4,7 @@ Resolves the (group, dataset, variant, seed) cell to its experiment dir and
 evaluates checkpoint_epoch_700.pth with the shared eval protocol.
 lib.eval_runner pulls the architecture (model name, attention_type, mlp_dim,
 use_aux, use_projection) from the run's frozen pretrain_config.yaml, so the same
-call handles every family (mft_cpea / mft_original, LiDAR / HSI-only).
+call handles every family (coffe / mft_original, LiDAR / HSI-only).
 
 Writes experiments/<name>/evaluations/sig_eval_epoch700/results.json.
 Idempotent: exits 0 without re-running if that results.json already exists.

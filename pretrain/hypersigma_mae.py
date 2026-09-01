@@ -1,6 +1,6 @@
 """Upstream-faithful MAE adaptation wrapper for HyperSIGMA (Level-2, Houston).
 
-Replaces the prior MFT-CPEA-style adapter. The masking now mirrors upstream
+Replaces the prior CoFFE-style adapter. The masking now mirrors upstream
 HyperSIGMA's MAE recipe — token-level masking with a learnable ``mask_token``
 substituted at masked positions, default ``mask_ratio = 0.75``, and
 per-patch z-scored reconstruction targets (``norm_pix_loss=True`` in

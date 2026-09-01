@@ -6,9 +6,9 @@ epoch-700 checkpoint is evaluated with one fixed protocol and reported as
 mean +/- std +/- 95% CI (t, df=4) across seeds.
 
 Groups (model families):
-  enhanced      main MFT-CPEA, with LiDAR; variants spatial/spectral/both  (v1, done)
-  hsi_only      MFT-CPEA with use_aux=false; variants spatial/spectral/both
-  enhanced_mae  MFT-CPEA objective=mae; variants lidar/hsi_only
+  enhanced      CoFFE, with LiDAR; variants spatial/spectral/both  (v1, done)
+  hsi_only      CoFFE with use_aux=false; variants spatial/spectral/both
+  enhanced_mae  CoFFE objective=mae; variants lidar/hsi_only
   mft_mae       faithful mft_original baseline, MAE objective
   mft_spatial   faithful mft_original baseline, spatial-masking objective
 
@@ -111,7 +111,7 @@ GROUPS: Dict[str, Group] = {
     "enhanced": Group(
         "enhanced",
         ["spatial", "spectral", "both"],
-        base_config=lambda ds, v: f"configs/pretrain/{ds}_pretrain_enhanced.yaml",
+        base_config=lambda ds, v: f"configs/coffe/{ds}_simmim.yaml",
         experiment_name=lambda ds, v, s: f"{ds}_enhanced_{v}_seed{s}",
         clone_mask=True,
         canonical_dir=lambda ds, v: _ENHANCED_CANONICAL[(ds, v)],
@@ -119,7 +119,7 @@ GROUPS: Dict[str, Group] = {
     "hsi_only": Group(
         "hsi_only",
         ["spatial", "spectral", "both"],
-        base_config=lambda ds, v: f"configs/pretrain/{ds}_pretrain_hsi_only.yaml",
+        base_config=lambda ds, v: f"configs/coffe/{ds}_simmim_hsi.yaml",
         experiment_name=lambda ds, v, s: f"{ds}_hsi_only_{v}_seed{s}",
         clone_mask=True,
         canonical_dir=lambda ds, v: f"{ds}_enhanced_{_NO_LIDAR_SUFFIX[v]}_no_lidar",
@@ -128,8 +128,8 @@ GROUPS: Dict[str, Group] = {
         "enhanced_mae",
         ["lidar", "hsi_only"],
         base_config=lambda ds, v: (
-            f"configs/pretrain/{ds}_pretrain_mae.yaml" if v == "lidar"
-            else f"configs/pretrain/{ds}_pretrain_mae_hsi_only.yaml"
+            f"configs/coffe/{ds}_mae.yaml" if v == "lidar"
+            else f"configs/coffe/{ds}_mae_hsi.yaml"
         ),
         experiment_name=lambda ds, v, s: f"{ds}_enhanced_mae_{v}_seed{s}",
         clone_mask=False,
@@ -137,14 +137,14 @@ GROUPS: Dict[str, Group] = {
     "mft_mae": Group(
         "mft_mae",
         ["mae"],
-        base_config=lambda ds, v: f"configs/pretrain/mft_original_{ds}_mae.yaml",
+        base_config=lambda ds, v: f"configs/mft/{ds}_mae.yaml",
         experiment_name=lambda ds, v, s: f"mft_original_{ds}_mae_seed{s}",
         clone_mask=False,
     ),
     "mft_spatial": Group(
         "mft_spatial",
         ["spatial"],
-        base_config=lambda ds, v: f"configs/pretrain/mft_original_{ds}_spatial.yaml",
+        base_config=lambda ds, v: f"configs/mft/{ds}_simmim_token.yaml",
         experiment_name=lambda ds, v, s: f"mft_original_{ds}_spatial_seed{s}",
         clone_mask=False,
     ),

@@ -2,7 +2,8 @@
 """Gather a focused, single-file results JSON for a specific requested set of runs.
 
 Groups (see user request):
-  * MFT-CPEA enhanced/mae baselines: houston_enhanced_spatial_no_lidar, muufl_mae_no_lidar
+  * CoFFE SimMIM/MAE baselines: houston_enhanced_spatial_no_lidar, muufl_mae_no_lidar
+    (experiment dir names are frozen, PAPER_CANON §7.3)
   * HyperSIGMA PCA-100 spatial_only  (all 3 datasets, most recent run)
   * HyperSIGMA PCA-100 joint_sem     (all 3 datasets, most recent run; PCA-100 only)
   * HyperSIGMA spectral_only         (all 3 datasets; NO PCA-100)
@@ -100,8 +101,8 @@ report: Dict[str, Any] = {
 }
 G = report["groups"]
 
-# --- 1. MFT-CPEA enhanced / mae baselines ---------------------------------
-G["mft_cpea_baselines"] = {
+# --- 1. CoFFE SimMIM / MAE baselines --------------------------------------
+G["coffe_baselines"] = {
     "houston_enhanced_spatial_no_lidar":
         load_eval("houston_enhanced_spatial_no_lidar",
                   "houston_enhanced_spatial_no_lidar_eval"),
@@ -179,10 +180,10 @@ G["hypersigma_native_sem_pad"] = {
     "houston": load_eval("hypersigma_native_sem_pad_run1", "native_sem_pad_houston"),
     "trento":  placeholder(
         "No native_sem_pad Trento run/eval completed. Config exists "
-        "(configs/pretrain/hypersigma_trento_adapt_native_sem_pad.yaml) but no experiment dir."),
+        "(configs/hypersigma/trento_backbonenative_pad_sem_only.yaml) but no experiment dir."),
     "muufl":   placeholder(
         "No native_sem_pad MUUFL run/eval completed. Config exists "
-        "(configs/pretrain/hypersigma_muufl_adapt_native_sem_pad.yaml) but no experiment dir."),
+        "(configs/hypersigma/muufl_backbonenative_pad_sem_only.yaml) but no experiment dir."),
 }
 
 # --- 7. MFT-original MAE (not faithful) -----------------------------------

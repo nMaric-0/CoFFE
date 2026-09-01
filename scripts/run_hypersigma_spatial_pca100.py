@@ -142,7 +142,7 @@ def run_dataset(
     adapt_exp = run_adapt_hypersigma(
         name=adapt_experiment_name,
         description=adapt_description,
-        config=f"configs/pretrain/hypersigma_{dataset}_adapt.yaml",
+        config=f"configs/hypersigma/{dataset}_patchnative_joint_sem.yaml",
         overrides=overrides,
         overwrite=overwrite,
     )

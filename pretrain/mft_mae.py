@@ -1,5 +1,5 @@
 """
-Standard-MAE pretraining for the original-MFT baseline (:class:`models.mft_original.MFTOriginalCosine`).
+Standard-MAE pretraining for the original-MFT baseline (:class:`models.mft_original.MFTOriginal`).
 
 This is the He et al. (2022) "Masked Autoencoders Are Scalable Vision Learners"
 recipe — token removal (75%), encode the visible subset only, an asymmetric
@@ -7,7 +7,7 @@ transformer decoder re-inserts learnable mask tokens and reconstructs the
 per-pixel band values, MSE on masked tokens only with ``norm_pix_loss`` — applied
 to the 121 spatial HSI tokens of the faithful MFT encoder. It mirrors
 :class:`pretrain.mae_pretrain.MAEPretrainModel` (which targets the unified
-``MFTCPEACosine``) and shares its decoder (:mod:`pretrain.decoders`) and masking
+``CoFFE``) and shares its decoder (:mod:`pretrain.decoders`) and masking
 convention, with two MFT-specific changes:
 
 1. **Data-dependent CLS.** ``MAEPretrainModel`` prepends a learnable
@@ -24,9 +24,9 @@ convention, with two MFT-specific changes:
    deliberate deviation from vanilla MAE required by the mCrossPA architecture.
 
 After pretraining the decoder / ``enc_to_dec`` are discarded; eval rebuilds the
-bare ``MFTOriginalCosine`` and the evaluator's ``fix_state_dict_keys`` strips the
+bare ``MFTOriginal`` and the evaluator's ``fix_state_dict_keys`` strips the
 ``encoder.`` prefix and skips ``decoder`` / ``enc_to_dec`` (same as the
-``MFTCPEACosine`` MAE path).
+``CoFFE`` MAE path).
 """
 
 import torch
@@ -39,12 +39,12 @@ from utils.spatial_weights import make_center_weights
 
 class MFTMAEPretrainModel(nn.Module):
     """
-    Masked-autoencoder pretraining wrapper around an :class:`MFTOriginalCosine`.
+    Masked-autoencoder pretraining wrapper around an :class:`MFTOriginal`.
 
     Args:
         encoder: The MFT encoder to pretrain. Must expose ``tokenize(hsi)``,
             ``make_cls(aux)``, ``encoder``, ``norm`` and ``pos_embed``
-            (an ``MFTOriginalCosine`` does).
+            (an ``MFTOriginal`` does).
         hsi_channels: Number of HSI spectral bands.
         aux_channels: Number of auxiliary channels (e.g. 1 for LiDAR).
         use_aux: Must be True (MFT reconstructs HSI+aux jointly and needs aux for

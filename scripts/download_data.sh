@@ -1,5 +1,5 @@
 #!/bin/bash
-# Download datasets for MFT-CPEA
+# Download the HSI+LiDAR datasets used by CoFFE
 
 DATASET=${1:-houston}
 DATA_DIR=${2:-./data/raw}

@@ -20,7 +20,7 @@ from .sem import SEM
 from .spat_vit_branch import SpatViTBranch
 from .spec_vit_branch import SpecViTBranch
 from .hypersigma_dual import HyperSIGMADual
-from .hypersigma_cosine import HyperSIGMACosine
+from .few_shot import HyperSIGMAFewShot
 
 __all__ = [
     "PCAPreprocessor",
@@ -31,5 +31,24 @@ __all__ = [
     "SpatViTBranch",
     "SpecViTBranch",
     "HyperSIGMADual",
-    "HyperSIGMACosine",
+    "HyperSIGMAFewShot",
 ]
+
+
+# Legacy class names (PAPER_CANON §1) still resolve, with a DeprecationWarning,
+# so notebooks and scripts written before the rename keep importing. The alias
+# table lives in one place: coffe_compat.LEGACY_CLASSES.
+_LEGACY_ALIASES = {"HyperSIGMACosine": "HyperSIGMAFewShot"}
+
+
+def __getattr__(name):
+    canonical = _LEGACY_ALIASES.get(name)
+    if canonical is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    import coffe_compat
+
+    return getattr(coffe_compat, name)
+
+
+def __dir__():
+    return sorted(set(__all__) | set(_LEGACY_ALIASES))

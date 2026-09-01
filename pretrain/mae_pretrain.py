@@ -1,5 +1,5 @@
 """
-Original-MAE pretraining for the unified MFT-CPEA encoder.
+Token-drop MAE pretraining for the CoFFE encoder.
 
 This is the He et al. (2022) "Masked Autoencoders Are Scalable Vision Learners"
 recipe, adapted to the unified HSI+LiDAR token space:
@@ -15,10 +15,10 @@ recipe, adapted to the unified HSI+LiDAR token space:
   *masked* tokens only (optionally with ``norm_pix_loss`` per-token target
   normalization, the paper's default).
 
-Contrast with :class:`pretrain.masked_modeling_enhanced.EnhancedMaskedSpectralSpatialModel`,
+Contrast with :class:`pretrain.simmim.SimMIMPretrainModel`,
 which keeps all tokens in the encoder (SimMIM-style in-place masking) and uses an
 MLP decoder. That path is left untouched; this is a separate ``objective="mae"``
-variant selected in ``scripts/pretrain_enhanced.py``.
+variant selected in ``scripts/pretrain.py``.
 
 The transformer decoder is reused from :mod:`pretrain.decoders` (its
 ``forward(visible_tokens, ids_restore)`` already implements the canonical MAE
@@ -38,14 +38,14 @@ from utils.spatial_weights import make_center_weights
 
 class MAEPretrainModel(nn.Module):
     """
-    Masked-autoencoder pretraining wrapper around an ``MFTCPEACosine`` encoder.
+    Masked-autoencoder pretraining wrapper around a ``CoFFE`` encoder.
 
     The encoder must be built with ``use_projection=False`` (the MAE recipe has
     no projection head). It must expose ``tokenize``, ``encoder``, ``norm``,
-    ``class_agnostic_emb`` and ``pos_embed`` (an ``MFTCPEACosine`` does).
+    ``class_agnostic_emb`` and ``pos_embed`` (a ``CoFFE`` does).
 
     Args:
-        encoder: The MFT-CPEA encoder to pretrain.
+        encoder: The CoFFE encoder to pretrain.
         hsi_channels: Number of HSI spectral bands.
         aux_channels: Number of auxiliary channels (e.g. 1 for LiDAR).
         use_aux: If True, aux bands are concatenated with HSI and reconstructed

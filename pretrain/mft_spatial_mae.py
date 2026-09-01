@@ -1,11 +1,11 @@
 """
 "Spatial" masked-modeling pretraining for the original-MFT baseline
-(:class:`models.mft_original.MFTOriginalCosine`).
+(:class:`models.mft_original.MFTOriginal`).
 
-This replicates the masking + loss of the team's *Spatial version* of MFT-CPEA
-— the ``enhanced`` objective with ``band_mask_ratio=0.0, spatial_mask_ratio=0.75,
+This replicates the masking + loss of CoFFE's SimMIM-token regime
+— the SimMIM objective with ``band_mask_ratio=0.0, spatial_mask_ratio=0.75,
 recon_center_sigma=1.0`` (see
-:class:`pretrain.masked_modeling_enhanced.EnhancedMaskedSpectralSpatialModel`):
+:class:`pretrain.simmim.SimMIMPretrainModel`):
 
 * SimMIM-style *in-place* spatial token masking
   (:class:`pretrain.masked_modeling.SpatialTokenMasking`): 75% of the 121 pixel
@@ -15,7 +15,7 @@ recon_center_sigma=1.0`` (see
   the full per-pixel HSI+LiDAR band vector.
 * Center-weighted MSE (``recon_center_sigma``) computed **only on masked entries**.
 
-It differs from ``EnhancedMaskedSpectralSpatialModel`` only where the original
+It differs from ``SimMIMPretrainModel`` only where the original
 MFT architecture demands it:
 
 1. **Data-dependent CLS.** The enhanced wrapper prepends a learnable
@@ -38,7 +38,7 @@ Only spatial masking is supported (band masking is ill-defined for the original
 MFT, where the auxiliary modality enters only through the CLS token).
 
 After pretraining the decoder / masking modules are discarded; eval rebuilds the
-bare ``MFTOriginalCosine`` and ``fix_state_dict_keys`` strips the ``encoder.``
+bare ``MFTOriginal`` and ``fix_state_dict_keys`` strips the ``encoder.``
 prefix and skips ``spatial_masking`` / ``decoder``.
 """
 
@@ -52,11 +52,11 @@ from utils.spatial_weights import make_center_weights
 
 class MFTSpatialMaskPretrainModel(nn.Module):
     """
-    Spatial-mask (SimMIM-style) pretraining wrapper around an ``MFTOriginalCosine``.
+    Spatial-mask (SimMIM-style) pretraining wrapper around an ``MFTOriginal``.
 
     Args:
         encoder: The MFT encoder. Must expose ``tokenize(hsi)``, ``make_cls(aux)``,
-            ``encoder``, ``norm`` and ``pos_embed`` (an ``MFTOriginalCosine`` does).
+            ``encoder``, ``norm`` and ``pos_embed`` (an ``MFTOriginal`` does).
         hsi_channels: Number of HSI spectral bands.
         aux_channels: Number of auxiliary channels (e.g. 1 for LiDAR).
         use_aux: Must be True (MFT reconstructs HSI+aux jointly and needs aux for
@@ -110,7 +110,7 @@ class MFTSpatialMaskPretrainModel(nn.Module):
             rw = rw / rw.mean()  # mean weight 1.0 so the loss scale is preserved
             self.register_buffer("_recon_center_weights", rw)
 
-        # Same masking + decoder building blocks as the Spatial MFT-CPEA recipe.
+        # Same masking + decoder building blocks as CoFFE's SimMIM-token recipe.
         self.spatial_masking = SpatialTokenMasking(
             embed_dim=embed_dim,
             mask_ratio=spatial_mask_ratio,

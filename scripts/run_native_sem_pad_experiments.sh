@@ -10,8 +10,8 @@
 # so the two are directly comparable.
 #
 # Per dataset:
-#   1. adapt:  scripts/adapt_hypersigma.py   --config configs/.../hypersigma_<ds>_adapt_native_sem_pad.yaml
-#   2. eval:   scripts/evaluate_hypersigma_cosine.py --native-geometry --input-fit pad ...
+#   1. adapt:  scripts/adapt_hypersigma.py   --config configs/hypersigma/<ds>_backbonenative_pad_sem_only.yaml
+#   2. eval:   scripts/evaluate_hypersigma.py --native-geometry --input-fit pad ...
 #
 # Outputs:
 #   checkpoints/hypersigma_adapted/<ds>_native_sem_pad/checkpoint_final.pth
@@ -69,7 +69,7 @@ for ds in ${DATASETS}; do
   echo
   echo "##############  ${ds}  ######################################"
 
-  config="configs/pretrain/hypersigma_${ds}_adapt_native_sem_pad.yaml"
+  config="configs/hypersigma/${ds}_backbonenative_pad_sem_only.yaml"
   ckpt_dir="checkpoints/hypersigma_adapted/${ds}_native_sem_pad"
   ckpt="${ckpt_dir}/checkpoint_final.pth"
   eval_dir="experiments/${EXPERIMENT}/evaluations/native_sem_pad_${ds}"
@@ -100,7 +100,7 @@ for ds in ${DATASETS}; do
       exit 1
     fi
     echo "[${ds}] EVAL -> ${results}"
-    "${PY}" scripts/evaluate_hypersigma_cosine.py \
+    "${PY}" scripts/evaluate_hypersigma.py \
       --dataset "${ds}" \
       --mode fused \
       --native-geometry \

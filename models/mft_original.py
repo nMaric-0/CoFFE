@@ -1,13 +1,14 @@
 """
-Original MFT (Multimodal Fusion Transformer) baseline — cosine few-shot head.
+Original MFT (Multimodal Fusion Transformer) — the architectural control.
 
 Faithful port of the Multimodal Fusion Transformer (Roy et al., 2023,
 "Multimodal Fusion Transformer for Remote Sensing Image Classification",
 arXiv:2203.16952; github.com/srinadh99/Transformer-Models-for-Multimodal-Remote-Sensing-Data),
-wired as a *second baseline* alongside HyperSIGMA. It is pretrained with the
-standard MAE recipe (see :mod:`pretrain.mft_mae`) and evaluated with the same
-cosine/euclidean prototypical few-shot protocol as ``MFTCPEACosine`` and
-``HyperSIGMACosine`` (``scripts/evaluate_cosine.py``).
+wired as the *architectural control* against CoFFE: same masked objectives
+(:mod:`pretrain.mft_mae` for MAE, :mod:`pretrain.mft_spatial_mae` for SimMIM
+token), same frozen-encoder nearest-class-mean protocol as ``CoFFE`` and
+``HyperSIGMAFewShot`` (``scripts/evaluate.py``), but MFT's external fusion token
+instead of CoFFE's input-level fusion.
 
 This is the **channel-tokenization** variant: the auxiliary modality (LiDAR/DSM)
 is aggregated into a single external CLS token via the learnable channel
@@ -23,7 +24,7 @@ which is degenerate under 75% masking. So here the HSI is represented as the
 **121 per-pixel spatial tokens** produced by the MFT Conv3D+HetConv front-end
 (the un-compressed limit of MFT tokenization) — the fusion (LiDAR→CLS channel
 tokenization + mCrossPA) stays faithful, while the token geometry now matches
-``MFTCPEACosine`` (121 tokens) so the canonical MAE machinery and the shared
+``CoFFE`` (121 tokens) so the canonical MAE machinery and the shared
 evaluator apply unchanged.
 
 Eval feature = the CLS token
@@ -31,9 +32,9 @@ Eval feature = the CLS token
 mCrossPA updates only the CLS token (token 0); the HSI patch tokens pass through
 unchanged. The discriminative fused representation is therefore the encoded CLS,
 so :meth:`forward_features` packs it as a single patch token
-(``patch_emb = cls_emb.unsqueeze(1)``) — exactly how ``HyperSIGMACosine`` packs
+(``patch_emb = cls_emb.unsqueeze(1)``) — exactly how ``HyperSIGMAFewShot`` packs
 its fused feature — and the shared eval loop's ``patch_emb.mean(dim=1)`` recovers
-it. There is no CPEA: :meth:`adapt_embeddings` is a no-op (clean original-MFT
+it. No class-token folding: :meth:`eval_patch_embeddings` is a no-op (clean original-MFT
 baseline).
 """
 import torch
@@ -44,9 +45,9 @@ from typing import Dict, Optional, Tuple
 from .components.mft_blocks import HetConv, LearnableTokenizer, MFTEncoder
 
 
-class MFTOriginalCosine(nn.Module):
+class MFTOriginal(nn.Module):
     """
-    Original MFT (channel-tokenization) encoder with a cosine few-shot head.
+    Original MFT (channel-tokenization) encoder, evaluated by nearest class mean.
 
     Args:
         hsi_channels: Number of HSI spectral bands.
@@ -90,7 +91,7 @@ class MFTOriginalCosine(nn.Module):
 
         if not use_aux:
             raise ValueError(
-                "MFTOriginalCosine requires use_aux=True: the MFT CLS token is "
+                "MFTOriginal requires use_aux=True: the MFT CLS token is "
                 "derived from the auxiliary modality. HSI-only MFT is degenerate."
             )
 
@@ -208,7 +209,7 @@ class MFTOriginalCosine(nn.Module):
         return cls
 
     # ------------------------------------------------------------------
-    # Few-shot eval contract (mirrors MFTCPEACosine / HyperSIGMACosine)
+    # Few-shot eval contract (mirrors CoFFE / HyperSIGMAFewShot)
     # ------------------------------------------------------------------
     def forward_features(
         self,
@@ -234,14 +235,16 @@ class MFTOriginalCosine(nn.Module):
         patch_emb = cls_emb.unsqueeze(1)        # [B, 1, D] (single-token packing)
         return patch_emb, cls_emb, cls_emb
 
-    def adapt_embeddings(
+    def eval_patch_embeddings(
         self,
         patch_emb: torch.Tensor,
         cls_emb: torch.Tensor,
-        lambda_factor: Optional[float] = None,
+        cls_token_weight: Optional[float] = None,
         renormalize: bool = True,
     ) -> torch.Tensor:
-        """No CPEA in the original-MFT baseline — pass patch tokens through unchanged."""
+        """No class-token folding in the MFT control — patch tokens pass through
+        unchanged, so the CoFFE-only adaptation of PAPER_CANON §8 D3 cannot
+        touch this route (its eval configs record ``lambda_factor: None``)."""
         return patch_emb
 
     def compute_prototypes(
@@ -264,7 +267,7 @@ class MFTOriginalCosine(nn.Module):
         support_labels: torch.Tensor,
         q_features: torch.Tensor,
     ) -> torch.Tensor:
-        """Standard prototypical networks: average support features, then distance."""
+        """Nearest class mean: average the support features, then measure distance."""
         prototypes = self.compute_prototypes(s_features, support_labels)  # [N, D]
         if self.distance_metric == "cosine":
             logits = torch.matmul(q_features, prototypes.T) * self.temperature

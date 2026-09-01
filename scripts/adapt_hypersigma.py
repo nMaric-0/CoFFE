@@ -7,9 +7,12 @@ Trains the small randomly-initialized components of the dual encoder
 fill values) using masked HSI reconstruction. SpatViT/SpecViT
 transformer bodies remain frozen.
 
-Recipe matches ``configs/pretrain/houston_pretrain_enhanced.yaml``:
-band_mask_ratio=0.9, sigma=1.0, decoder_hidden_dim=256, lr=1.5e-4,
-weight_decay=0.05, warmup=100, epochs=3000, batch_size=64, AMP off.
+Optimizer recipe follows the CoFFE pretraining configs: lr=1.5e-4,
+weight_decay=0.05, warmup=100, batch_size=64, AMP off. The decoders are
+HyperSIGMA-specific (`spat_decoder_hidden`/`spec_decoder_hidden` 256,
+`fused_decoder_hidden` 512) and there is no centre-weighting here. Masking here is HyperSIGMA's own 75% token masking
+(``pretrain.mask_ratio``), not CoFFE's band/token pair, and the epoch count is
+per-config (2000-3000).
 
 The target dataset is selected entirely by the ``data.dataset`` field
 of the config (``houston`` | ``trento`` | ``muufl``). Band count and the
@@ -19,7 +22,7 @@ datasets is a one-field change.
 
 Usage:
     python scripts/adapt_hypersigma.py \
-        --config configs/pretrain/hypersigma_houston_adapt.yaml
+        --config configs/hypersigma/houston_patchnative_joint_sem.yaml
 """
 
 from __future__ import annotations

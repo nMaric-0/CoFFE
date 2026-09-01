@@ -1,5 +1,5 @@
 {
-  "description": "Episodic eval via scripts.evaluate_cosine.run_evaluation against the committed pre-refactor fixtures: OA to 6 decimals plus a SHA-256 over the full per-episode per-query argmin assignment matrix.",
+  "description": "Episodic eval via scripts.evaluate.run_evaluation against the committed pre-refactor fixtures: OA to 6 decimals plus a SHA-256 over the full per-episode per-query argmin assignment matrix.",
   "entries": {
     "coffe": {
       "OA": {

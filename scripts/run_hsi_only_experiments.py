@@ -5,8 +5,8 @@ Matrix:  {houston, trento, muufl}  ×  {spectral-only, spatial-only, combined}
 Masking: spectral (band_mask_ratio) = 0.85, spatial (spatial_mask_ratio) = 0.75
          (matching the ratios used in the current HSI+LiDAR results).
 
-Each cell pretrains the unified MFT-CPEA-Cosine encoder with use_aux=false (the
-aux/LiDAR bands are never used) using the per-dataset *_hsi_only.yaml config,
+Each cell pretrains the CoFFE encoder with use_aux=false (the
+aux/LiDAR bands are never used) using the per-dataset *_simmim_hsi.yaml config,
 then runs few-shot cosine/euclidean evaluation on the same dataset. Both stages
 go through the standard experiment runners (lib.pretrain_runner /
 lib.eval_runner), so each lands in experiments/<name>/ and the evaluator
@@ -60,9 +60,9 @@ REGIMES = {
 
 # dataset -> HSI-only pretrain config
 CONFIGS = {
-    "houston": "configs/pretrain/houston_pretrain_hsi_only.yaml",
-    "trento":  "configs/pretrain/trento_pretrain_hsi_only.yaml",
-    "muufl":   "configs/pretrain/muufl_pretrain_hsi_only.yaml",
+    "houston": "configs/coffe/houston_simmim_hsi.yaml",
+    "trento":  "configs/coffe/trento_simmim_hsi.yaml",
+    "muufl":   "configs/coffe/muufl_simmim_hsi.yaml",
 }
 
 # Evaluation params matching the current HSI+LiDAR result runs. use_aux is NOT
@@ -132,7 +132,7 @@ def main():
             run_pretrain(
                 name=exp_name,
                 description=(
-                    f"HSI-only (LiDAR removed, use_aux=false) MFT-CPEA-Cosine on "
+                    f"HSI-only (LiDAR removed, use_aux=false) CoFFE on "
                     f"{ds}; {label} masking (band={band}, spatial={spatial}). "
                     f"Ablation mirroring {ds}_enhanced_{regime} with LiDAR removed."
                 ),

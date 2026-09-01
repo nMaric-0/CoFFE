@@ -3,7 +3,7 @@
 These tests exercise the construction + forward-shape contract of the
 dual encoder without requiring the released SpatViT/SpecViT checkpoints
 or the Houston dataset. They synthesize a tiny PCA on-the-fly and run a
-single dummy batch through ``HyperSIGMADual`` / ``HyperSIGMACosine``.
+single dummy batch through ``HyperSIGMADual`` / ``HyperSIGMAFewShot``.
 
 Run with::
 
@@ -23,7 +23,7 @@ torch = pytest.importorskip("torch")
 from sklearn.decomposition import PCA
 
 from models.hypersigma import (
-    HyperSIGMACosine,
+    HyperSIGMAFewShot,
     HyperSIGMADual,
     SEM,
 )
@@ -69,7 +69,7 @@ def test_dual_forward_shapes_random_init(tmp_path):
     assert out["spec_features"][-1].shape == (2, 100, 768)
 
 
-def test_cosine_wrapper_modes(tmp_path):
+def test_fewshot_wrapper_modes(tmp_path):
     pca_path = _make_dummy_pca(tmp_path)
     dual = HyperSIGMADual(
         pca_spat_path=pca_path,
@@ -80,8 +80,8 @@ def test_cosine_wrapper_modes(tmp_path):
         freeze_body=True,
     )
     x = torch.randn(3, 144, 11, 11)
-    for mode in HyperSIGMACosine.SUPPORTED_MODES:
-        model = HyperSIGMACosine(dual=dual, mode=mode, distance_metric="cosine")
+    for mode in HyperSIGMAFewShot.SUPPORTED_MODES:
+        model = HyperSIGMAFewShot(dual=dual, mode=mode, distance_metric="cosine")
         with torch.no_grad():
             patch, cls, aux = model.forward_features(x, None)
         assert patch.shape[0] == 3 and patch.shape[1] == 1

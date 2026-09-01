@@ -9,8 +9,8 @@ end, LiDAR-derived external CLS via channel tokenization, mCrossPA fusion) as a
 the standard MAE recipe (He et al. 2022; remove 75% of the 121 spatial tokens,
 encode the visible 25% + the LiDAR CLS, transformer decoder reconstructs the
 masked tokens' bands with norm_pix_loss — see pretrain/mft_mae.py) using the
-per-dataset config (configs/pretrain/mft_original_<ds>_mae.yaml), then runs the
-same few-shot cosine/euclidean evaluation as the other baselines. Both stages go
+per-dataset config (configs/mft/<ds>_mae.yaml), then runs the same
+nearest-class-mean few-shot evaluation as the other routes. Both stages go
 through the standard runners (lib.pretrain_runner / lib.eval_runner), so each
 lands in experiments/<name>/ and the evaluator auto-loads the architecture
 (model.name=mft_original, attention_type, use_projection=false) from the saved
@@ -56,9 +56,9 @@ DEVICE = "cuda:0"
 
 # dataset -> multimodal MAE config path
 CONFIGS = {
-    "houston": "configs/pretrain/mft_original_houston_mae.yaml",
-    "trento":  "configs/pretrain/mft_original_trento_mae.yaml",
-    "muufl":   "configs/pretrain/mft_original_muufl_mae.yaml",
+    "houston": "configs/mft/houston_mae.yaml",
+    "trento":  "configs/mft/trento_mae.yaml",
+    "muufl":   "configs/mft/muufl_mae.yaml",
 }
 
 # Evaluation params matching the other MAE baselines (run_mae_experiments.py).

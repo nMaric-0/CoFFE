@@ -54,13 +54,13 @@ DEVICE = "cuda:0"
 
 # dataset -> multimodal "Spatial" config path
 CONFIGS = {
-    "houston": "configs/pretrain/mft_original_houston_spatial.yaml",
-    "trento":  "configs/pretrain/mft_original_trento_spatial.yaml",
-    "muufl":   "configs/pretrain/mft_original_muufl_spatial.yaml",
+    "houston": "configs/mft/houston_simmim_token.yaml",
+    "trento":  "configs/mft/trento_simmim_token.yaml",
+    "muufl":   "configs/mft/muufl_simmim_token.yaml",
 }
 
 # Evaluation params — identical to the MAE variant and to how the Spatial
-# MFT-CPEA runs were evaluated (euclidean, k5/q100/1000 episodes, pool_sigma=None,
+# CoFFE runs were evaluated (euclidean, k5/q100/1000 episodes, pool_sigma=None,
 # use_projection=False). Architecture auto-loads from pretrain_config.yaml.
 EVAL_PARAMS = dict(
     split="all",

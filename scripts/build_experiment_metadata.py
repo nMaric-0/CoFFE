@@ -32,15 +32,24 @@ import datetime as _dt
 import json
 import math
 import re
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import yaml
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from coffe_compat import normalize_model_name, normalize_objective  # noqa: E402
+
 
 # --------------------------------------------------------------------------- #
 # small readers / sanitisers
 # --------------------------------------------------------------------------- #
+
+
 def _read_json(path: Path) -> Optional[Any]:
     if not path.exists():
         return None
@@ -104,10 +113,14 @@ def _method_family(
             return "hypersigma_adapt" if model.get("adapt_mode") else "hypersigma"
         if mname == "mft_original":
             return "mft_original_mae"
-        if mname == "mft_cpea":
-            if isinstance(pre, dict) and pre.get("objective") == "mae":
-                return "mft_cpea_mae"
-            return "mft_cpea_enhanced"
+        if normalize_model_name(mname, origin="pretrain_config.yaml") == "coffe":
+            objective = normalize_objective(
+                (pre or {}).get("objective") if isinstance(pre, dict) else None,
+                origin="pretrain_config.yaml",
+            )
+            if objective == "mae":
+                return "coffe_mae"
+            return "coffe_simmim"
     # configs without a model block (ablation / notebook-only): use eval model_type
     model_types = {
         (e.get("model_type") or "") for e in evals.values()

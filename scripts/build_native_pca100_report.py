@@ -166,7 +166,7 @@ OVERVIEW: Dict[str, Any] = {
         ),
     },
     "few_shot_eval_protocol": {
-        "classifier": "Prototypical (class prototype = mean of L2-normalised support features).",
+        "classifier": "Nearest class mean (class mean = mean of L2-normalised support features).",
         "n_way": "Full label set per dataset (Houston 15, MUUFL 11, Trento 6).",
         "k_shot": 5,
         "n_query_per_class": 100,
@@ -222,14 +222,16 @@ COVERAGE_GAPS_AND_ANOMALIES = [
     "(no checkpoint_final.pth, metadata stuck at status='running'); no eval dir exists -> MUUFL "
     "joint_sem PCA-100 few-shot accuracy was never produced.",
     "native_sem coverage is Houston-only. Configs exist for MUUFL and Trento native_sem_pad "
-    "(configs/pretrain/hypersigma_{muufl,trento}_adapt_native_sem_pad.yaml) and the driver script "
+    "(configs/hypersigma/{muufl,trento}_backbonenative_pad_sem_only.yaml) and the driver script "
     "defaults to all three datasets, but no MUUFL/Trento native_sem experiment dirs were completed "
     "(a Trento pad adapt was started to ~epoch 50 then abandoned).",
     "Most eval-container 'pretrain_metadata.json' files are stale stubs (status='running', "
     "overrides={}, one-line stub configs). The real adaptation metadata lives in the sibling "
     "'hypersigma_adapt_*' dirs; the eval results themselves are complete and valid.",
-    "Several adapt READMEs name the base config 'hypersigma_<ds>_adapt.yaml' (the 3-band base) and "
-    "realise PCA-100 / mode via driver overrides; the dedicated 'hypersigma_houston_adapt_pca100.yaml' "
+    "Several adapt READMEs name the base config by its pre-rename name 'hypersigma_<ds>_adapt.yaml' "
+    "(now configs/hypersigma/<ds>_patchnative_joint_sem.yaml, the 3-band base) and "
+    "realise PCA-100 / mode via driver overrides; the dedicated PCA-100 config "
+    "(now configs/hypersigma/houston_patchnative_pca100_joint_sem.yaml) "
     "documents a different schedule (3000 epochs / batch 64 / lr 1.5e-4) than what actually ran "
     "(2000 / 128 / 1e-5).",
     "native_ablation: the spatial branch is NOT truly 'full band' on its input width -- it still uses "

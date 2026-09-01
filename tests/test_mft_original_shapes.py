@@ -1,6 +1,6 @@
 """Shape + MAE-gradient tests for the original-MFT baseline.
 
-The original-MFT baseline (``models.mft_original.MFTOriginalCosine``) is the
+The original-MFT baseline (``models.mft_original.MFTOriginal``) is the
 faithful MFT — Conv3D+HetConv HSI front-end -> 121 spatial tokens, LiDAR-derived
 external CLS via channel tokenization, mCrossPA fusion — pretrained with standard
 MAE (``pretrain.mft_mae.MFTMAEPretrainModel``). These checkpoint-free tests
@@ -8,7 +8,7 @@ exercise:
 
 * the tokenization / forward-feature shape contract across all three datasets'
   band counts (144/63/64 HSI, 1/1/2 aux);
-* the few-shot eval contract (single-token CLS packing, no-op CPEA);
+* the few-shot eval contract (single-token CLS packing, no class-token folding);
 * the standard-MAE forward (scalar loss, ``len_keep`` from ``mask_ratio``);
 * the key consequence of combining mCrossPA with MAE — that the decoder's
   cross-attention to the encoded CLS actually routes a reconstruction gradient
@@ -26,7 +26,7 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
-from models.mft_original import MFTOriginalCosine
+from models.mft_original import MFTOriginal
 from pretrain.mft_mae import MFTMAEPretrainModel
 from pretrain.mft_spatial_mae import MFTSpatialMaskPretrainModel
 
@@ -38,7 +38,7 @@ DATASETS = [("houston", 144, 1), ("trento", 63, 1), ("muufl", 64, 2)]
 
 
 def _encoder(hsi_channels, aux_channels):
-    return MFTOriginalCosine(
+    return MFTOriginal(
         hsi_channels=hsi_channels,
         aux_channels=aux_channels,
         use_aux=True,
@@ -72,8 +72,8 @@ def test_forward_features_contract(name, hsi_c, aux_c):
     assert cls.shape == (3, DIMS["embed_dim"]), cls.shape
     assert torch.allclose(patch.mean(dim=1), cls)
     assert aux_emb is cls or torch.allclose(aux_emb, cls)
-    # No CPEA: adapt_embeddings is a no-op pass-through.
-    assert torch.allclose(model.adapt_embeddings(patch, cls), patch)
+    # No class-token folding: eval_patch_embeddings is a no-op pass-through.
+    assert torch.allclose(model.eval_patch_embeddings(patch, cls), patch)
 
 
 def test_hsi_only_rejected():
@@ -150,7 +150,7 @@ def test_checkpoint_keys_round_trip():
     # Stripping the ``encoder.`` prefix yields keys that load into the bare encoder.
     bare = model.state_dict()
     stripped = {k[len("encoder."):]: v for k, v in sd.items() if k.startswith("encoder.")}
-    missing, unexpected = MFTOriginalCosine(
+    missing, unexpected = MFTOriginal(
         hsi_channels=144, aux_channels=1, use_aux=True, patch_size=11,
         attention_type="mcross", **DIMS,
     ).load_state_dict(stripped, strict=False)
@@ -209,7 +209,7 @@ def test_spatial_trains_mcrosspa_attention_via_cls_injection():
 
 def test_spatial_checkpoint_keys_round_trip():
     """spatial_masking / decoder modules are skipped at eval; encoder.* loads into
-    the bare MFTOriginalCosine."""
+    the bare MFTOriginal."""
     enc, mae = _spatial_mae(144, 1)
     sd = mae.state_dict()
     assert any(k.startswith("encoder.") for k in sd)
@@ -217,7 +217,7 @@ def test_spatial_checkpoint_keys_round_trip():
     assert any(k.startswith("decoder.") for k in sd)
 
     stripped = {k[len("encoder."):]: v for k, v in sd.items() if k.startswith("encoder.")}
-    missing, _ = MFTOriginalCosine(
+    missing, _ = MFTOriginal(
         hsi_channels=144, aux_channels=1, use_aux=True, patch_size=11,
         attention_type="mcross", **DIMS,
     ).load_state_dict(stripped, strict=False)

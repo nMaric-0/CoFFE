@@ -2,7 +2,7 @@
 """Compile few-shot evaluation results into a single presentation-ready JSON.
 
 Scans ``experiments/*/evaluations/*/results.json``, normalises the two result
-schemas (MFT-CPEA-Cosine single-metric vs HyperSIGMA dual cosine/euclidean),
+schemas (CoFFE/MFT single-metric vs HyperSIGMA dual cosine/euclidean),
 applies light curation (drops scratch/test runs and obviously mislabelled
 evals, collapses repeat runs of the same config), and writes a curated headline
 set to ``docs/presentation/RESULTS.json``.
@@ -13,17 +13,25 @@ refresh the compilation::
 
     python scripts/compile_results.py
 
-The masking *regime* (spectral / spatial / combined / MAE) is a property of how
-a model was *pretrained*, so it is derived from the experiment directory name,
-not from the (sometimes mislabelled) evaluation name.
+The masking *regime* (SimMIM band / token / band+token, or MAE) is a property of
+how a model was *pretrained*, so it is derived from the experiment directory
+name, not from the (sometimes mislabelled) evaluation name. Those directory
+names use the pre-paper vocabulary (``spectral``/``spatial``/``both``) and are
+frozen (PAPER_CANON §7.3): the substring tests below match them as-is and the
+canonical regime label is what gets written out.
 """
 from __future__ import annotations
 
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+
+from coffe_compat import normalize_model_type  # noqa: E402
 EXPERIMENTS = REPO / "experiments"
 OUT = REPO / "docs" / "presentation" / "RESULTS.json"
 
@@ -55,7 +63,9 @@ def classify(exp: str, ev: str, data: dict):
     """
     exp_l, ev_l = exp.lower(), ev.lower()
     ds = data.get("dataset")
-    mt = data.get("model_type")
+    # Old results.json files record the pre-paper class names
+    # (PAPER_CANON §8 D16); normalise before any comparison.
+    mt = normalize_model_type(data.get("model_type"), origin=f"{exp}/{ev}/results.json")
 
     # Drop scratch/test runs and the placeholder experiment.
     if any(m in exp_l for m in _TEST_MARKERS):
@@ -77,31 +87,32 @@ def classify(exp: str, ev: str, data: dict):
             regime = "joint_sem (fused)"
         return "HyperSIGMA", regime, "HSI-only", None
 
-    # MFT-CPEA-Cosine
+    # CoFFE (and the MFT control, which shares this schema)
     modality = "HSI-only" if "no_lidar" in exp_l else "HSI+LiDAR"
     if "_mae_" in exp_l or exp_l.endswith("_mae"):
         regime = "MAE"
     else:
+        # Frozen dir names: "spectral" = band masking, "spatial" = token masking.
         has_spec = "spectral" in exp_l
         has_spat = "spatial" in exp_l or "_spat" in exp_l
         if has_spec and has_spat:
-            regime = "Enhanced: combined"
+            regime = "SimMIM band+token"
         elif has_spat:
-            regime = "Enhanced: spatial"
+            regime = "SimMIM token"
         elif has_spec:
-            regime = "Enhanced: spectral"
+            regime = "SimMIM band"
         else:
-            regime = "Enhanced"
-    return "MFT-CPEA", regime, modality, None
+            regime = "SimMIM"
+    return "CoFFE", regime, modality, None
 
 
 def metrics_of(data: dict) -> dict:
     """Normalise metrics to {metric_name: {OA,AA,Kappa}}.
 
-    HyperSIGMA results carry both cosine and euclidean blocks; MFT-CPEA carry a
+    HyperSIGMA results carry both cosine and euclidean blocks; CoFFE/MFT carry a
     single block under its ``distance_metric``.
     """
-    if data.get("model_type") == "HyperSIGMADual":
+    if normalize_model_type(data.get("model_type")) == "HyperSIGMADual":
         out = {}
         for name in ("cosine", "euclidean"):
             mb = _metric_block(data.get(name))
@@ -202,7 +213,7 @@ def main() -> None:
         )["entries"].append(entry)
 
     # Stable, presentation-friendly ordering of entries within each dataset.
-    model_order = {"MFT-CPEA": 0, "HyperSIGMA": 1}
+    model_order = {"CoFFE": 0, "HyperSIGMA": 1}
     for ds in datasets_out.values():
         ds["entries"].sort(key=lambda e: (model_order.get(e["model"], 9), e["regime"], e["modality"]))
 
@@ -217,7 +228,7 @@ def main() -> None:
             ),
             "metric_keys": "OA = Overall Accuracy, AA = Average Accuracy, Kappa = Cohen's kappa (all %).",
             "eval_protocol": {
-                "MFT-CPEA": "5-shot, k_query=100, 1000 episodes, euclidean prototypes.",
+                "CoFFE": "5-shot, k_query=100, 1000 episodes, Euclidean nearest-class-mean.",
                 "HyperSIGMA": "5-shot, k_query=30 (Houston) / 100 (Trento), 600-2000 episodes; cosine & euclidean reported.",
             },
             "curation": (

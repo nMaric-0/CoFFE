@@ -54,13 +54,13 @@ ROOTS: dict[str, list[str]] = {
     ],
     # ---- The two core CLIs the runners shell out to -----------------------
     "paper_core_cli": [
-        "scripts/pretrain_enhanced.py",
-        "scripts/evaluate_cosine.py",
+        "scripts/pretrain.py",
+        "scripts/evaluate.py",
     ],
     # ---- Tables 2-3, HyperSIGMA rows -------------------------------------
     "paper_hypersigma": [
         "scripts/adapt_hypersigma.py",
-        "scripts/evaluate_hypersigma_cosine.py",
+        "scripts/evaluate_hypersigma.py",
         "scripts/fit_pca_hypersigma.py",
         "scripts/run_hypersigma_spatial_pca100.py",
         "scripts/gather_native_pca100_raw.py",
@@ -121,7 +121,8 @@ ROOTS: dict[str, list[str]] = {
     "tests": [
         "tests/test_data.py",
         "tests/test_models.py",
-        "tests/test_pretrain_enhanced.py",
+        "tests/test_pretrain_simmim.py",
+        "tests/test_compat.py",
         "tests/test_spatial_weights.py",
         "tests/test_mft_original_shapes.py",
         "tests/test_hypersigma_shapes.py",

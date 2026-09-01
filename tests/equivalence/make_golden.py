@@ -146,13 +146,13 @@ def assert_safe_to_generate(rebaseline: bool) -> None:
 
 
 def make_g1(scene_root: Path, work: Path) -> Dict[str, Any]:
-    from scripts.pretrain_enhanced import run_pretrain
+    from scripts.pretrain import run_pretrain
 
     spec = SCENES["houston_mini"]
     entries: Dict[str, Any] = {}
 
     for objective_id in OBJECTIVES:
-        for model_name in ("mft_cpea", "mft_original"):
+        for model_name in ("coffe", "mft_original"):
             if model_name == "mft_original" and objective_id not in MFT_OBJECTIVES:
                 continue
             key = f"{model_name}:{objective_id}"
@@ -173,7 +173,7 @@ def make_g1(scene_root: Path, work: Path) -> Dict[str, Any]:
     return {
         "description": (
             "Per-epoch mean pretraining loss for every objective in PAPER_CANON "
-            "Table 2, via scripts.pretrain_enhanced.run_pretrain on houston_mini."
+            "Table 2, via scripts.pretrain.run_pretrain on houston_mini."
         ),
         "scene": spec.name,
         "epochs": G1_EPOCHS,
@@ -202,8 +202,8 @@ def make_g2(work: Path) -> Dict[str, Any]:
     entries: Dict[str, Any] = {}
 
     for key, model_name, use_aux in (
-        ("coffe_hsi_lidar", "mft_cpea", True),
-        ("coffe_hsi", "mft_cpea", False),
+        ("coffe_hsi_lidar", "coffe", True),
+        ("coffe_hsi", "coffe", False),
         ("mft_original", "mft_original", True),
     ):
         set_determinism()
@@ -239,7 +239,7 @@ def make_g2(work: Path) -> Dict[str, Any]:
 # `encoder.`-prefixed keys, exactly what `fix_state_dict_keys` consumes. The
 # optimiser/scheduler state is dropped so the fixtures stay small.
 FIXTURES = {
-    "coffe": {"model_name": "mft_cpea", "objective": "simmim_token"},
+    "coffe": {"model_name": "coffe", "objective": "simmim_token"},
     "mft_original": {"model_name": "mft_original", "objective": "simmim_token"},
 }
 
@@ -251,7 +251,7 @@ def fixture_path(key: str) -> Path:
 def make_fixtures(scene_root: Path, work: Path) -> Dict[str, Any]:
     import torch
 
-    from scripts.pretrain_enhanced import run_pretrain
+    from scripts.pretrain import run_pretrain
 
     spec = SCENES["houston_mini"]
     FIXTURE_DIR.mkdir(parents=True, exist_ok=True)
@@ -295,7 +295,7 @@ def _fixture_key_report(spec: SceneSpec, key: str, model_name: str) -> Dict[str,
     pretrain-only tensors the eval encoder does not have. Recording the exact
     list means any *other* key drifting into it fails the harness.
     """
-    from scripts.evaluate_cosine import (
+    from scripts.evaluate import (
         fix_state_dict_keys,
         load_checkpoint_with_key_mapping,
     )
@@ -315,7 +315,7 @@ def _fixture_key_report(spec: SceneSpec, key: str, model_name: str) -> Dict[str,
 
 
 def make_g3(scene_root: Path) -> Dict[str, Any]:
-    from scripts.evaluate_cosine import run_evaluation
+    from scripts.evaluate import run_evaluation
 
     spec = SCENES["houston_mini"]
     entries: Dict[str, Any] = {}
@@ -346,7 +346,7 @@ def make_g3(scene_root: Path) -> Dict[str, Any]:
 
     return {
         "description": (
-            "Episodic eval via scripts.evaluate_cosine.run_evaluation against the "
+            "Episodic eval via scripts.evaluate.run_evaluation against the "
             "committed pre-refactor fixtures: OA to 6 decimals plus a SHA-256 over "
             "the full per-episode per-query argmin assignment matrix."
         ),
@@ -430,7 +430,7 @@ def make_real(experiments_dir: Path) -> Dict[str, Any]:
     ``golden/real_local.json`` which is gitignored and never asserted against by
     ``test_equivalence.py``.
     """
-    from scripts.evaluate_cosine import run_evaluation
+    from scripts.evaluate import run_evaluation
 
     # PAPER_CANON §8 D14: Table 2's headline Houston cell (75.30) comes from this
     # directory, evaluated at epoch 950. The `seed52` in the name is a misnomer;
@@ -463,7 +463,7 @@ def make_real(experiments_dir: Path) -> Dict[str, Any]:
         max_tsne_samples=0,
         output=None,
         patch_size=11,
-        name="mft_cpea",
+        name="coffe",
         **{k: v for k, v in COFFE_ARCH.items()},
     )
     return {

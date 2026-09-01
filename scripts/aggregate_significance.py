@@ -50,7 +50,7 @@ def _read_metric_means(name: str) -> Optional[Dict[str, float]]:
 
 
 def _ci95(values: List[float]) -> float:
-    """95% CI half-width via the t-distribution (matches evaluate_cosine)."""
+    """95% CI half-width via the t-distribution (matches scripts/evaluate.py)."""
     n = len(values)
     if n < 2:
         return float("nan")

@@ -1,4 +1,4 @@
-"""Notebook-friendly wrapper around scripts.pretrain_enhanced.run_pretrain.
+"""Notebook-friendly wrapper around scripts.pretrain.run_pretrain.
 
 The runner creates a directory under experiments/<name>/, redirects the
 trainer's checkpoint/log output there, attaches a file logger so the run's
@@ -46,7 +46,7 @@ def run_pretrain(
     experiments_root: Union[str, Path] = DEFAULT_EXPERIMENTS_ROOT,
     overwrite: bool = False,
 ) -> PretrainExperiment:
-    """Run an enhanced-pretraining experiment end-to-end.
+    """Run a masked-pretraining experiment end-to-end.
 
     Args:
         name: Short experiment identifier (becomes the directory name).
@@ -61,7 +61,7 @@ def run_pretrain(
     Returns the PretrainExperiment handle; its `.metadata` contains the final
     `history` summary after the run.
     """
-    from scripts.pretrain_enhanced import run_pretrain as _run
+    from scripts.pretrain import run_pretrain as _run
 
     base_config_path = str(config) if isinstance(config, (str, Path)) else None
     cfg = _load_config(config)

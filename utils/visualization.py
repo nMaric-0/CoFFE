@@ -1,4 +1,4 @@
-"""Visualization utilities for MFT-CPEA evaluation."""
+"""Visualization utilities for few-shot evaluation."""
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt

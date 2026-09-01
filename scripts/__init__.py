@@ -1,1 +1,1 @@
-"""Entry-point scripts. Importable as `scripts.pretrain_enhanced` etc."""
+"""Entry-point scripts. Importable as `scripts.pretrain` etc."""

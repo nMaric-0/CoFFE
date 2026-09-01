@@ -71,7 +71,7 @@ def run_adapt_hypersigma(
         name: Short experiment identifier (becomes the directory name).
         description: One-paragraph description, written into README.md.
         config: Path to a YAML config OR a dict matching the YAML schema.
-            Typical: ``configs/pretrain/hypersigma_houston_adapt.yaml``.
+            Typical: ``configs/hypersigma/houston_patchnative_joint_sem.yaml``.
         overrides: Optional deep-merged overrides applied to the loaded
             config (handy for sweeps — e.g.
             ``{"pretrain": {"lr": 5e-5, "epochs": 200}}``,

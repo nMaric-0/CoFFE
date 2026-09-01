@@ -1,1 +1,1 @@
-"""Tests for MFT-CPEA."""
+"""Tests for the CoFFE release."""

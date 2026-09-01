@@ -1,3 +1,26 @@
+# MFT SimMIM token — Trento, HSI+LiDAR
+#
+# Reproduces the paper's Table 2 cell **OA 88.22**.
+#
+#   source run       experiments/mft_original_trento_spatial_faithful/
+#   evaluated at     epoch 950 of a 1500-epoch schedule
+#
+# Every recipe value below matches that run's frozen pretrain_config.yaml,
+# checked by tools/refactor/make_cell_configs.py.
+#
+# NOTE this file keeps its original `paths:` (config paths are on the
+# audit's DO-NOT-RENAME list). Those directories do not exist today — the
+# paper's checkpoints are under experiments/<run>/checkpoints/ — but a
+# plain `python scripts/pretrain.py --config ...` will create and write
+# into them. Point `paths:` elsewhere if that matters to you.
+#
+# NOTE the checkpoint the paper evaluated is NOT the final one: train the
+# full 1500 epochs, then evaluate epoch 950
+# (PAPER_CANON §8 D17).
+#
+# Run with:
+#   python scripts/pretrain.py --config configs/mft/trento_simmim_token.yaml
+
 # Trento — MFT control, SimMIM token pretraining (HSI+LiDAR)
 #
 # See configs/mft/houston_simmim_token.yaml for the full description.

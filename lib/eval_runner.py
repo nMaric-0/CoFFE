@@ -175,7 +175,7 @@ def run_hypersigma_evaluation(
             summary = results
         # ``summary`` from the HyperSIGMA eval has separate cosine/euclidean
         # blocks; pick the primary metric for the EvalRun.finalize summary.
-        primary_metric = forwarded.get("distance_metric", "cosine")
+        primary_metric = forwarded.get("distance_metric", "euclidean")
         finalize_payload = summary.get(primary_metric, summary) if isinstance(summary, dict) else summary
         eval_run.finalize(results=finalize_payload)
         log.info(f"HyperSIGMA eval '{eval_name}' complete.")

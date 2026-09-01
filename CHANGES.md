@@ -4,9 +4,13 @@ Renames applied while preparing this repository for release, and what still
 accepts the old names.
 
 **No computed number changed.** Every entry below is a name: a class, a file, a
-config value, or a printed label. The behaviour-equivalence harness
-(`tests/equivalence/`) was green and byte-identical across the whole rename, and
-a pre-rename checkpoint fixture still loads through the renamed classes.
+config value, or a printed label — with one signed-off exception, the
+`distance_metric` default (see the end of this file). The behaviour-equivalence
+harness (`tests/equivalence/`) stayed green throughout: G2–G5 are **bit-identical**
+at zero tolerance, and G1's loss trajectories match the goldens' stored 8-decimal
+precision (residual ≤ 5e-09, BLAS reduction-order noise that the harness's
+declared tolerance exists for — it is present on goldens this work never touched).
+A pre-rename checkpoint fixture still loads through the renamed classes.
 
 ---
 
@@ -182,6 +186,44 @@ behave identically either way. `tests/test_compat.py` (25 tests) pins all three 
 runs a frozen-vocabulary config end-to-end through `run_pretrain` and checks the
 loss trajectory against the golden.
 
+### Per-cell reproduction configs (added at the gate)
+
+Every one of the paper's 30 Table-2 cells now has a config carrying **the exact
+recipe of the run that produced its published mean**, generated from that run's
+frozen `pretrain_config.yaml` by `tools/refactor/make_cell_configs.py`:
+
+| Route | Files |
+|---|---|
+| `configs/coffe/` | `<scene>_simmim_{band,token,band_token}[_hsi].yaml` (18, new) and `<scene>_mae[_hsi].yaml` (6, already matched their cell — stamped with provenance) |
+| `configs/mft/` | `<scene>_simmim_token.yaml`, `<scene>_mae.yaml` (6, already matched — stamped) |
+
+Each header names the cell, its paper OA, the source run, and the **evaluated
+checkpoint epoch** (950/975, not the final one — PAPER_CANON §8 D17).
+
+`paths:` is deliberately *not* copied into the **18 generated** files — the
+frozen values name the run's own output directories. The **12 stamped** files
+(the MAE and MFT cells, which already matched their run) keep the `paths:` they
+already had, because config `paths:` values are on the audit's DO-NOT-RENAME
+list; none of those directories exists on disk today (the paper's checkpoints
+live under `experiments/<run>/checkpoints/`), but a raw
+`python scripts/pretrain.py --config ...` will create and write into them.
+
+The six `configs/coffe/<scene>_simmim[_hsi].yaml` files are **not** cell recipes
+— they are the 5-seed significance runner's base configs (it clones per-variant
+mask rates at launch), and each now says so in its header. Note the twelve MAE
+and MFT cell configs do double duty: `sig_significance_config.py:131-147` also
+uses them as base configs for the `enhanced_mae`, `mft_mae` and `mft_spatial`
+groups. That is harmless — those groups set `clone_mask=False`, so the runner
+uses the file's values, which are exactly the cell's.
+
+### `compile_results.py` no longer calls the MFT control "CoFFE"
+
+`classify()` split the two apart using the `model_type` the evaluator writes.
+Before, every single-metric result got one label (`"MFT-CPEA"`, then `"CoFFE"`),
+so 47 MFT-control results were labelled as CoFFE and could out-rank a genuine
+CoFFE run as a cell's representative in six groups. The committed
+`RESULTS.json` predates those runs and is unaffected.
+
 ## Where the retired names still appear
 
 By design, in exactly these places — this is the list the verification battery's
@@ -190,6 +232,8 @@ stale-vocabulary grep excludes:
 | File | Why |
 |---|---|
 | `coffe_compat.py`, `tests/test_compat.py` | the alias table itself, and its tests |
+| `tests/equivalence/test_equivalence.py`'s `test_g1_legacy_vocabulary_config_trains_identically` | drives a frozen-vocabulary config end to end on purpose |
+| `.claude/agents/*.md`, `.claude/skills/*` | the refactor tooling's own specification of the retirement (same category as `docs/refactor/`) |
 | `_LEGACY_ALIASES` in `models/__init__.py`, `models/hypersigma/__init__.py`, `pretrain/__init__.py` | the package-level import shims, which delegate to that table |
 | `tools/refactor/apply_renames.py`, `tools/refactor/build_manifest.py` | the rename table and the audit ledger — they exist to record old→new |
 | `CHANGES.md`, `PAPER_CANON.md`, `docs/refactor/*`, `CLAUDE.md`, `WORKFLOW.md` | documents about the retirement |
@@ -204,10 +248,17 @@ import, not a cosmetic issue.
 ## What deliberately did **not** change
 
 - Any default that affects a computed number — every hyperparameter, constant
-  and piece of maths. In particular `--distance-metric` still defaults to
-  `cosine`, even though the paper protocol is euclidean and PAPER_CANON §1 says
-  cosine should never be a default: changing it would change what an unflagged
-  run computes. Flagged for a decision at the phase-4 gate.
+  and piece of maths, with **one deliberate, signed-off exception**:
+  `distance_metric` now defaults to `"euclidean"` instead of `"cosine"`
+  (phase-4 gate, 2026-09-01). It is the paper protocol, PAPER_CANON §1 forbids
+  cosine as a default, and no paper run is affected because **every paper run
+  passes `distance_metric` explicitly** — so no default is ever consulted. (Not
+  every paper run passes *euclidean*: one Table 3 cell records `cosine`, see
+  PAPER_CANON §8 D18.) That is why the equivalence goldens are unchanged.
+  Cosine remains fully selectable via `--distance-metric cosine`. Changed in
+  `scripts/evaluate.py` (CLI + `_DEFAULT_ARGS` + config fallbacks),
+  `scripts/evaluate_hypersigma.py`, `lib/eval_runner.py`, and the `CoFFE` /
+  `MFTOriginal` / `HyperSIGMAFewShot` constructors.
 - The only defaults that did move are four **output-path fallbacks** whose names
   carried retired vocabulary and which no shipped config or reader relies on
   (all 26 pretraining/adaptation configs set `paths.checkpoint_dir` /

@@ -22,7 +22,7 @@ vocabulary without changing what it computes.
 | `MFT-CPEA`, `MFTCPEA`, `mft_cpea`, "MFT-CPEA-Cosine" | **CoFFE** (Cross-modal Fusion Feature Encoder) | The paper's compact encoder. Python class `CoFFE`, module `coffe/models/coffe.py`, config `model.name: "coffe"`. |
 | `MFTCPEACosine` (class) | `CoFFE` | Class rename only. **state_dict attribute names are frozen** (see §7). |
 | `models/mft_cpea_cosine.py` | `coffe/models/coffe.py` | |
-| "Cosine" in file/class/script/doc names (`evaluate_cosine.py`, `run_cosine_eval.sh`, `hypersigma_cosine.py`, `docs/COSINE_VARIANT.md`, `HyperSIGMACosine`) | Drop. Protocol name is **"Euclidean nearest-class-mean (NCM)"** | The paper protocol is Euclidean NCM (`distance_metric="euclidean"` in every paper run). `cosine` may remain as a **non-default option value** of `distance_metric`, never in a name, title, or default. |
+| "Cosine" in file/class/script/doc names (`evaluate_cosine.py`, `run_cosine_eval.sh`, `hypersigma_cosine.py`, `docs/COSINE_VARIANT.md`, `HyperSIGMACosine`) | Drop. Protocol name is **"Euclidean nearest-class-mean (NCM)"** | The paper protocol is Euclidean NCM (`distance_metric="euclidean"` in every Table 2 run and every Table 3 cell but one — §8 D18). `cosine` may remain as a **non-default option value** of `distance_metric`, never in a name, title, or default. **Phase-4 gate 2026-09-01: the default is now `euclidean`** everywhere (CLI, `_DEFAULT_ARGS`, every model constructor, `lib/eval_runner`); cosine stays selectable. This is the one deliberate default change of the refactor. No paper run is affected because every paper run passes `distance_metric` **explicitly**, so no default is consulted — note that value is not always `euclidean`: the Table 3 Houston 11×11 spectral cell records `cosine` (§8 D18). |
 | `MFTOriginalCosine` | `MFTOriginal` | The architectural control: original MFT (Roy et al.), external fusion token, pretrained under the same masked objectives. Config `model.name: "mft_original"` is already correct. |
 | objective `"enhanced"` | `"simmim"` | SimMIM-style in-place masked reconstruction (Xie et al.). |
 | variant `"spectral"` | **SimMIM band** → id `simmim_band` | Band masking of (pixel, band) entries, rates `(r_b, r_s) = (0.85, 0)`. |
@@ -362,6 +362,23 @@ where the paper allows, renaming.
   obligation, and any new `configs/coffe/*band_token*` written in phase 4 must
   carry the rate of the cell it reproduces.
 
+- **D20 — for two Trento cells the ± was measured on a different mask rate than
+  the mean.** `_ENHANCED_CANONICAL` (`scripts/sig_significance_config.py:66-74`)
+  supplies the mask rates that the 5-seed significance runs clone. For Trento it
+  names `trento_enhanced_spectral_run1` (band **0.75**) and
+  `trento_enhanced_spectral_spatial_run1` (**0.75/0.75**), while Table 2's means
+  come from `..._run2` (band **0.85** and **0.85/0.75**) — `AUDIT.md` §3, and the
+  eval JSONs confirm it: run2 gives exactly the published 90.32 and 92.50, run1
+  gives 87.47 and 88.52. So for **CoFFE SimMIM band / HSI+LiDAR / Trento
+  (90.32 ± 0.6)** and **CoFFE SimMIM band+token / HSI+LiDAR / Trento
+  (92.50 ± 1.2)** the ± is the spread of a different recipe than the mean. The
+  other seven canonical cells match. Nothing was changed: the numbers are what
+  they are.
+  **DECIDED 2026-09-01 (Nikola): the per-cell reproduction configs carry the
+  rate of the run that produced the published mean (0.85).** Each of the two
+  configs states the mismatch in its header, so nobody reads the ± as the spread
+  of the shipped recipe.
+
 ## 9. Target vocabulary for new artifacts
 
 New configs: `configs/{coffe,mft,hypersigma}/<scene>_<regime>[_hsi].yaml`, e.g.
@@ -369,4 +386,10 @@ New configs: `configs/{coffe,mft,hypersigma}/<scene>_<regime>[_hsi].yaml`, e.g.
 `configs/mft/trento_simmim_token.yaml`,
 `configs/hypersigma/muufl_patchnative_joint_sem.yaml`.
 New experiment names: `<scene>_<model>_<regime>_<modality>_seed<k>`.
+**Per-cell reproduction configs** (phase-4 gate, 2026-09-01): every Table 2 cell
+has one, at `configs/{coffe,mft}/<scene>_<regime>[_hsi].yaml`, generated from
+that cell's frozen run by `tools/refactor/make_cell_configs.py` and carrying its
+exact recipe plus the evaluated checkpoint epoch. The six
+`configs/coffe/<scene>_simmim[_hsi].yaml` files are **not** cell recipes — they
+are the 5-seed significance runner's base configs, and say so in their headers.
 CLI verbs: `pretrain`, `evaluate`, `adapt-hypersigma`, `reproduce`.

@@ -1,3 +1,26 @@
+# CoFFE MAE — Houston, HSI+LiDAR
+#
+# Reproduces the paper's Table 2 cell **OA 72.15**.
+#
+#   source run       experiments/houston_mae_lidar/
+#   evaluated at     epoch 950 of a 3000-epoch schedule
+#
+# Every recipe value below matches that run's frozen pretrain_config.yaml,
+# checked by tools/refactor/make_cell_configs.py.
+#
+# NOTE this file keeps its original `paths:` (config paths are on the
+# audit's DO-NOT-RENAME list). Those directories do not exist today — the
+# paper's checkpoints are under experiments/<run>/checkpoints/ — but a
+# plain `python scripts/pretrain.py --config ...` will create and write
+# into them. Point `paths:` elsewhere if that matters to you.
+#
+# NOTE the checkpoint the paper evaluated is NOT the final one: train the
+# full 3000 epochs, then evaluate epoch 950
+# (PAPER_CANON §8 D17).
+#
+# Run with:
+#   python scripts/pretrain.py --config configs/coffe/houston_mae.yaml
+
 # Houston MAE Pretraining Configuration (original MAE recipe, HSI+LiDAR tokens)
 #
 # MAE recipe (He et al. 2022): remove 75% of the spatial (pixel) tokens, encode

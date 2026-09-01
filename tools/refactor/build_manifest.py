@@ -386,6 +386,44 @@ rec("coffe_compat.py", "INFRA", "move", "coffe/compat.py",
     "phase-4 legacy-vocabulary alias layer (PAPER_CANON §7.3): the one place "
     "allowed to spell the retired names", "moves with the package in phase 5")
 
+# ---- Phase-4 gate addendum: per-cell reproduction configs ----------------
+# Every Table-2 cell gained a config carrying its source run's exact recipe,
+# generated and re-verified by tools/refactor/make_cell_configs.py. The generic
+# `configs/` rule below says committed configs may not match the runs (risk R1);
+# for these thirty that is measurably false, so they get explicit records.
+_CELL_CONFIGS = {
+    "coffe": ["{s}_simmim_band", "{s}_simmim_band_hsi", "{s}_simmim_token",
+              "{s}_simmim_token_hsi", "{s}_simmim_band_token",
+              "{s}_simmim_band_token_hsi", "{s}_mae", "{s}_mae_hsi"],
+    "mft": ["{s}_simmim_token", "{s}_mae"],
+}
+for _route, _stems in _CELL_CONFIGS.items():
+    for _scene in ("houston", "trento", "muufl"):
+        for _stem in _stems:
+            rec(f"configs/{_route}/{_stem.format(s=_scene)}.yaml", "PAPER", "keep", None,
+                "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe "
+                "value is copied from the frozen pretrain_config.yaml of the run that "
+                "produced this cell's published mean, and re-verified by "
+                "tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+                "paths: deliberately NOT copied - the frozen values name the "
+                "directories holding the paper's checkpoints")
+
+# The six base configs are NOT cell recipes: sig_significance_config.py:114,122
+# uses them as the 5-seed experiment's per-scene templates and clones the mask
+# rates at launch.
+for _scene in ("houston", "trento", "muufl"):
+    for _sfx, _group in (("", "enhanced"), ("_hsi", "hsi_only")):
+        rec(f"configs/coffe/{_scene}_simmim{_sfx}.yaml", "PAPER", "keep", None,
+            f"base config for the significance experiment's `{_group}` group "
+            "(scripts/sig_significance_config.py), NOT a Table-2 cell recipe - the "
+            "runner clones per-variant mask rates from the canonical run dir",
+            "carries a ROLE banner saying so and pointing at the per-cell configs")
+
+rec("tools/refactor/make_cell_configs.py", "INFRA", "keep", None,
+    "phase-4 gate addendum: generates and re-verifies the 30 per-cell "
+    "reproduction configs from the frozen runs; requires the private "
+    "experiments/ tree, so it is a maintainer tool, not a release check", "")
+
 RULES = [
     ("third_party/", "VENDORED", "keep",
      "PAPER_CANON §7.4: vendored, contents never modified"),
@@ -438,6 +476,8 @@ NOTE = (
     " reorganised into configs/{coffe,mft,hypersigma}/ per §9 - those 26 files"
     " had rule-based 'keep' records, so the ledger shows them only at their new"
     " paths; the full old->new table is CHANGES.md."
+    " | phase-4 gate 2026-09-01: every Table-2 cell gained a reproduction config"
+    " generated from its source run (tools/refactor/make_cell_configs.py)."
 )
 
 # Which phase carried out each already-executed verdict. Such a path is no

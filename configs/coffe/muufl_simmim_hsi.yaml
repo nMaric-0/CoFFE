@@ -12,16 +12,20 @@
 #
 # Run with:
 #   python scripts/pretrain.py --config configs/coffe/muufl_simmim_hsi.yaml
+#
+# ROLE: this is the **5-seed significance experiment's base config** for this
+# scene (the `hsi_only` group in scripts/sig_significance_config.py). That runner
+# CLONES the per-variant mask rates from the canonical run dir at launch, so the
+# pair in this file (0.9 / 0.0) is only what it happens to carry — it is NOT
+# the recipe of any Table 2 cell.
+#
+# To reproduce a published cell, use that cell's own config, each generated from
+# its frozen run by tools/refactor/make_cell_configs.py:
+#   configs/coffe/muufl_simmim_band_hsi.yaml
+#   configs/coffe/muufl_simmim_token_hsi.yaml
+#   configs/coffe/muufl_simmim_band_token_hsi.yaml
 
 # Model architecture
-#
-# NOTE ON THE REGIME. This is a per-scene SimMIM *base* config: the mask-rate
-# pair below is band 0.9 / token 0.0 -> **SimMIM band**, HSI-only. It is not a per-cell reproduction
-# recipe — the paper's Table 2 cells use per-cell rates (0.85 or 0.75 band,
-# 0.75 token; PAPER_CANON §8 D19), and the 5-seed significance runs clone their
-# rates at runtime from the canonical run dir
-# (scripts/sig_significance_config.py). Set band_mask_ratio /
-# spatial_mask_ratio explicitly to reproduce a specific cell.
 model:
   name: "coffe"
   embed_dim: 128

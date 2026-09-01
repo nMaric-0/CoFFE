@@ -40,7 +40,7 @@ class HyperSIGMAFewShot(nn.Module):
         self,
         dual: HyperSIGMADual,
         mode: str = "fused",
-        distance_metric: str = "cosine",
+        distance_metric: str = "euclidean",
         temperature: float = 10.0,
         prototype_mode: str = "mean_features",
         pool_sigma: Optional[float] = None,

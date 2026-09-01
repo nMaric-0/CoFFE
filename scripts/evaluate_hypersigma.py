@@ -785,7 +785,7 @@ _DEFAULT_ARGS = {
     "data_root": "./data/raw",
     "split": "test",
     "patch_size": 11,
-    "distance_metric": "cosine",
+    "distance_metric": "euclidean",
     "temperature": 10.0,
     "prototype_mode": "mean_features",
     "seed": 42,
@@ -873,8 +873,11 @@ if __name__ == "__main__":
                         help="Path to adapted checkpoint; 'auto' derives "
                              "checkpoints/hypersigma_adapted/<ds>_k<k>/checkpoint.pth; "
                              "omit or 'none' for the unadapted ablation")
-    parser.add_argument("--distance-metric", type=str, default="cosine",
-                        choices=["cosine", "euclidean"])
+    parser.add_argument("--distance-metric", type=str, default="euclidean",
+                        choices=["euclidean", "cosine"],
+                        help="Primary distance to the class means (default: "
+                             "euclidean, the paper protocol). Both blocks are "
+                             "always reported for HyperSIGMA.")
     parser.add_argument("--temperature", type=float, default=10.0)
     parser.add_argument("--prototype-mode", type=str, default="mean_features",
                         choices=["mean_features"])  # mean_distances not used for the dual feature

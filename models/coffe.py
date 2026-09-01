@@ -71,8 +71,8 @@ class CoFFE(nn.Module):
         proj_hidden_dim: Projection head hidden dimension (default: 4x embed_dim)
         proj_num_layers: Number of projection head layers (1, 2, or 3)
         proj_l2_normalize: Whether to L2 normalize projection output
-        distance_metric: "cosine" or "euclidean" distance to the class means.
-                 The paper protocol is "euclidean".
+        distance_metric: distance to the class means — "euclidean" (default,
+                 the paper protocol) or "cosine".
         temperature: Temperature scaling for cosine similarity (default: 10.0)
         prototype_mode: "mean_features" (average features then distance) or
                        "mean_distances" (distance to each, then average)
@@ -93,7 +93,7 @@ class CoFFE(nn.Module):
         proj_hidden_dim: Optional[int] = None,
         proj_num_layers: int = 2,
         proj_l2_normalize: bool = True,
-        distance_metric: str = "cosine",
+        distance_metric: str = "euclidean",
         temperature: float = 10.0,
         prototype_mode: str = "mean_features",
         pool_sigma: Optional[float] = None

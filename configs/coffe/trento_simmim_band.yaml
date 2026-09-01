@@ -1,0 +1,75 @@
+# CoFFE SimMIM band — Trento, HSI+LiDAR
+#
+# Reproduces the paper's Table 2 cell **OA 90.32**.
+#
+#   source run       experiments/trento_enhanced_spectral_run2/
+#   evaluated at     epoch 975 of a 1500-epoch schedule
+#
+# Every recipe value below matches that run's frozen pretrain_config.yaml,
+# checked by tools/refactor/make_cell_configs.py.
+#
+# Output paths are fresh (./checkpoints/<route>/<cell>), not the source
+# run's own output directory.
+#
+# NOTE the checkpoint the paper evaluated is NOT the final one: train the
+# full 1500 epochs, then evaluate epoch 975
+# (PAPER_CANON §8 D17).
+#
+# PAPER_CANON §8 D20: the published mean comes from this recipe (band 0.85,
+# run `trento_enhanced_spectral_run2`), but the ±0.6 in Table 2 is the
+# across-seed std of 5 runs trained at band **0.75** (cloned from
+# `trento_enhanced_spectral_run1`). Gate decision 2026-09-01: the cell
+# config carries the mean's rate.
+#
+# Run with:
+#   python scripts/pretrain.py --config configs/coffe/trento_simmim_band.yaml
+
+model:
+  name: "coffe"
+  embed_dim: 128
+  num_heads: 2
+  num_layers: 2
+  lambda_factor: 0.5
+  dropout: 0.1
+  use_projection: true
+  proj_hidden_dim: 512
+  proj_num_layers: 1
+  proj_l2_normalize: true
+
+data:
+  patch_size: 11
+  num_workers: 4
+
+pretrain:
+  datasets:
+    - "trento"
+  objective: "simmim"
+  epochs: 1500
+  batch_size: 128
+  val_split: 0.0
+  lr: 0.00015
+  min_lr: 1.0e-06
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+  decoder_hidden_dim: 256
+  band_mask_ratio: 0.85
+  spatial_mask_ratio: 0.0
+  recon_center_sigma: 1.0
+  pool_center_sigma: 1.0
+  save_interval: 25
+  val_interval: 3000
+  log_interval: 1
+  use_amp: false
+
+# Fresh output paths: the source run's checkpoint_dir holds the paper's
+# checkpoints and must not be written into.
+paths:
+  data_root: "./data/raw"
+  checkpoint_dir: "./checkpoints/coffe/trento_simmim_band"
+  log_dir: "./logs/coffe/trento_simmim_band"
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: true

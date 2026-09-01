@@ -58,6 +58,8 @@ def _metric_block(block: dict) -> dict | None:
 def classify(exp: str, ev: str, data: dict):
     """Return (model, regime, modality) for a result, or None if excluded.
 
+    ``model`` is one of ``"CoFFE"``, ``"MFT (original)"`` or ``"HyperSIGMA"``.
+
     ``regime`` is taken from the *experiment* name (pretraining config), since
     eval names occasionally relabel the same checkpoint.
     """
@@ -87,7 +89,15 @@ def classify(exp: str, ev: str, data: dict):
             regime = "joint_sem (fused)"
         return "HyperSIGMA", regime, "HSI-only", None
 
-    # CoFFE (and the MFT control, which shares this schema)
+    # CoFFE and the MFT control share this result schema, so the model has to
+    # come from `model_type`, not from the schema. Both used to get the same
+    # label, which let an MFT-control run stand in as the representative of a
+    # CoFFE cell.
+    if mt == "MFTOriginal" or "mft_original" in exp_l:
+        model = "MFT (original)"
+    else:
+        model = "CoFFE"
+
     modality = "HSI-only" if "no_lidar" in exp_l else "HSI+LiDAR"
     if "_mae_" in exp_l or exp_l.endswith("_mae"):
         regime = "MAE"
@@ -103,7 +113,7 @@ def classify(exp: str, ev: str, data: dict):
             regime = "SimMIM band"
         else:
             regime = "SimMIM"
-    return "CoFFE", regime, modality, None
+    return model, regime, modality, None
 
 
 def metrics_of(data: dict) -> dict:
@@ -213,7 +223,7 @@ def main() -> None:
         )["entries"].append(entry)
 
     # Stable, presentation-friendly ordering of entries within each dataset.
-    model_order = {"CoFFE": 0, "HyperSIGMA": 1}
+    model_order = {"CoFFE": 0, "MFT (original)": 1, "HyperSIGMA": 2}
     for ds in datasets_out.values():
         ds["entries"].sort(key=lambda e: (model_order.get(e["model"], 9), e["regime"], e["modality"]))
 

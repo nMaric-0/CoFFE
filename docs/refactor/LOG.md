@@ -731,9 +731,16 @@ the old log lines).
 
 - pytest `-m "not gpu and not data"`: **120 passed** (94 baseline + 25 compat
   tests + 1 new end-to-end legacy-vocabulary equivalence test), 0 failed.
-- Equivalence harness: **IDENTICAL** on G1/G2/G3/G5, and **G4 — the pre-rename
-  checkpoint fixture — loads through the renamed classes**. Re-run after each
-  rename group, not just at the end.
+- Equivalence harness: green after every rename group, not just at the end, and
+  **G4 — the pre-rename checkpoint fixture — loads through the renamed
+  classes**. Precisely: G2–G5 are **bit-identical at zero tolerance**; G1's loss
+  trajectories match the goldens' stored 8-decimal precision with a residual
+  ≤ 5e-09. That residual is BLAS reduction-order noise — it shows up equally on
+  the MAE goldens nothing in this work touches — which is what the harness's
+  declared `rtol=1e-6 / atol=1e-8` is for. Earlier entries in this log said
+  "IDENTICAL", which is the harness's verdict *at its declared tolerance*; the
+  addendum's verifier pass measured it at zero tolerance and this is the exact
+  statement.
 - The harness itself moved to canonical vocabulary (`objective: "simmim"`,
   `model_name: "coffe"`), which renamed five entry keys in
   `golden/g1_pretrain_loss.json`. Verified mechanically that the mapped entries
@@ -1041,3 +1048,126 @@ step-6 edit disclosed above cannot be reviewed from the commit.
    the MFT control using the `model_type` the evaluator writes, instead of
    labelling every single-metric run `"CoFFE"`? That changes what a regenerated
    `RESULTS.json` claims, so it was not done here.
+
+
+### Phase-4 gate addendum — Nikola's five decisions (2026-09-01)
+
+**1. D20 — use the mean's run.** The two Trento cells whose ± was measured on a
+different mask rate than their mean keep the published numbers, and their
+reproduction configs carry **the mean's rate (band 0.85)**. Confirmed against
+the eval JSONs before deciding: `trento_enhanced_spectral_run2` @ 0.85 gives
+exactly 90.32 and `..._spectral_spatial_run2` @ 0.85/0.75 gives exactly 92.50,
+while the 5-seed ± was cloned from the `_run1` dirs at 0.75, which evaluate to
+87.47 and 88.52. Both cell configs state the mismatch in their header.
+`PAPER_CANON` §8 gains **D20** with that decision.
+
+**2. `distance_metric` now defaults to `euclidean`.** Cosine stays a selectable
+option. This is the refactor's **one deliberate default change**, and it is
+behaviour-visible for an unflagged invocation — which is exactly why it needed
+the gate. Changed in `scripts/evaluate.py` (CLI, `_DEFAULT_ARGS`, both
+`model_config.get(...)` fallbacks), `scripts/evaluate_hypersigma.py`,
+`lib/eval_runner.py`'s primary-metric pick, and the `CoFFE` / `MFTOriginal` /
+`HyperSIGMAFewShot` constructors. **The equivalence goldens are unchanged**,
+which is the proof that no paper run went through the default: every paper run
+passes `distance_metric` explicitly. (The canon-reviewer was right to challenge
+the first wording of this — not every paper run passes *euclidean*: the Table 3
+Houston 11×11 spectral cell records `cosine`, D18. The conclusion holds because
+what matters is that the flag is always given, not which value it takes.) Recorded in `PAPER_CANON` §1.
+
+**3. Per-cell reproduction configs — all 30 Table-2 cells now have one.**
+`tools/refactor/make_cell_configs.py` parses the cell → run mapping out of
+`AUDIT.md` §3 (so it cannot drift from the audit), reads each cell's frozen
+`pretrain_config.yaml`, and emits a config whose every recipe value is copied
+verbatim — only `model.name` and `pretrain.objective` are rewritten to canon
+vocabulary, through `coffe_compat`. 18 CoFFE SimMIM configs are new; the 12 MAE
+and MFT configs already matched their cell exactly and only gained a provenance
+header (verified: comments and blank lines only). `paths:` is not copied into the 18 generated files. The 12 stamped ones keep the
+`paths:` they had (config `paths:` values are DO-NOT-RENAME); none of those
+directories exists on disk — the paper's checkpoints are under
+`experiments/<run>/checkpoints/` — but a raw CLI run would create them, which
+their headers now say.
+
+The tool re-verifies all 30 on every run and **caught a bug it had introduced
+itself**: `min_lr` rendered as `1e-06`, which PyYAML reads back as the *string*
+`"1e-06"`, not a float — it would have reached the scheduler as one. `_scalar()`
+now forces `1.0e-06`, and `render()` round-trips through `yaml.safe_load` and
+compares against the run's recipe before anything is written, so a formatting
+slip can no longer ship a config that trains something else.
+
+The six `configs/coffe/<scene>_simmim[_hsi].yaml` files are **not** redundant
+after this: `scripts/sig_significance_config.py:114,122` uses them as the
+significance experiment's base configs. They keep their names and now carry a
+ROLE banner saying what they are and pointing at the per-cell configs.
+
+**4. `RESULTS.{md,json}` — explained at the gate, no change made.** See the
+answer written up for Nikola; the short version is that the committed file is a
+June-04 generation (33 kept results, 26 headline rows) while today's tree yields
+858 kept / 41 rows, it is missing the headline Houston cell because
+`_TEST_MARKERS` filters the run's directory name (D14), and its HyperSIGMA rows
+are the superseded generation D2 records. Regenerating is a phase-8 decision
+that also needs D14's filter settled.
+
+**5. `compile_results.py` mislabelled the MFT control — fixed.** `classify()`
+now splits on the `model_type` the evaluator writes: `MFTOriginal` →
+`"MFT (original)"`, everything else single-metric → `"CoFFE"` (Nikola's note is
+right that the MFT-CPEA variant *is* CoFFE — that half was already correct).
+Before the fix, 47 MFT-control results were labelled `"CoFFE"`, and in six
+(dataset, model, regime, modality) groups an MFT-control run competed with
+genuine CoFFE runs to be the cell's representative. The committed
+`RESULTS.json` predates those runs, so no published row was affected.
+
+`canon-reviewer` returned **FAIL** on the addendum, for two claims of mine that
+overreached, both now corrected:
+
+- **"`paths:` is deliberately not copied"** was true of the 18 generated configs
+  and false of the 12 stamped ones, which keep their original `paths:` (config
+  `paths:` values are DO-NOT-RENAME). Checked: none of those twelve directories
+  exists — the paper's checkpoints live under `experiments/<run>/checkpoints/` —
+  so nothing can be clobbered, but a raw CLI run would create them. The claim is
+  now scoped, and the twelve headers say where they write.
+- **"no paper run is affected, since all of them pass `euclidean` explicitly"**
+  — not all of them do: the Table 3 Houston 11×11 spectral cell records
+  `cosine` (D18). The conclusion stands (every paper run passes the flag
+  *explicitly*, so no default is consulted), but the justification was wrong in
+  `PAPER_CANON` §1 itself, at the one place recording the refactor's only
+  behaviour change. Reworded there, in CHANGES.md and above.
+
+Its non-blocking items are handled: the generator documented a `--check` flag it
+does not have; the header duplicated the modality and, for one cell, the D17
+note; `compile_results.py`'s new comment reintroduced a retired name; and three
+notebooks still carried the `.get("distance_metric", "cosine")` primary-metric
+fallback that `lib/eval_runner.py` had moved. The double duty of the twelve
+MAE/MFT configs — they are *also* the significance runner's base configs for the
+`enhanced_mae`/`mft_mae`/`mft_spatial` groups (`clone_mask=False`, so the values
+used are the cell's) — is now stated in CHANGES.md.
+
+It also found three silent-drop paths in the generator that the round-trip guard
+could not catch, all now closed: `assert_no_dropped_keys()` refuses to emit if a
+frozen config carries a key outside the emit lists, and `_objective_of()`
+replaces the old "band_mask_ratio present ⇒ SimMIM" inference — an MAE run that
+omitted `objective` would have been silently relabelled `simmim`, and the guard
+would have agreed with itself. It now raises instead of guessing.
+
+The verifier's addendum pass returned **BATTERY: PASS** and added three items,
+all handled: `configs/eval/hypersigma_houston.yaml` was the one shipped artifact
+still selecting `cosine` (it is the "default HyperSIGMA eval config", and that
+key picks which block `lib/eval_runner` records as primary) — now `euclidean`,
+with its non-paper episode constants spelled out in the header; CHANGES.md's
+exclusion table gained `.claude/` and the deliberate legacy-vocabulary G1 test;
+and its zero-tolerance measurement of the goldens corrected the "IDENTICAL"
+shorthand used earlier in this log (G2–G5 bit-identical, G1 within ≤ 5e-09 of
+its 8-decimal goldens — reduction-order noise present on untouched goldens too).
+
+It also confirmed independently, without using the generator, that all 30 cell
+configs match their frozen runs: 45 deltas in total, every one of them in the
+allowed set (23 × `model.name`, 22 × `pretrain.objective`). The twelve
+MUUFL/Trento SimMIM cell configs omit the frozen `data.hsi_channels` /
+`data.aux_channels`; that is inert (`scripts/pretrain.py:214-220` derives both
+from the dataset and never reads them from the config) and Houston's frozen
+configs never carried them.
+
+Verification for this addendum: 120 tests pass, equivalence goldens unchanged
+(the default flip is invisible to them by construction), all 30 cell configs
+re-verified value-by-value against their frozen runs, and the six base configs
+plus the twelve stamped cell configs confirmed to differ from the phase-4 commit
+in comments and blank lines only.

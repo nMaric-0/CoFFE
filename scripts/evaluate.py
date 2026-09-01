@@ -157,7 +157,7 @@ def load_model_with_checkpoint(
             patch_size=model_config.get("patch_size", 11),
             dropout=model_config.get("dropout", 0.1),
             attention_type=model_config.get("attention_type", "mcross"),
-            distance_metric=model_config.get("distance_metric", "cosine"),
+            distance_metric=model_config.get("distance_metric", "euclidean"),
             temperature=model_config.get("temperature", 10.0),
             prototype_mode=model_config.get("prototype_mode", "mean_features"),
         )
@@ -178,7 +178,7 @@ def load_model_with_checkpoint(
             proj_hidden_dim=model_config.get("proj_hidden_dim", None),
             proj_num_layers=model_config.get("proj_num_layers", 2),
             proj_l2_normalize=model_config.get("proj_l2_normalize", True),
-            distance_metric=model_config.get("distance_metric", "cosine"),
+            distance_metric=model_config.get("distance_metric", "euclidean"),
             temperature=model_config.get("temperature", 10.0),
             prototype_mode=model_config.get("prototype_mode", "mean_features"),
             pool_sigma=model_config.get("pool_sigma", None)
@@ -897,7 +897,7 @@ _DEFAULT_ARGS = {
     "proj_hidden_dim": None,
     "proj_num_layers": 2,
     "proj_l2_normalize": True,
-    "distance_metric": "cosine",
+    "distance_metric": "euclidean",
     "temperature": 10.0,
     "prototype_mode": "mean_features",
     "pool_sigma": None,
@@ -965,13 +965,14 @@ if __name__ == "__main__":
     parser.add_argument("--no-aux", dest="use_aux", action="store_false",
                        help="HSI-only: ignore aux/LiDAR bands (for HSI-only checkpoints)")
 
-    # Nearest-class-mean settings. The paper protocol is euclidean; the default
-    # is left at "cosine" because changing it would change what an unflagged
-    # invocation computes (PAPER_CANON §7.1 freezes behaviour). Raised as phase-4
-    # gate question 2 in docs/refactor/LOG.md.
-    parser.add_argument("--distance-metric", type=str, default="cosine",
-                       choices=["cosine", "euclidean"],
-                       help="Distance to the class means. The paper uses 'euclidean'.")
+    # Nearest-class-mean settings. Default is euclidean, the paper protocol
+    # (phase-4 gate decision 2026-09-01, PAPER_CANON §1: cosine may exist as an
+    # option value but never as a default). Cosine still works, with
+    # --temperature.
+    parser.add_argument("--distance-metric", type=str, default="euclidean",
+                       choices=["euclidean", "cosine"],
+                       help="Distance to the class means (default: euclidean, "
+                            "the paper protocol).")
     parser.add_argument("--temperature", type=float, default=10.0,
                        help="Temperature scaling for cosine similarity")
     parser.add_argument("--prototype-mode", type=str, default="mean_features",

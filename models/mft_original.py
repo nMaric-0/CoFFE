@@ -65,7 +65,8 @@ class MFTOriginal(nn.Module):
         dropout: Dropout rate.
         attention_type: "mcross" (faithful MFT) or "standard" (self-attention,
             for ablation).
-        distance_metric: "cosine" or "euclidean" for prototype matching.
+        distance_metric: distance to the class means — "euclidean" (default,
+            the paper protocol) or "cosine".
         temperature: Temperature scaling for cosine similarity.
         prototype_mode: "mean_features" or "mean_distances".
     """
@@ -82,7 +83,7 @@ class MFTOriginal(nn.Module):
         patch_size: int = 11,
         dropout: float = 0.1,
         attention_type: str = "mcross",
-        distance_metric: str = "cosine",
+        distance_metric: str = "euclidean",
         temperature: float = 10.0,
         prototype_mode: str = "mean_features",
         pool_sigma: Optional[float] = None,

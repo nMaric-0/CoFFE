@@ -1,3 +1,26 @@
+# CoFFE MAE — Muufl, HSI-only
+#
+# Reproduces the paper's Table 2 cell **OA 58.65**.
+#
+#   source run       experiments/muufl_mae_no_lidar/
+#   evaluated at     epoch 975 of a 1500-epoch schedule
+#
+# Every recipe value below matches that run's frozen pretrain_config.yaml,
+# checked by tools/refactor/make_cell_configs.py.
+#
+# NOTE this file keeps its original `paths:` (config paths are on the
+# audit's DO-NOT-RENAME list). Those directories do not exist today — the
+# paper's checkpoints are under experiments/<run>/checkpoints/ — but a
+# plain `python scripts/pretrain.py --config ...` will create and write
+# into them. Point `paths:` elsewhere if that matters to you.
+#
+# NOTE the checkpoint the paper evaluated is NOT the final one: train the
+# full 1500 epochs, then evaluate epoch 975
+# (PAPER_CANON §8 D17).
+#
+# Run with:
+#   python scripts/pretrain.py --config configs/coffe/muufl_mae_hsi.yaml
+
 # MUUFL MAE HSI-only Pretraining Configuration (original MAE recipe, no LiDAR)
 #
 # HSI-only ablation of the MAE variant: model.use_aux=false drops the 2 LiDAR/aux

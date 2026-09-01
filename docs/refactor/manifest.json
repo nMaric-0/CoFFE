@@ -2,26 +2,26 @@
   "phase": 1,
   "ledger_through_phase": 4,
   "generated_by": "tools/refactor/build_manifest.py",
-  "note": "verdicts are PROPOSALS until 'approved': true is set at the phase-1 gate | phase-3 gate 2026-08-31: the remaining 23 delete records approved by Nikola in four groups (notebook dups, dead code, superseded scripts, setup.py + utils/checkpoints.py); all 24 deletes and 18 archives executed. | phase 4 2026-09-01: the PAPER_CANON \u00a71 renames executed (basenames only; the move into a coffe/ package is phase 5). configs/ was reorganised into configs/{coffe,mft,hypersigma}/ per \u00a79 - those 26 files had rule-based 'keep' records, so the ledger shows them only at their new paths; the full old->new table is CHANGES.md.",
+  "note": "verdicts are PROPOSALS until 'approved': true is set at the phase-1 gate | phase-3 gate 2026-08-31: the remaining 23 delete records approved by Nikola in four groups (notebook dups, dead code, superseded scripts, setup.py + utils/checkpoints.py); all 24 deletes and 18 archives executed. | phase 4 2026-09-01: the PAPER_CANON \u00a71 renames executed (basenames only; the move into a coffe/ package is phase 5). configs/ was reorganised into configs/{coffe,mft,hypersigma}/ per \u00a79 - those 26 files had rule-based 'keep' records, so the ledger shows them only at their new paths; the full old->new table is CHANGES.md. | phase-4 gate 2026-09-01: every Table-2 cell gained a reproduction config generated from its source run (tools/refactor/make_cell_configs.py).",
   "summary": {
-    "files": 276,
+    "files": 295,
     "by_class": {
       "DEAD": 11,
       "DUPLICATE": 10,
       "EXPLORATORY": 19,
-      "INFRA": 65,
-      "PAPER": 158,
+      "INFRA": 66,
+      "PAPER": 176,
       "VENDORED": 13
     },
     "by_verdict": {
       "archive": 18,
       "delete": 24,
-      "keep": 187,
+      "keep": 206,
       "move": 7,
       "rename": 40
     },
     "executed": 79,
-    "still_tracked": 197
+    "still_tracked": 216
   },
   "files": [
     {
@@ -111,8 +111,8 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -120,8 +120,8 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -129,8 +129,44 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "base config for the significance experiment's `enhanced` group (scripts/sig_significance_config.py), NOT a Table-2 cell recipe - the runner clones per-variant mask rates from the canonical run dir",
+      "notes": "carries a ROLE banner saying so and pointing at the per-cell configs",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/houston_simmim_band.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/houston_simmim_band_hsi.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/houston_simmim_band_token.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/houston_simmim_band_token_hsi.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -138,8 +174,26 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "base config for the significance experiment's `hsi_only` group (scripts/sig_significance_config.py), NOT a Table-2 cell recipe - the runner clones per-variant mask rates from the canonical run dir",
+      "notes": "carries a ROLE banner saying so and pointing at the per-cell configs",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/houston_simmim_token.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/houston_simmim_token_hsi.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -147,8 +201,8 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -156,8 +210,8 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -165,8 +219,44 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "base config for the significance experiment's `enhanced` group (scripts/sig_significance_config.py), NOT a Table-2 cell recipe - the runner clones per-variant mask rates from the canonical run dir",
+      "notes": "carries a ROLE banner saying so and pointing at the per-cell configs",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/muufl_simmim_band.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/muufl_simmim_band_hsi.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/muufl_simmim_band_token.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/muufl_simmim_band_token_hsi.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -174,8 +264,26 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "base config for the significance experiment's `hsi_only` group (scripts/sig_significance_config.py), NOT a Table-2 cell recipe - the runner clones per-variant mask rates from the canonical run dir",
+      "notes": "carries a ROLE banner saying so and pointing at the per-cell configs",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/muufl_simmim_token.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/muufl_simmim_token_hsi.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -183,8 +291,8 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -192,8 +300,8 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -201,8 +309,44 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "base config for the significance experiment's `enhanced` group (scripts/sig_significance_config.py), NOT a Table-2 cell recipe - the runner clones per-variant mask rates from the canonical run dir",
+      "notes": "carries a ROLE banner saying so and pointing at the per-cell configs",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/trento_simmim_band.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/trento_simmim_band_hsi.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/trento_simmim_band_token.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/trento_simmim_band_token_hsi.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -210,8 +354,26 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "base config for the significance experiment's `hsi_only` group (scripts/sig_significance_config.py), NOT a Table-2 cell recipe - the runner clones per-variant mask rates from the canonical run dir",
+      "notes": "carries a ROLE banner saying so and pointing at the per-cell configs",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/trento_simmim_token.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
+      "approved": false
+    },
+    {
+      "path": "configs/coffe/trento_simmim_token_hsi.yaml",
+      "class": "PAPER",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -300,8 +462,8 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -309,8 +471,8 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -318,8 +480,8 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -327,8 +489,8 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -336,8 +498,8 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -345,8 +507,8 @@
       "class": "PAPER",
       "verdict": "keep",
       "target": null,
-      "evidence": "config for a paper route; RISK R1: committed configs do not reproduce the paper runs (see AUDIT.md D13)",
-      "notes": "",
+      "evidence": "per-cell reproduction config (phase-4 gate 2026-09-01): every recipe value is copied from the frozen pretrain_config.yaml of the run that produced this cell's published mean, and re-verified by tools/refactor/make_cell_configs.py. Closes risk R1 for these files.",
+      "notes": "paths: deliberately NOT copied - the frozen values name the directories holding the paper's checkpoints",
       "approved": false
     },
     {
@@ -2532,6 +2694,15 @@
       "verdict": "keep",
       "target": null,
       "evidence": "refactor tooling (this phase)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tools/refactor/make_cell_configs.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-4 gate addendum: generates and re-verifies the 30 per-cell reproduction configs from the frozen runs; requires the private experiments/ tree, so it is a maintainer tool, not a release check",
       "notes": "",
       "approved": false
     },

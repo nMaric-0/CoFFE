@@ -1,23 +1,26 @@
 {
   "phase": 1,
+  "ledger_through_phase": 3,
   "generated_by": "tools/refactor/build_manifest.py",
   "note": "verdicts are PROPOSALS until 'approved': true is set at the phase-1 gate | phase-3 gate 2026-08-31: the remaining 23 delete records approved by Nikola in four groups (notebook dups, dead code, superseded scripts, setup.py + utils/checkpoints.py); all 24 deletes and 18 archives executed.",
   "summary": {
-    "files": 219,
+    "files": 235,
     "by_class": {
       "DEAD": 11,
       "DUPLICATE": 10,
       "EXPLORATORY": 19,
-      "INFRA": 42,
+      "INFRA": 58,
       "PAPER": 124,
       "VENDORED": 13
     },
     "by_verdict": {
       "archive": 18,
       "delete": 24,
-      "keep": 164,
+      "keep": 180,
       "rename": 13
-    }
+    },
+    "executed": 42,
+    "still_tracked": 193
   },
   "files": [
     {
@@ -26,7 +29,7 @@
       "verdict": "keep",
       "target": null,
       "evidence": "D5: the bare lib/ rule is already neutralised by the negations at :78-84 (verified with git check-ignore at phase 0)",
-      "notes": "cosmetic removal of the shadowed rule in phase 5",
+      "notes": "cosmetic removal of the shadowed rule in phase 5; phase 3 added the '/archive/' rule for the D9 archive tree",
       "approved": false
     },
     {
@@ -72,7 +75,8 @@
       "target": null,
       "evidence": "documents extraction from the private parent repo mft-cpea, naming an internal branch (SPLIT.md:3); internal-only",
       "notes": "D11 APPROVED 2026-08-31: delete",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "WORKFLOW.md",
@@ -99,7 +103,8 @@
       "target": null,
       "evidence": "referenced by nothing; utils/io.py:10 load_config is a flat OmegaConf load with no inheritance, and no config declares a base",
       "notes": "D4: also stale (8 heads/4 layers/lambda=2.0/800 ep vs paper 2/2) | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "configs/pretrain/houston_pretrain_enhanced.yaml",
@@ -441,7 +446,8 @@
       "target": null,
       "evidence": "closure.json unreached; no in-repo importer of data.transforms (AUDIT.md \u00a72.2)",
       "notes": "0% coverage at baseline | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "data/transforms/augmentations.py",
@@ -450,7 +456,8 @@
       "target": null,
       "evidence": "closure.json unreached; notebook 'Compose' hits are unrelated prose (verified)",
       "notes": "sole torchvision consumer; its removal drops that dependency (D6) | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "docs/COSINE_VARIANT.md",
@@ -650,7 +657,8 @@
       "target": "archive/exploratory/ablation_report.json",
       "evidence": "report of an exploratory pipeline; no Table 2/3 cell traces to it",
       "notes": "D9 APPROVED 2026-08-31: archive, not delete",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "experiments/aggregated_results.json",
@@ -668,7 +676,8 @@
       "target": "archive/exploratory/bestcfg_report.json",
       "evidence": "report of an exploratory pipeline; no Table 2/3 cell traces to it",
       "notes": "D9 APPROVED 2026-08-31: archive, not delete",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "experiments/combo_report.json",
@@ -677,7 +686,8 @@
       "target": "archive/exploratory/combo_report.json",
       "evidence": "report of an exploratory pipeline; no Table 2/3 cell traces to it",
       "notes": "D9 APPROVED 2026-08-31: archive, not delete",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "experiments/experiment_metadata.json",
@@ -794,7 +804,8 @@
       "target": null,
       "evidence": "closed island: reachable only via models/__init__.py:5,12 re-export; no symbol used outside the island (AUDIT.md \u00a72.2)",
       "notes": "delete with models/__init__.py:5-11 re-export block | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "models/backbones/base.py",
@@ -803,7 +814,8 @@
       "target": null,
       "evidence": "closed island: reachable only via models/__init__.py:5,12 re-export; no symbol used outside the island (AUDIT.md \u00a72.2)",
       "notes": "delete with models/__init__.py:5-11 re-export block | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "models/backbones/hsi_baseline.py",
@@ -812,7 +824,8 @@
       "target": null,
       "evidence": "closed island: reachable only via models/__init__.py:5,12 re-export; no symbol used outside the island (AUDIT.md \u00a72.2)",
       "notes": "delete with models/__init__.py:5-11 re-export block | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "models/backbones/mft_channel.py",
@@ -821,7 +834,8 @@
       "target": null,
       "evidence": "closed island: reachable only via models/__init__.py:5,12 re-export; no symbol used outside the island (AUDIT.md \u00a72.2)",
       "notes": "delete with models/__init__.py:5-11 re-export block | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "models/backbones/mft_pixel.py",
@@ -830,7 +844,8 @@
       "target": null,
       "evidence": "closed island: reachable only via models/__init__.py:5,12 re-export; no symbol used outside the island (AUDIT.md \u00a72.2)",
       "notes": "delete with models/__init__.py:5-11 re-export block | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "models/components/__init__.py",
@@ -977,7 +992,8 @@
       "target": null,
       "evidence": "closed island: reachable only via models/__init__.py:5,12 re-export; no symbol used outside the island (AUDIT.md \u00a72.2)",
       "notes": "delete with models/__init__.py:12 re-export | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "models/wrappers/pretrain_wrapper.py",
@@ -986,7 +1002,8 @@
       "target": null,
       "evidence": "closed island: reachable only via models/__init__.py:5,12 re-export; no symbol used outside the island (AUDIT.md \u00a72.2)",
       "notes": "holds ContrastiveHead / MAEDecoder; no contrastive learning in the paper (D10) | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "notebooks/adapt_hypersigma_native_sem.ipynb",
@@ -1022,7 +1039,8 @@
       "target": null,
       "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
       "notes": "D8 (count is 9 with pretrain_run2, not 7) | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "notebooks/evaluate_hypersigma copy 3.ipynb",
@@ -1031,7 +1049,8 @@
       "target": null,
       "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
       "notes": "D8 (count is 9 with pretrain_run2, not 7) | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "notebooks/evaluate_hypersigma copy.ipynb",
@@ -1040,7 +1059,8 @@
       "target": null,
       "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
       "notes": "D8 (count is 9 with pretrain_run2, not 7) | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "notebooks/evaluate_hypersigma.ipynb",
@@ -1067,7 +1087,8 @@
       "target": null,
       "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
       "notes": "D8 (count is 9 with pretrain_run2, not 7) | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "notebooks/evaluate_hypersigma_pca100 copy.ipynb",
@@ -1076,7 +1097,8 @@
       "target": null,
       "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
       "notes": "D8 (count is 9 with pretrain_run2, not 7) | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "notebooks/evaluate_hypersigma_pca100.ipynb",
@@ -1094,7 +1116,8 @@
       "target": null,
       "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
       "notes": "D8 (count is 9 with pretrain_run2, not 7) | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "notebooks/pretrain copy 3.ipynb",
@@ -1103,7 +1126,8 @@
       "target": null,
       "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
       "notes": "D8 (count is 9 with pretrain_run2, not 7) | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "notebooks/pretrain copy.ipynb",
@@ -1112,7 +1136,8 @@
       "target": null,
       "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
       "notes": "D8 (count is 9 with pretrain_run2, not 7) | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "notebooks/pretrain.ipynb",
@@ -1130,7 +1155,8 @@
       "target": null,
       "evidence": "divergent working copy of its base notebook; reaches no module the PAPER closure does not already reach (closure.json nb_other-only = none)",
       "notes": "D8 (count is 9 with pretrain_run2, not 7) | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "pretrain/__init__.py",
@@ -1238,8 +1264,9 @@
       "verdict": "archive",
       "target": "archive/exploratory/ablation_config.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
-      "approved": true
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree ('/archive/' added to .gitignore in phase 3, not phase 5)",
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/ablation_eval_worker.py",
@@ -1247,8 +1274,9 @@
       "verdict": "archive",
       "target": "archive/exploratory/ablation_eval_worker.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
-      "approved": true
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree ('/archive/' added to .gitignore in phase 3, not phase 5)",
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/ablation_pretrain_worker.py",
@@ -1256,8 +1284,9 @@
       "verdict": "archive",
       "target": "archive/exploratory/ablation_pretrain_worker.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
-      "approved": true
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree ('/archive/' added to .gitignore in phase 3, not phase 5)",
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/adapt_hypersigma.py",
@@ -1276,7 +1305,8 @@
       "target": null,
       "evidence": "shim re-exporting scripts.adapt_hypersigma; no live importer (lib/adapt_runner.py:86 imports the real module)",
       "notes": "only markdown prose + captured log output mention it (D8) | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/aggregate_ablation.py",
@@ -1284,8 +1314,9 @@
       "verdict": "archive",
       "target": "archive/exploratory/aggregate_ablation.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
-      "approved": true
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree ('/archive/' added to .gitignore in phase 3, not phase 5)",
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/aggregate_bestcfg.py",
@@ -1293,8 +1324,9 @@
       "verdict": "archive",
       "target": "archive/exploratory/aggregate_bestcfg.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
-      "approved": true
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree ('/archive/' added to .gitignore in phase 3, not phase 5)",
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/aggregate_combo.py",
@@ -1302,8 +1334,9 @@
       "verdict": "archive",
       "target": "archive/exploratory/aggregate_combo.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
-      "approved": true
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree ('/archive/' added to .gitignore in phase 3, not phase 5)",
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/aggregate_experiment_results.py",
@@ -1329,8 +1362,9 @@
       "verdict": "archive",
       "target": "archive/exploratory/bestcfg_config.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
-      "approved": true
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree ('/archive/' added to .gitignore in phase 3, not phase 5)",
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/bestcfg_eval_worker.py",
@@ -1338,8 +1372,9 @@
       "verdict": "archive",
       "target": "archive/exploratory/bestcfg_eval_worker.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
-      "approved": true
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree ('/archive/' added to .gitignore in phase 3, not phase 5)",
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/bestcfg_pretrain_worker.py",
@@ -1347,8 +1382,9 @@
       "verdict": "archive",
       "target": "archive/exploratory/bestcfg_pretrain_worker.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
-      "approved": true
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree ('/archive/' added to .gitignore in phase 3, not phase 5)",
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/build_experiment_metadata.py",
@@ -1374,8 +1410,9 @@
       "verdict": "archive",
       "target": "archive/exploratory/combo_config.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
-      "approved": true
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree ('/archive/' added to .gitignore in phase 3, not phase 5)",
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/combo_eval_worker.py",
@@ -1383,8 +1420,9 @@
       "verdict": "archive",
       "target": "archive/exploratory/combo_eval_worker.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
-      "approved": true
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree ('/archive/' added to .gitignore in phase 3, not phase 5)",
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/combo_pretrain_worker.py",
@@ -1392,8 +1430,9 @@
       "verdict": "archive",
       "target": "archive/exploratory/combo_pretrain_worker.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
-      "approved": true
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree ('/archive/' added to .gitignore in phase 3, not phase 5)",
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/compile_mft_faithful_results.py",
@@ -1495,7 +1534,8 @@
       "target": null,
       "evidence": "its epoch-1500 evals are NOT in Table 2 (67.70 vs the paper's 67.49 for Houston MFT SimMIM token); superseded by the epoch-950 evals",
       "notes": "D1 - keeping it would document the wrong recipe | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/run_ablation.py",
@@ -1503,8 +1543,9 @@
       "verdict": "archive",
       "target": "archive/exploratory/run_ablation.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
-      "approved": true
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree ('/archive/' added to .gitignore in phase 3, not phase 5)",
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/run_bestcfg.py",
@@ -1512,8 +1553,9 @@
       "verdict": "archive",
       "target": "archive/exploratory/run_bestcfg.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
-      "approved": true
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree ('/archive/' added to .gitignore in phase 3, not phase 5)",
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/run_combo.py",
@@ -1521,8 +1563,9 @@
       "verdict": "archive",
       "target": "archive/exploratory/run_combo.py",
       "evidence": "reachable only from the ablation/combo/bestcfg roots; appears in no paper table; pulls in no library code the PAPER closure lacks",
-      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree (phase 5 must add 'archive/' to .gitignore)",
-      "approved": true
+      "notes": "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree ('/archive/' added to .gitignore in phase 3, not phase 5)",
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "scripts/run_cosine_eval.sh",
@@ -1686,7 +1729,8 @@
       "target": null,
       "evidence": "closure.json unreached; placeholder metadata (name 'mft-cpea', author_email 'nikola@example.com', url 'yourusername'); install_requires lists einops/timm which nothing imports",
       "notes": "fold real packaging into pyproject.toml in phase 6 | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "tests/__init__.py",
@@ -1694,6 +1738,141 @@
       "verdict": "keep",
       "target": null,
       "evidence": "test suite",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/equivalence/README.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-2 equivalence harness: the behavior-freeze arbiter (hard rule 1)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/equivalence/__init__.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-2 equivalence harness: the behavior-freeze arbiter (hard rule 1)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/equivalence/_harness.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-2 equivalence harness: the behavior-freeze arbiter (hard rule 1)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/equivalence/conftest.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-2 equivalence harness: the behavior-freeze arbiter (hard rule 1)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/equivalence/fixtures/README.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-2 equivalence harness: the behavior-freeze arbiter (hard rule 1)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/equivalence/fixtures/coffe_houston_mini_simmim_token_ep3.pth.fixture",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-2 equivalence harness: the behavior-freeze arbiter (hard rule 1)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/equivalence/fixtures/mft_original_houston_mini_simmim_token_ep3.pth.fixture",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-2 equivalence harness: the behavior-freeze arbiter (hard rule 1)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/equivalence/golden/.gitignore",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-2 equivalence harness: the behavior-freeze arbiter (hard rule 1)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/equivalence/golden/g1_pretrain_loss.json",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-2 equivalence harness: the behavior-freeze arbiter (hard rule 1)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/equivalence/golden/g2_encoder_forward.json",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-2 equivalence harness: the behavior-freeze arbiter (hard rule 1)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/equivalence/golden/g3_episodic_eval.json",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-2 equivalence harness: the behavior-freeze arbiter (hard rule 1)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/equivalence/golden/g5_masking.json",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-2 equivalence harness: the behavior-freeze arbiter (hard rule 1)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/equivalence/golden/meta.json",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-2 equivalence harness: the behavior-freeze arbiter (hard rule 1)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/equivalence/make_golden.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-2 equivalence harness: the behavior-freeze arbiter (hard rule 1)",
+      "notes": "",
+      "approved": false
+    },
+    {
+      "path": "tests/equivalence/test_equivalence.py",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "phase-2 equivalence harness: the behavior-freeze arbiter (hard rule 1)",
       "notes": "",
       "approved": false
     },
@@ -1878,6 +2057,15 @@
       "approved": false
     },
     {
+      "path": "tools/refactor/README.md",
+      "class": "INFRA",
+      "verdict": "keep",
+      "target": null,
+      "evidence": "refactor tooling (this phase)",
+      "notes": "",
+      "approved": false
+    },
+    {
       "path": "tools/refactor/build_manifest.py",
       "class": "INFRA",
       "verdict": "keep",
@@ -1947,7 +2135,8 @@
       "target": null,
       "evidence": "no importer; live twin is scripts/evaluate_cosine.py:107 fix_state_dict_keys",
       "notes": "RISK: PAPER_CANON \u00a77.2 names this file as the key-map shim location - see AUDIT.md risk R2 before deleting | delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)",
-      "approved": true
+      "approved": true,
+      "executed_in_phase": 3
     },
     {
       "path": "utils/io.py",

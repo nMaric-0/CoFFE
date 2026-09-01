@@ -11,6 +11,12 @@ The closure is static only. Dynamic dispatch (a config string routed to a class
 in a lookup table) is *not* followed -- those edges are supplied by hand via
 ``EXTRA_EDGES`` below, each with a file:line justification.
 
+``ROOTS`` is the phase-1 audit's root list and is kept intact as provenance even
+after a phase prunes some of those entry points; roots that no longer exist are
+skipped and reported under ``pruned_roots``. ``docs/refactor/closure.json`` is
+the frozen phase-1 snapshot that ``AUDIT.md`` cites -- re-run against the
+current tree with an explicit ``--out`` rather than overwriting it.
+
 Usage:  python tools/refactor/closure.py [--root .] [--out docs/refactor/closure.json]
 """
 
@@ -120,12 +126,17 @@ ROOTS: dict[str, list[str]] = {
         "tests/test_mft_original_shapes.py",
         "tests/test_hypersigma_shapes.py",
         "tests/test_hypersigma_native_shapes.py",
+        # Phase-2 equivalence harness (pytest collects these directly).
+        "tests/equivalence/test_equivalence.py",
+        "tests/equivalence/conftest.py",
+        "tests/equivalence/make_golden.py",
     ],
     # ---- Refactor tooling ------------------------------------------------
     "tooling": [
         "tools/refactor/inventory.py",
         "tools/refactor/closure.py",
         "tools/refactor/build_manifest.py",
+        "tools/refactor/lambda_probe.py",
     ],
 }
 
@@ -213,6 +224,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--root", default=".")
     ap.add_argument("--out", default="docs/refactor/closure.json")
+    ap.add_argument("--force", action="store_true",
+                    help="overwrite --out if it already exists")
     args = ap.parse_args()
 
     root = Path(args.root).resolve()
@@ -251,9 +264,21 @@ def main() -> int:
     for src, dst, why in EXTRA_EDGES:
         edges.setdefault(src, []).append({"to": dst, "module": "<dynamic>", "line": 0, "why": why})
 
+    # Roots pruned from the tree by a later phase (phase 3 removed the D8
+    # duplicate twins and archived the D9 exploratory pipeline) stay listed in
+    # ROOTS as audit provenance. A re-run must skip them: seeding the BFS with a
+    # path that no longer exists would silently count phantom nodes.
+    live_roots: dict[str, list[str]] = {}
+    pruned_roots: dict[str, list[str]] = {}
+    for name, roots in ROOTS.items():
+        live_roots[name] = [r for r in roots if r in traceable]
+        gone = [r for r in roots if r not in traceable]
+        if gone:
+            pruned_roots[name] = gone
+
     # BFS per root set.
     closures: dict[str, dict[str, list[str]]] = {}
-    for name, roots in ROOTS.items():
+    for name, roots in live_roots.items():
         reached: dict[str, list[str]] = {}
         frontier = [(r, [r]) for r in roots]
         while frontier:
@@ -284,6 +309,8 @@ def main() -> int:
 
     payload = {
         "roots": ROOTS,
+        "live_roots": live_roots,
+        "pruned_roots": pruned_roots,
         "paper_root_sets": PAPER_ROOTS,
         "extra_edges": [{"from": a, "to": b, "why": w} for a, b, w in EXTRA_EDGES],
         "summary": {
@@ -291,6 +318,7 @@ def main() -> int:
             "paper_closure_size": len(union_paper),
             "reached_by_something": len(all_reached),
             "unreached": len(unreached),
+            "pruned_root_paths": sum(len(v) for v in pruned_roots.values()),
             "per_root_set": {k: len(v) for k, v in closures.items()},
         },
         "paper_closure": sorted(union_paper),
@@ -301,6 +329,12 @@ def main() -> int:
     }
 
     out = root / args.out
+    if out.exists() and not args.force:
+        raise SystemExit(
+            f"refusing to overwrite {_display(out, root)}: it is the frozen "
+            "phase-1 snapshot AUDIT.md cites by line. Re-run with an explicit "
+            "--out (or --force if you really mean to re-baseline it)."
+        )
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
@@ -310,6 +344,11 @@ def main() -> int:
     print(f"  reached by something: {s['reached_by_something']}  unreached: {s['unreached']}")
     for k, v in s["per_root_set"].items():
         print(f"    {k:24s} {v}")
+    if pruned_roots:
+        print("  PRUNED ROOTS (removed from the tree by a later phase, skipped):")
+        for k, v in pruned_roots.items():
+            for p in v:
+                print(f"    {k:24s} {p}")
     if unreached:
         print("  UNREACHED:")
         for p in unreached:

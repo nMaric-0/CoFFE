@@ -549,3 +549,90 @@ including `experiments/significance_report copy.json`.
    inherits the `[project]` table the deleted `setup.py` used to provide.
 3. Still carried from phase 2: whether the reproduction docs state the per-cell
    band mask rate (D19).
+
+### Phase-3 gate addendum — Nikola's three decisions (2026-09-01)
+
+| # | question | decision |
+|---|---|---|
+| 1 | `tools/refactor/` disposition | **release it, and make it work** |
+| 2 | `torchvision` out, `[project]` table in, at phase 6 | **confirmed** |
+| 3 | reproduction docs and mask rates | **they state the mask rates** (per cell) |
+
+**1. `tools/refactor/` now runs against the pruned tree.** It ships with the
+release, so it had to stop describing a tree that no longer exists. Four fixes,
+no change to any verdict or evidence string the audit recorded:
+
+- `inventory.py` skips the untracked D9 `archive/` tree — by repo-relative path
+  (`SKIP_RELDIRS`), not by directory name, so a future in-tree package called
+  `archive` is unaffected — and no longer crashes when `--out` points outside
+  the repo.
+- `closure.py` keeps the phase-1 `ROOTS` list intact as provenance but now
+  partitions it: roots that no longer exist are **skipped and reported** under
+  `pruned_roots` instead of being seeded into the BFS. That is **25 paths** —
+  15 D9 exploratory scripts, the 1 D8 duplicate twin, and the 9 duplicate
+  notebooks — each of which a re-run previously seeded as a phantom node. The
+  phase-2 equivalence harness and `lambda_probe.py` were added as roots, so
+  `unreached` means dead again — it is now **0**.
+- `build_manifest.py` carries the phase-3 gate approvals (the 23-delete sweep)
+  and emits a record for every path the audit ruled on, including ones already
+  carried out, tagged `"executed_in_phase": 3`. The ledger is therefore complete
+  (**235 records = 193 tracked + 42 executed**) rather than quietly shrinking to
+  the survivors, and **regenerating it is now a verified no-op** — the check
+  that the ledger still matches the tree. It exits **non-zero** if it holds a
+  verdict for a path that is neither tracked nor accounted for as executed, so
+  **phase 4 must add `rename` to `EXECUTED_IN_PHASE`** when it starts moving
+  files, or the tool will fail loudly rather than drop records. The payload
+  gained `ledger_through_phase` so the ledger says how current it is while
+  `phase: 1` keeps naming the audit that produced the verdicts.
+- `closure.py` and `inventory.py` now **refuse to overwrite** their committed
+  `docs/refactor/*.json` (exit 1 with instructions; `--force` overrides). A
+  README sentence was the only thing protecting the phase-1 evidence `AUDIT.md`
+  cites by line.
+- `lambda_probe.py --help` used to die in `int(sys.argv[1])`; it has a real
+  argparse CLI now (and `--help` works without importing torch).
+- New `tools/refactor/README.md`: what each script does, the release decision,
+  and the rule that `manifest.json` is live while `closure.json` /
+  `inventory.json` are frozen phase-1 snapshots cited by line in `AUDIT.md` —
+  re-run those two with an explicit `--out`.
+
+**An independent check of phase 3 fell out of this.** Re-running the closure
+tracer on the pruned tree gives a paper closure of **72 files, down from 79**,
+and the 7 that left are exactly `models/backbones/*` (5) and
+`models/wrappers/*` (2) — nothing else, nothing added. Reproduce with:
+
+```bash
+.venv/bin/python tools/refactor/closure.py --out /tmp/closure_post.json
+```
+
+**2. Confirmed for phase 6:** `torchvision` leaves `requirements.txt` (its only
+consumer, `data/transforms/`, is gone) and phase 6 owns the `[project]` table
+the deleted `setup.py` used to provide. Recorded on `PAPER_CANON` §8 D6.
+
+**3. Mask rates get stated per cell.** `PAPER_CANON` §8 D19 now records the
+decision: the reproduction docs state the rate of each cell rather than a single
+global 0.85 (phase-8 obligation), and any `configs/coffe/*band_token*` written
+in phase 4 must carry the rate of the cell it reproduces — i.e. `(0.75, 0.75)`
+for Houston, `(0.85, 0.75)` for the other five. D19 is now closed.
+
+**Two phase-1 `notes` fields were edited** (disclosed here because the audit's
+records are otherwise frozen): the `.gitignore` record gained "phase 3 added the
+'/archive/' rule", and the 18 D9 archive records said "phase 5 must add
+'archive/' to .gitignore", which phase 3 did — now "'/archive/' added to
+.gitignore in phase 3, not phase 5". No `class`, `verdict`, `target`,
+`evidence` or `approved` field changed on any of the 219 pre-existing records.
+
+`canon-reviewer` returned **FAIL** on the first pass over this addendum, for one
+blocking item: `tools/refactor/README.md` claimed the tools are "stdlib-only,
+read-only, and import nothing from the paper code", which is false for
+`lambda_probe.py` (it imports torch, `data.datasets.patched`,
+`scripts.evaluate_cosine`, `utils.seed` and needs `data/raw/` plus a real
+checkpoint) and glosses over `build_manifest.py` writing in place. The claim is
+now scoped to the three stdlib tools, with the exception spelled out. All seven
+of its non-blocking items are fixed above (undisclosed `notes` edits, `phase: 1`
+staleness, the hardcoded executed-phase map and its silent warning, the
+pruned-root count, the unguarded `--out` defaults, the name-based `archive`
+skip, and the 18 archive records' stale phase-5 note). Its independent analytic
+check of the 79 → 72 closure delta agreed with the tool's measured answer.
+
+No behavior touched: this addendum changes only `tools/refactor/`,
+`PAPER_CANON.md` §8 (D6, D19), `docs/refactor/{LOG.md,manifest.json}`.

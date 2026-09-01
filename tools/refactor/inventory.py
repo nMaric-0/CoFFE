@@ -22,6 +22,15 @@ import json
 import os
 from pathlib import Path
 
+
+def _display(path: Path, root: Path) -> str:
+    """Repo-relative path when possible, absolute otherwise."""
+    try:
+        return str(path.relative_to(root))
+    except ValueError:
+        return str(path)
+
+
 # Directories never descended into.
 SKIP_DIRS = {
     ".git",
@@ -37,6 +46,12 @@ SKIP_DIRS = {
     ".egg-info",
 }
 
+# Repo-relative directories skipped by path, not by name, so an in-tree package
+# that happens to share the name is unaffected. ``archive/`` is the exploratory
+# tree moved out of the release in phase 3 (D9): on disk, deliberately
+# untracked, not part of the repo's Python surface.
+SKIP_RELDIRS = {"archive"}
+
 # Per-run experiment output trees are skipped; loose files in experiments/ are kept.
 SKIP_GLOB_PARENTS = ("experiments",)
 
@@ -48,6 +63,8 @@ def should_skip_dir(path: Path, root: Path) -> bool:
     if name in SKIP_DIRS or name.endswith(".egg-info"):
         return True
     rel = path.relative_to(root)
+    if rel.as_posix() in SKIP_RELDIRS:
+        return True
     # experiments/<run>/ is skipped; experiments/ itself is not.
     if len(rel.parts) >= 2 and rel.parts[0] in SKIP_GLOB_PARENTS:
         return True
@@ -171,6 +188,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--root", default=".", help="repository root (default: cwd)")
     ap.add_argument("--out", default="docs/refactor/inventory.json")
+    ap.add_argument("--force", action="store_true",
+                    help="overwrite --out if it already exists")
     args = ap.parse_args()
 
     root = Path(args.root).resolve()
@@ -211,11 +230,17 @@ def main() -> int:
     }
 
     out = root / args.out
+    if out.exists() and not args.force:
+        raise SystemExit(
+            f"refusing to overwrite {_display(out, root)}: it is the frozen "
+            "phase-1 snapshot AUDIT.md cites by line. Re-run with an explicit "
+            "--out (or --force if you really mean to re-baseline it)."
+        )
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8")
 
     s = payload["summary"]
-    print(f"wrote {out.relative_to(root)}")
+    print(f"wrote {_display(out, root)}")
     print(f"  python: {s['python_files']} files, {s['python_loc']} LOC")
     print(f"  top-level: {s['top_level_functions']} defs, {s['top_level_classes']} classes")
     print(f"  other: {s['other_files']} files {s['other_by_suffix']}")

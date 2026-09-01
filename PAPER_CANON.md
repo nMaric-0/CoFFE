@@ -240,7 +240,10 @@ where the paper allows, renaming.
   Restructure must eliminate this trap.
 - **D6 — Requirements kitchen-sink.** `requirements.txt` lists hydra-core,
   wandb, timm, rasterio, spectral, tensorboard, seaborn, etc. Compute the true
-  import set; prune in Phase 6.
+  import set; prune in Phase 6. **CONFIRMED 2026-09-01 (Nikola):** `torchvision`
+  goes — its only consumer, `data/transforms/`, was deleted in phase 3 — and
+  phase 6 also owns the `[project]` table that the deleted `setup.py` used to
+  provide (`pip install -e .` was dropped from the README in phase 3).
 - **D7 — README is wrong** on: title/branding, "cosine ... prototypical
   network" protocol, the `n_way: 5` example (paper is N-way full-class), OA/AA/
   Kappa metrics, and it omits the MFT control and HyperSIGMA routes entirely.
@@ -354,9 +357,10 @@ where the paper allows, renaming.
   Nothing was changed: the number is sound, the paper's stated rate is simply
   wrong for that one cell. The equivalence harness pins **both** rates (G1/G5
   entries `simmim_band_token` at 0.85 and `simmim_band_token_houston_run` at
-  0.75) so neither can drift. Reproduction docs must state the per-cell band
-  rate rather than a single global 0.85 — **that half remains open at the
-  phase-2 gate.**
+  0.75) so neither can drift. **DECIDED 2026-09-01 (Nikola): the reproduction
+  docs state the mask rates per cell**, not a single global 0.85 — a phase-8
+  obligation, and any new `configs/coffe/*band_token*` written in phase 4 must
+  carry the rate of the cell it reproduces.
 
 ## 9. Target vocabulary for new artifacts
 

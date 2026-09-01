@@ -17,8 +17,17 @@ Table 2 checkpoint, and compares lambda=0.5 (as it ran) against lambda=0.0
 Euclidean NCM is translation-invariant, so if cls_emb were constant across
 samples, lambda would provably contribute nothing.
 """
+import argparse
 import sys
 from pathlib import Path
+
+# Parsed before the heavy imports so ``--help`` works without torch or data.
+_ap = argparse.ArgumentParser(
+    description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+)
+_ap.add_argument("episodes", nargs="?", type=int, default=40,
+                 help="number of episodes to probe (default: 40)")
+N_EPISODES = _ap.parse_args().episodes
 
 import numpy as np
 import torch
@@ -34,8 +43,6 @@ REPO = Path(__file__).resolve().parents[2]
 # The run behind Table 2's headline Houston cell (75.30), at its evaluated epoch.
 CKPT = str(REPO / "experiments/houston_enhanced_spatial_mask_test_run1_seed52"
                   "/checkpoints/checkpoint_epoch_950.pth")
-N_EPISODES = int(sys.argv[1]) if len(sys.argv) > 1 else 40
-
 # Arch + eval params exactly as the run's eval_config.json records them.
 MODEL_CFG = dict(name="mft_cpea", embed_dim=128, num_heads=2, num_layers=2,
                  patch_size=11, lambda_factor=0.5, dropout=0.1,

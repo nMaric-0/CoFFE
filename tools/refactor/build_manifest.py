@@ -109,7 +109,7 @@ for p in (
 ):
     rec(p, "EXPLORATORY", "archive", "archive/exploratory/" + p.split("/")[-1], _EXPL,
         "D9 APPROVED 2026-08-31: archive into an untracked archive/ tree "
-        "(phase 5 must add 'archive/' to .gitignore)", approved=True)
+        "('/archive/' added to .gitignore in phase 3, not phase 5)", approved=True)
 for p in ("experiments/ablation_report.json", "experiments/combo_report.json",
           "experiments/bestcfg_report.json"):
     rec(p, "EXPLORATORY", "archive", "archive/exploratory/" + p.split("/")[-1],
@@ -184,7 +184,8 @@ rec("LICENSE", "INFRA", "keep", None, "repo license", "")
 rec(".gitignore", "INFRA", "keep", None,
     "D5: the bare lib/ rule is already neutralised by the negations at "
     ":78-84 (verified with git check-ignore at phase 0)",
-    "cosmetic removal of the shadowed rule in phase 5")
+    "cosmetic removal of the shadowed rule in phase 5; phase 3 added the "
+    "'/archive/' rule for the D9 archive tree")
 rec("pyproject.toml", "INFRA", "keep", None,
     "no gpu/data pytest markers registered (phase-0 E3); addopts forces "
     "--cov on every run", "phase 2 registers the markers")
@@ -245,6 +246,8 @@ rec("models/mft_cpea_cosine.py", "PAPER", "rename", "coffe/models/coffe.py",
 RULES = [
     ("third_party/", "VENDORED", "keep",
      "PAPER_CANON §7.4: vendored, contents never modified"),
+    ("tests/equivalence/", "INFRA", "keep",
+     "phase-2 equivalence harness: the behavior-freeze arbiter (hard rule 1)"),
     ("tests/", "INFRA", "keep", "test suite"),
     ("tools/refactor/", "INFRA", "keep", "refactor tooling (this phase)"),
     ("docs/refactor/", "INFRA", "keep", "refactor record"),
@@ -264,6 +267,40 @@ RULES = [
     ("data/", "PAPER", "keep", "in a paper root's import closure"),
     ("experiments/", "PAPER", "keep", "paper-table provenance artifact"),
 ]
+
+
+# ---------------------------------------------------------------------------
+# Phase-3 gate (2026-08-31). Only 20 of the 43 actionable records were approved
+# at the phase-1 gate (the 18 D9 archives + SPLIT.md); the phase-1 log left "a
+# review of the remaining 24-entry delete list" open. Nikola approved the other
+# 23 deletes in four groups at the start of phase 3. Applied as a sweep so every
+# per-record ``evidence`` string above stays exactly as phase 1 wrote it.
+# ---------------------------------------------------------------------------
+
+PHASE3_DELETE_TAG = "delete-list APPROVED 2026-08-31 (phase-3 gate, all four groups)"
+
+for _path, _v in list(V.items()):
+    if _v[1] == "delete" and not _v[6]:
+        _cls, _verdict, _target, _evidence, _notes, _prov, _ = _v
+        _notes = f"{_notes} | {PHASE3_DELETE_TAG}" if _notes else PHASE3_DELETE_TAG
+        V[_path] = (_cls, _verdict, _target, _evidence, _notes, _prov, True)
+
+NOTE = (
+    "verdicts are PROPOSALS until 'approved': true is set at the phase-1 gate"
+    " | phase-3 gate 2026-08-31: the remaining 23 delete records approved by"
+    " Nikola in four groups (notebook dups, dead code, superseded scripts,"
+    " setup.py + utils/checkpoints.py); all 24 deletes and 18 archives executed."
+)
+
+# Which phase carried out each already-executed verdict. Such a path is no
+# longer tracked, so it cannot come from ``git ls-files`` -- it is emitted from
+# ``V`` with ``executed_in_phase`` so the manifest stays a complete ledger of
+# every file the audit ruled on, not just the survivors. Phase 3 executed the
+# deletes and archives; **a later phase that carries out ``rename``/``move``
+# records must add its verdict here**, or ``main()`` exits non-zero rather than
+# letting the record drop out of the ledger.
+EXECUTED_IN_PHASE = {"delete": 3, "archive": 3}
+LEDGER_THROUGH_PHASE = max(EXECUTED_IN_PHASE.values())
 
 
 def _display(path: Path, root: Path) -> str:
@@ -287,8 +324,24 @@ def main() -> int:
         ).stdout.split("\x00") if p.strip()
     ]
 
+    tracked_set = set(tracked)
+    executed = sorted(
+        p for p, v in V.items()
+        if p not in tracked_set and v[1] in EXECUTED_IN_PHASE
+    )
+    missing = sorted(
+        p for p in V
+        if p not in tracked_set and p not in set(executed)
+    )
+    if missing:
+        print(f"  ERROR: {len(missing)} verdict path(s) neither tracked nor "
+              f"accounted for as executed: {missing}")
+        print("  Add the executed verdict to EXECUTED_IN_PHASE (or restore the "
+              "path) -- the ledger must not silently drop a record.")
+        return 1
+
     records = []
-    for path in sorted(tracked):
+    for path in sorted(set(tracked) | set(executed)):
         if path in V:
             cls, verdict, target, evidence, notes, prov, appr = V[path]
         else:
@@ -311,6 +364,8 @@ def main() -> int:
         }
         if prov:
             r["provisional"] = True
+        if path not in tracked_set:
+            r["executed_in_phase"] = EXECUTED_IN_PHASE[verdict]
         records.append(r)
 
     counts_class: dict[str, int] = {}
@@ -321,12 +376,15 @@ def main() -> int:
 
     payload = {
         "phase": 1,
+        "ledger_through_phase": LEDGER_THROUGH_PHASE,
         "generated_by": "tools/refactor/build_manifest.py",
-        "note": "verdicts are PROPOSALS until 'approved': true is set at the phase-1 gate",
+        "note": NOTE,
         "summary": {
             "files": len(records),
             "by_class": dict(sorted(counts_class.items())),
             "by_verdict": dict(sorted(counts_verdict.items())),
+            "executed": len(executed),
+            "still_tracked": len(tracked),
         },
         "files": records,
     }

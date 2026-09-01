@@ -39,40 +39,45 @@ from inventory import iter_files, module_index, resolve, absolutise  # noqa: E40
 ROOTS: dict[str, list[str]] = {
     # ---- Table 2, CoFFE + MFT rows: the significance pipeline -------------
     "paper_significance": [
-        "scripts/run_significance_experiment.py",
-        "scripts/sig_pretrain_worker.py",
-        "scripts/sig_eval_worker.py",
-        "scripts/sig_significance_config.py",
-        "scripts/aggregate_significance.py",
+        "scripts/reproduce/run_significance_experiment.py",
+        "scripts/reproduce/sig_pretrain_worker.py",
+        "scripts/reproduce/sig_eval_worker.py",
+        "scripts/reproduce/sig_significance_config.py",
+        "scripts/reports/aggregate_significance.py",
     ],
     # ---- Table 2, per-group runners --------------------------------------
     "paper_group_runners": [
-        "scripts/run_mae_experiments.py",
-        "scripts/run_hsi_only_experiments.py",
-        "scripts/run_mft_original_mae_experiments.py",
-        "scripts/run_mft_original_spatial_experiments.py",
+        "scripts/reproduce/run_mae_experiments.py",
+        "scripts/reproduce/run_hsi_only_experiments.py",
+        "scripts/reproduce/run_mft_original_mae_experiments.py",
+        "scripts/reproduce/run_mft_original_spatial_experiments.py",
     ],
     # ---- The two core CLIs the runners shell out to -----------------------
     "paper_core_cli": [
         "scripts/pretrain.py",
         "scripts/evaluate.py",
+        # phase 5: the scripts are argparse-only; the paper logic lives here
+        "coffe/pretrain/loop.py",
+        "coffe/eval/episodic.py",
     ],
     # ---- Tables 2-3, HyperSIGMA rows -------------------------------------
     "paper_hypersigma": [
         "scripts/adapt_hypersigma.py",
         "scripts/evaluate_hypersigma.py",
+        "coffe/pretrain/hypersigma_adapt.py",
+        "coffe/eval/hypersigma.py",
         "scripts/fit_pca_hypersigma.py",
-        "scripts/run_hypersigma_spatial_pca100.py",
-        "scripts/gather_native_pca100_raw.py",
-        "scripts/build_native_pca100_report.py",
+        "scripts/reproduce/run_hypersigma_spatial_pca100.py",
+        "scripts/reports/gather_native_pca100_raw.py",
+        "scripts/reports/build_native_pca100_report.py",
     ],
     # ---- Result compilation ----------------------------------------------
     "paper_compile": [
         "scripts/compile_results.py",
-        "scripts/compile_mft_faithful_results.py",
-        "scripts/gather_requested_results.py",
-        "scripts/aggregate_experiment_results.py",
-        "scripts/build_experiment_metadata.py",
+        "scripts/reports/compile_mft_faithful_results.py",
+        "scripts/reports/gather_requested_results.py",
+        "scripts/reports/aggregate_experiment_results.py",
+        "scripts/reports/build_experiment_metadata.py",
     ],
     # ---- Exploratory: ablation / combo / bestcfg (D9) ---------------------
     "exploratory": [

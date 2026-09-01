@@ -27,9 +27,9 @@ torch = pytest.importorskip("torch")
 
 from sklearn.decomposition import PCA
 
-from models.hypersigma import HyperSIGMAFewShot, HyperSIGMADual
-from models.hypersigma._input_fit import fit_input
-from models.hypersigma.preprocessing import SpectralResample
+from coffe.models.hypersigma import HyperSIGMAFewShot, HyperSIGMADual
+from coffe.models.hypersigma._input_fit import fit_input
+from coffe.models.hypersigma.preprocessing import SpectralResample
 
 SPAT_CKPT = Path("checkpoints/hypersigma/spat-vit-base.pth")
 SPEC_CKPT = Path("checkpoints/hypersigma/spec-vit-base.pth")
@@ -149,7 +149,7 @@ def test_native_pca_front_end_selected(tmp_path):
         native_pca_spat_path=pca_path,
         build_spat=True, build_spec=False, build_sem=False,
     )
-    from models.hypersigma.preprocessing import PCAPreprocessor
+    from coffe.models.hypersigma.preprocessing import PCAPreprocessor
     assert isinstance(dual.pca_spat, PCAPreprocessor)
     assert dual.pca_spat.out_channels == 100
 
@@ -183,7 +183,7 @@ def test_adapted_pca100_resample_when_under_100_bands(tmp_path):
 
 
 def test_adapted_pca100_uses_pca_when_available(tmp_path):
-    from models.hypersigma.preprocessing import PCAPreprocessor
+    from coffe.models.hypersigma.preprocessing import PCAPreprocessor
     pca_path = _make_dummy_pca(tmp_path, in_bands=144, n_components=100)
     dual = HyperSIGMADual(
         pca_spat_path=pca_path, spat_ckpt=None, spec_ckpt=None, hsi_channels=144,
@@ -202,7 +202,7 @@ def test_adapted_pca100_uses_pca_when_available(tmp_path):
 
 @pytest.mark.parametrize("fit", ["upscale", "pad"])
 def test_native_sem_only_adaptation(fit):
-    from pretrain.hypersigma_mae import HyperSIGMAMaskedAdaptation
+    from coffe.pretrain.hypersigma_mae import HyperSIGMAMaskedAdaptation
 
     # Native FULL dual (both branches + SEM), random body, resample 144->100.
     dual = HyperSIGMADual(

@@ -26,9 +26,9 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
-from models.mft_original import MFTOriginal
-from pretrain.mft_mae import MFTMAEPretrainModel
-from pretrain.mft_spatial_mae import MFTSpatialMaskPretrainModel
+from coffe.models.mft_original import MFTOriginal
+from coffe.pretrain.mft_mae import MFTMAEPretrainModel
+from coffe.pretrain.mft_spatial_mae import MFTSpatialMaskPretrainModel
 
 
 # Faithful MFT dims (Roy et al. / srinadh99): FM=16 -> dim=64, 8 heads, depth 2,

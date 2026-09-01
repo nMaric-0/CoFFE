@@ -143,7 +143,7 @@ def _g1_cases():
 def test_g1_pretrain_loss_trajectory(
     scene_root: Path, tmp_path: Path, model_name: str, objective_id: str
 ) -> None:
-    from scripts.pretrain import run_pretrain
+    from coffe.pretrain.loop import run_pretrain
 
     golden = _golden("g1_pretrain_loss")
     key = f"{model_name}:{objective_id}"
@@ -172,8 +172,8 @@ def test_g1_legacy_vocabulary_config_trains_identically() -> None:
     """
     import warnings
 
-    import coffe_compat
-    from scripts.pretrain import run_pretrain
+    from coffe import compat as coffe_compat
+    from coffe.pretrain.loop import run_pretrain
 
     # The deprecation cache is process-global; clear it so this test does not
     # depend on which tests ran before it.
@@ -320,7 +320,7 @@ def test_g3_episodic_eval(scene_root: Path, key: str) -> None:
     (the live key-mapping code, PAPER_CANON §8 D15), so breaking state_dict keys
     or loader plumbing fails here.
     """
-    from scripts.evaluate import run_evaluation
+    from coffe.eval.episodic import run_evaluation
 
     golden = _golden("g3_episodic_eval")
     expected = golden["entries"][key]
@@ -390,7 +390,7 @@ def test_g4_fixture_keys_load_without_gaps(key: str) -> None:
     encoder tensor shows up as *missing* (the rename left a parameter unloaded)
     or as an unexplained *unexpected* key.
     """
-    from scripts.evaluate import (
+    from coffe.eval.episodic import (
         fix_state_dict_keys,
         load_checkpoint_with_key_mapping,
     )

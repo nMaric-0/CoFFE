@@ -22,10 +22,10 @@ scenes are synthesised, and the HyperSIGMA ViT bodies are randomly initialised.
 
 | Golden | File | What it fixes |
 |---|---|---|
-| **G1** | `golden/g1_pretrain_loss.json` | Per-epoch mean pretraining loss (8 decimals) for every Table 2 objective — `simmim_band`, `simmim_token`, `simmim_band_token`, `mae` — plus the Houston band+token rate actually used (D19), for CoFFE and the MFT control. Via `scripts.pretrain.run_pretrain`. |
+| **G1** | `golden/g1_pretrain_loss.json` | Per-epoch mean pretraining loss (8 decimals) for every Table 2 objective — `simmim_band`, `simmim_token`, `simmim_band_token`, `mae` — plus the Houston band+token rate actually used (D19), for CoFFE and the MFT control. Via `coffe.pretrain.loop.run_pretrain`. |
 | **G2** | `golden/g2_encoder_forward.json` | Every state_dict tensor of a freshly-seeded model (pins init *and* the §7.2 key contract) and the pooled eval feature `z` for CoFFE HSI+LiDAR, CoFFE HSI-only, `MFTOriginal`, and the HyperSIGMA wrapper in both paper input regimes. |
-| **G3** | `golden/g3_episodic_eval.json` | OA (6 decimals) and a SHA-256 over the **full per-episode per-query argmin assignment matrix**, via `scripts.evaluate.run_evaluation`. |
-| **G4** | `fixtures/*.pth.fixture` | The pre-refactor checkpoints themselves. Loaded through the live key-mapping code on every run; if anyone breaks state_dict keys or loader plumbing, G4 fails. |
+| **G3** | `golden/g3_episodic_eval.json` | OA (6 decimals) and a SHA-256 over the **full per-episode per-query argmin assignment matrix**, via `coffe.eval.episodic.run_evaluation`. |
+| **G4** | `fixtures/*.pth` | The pre-refactor checkpoints themselves. Loaded through the live key-mapping code on every run; if anyone breaks state_dict keys or loader plumbing, G4 fails. |
 | **G5** | `golden/g5_masking.json` | Realized band/token mask rates (4 decimals, exact), the union-mask rate, and the masked reconstruction loss — pins Eq. 1 (union of the two masks, centre weights with mean one). |
 
 `golden/meta.json` records python/torch/numpy versions, the git SHA and the
@@ -43,13 +43,13 @@ gitignored, and never asserted against.
 ## The paper path, not a convenient path
 
 The harness drives the same functions the paper runs went through
-(`lib/*_runner.py` are thin wrappers over these):
+(`coffe/runners/*_runner.py` are thin wrappers over these):
 
-* `scripts.pretrain.run_pretrain`
-* `scripts.evaluate.run_evaluation`
-* `scripts.evaluate.load_model_with_checkpoint` (and its
+* `coffe.pretrain.loop.run_pretrain`
+* `coffe.eval.episodic.run_evaluation`
+* `coffe.eval.episodic.load_model_with_checkpoint` (and its
   `fix_state_dict_keys`, which is the *live* key-mapping code — PAPER_CANON §8 D15)
-* `data.datasets.*PatchedDataset`, fed synthetic `.mat` files in the real
+* `coffe.data.datasets.*PatchedDataset`, fed synthetic `.mat` files in the real
   on-disk layout, so patch handling and min-max normalisation are the repo's
 
 In particular the eval feature is captured off the **live** path

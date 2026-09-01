@@ -117,28 +117,29 @@ for p in ("experiments/ablation_report.json", "experiments/combo_report.json",
         "D9 APPROVED 2026-08-31: archive, not delete", approved=True)
 
 # ---- PAPER: report JSONs that provenance Table 2 / Table 3 ---------------
-rec("experiments/significance_report.json", "PAPER", "keep", None,
+rec("experiments/significance_report.json", "PAPER", "move", "results/significance_report.json",
     "supplies the across-seed std for 18 of 30 Table 2 cells (AUDIT.md §3 D1 table)",
     "5-seed, EPOCHS=700, eval_name=sig_eval_epoch700")
 rec("experiments/significance_report copy.json", "PAPER", "rename",
-    "experiments/significance_report_enhanced_v1.json",
+    "results/significance_report_enhanced_v1.json",
     "NOT junk: supplies the across-seed std for the 12 'enhanced' (HSI+LiDAR) "
     "Table 2 cells, which significance_report.json does not contain "
     "(its groups list omits 'enhanced')",
-    "RESCUE from the D8 delete list - see gate item")
-rec("experiments/_report_raw.json", "PAPER", "keep", None,
+    "RESCUE from the D8 delete list (phase-3 gate). EXECUTED phase 5: renamed "
+    "and moved into results/ with the other paper-provenance JSONs")
+rec("experiments/_report_raw.json", "PAPER", "move", "results/_report_raw.json",
     "holds 20 of 24 Table 3 cells with exact mean+CI match (AUDIT.md §3 D2)",
     "rename proposed but deferred: leading underscore is load-bearing for no reader")
-rec("experiments/aggregated_results.json", "PAPER", "keep", None,
+rec("experiments/aggregated_results.json", "PAPER", "move", "results/aggregated_results.json",
     "holds the single-run OA means for 21 of 30 Table 2 cells", "")
-rec("experiments/experiment_metadata.json", "PAPER", "keep", None,
+rec("experiments/experiment_metadata.json", "PAPER", "move", "results/experiment_metadata.json",
     "per-run distilled metadata; second source for Table 2 means", "")
-rec("experiments/mft_faithful_results.json", "PAPER", "keep", None,
+rec("experiments/mft_faithful_results.json", "PAPER", "move", "results/mft_faithful_results.json",
     "sole source of the 6 MFT-row means in Table 2 (epoch-950 checkpoints)", "")
-rec("experiments/hypersigma_native_sem_pca100_report.json", "PAPER", "keep", None,
+rec("experiments/hypersigma_native_sem_pca100_report.json", "PAPER", "move", "results/hypersigma_native_sem_pca100_report.json",
     "canon-named Table 3 report; its coverage_gaps_and_anomalies list is "
     "corroborated by AUDIT.md §3 D2/D13", "")
-rec("experiments/gathered_results.json", "PAPER", "keep", None,
+rec("experiments/gathered_results.json", "PAPER", "move", "results/gathered_results.json",
     "output of scripts/gather_requested_results.py (paper_compile root)", "")
 
 # ---- INFRA / docs verdicts ------------------------------------------------
@@ -359,14 +360,27 @@ rec("models/hypersigma/few_shot.py", "PAPER", "move",
     "renamed from models/hypersigma/hypersigma_cosine.py in phase 4", "")
 rec("pretrain/simmim.py", "PAPER", "move", "coffe/pretrain/simmim.py",
     "renamed from pretrain/masked_modeling_enhanced.py in phase 4", "")
-rec("scripts/evaluate.py", "PAPER", "move", "coffe/cli/evaluate.py",
-    "renamed from scripts/evaluate_cosine.py in phase 4",
-    "live AA/kappa maths, live fix_state_dict_keys, live episode loop")
-rec("scripts/pretrain.py", "PAPER", "move", "coffe/cli/pretrain.py",
-    "renamed from scripts/pretrain_enhanced.py in phase 4", "")
-rec("scripts/evaluate_hypersigma.py", "PAPER", "move",
-    "coffe/cli/evaluate_hypersigma.py",
-    "renamed from scripts/evaluate_hypersigma_cosine.py in phase 4", "")
+# The four CLIs keep their paths: phase 5 moved their *bodies* into the package
+# verbatim and left an argparse-only entry point behind, so every documented
+# `python scripts/<x>.py` invocation still works. This supersedes the phase-4
+# proposals that targeted `coffe/cli/<x>.py` (provisional, never approved):
+# the phase-5 gate kept `scripts/` as the CLI surface.
+rec("scripts/evaluate.py", "PAPER", "keep", None,
+    "renamed from scripts/evaluate_cosine.py in phase 4; argparse-only CLI "
+    "since phase 5",
+    "body (live AA/kappa maths, live fix_state_dict_keys, live episode loop) "
+    "moved verbatim to coffe/eval/episodic.py in phase 5")
+rec("scripts/pretrain.py", "PAPER", "keep", None,
+    "renamed from scripts/pretrain_enhanced.py in phase 4; argparse-only CLI "
+    "since phase 5",
+    "body moved verbatim to coffe/pretrain/loop.py in phase 5")
+rec("scripts/evaluate_hypersigma.py", "PAPER", "keep", None,
+    "renamed from scripts/evaluate_hypersigma_cosine.py in phase 4; "
+    "argparse-only CLI since phase 5",
+    "body moved verbatim to coffe/eval/hypersigma.py in phase 5")
+rec("scripts/adapt_hypersigma.py", "PAPER", "keep", None,
+    "HyperSIGMA label-free adaptation CLI (Table 3); argparse-only since phase 5",
+    "body moved verbatim to coffe/pretrain/hypersigma_adapt.py in phase 5")
 rec("docs/PRETRAINING.md", "INFRA", "keep", None,
     "renamed from docs/ENHANCED_PRETRAINING.md in phase 4 and rewritten: the "
     "old content documented weighted multi-task objectives, "
@@ -384,7 +398,7 @@ rec("tools/refactor/apply_renames.py", "INFRA", "keep", None,
     "legitimately spells the retired names", "")
 rec("coffe_compat.py", "INFRA", "move", "coffe/compat.py",
     "phase-4 legacy-vocabulary alias layer (PAPER_CANON §7.3): the one place "
-    "allowed to spell the retired names", "moves with the package in phase 5")
+    "allowed to spell the retired names", "EXECUTED phase 5: moved with the package")
 
 # ---- Phase-4 gate addendum: per-cell reproduction configs ----------------
 # Every Table-2 cell gained a config carrying its source run's exact recipe,
@@ -424,6 +438,55 @@ rec("tools/refactor/make_cell_configs.py", "INFRA", "keep", None,
     "reproduction configs from the frozen runs; requires the private "
     "experiments/ tree, so it is a maintainer tool, not a release check", "")
 
+
+# ---- Phase-5 package move (approved at the phase-4 gate, 2026-09-01) ------
+# Seven top-level packages became one installable package. Records live at the
+# pre-move paths so the ledger keeps the evidence; the moved files pick up the
+# `coffe/` rule below at their new paths.
+_PACKAGE_MOVES = {
+    "models/": "coffe/models/",
+    "pretrain/": "coffe/pretrain/",
+    "data/": "coffe/data/",
+    "utils/": "coffe/utils/",
+    "lib/": "coffe/runners/",
+    "trainers/pretrain_trainer.py": "coffe/pretrain/trainer.py",
+}
+for _old, _new in _PACKAGE_MOVES.items():
+    rec(_old, "PAPER", "move", _new,
+        "phase-5 restructure: one installable package (`pip install -e .`), "
+        "which also removes the .gitignore `lib/` trap of D5",
+        "EXECUTED phase 5, verbatim: no file content changed beyond import "
+        "statements and the removal of sys.path bootstrapping")
+
+_SCRIPT_MOVES = {
+    "scripts/run_significance_experiment.py": "scripts/reproduce/",
+    "scripts/sig_pretrain_worker.py": "scripts/reproduce/",
+    "scripts/sig_eval_worker.py": "scripts/reproduce/",
+    "scripts/sig_significance_config.py": "scripts/reproduce/",
+    "scripts/run_mae_experiments.py": "scripts/reproduce/",
+    "scripts/run_hsi_only_experiments.py": "scripts/reproduce/",
+    "scripts/run_mft_original_mae_experiments.py": "scripts/reproduce/",
+    "scripts/run_mft_original_spatial_experiments.py": "scripts/reproduce/",
+    "scripts/run_hypersigma_spatial_pca100.py": "scripts/reproduce/",
+    "scripts/aggregate_significance.py": "scripts/reports/",
+    "scripts/aggregate_experiment_results.py": "scripts/reports/",
+    "scripts/build_experiment_metadata.py": "scripts/reports/",
+    "scripts/build_native_pca100_report.py": "scripts/reports/",
+    "scripts/compile_mft_faithful_results.py": "scripts/reports/",
+    "scripts/gather_native_pca100_raw.py": "scripts/reports/",
+    "scripts/gather_requested_results.py": "scripts/reports/",
+}
+for _old, _dest in _SCRIPT_MOVES.items():
+    rec(_old, "PAPER", "move", _dest + _old.split("/")[-1],
+        "phase-5 restructure: scripts/ top level is the CLI surface; the "
+        "experiment drivers and the provenance builders move one level down",
+        "EXECUTED phase 5. Shell wrappers moved with their Python drivers.")
+
+rec("configs/eval/hypersigma_houston.yaml", "PAPER", "move",
+    "configs/hypersigma/houston_eval.yaml",
+    "PAPER_CANON §9 config layout: the one config left outside "
+    "configs/{coffe,mft,hypersigma}/", "EXECUTED phase 5")
+
 RULES = [
     ("third_party/", "VENDORED", "keep",
      "PAPER_CANON §7.4: vendored, contents never modified"),
@@ -438,14 +501,13 @@ RULES = [
     ("configs/", "PAPER", "keep",
      "config for a paper route; RISK R1: committed configs do not reproduce the "
      "paper runs (see AUDIT.md D13)"),
+    ("scripts/reproduce/", "PAPER", "keep",
+     "experiment driver behind a paper table cell"),
+    ("scripts/reports/", "PAPER", "keep",
+     "provenance / aggregation builder for the results/ JSONs"),
     ("scripts/", "PAPER", "keep", "in a paper root's import closure"),
-    ("lib/", "PAPER", "keep", "in a paper root's import closure"),
-    ("models/", "PAPER", "keep", "in a paper root's import closure"),
-    ("pretrain/", "PAPER", "keep", "in a paper root's import closure"),
-    ("trainers/", "PAPER", "keep",
-     "PretrainTrainer used by scripts/pretrain_enhanced.py:45 (D10 refuted)"),
-    ("utils/", "PAPER", "keep", "in a paper root's import closure"),
-    ("data/", "PAPER", "keep", "in a paper root's import closure"),
+    ("coffe/", "PAPER", "keep", "in a paper root's import closure"),
+    ("results/", "PAPER", "keep", "paper-table provenance artifact"),
     ("experiments/", "PAPER", "keep", "paper-table provenance artifact"),
 ]
 
@@ -487,7 +549,7 @@ NOTE = (
 # deletes and archives; **a later phase that carries out ``rename``/``move``
 # records must add its verdict here**, or ``main()`` exits non-zero rather than
 # letting the record drop out of the ledger.
-EXECUTED_IN_PHASE = {"delete": 3, "archive": 3, "rename": 4}
+EXECUTED_IN_PHASE = {"delete": 3, "archive": 3, "rename": 4, "move": 5}
 LEDGER_THROUGH_PHASE = max(EXECUTED_IN_PHASE.values())
 
 

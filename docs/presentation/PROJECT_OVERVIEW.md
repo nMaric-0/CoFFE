@@ -34,7 +34,7 @@ that transfer best to few-shot tasks**, and how does a purpose-built encoder
 
 All data are pre-cut into **11×11 spatial patches** centred on each labelled
 pixel; a sample is `{"hsi": [C_hsi,11,11], "aux": [C_aux,11,11]}`. Loaders live in
-[data/datasets/](../../data/datasets/) (`HoustonPatchedDataset`,
+[coffe/data/datasets/](../../coffe/data/datasets/) (`HoustonPatchedDataset`,
 `TrentoPatchedDataset`, `MUUFLPatchedDataset`), with a `CombinedPatchedDataset`
 that channel-pads for multi-dataset pretraining.
 
@@ -53,7 +53,7 @@ experiments/<name>/
     eval_config.json, eval.log
 ```
 
-Evaluation is orchestrated by [lib/eval_runner.py](../../lib/eval_runner.py),
+Evaluation is orchestrated by [coffe/runners/eval_runner.py](../../coffe/runners/eval_runner.py),
 which auto-loads the encoder architecture from `pretrain_config.yaml` so eval
 params can't drift from how the model was trained.
 
@@ -65,14 +65,14 @@ pretraining objective) — `use_projection` defaults to `False` for evaluation.
 
 ## 4. Main model — CoFFE
 
-[models/coffe.py](../../models/coffe.py). A compact
+[coffe/models/coffe.py](../../coffe/models/coffe.py). A compact
 spectral-spatial transformer encoder built for few-shot transfer.
 
 - **Unified tokenization.** HSI and aux bands are concatenated on the channel
   axis (when `use_aux=True`), passed through a `ChannelTokenizer`
   (`Conv2d(C, D, 1) + BN + GELU`) then a `SpatialTokenizer`, giving one token per
   pixel: `[B, H·W, D]`. Components in
-  [models/components/](../../models/components/).
+  [coffe/models/components/](../../coffe/models/components/).
 - **Class-agnostic CLS token** + learnable positional embeddings, then a small
   **transformer encoder** (`embed_dim=128`, `num_heads=2`, `num_layers=2` in
   every paper run; PAPER_CANON §2).
@@ -103,7 +103,7 @@ for the canonical runs, 3000 for Houston MAE and Houston MFT, 2000 for
 `houston_enhanced_spectral_run2` (PAPER_CANON §8 D17).
 
 **A. SimMIM masked modelling**
-([pretrain/simmim.py](../../pretrain/simmim.py),
+([coffe/pretrain/simmim.py](../../coffe/pretrain/simmim.py),
 `SimMIMPretrainModel`). Two composable masks with an MLP decoder
 that reconstructs the full cube (MSE over masked entries, optional center-weighted):
   - **Band masking** — per-(pixel, band) Bernoulli on the raw input, masked
@@ -115,15 +115,15 @@ that reconstructs the full cube (MSE over masked entries, optional center-weight
     `spatial`, `both`. One Table 2 cell used 0.75 band (PAPER_CANON §8 D19).
     See [docs/PRETRAINING.md](../PRETRAINING.md).
 
-**B. MAE** ([pretrain/mae_pretrain.py](../../pretrain/mae_pretrain.py),
+**B. MAE** ([coffe/pretrain/mae_pretrain.py](../../coffe/pretrain/mae_pretrain.py),
 `MAEPretrainModel`). Classic He-et-al. recipe in the unified token space: remove
 `mask_ratio=0.75` of tokens, asymmetric transformer decoder
 (`decoder_dim=64, depth=4, heads=4`), optional per-token `norm_pix_loss`. No
 projection head.
 
 **Ablation axes** (driven by
-[scripts/run_hsi_only_experiments.py](../../scripts/run_hsi_only_experiments.py)
-and [scripts/run_mae_experiments.py](../../scripts/run_mae_experiments.py)):
+[scripts/reproduce/run_hsi_only_experiments.py](../../scripts/reproduce/run_hsi_only_experiments.py)
+and [scripts/reproduce/run_mae_experiments.py](../../scripts/reproduce/run_mae_experiments.py)):
 
 1. **Dataset** — Houston / Trento / MUUFL.
 2. **Modality** — `HSI+LiDAR` vs `HSI-only` (the `*_no_lidar` configs).
@@ -134,21 +134,21 @@ regimes beat band-only (see [RESULTS.md](RESULTS.md)).
 
 ## 6. HyperSIGMA implementation (foundation-model baseline)
 
-[models/hypersigma/](../../models/hypersigma/). HyperSIGMA is a large pretrained
+[coffe/models/hypersigma/](../../coffe/models/hypersigma/). HyperSIGMA is a large pretrained
 HSI foundation model with a **dual-branch ViT** design, integrated here as a
 **frozen few-shot baseline**.
 
-- **SpatViT branch** ([spat_vit_branch.py](../../models/hypersigma/spat_vit_branch.py))
+- **SpatViT branch** ([spat_vit_branch.py](../../coffe/models/hypersigma/spat_vit_branch.py))
   — spatial pathway. HSI is PCA-reduced to **3 components**
-  ([preprocessing.py](../../models/hypersigma/preprocessing.py), `PCAPreprocessor`,
+  ([preprocessing.py](../../coffe/models/hypersigma/preprocessing.py), `PCAPreprocessor`,
   optionally `PCAStandardize`); a ViT-Base body (frozen) produces FPN spatial
   features. `spat_patch_k=3`.
-- **SpecViT branch** ([spec_vit_branch.py](../../models/hypersigma/spec_vit_branch.py))
+- **SpecViT branch** ([spec_vit_branch.py](../../coffe/models/hypersigma/spec_vit_branch.py))
   — spectral pathway over raw bands, with an `AdaptiveAvgPool1d` to **100 spectral
   tokens** (so any band count fits). ViT-Base body frozen.
-- **SEM fusion** ([sem.py](../../models/hypersigma/sem.py)) — gated spatial-spectral
+- **SEM fusion** ([sem.py](../../coffe/models/hypersigma/sem.py)) — gated spatial-spectral
   enhancement across 4 stages → a **512-d** fused feature.
-- **Eval wrapper** ([few_shot.py](../../models/hypersigma/few_shot.py),
+- **Eval wrapper** ([few_shot.py](../../coffe/models/hypersigma/few_shot.py),
   `HyperSIGMAFewShot`) — selects the feature used for prototypes:
   `fused` (512-d SEM), `spat_pool` (768-d spatial), or `spec_pool` (768-d
   spectral), L2-normalised. No learnable parameters at eval.
@@ -166,10 +166,10 @@ components to each target dataset's *unlabelled* pixels. Two steps:
    — 3-component PCA per dataset → `checkpoints/hypersigma/pca_<ds>_3band.pkl`
    (+ per-channel `_stats.pkl` for input standardization).
 2. **MAE adaptation**
-   ([pretrain/hypersigma_mae.py](../../pretrain/hypersigma_mae.py),
+   ([coffe/pretrain/hypersigma_mae.py](../../coffe/pretrain/hypersigma_mae.py),
    `HyperSIGMAMaskedAdaptation`; runner
    [scripts/adapt_hypersigma.py](../../scripts/adapt_hypersigma.py) /
-   notebook entry [lib/adapt_runner.py](../../lib/adapt_runner.py)) — upstream-style
+   notebook entry [coffe/runners/adapt_runner.py](../../coffe/runners/adapt_runner.py)) — upstream-style
    **token-level masking** (`mask_ratio=0.75`, HyperGlobal-450K default) with a
    learnable `mask_token` at masked positions and per-token z-scored
    reconstruction targets. A single `adapt_mode` knob controls both adaptation and
@@ -216,12 +216,12 @@ configured metric. Compilation: [scripts/compile_results.py](../../scripts/compi
 
 | Area | Path |
 |---|---|
-| Main model | [models/coffe.py](../../models/coffe.py) |
-| SimMIM pretraining | [pretrain/simmim.py](../../pretrain/simmim.py) |
-| MAE pretraining | [pretrain/mae_pretrain.py](../../pretrain/mae_pretrain.py) |
-| HyperSIGMA model | [models/hypersigma/](../../models/hypersigma/) |
-| HyperSIGMA adaptation | [pretrain/hypersigma_mae.py](../../pretrain/hypersigma_mae.py), [scripts/adapt_hypersigma.py](../../scripts/adapt_hypersigma.py) |
-| Evaluation | [lib/eval_runner.py](../../lib/eval_runner.py), [scripts/evaluate.py](../../scripts/evaluate.py), [scripts/evaluate_hypersigma.py](../../scripts/evaluate_hypersigma.py) |
-| Ablation drivers | [scripts/run_hsi_only_experiments.py](../../scripts/run_hsi_only_experiments.py), [scripts/run_mae_experiments.py](../../scripts/run_mae_experiments.py) |
+| Main model | [coffe/models/coffe.py](../../coffe/models/coffe.py) |
+| SimMIM pretraining | [coffe/pretrain/simmim.py](../../coffe/pretrain/simmim.py) |
+| MAE pretraining | [coffe/pretrain/mae_pretrain.py](../../coffe/pretrain/mae_pretrain.py) |
+| HyperSIGMA model | [coffe/models/hypersigma/](../../coffe/models/hypersigma/) |
+| HyperSIGMA adaptation | [coffe/pretrain/hypersigma_mae.py](../../coffe/pretrain/hypersigma_mae.py), [scripts/adapt_hypersigma.py](../../scripts/adapt_hypersigma.py) |
+| Evaluation | [coffe/runners/eval_runner.py](../../coffe/runners/eval_runner.py), [scripts/evaluate.py](../../scripts/evaluate.py), [scripts/evaluate_hypersigma.py](../../scripts/evaluate_hypersigma.py) |
+| Ablation drivers | [scripts/reproduce/run_hsi_only_experiments.py](../../scripts/reproduce/run_hsi_only_experiments.py), [scripts/reproduce/run_mae_experiments.py](../../scripts/reproduce/run_mae_experiments.py) |
 | Existing docs | [docs/EVAL_PROTOCOL.md](../EVAL_PROTOCOL.md), [docs/PRETRAINING.md](../PRETRAINING.md) |
 | Compiled results | [RESULTS.md](RESULTS.md), [RESULTS.json](RESULTS.json) |

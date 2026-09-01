@@ -3,7 +3,7 @@
 import torch
 import pytest
 
-from utils.spatial_weights import make_center_weights, center_weighted_pool
+from coffe.utils.spatial_weights import make_center_weights, center_weighted_pool
 
 
 class TestMakeCenterWeights:

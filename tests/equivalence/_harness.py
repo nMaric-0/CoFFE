@@ -5,12 +5,12 @@ and turns tensors into comparable fingerprints. It deliberately contains **no
 copy of the repository's preprocessing, masking, training or evaluation logic** —
 those are always reached by calling the real entry points:
 
-* pretraining  -> ``scripts.pretrain.run_pretrain``
-  (the same implementation ``lib/pretrain_runner.run_pretrain`` wraps)
-* evaluation   -> ``scripts.evaluate.run_evaluation``
-  (the same implementation ``lib/eval_runner.run_evaluation`` wraps)
-* datasets     -> ``scripts.evaluate.DATASETS`` (the repo's own map onto
-  ``data.datasets.*PatchedDataset``), fed synthetic ``.mat`` files in the exact
+* pretraining  -> ``coffe.pretrain.loop.run_pretrain``
+  (the same implementation ``coffe/runners/pretrain_runner.run_pretrain`` wraps)
+* evaluation   -> ``coffe.eval.episodic.run_evaluation``
+  (the same implementation ``coffe/runners/eval_runner.run_evaluation`` wraps)
+* datasets     -> ``coffe.eval.episodic.DATASETS`` (the repo's own map onto
+  ``coffe.data.datasets.*PatchedDataset``), fed synthetic ``.mat`` files in the exact
   on-disk layout the real scenes use, so patch handling and min-max
   normalisation run the repo's code.
 
@@ -21,7 +21,7 @@ tensors precisely so that ``PatchedMultimodalDataset._load_split`` /
 
 The one place a *sequence* of repo calls is reproduced here is
 :func:`live_eval_feature`, which mirrors the five lines of
-``scripts/evaluate.py:389-400``. That is the LIVE eval feature path
+``coffe/eval/episodic.py:384-395``. That is the LIVE eval feature path
 (PAPER_CANON §8 D3: ``CoFFE.forward_episode`` is dead code and must not
 be what the harness pins). G3 exercises the real evaluator end-to-end, so the
 mirror is only used for the G2 encoder-forward fingerprints; a dedicated test
@@ -46,12 +46,11 @@ if str(REPO_ROOT) not in sys.path:
 GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
 
-# Fixture checkpoints cannot use the `.pth` extension: the repo `.gitignore`
-# has a blanket `*.pth` rule, so a `.pth` under fixtures/ would silently fail
-# to commit (the same trap PAPER_CANON §8 D5 records for `lib/`). `torch.load`
-# does not care about the extension. Proposed for phase 5: add
-# `!/tests/equivalence/fixtures/*.pth` to .gitignore and rename these back.
-FIXTURE_SUFFIX = ".pth.fixture"
+# The checkpoint fixtures are committed despite the blanket `*.pth` rule in
+# .gitignore: phase 5 added an explicit `!/tests/equivalence/fixtures/*.pth`
+# negation, so they carry their real extension again (they were named
+# `*.pth.fixture` in phases 2-4, when .gitignore was out of scope).
+FIXTURE_SUFFIX = ".pth"
 
 PATCH_SIZE = 11
 
@@ -191,7 +190,7 @@ def build_all_scenes(data_root: Path) -> Path:
 
 def load_scene_dataset(spec: SceneSpec, data_root: Path, split: str = "all"):
     """Load a mini-scene through the repository's own dataset class."""
-    from scripts.evaluate import DATASETS  # the repo's own map
+    from coffe.eval.episodic import DATASETS  # the repo's own map
 
     return DATASETS[spec.key](
         data_root=str(data_root), patch_size=PATCH_SIZE, split=split, normalize=True,
@@ -231,7 +230,7 @@ MFT_ARCH: Dict[str, Any] = {
 # Objective table, in PAPER_CANON §1 canonical vocabulary throughout (phase 4
 # renamed the config values to match the ids: objective "simmim" | "mae", with
 # the band/spatial mask-rate pair naming the regime). Frozen configs spell the
-# SimMIM objective "enhanced"; `coffe_compat` maps it, and
+# SimMIM objective "enhanced"; `coffe.compat` maps it, and
 # `tests/test_compat.py` pins that path.
 OBJECTIVES: Dict[str, Dict[str, Any]] = {
     "simmim_band": {
@@ -371,7 +370,7 @@ def eval_params(
     k_query: int = G3_K_QUERY,
     seed: int = G3_SEED,
 ) -> Dict[str, Any]:
-    """Keyword arguments for ``scripts.evaluate.run_evaluation``."""
+    """Keyword arguments for ``coffe.eval.episodic.run_evaluation``."""
     arch = dict(MFT_ARCH) if model_name == "mft_original" else dict(COFFE_ARCH)
     arch.pop("proj_hidden_dim", None)
     arch.pop("proj_num_layers", None)
@@ -398,7 +397,7 @@ def eval_params(
         "no_plots": True,
         # Capture every episode's assignment, not just the plotting sample.
         # Pure collection flag: it touches no RNG and no arithmetic
-        # (scripts/evaluate.py:447-456).
+        # (coffe/eval/episodic.py:442-451).
         "num_example_episodes": num_episodes,
         "max_tsne_samples": 0,
         "output": None,
@@ -427,16 +426,16 @@ def build_eval_model(
 ):
     """Build the eval-shaped encoder through the repository's own loader.
 
-    Goes through ``scripts.evaluate.load_model_with_checkpoint`` with
+    Goes through ``coffe.eval.episodic.load_model_with_checkpoint`` with
     checkpoint ``"random"`` so the harness pins the real construction path
     (including its per-architecture defaults), not a private copy of it.
 
     ``use_projection`` defaults to False — the paper's eval setting
     (PAPER_CANON §4). :func:`build_pretrain_model` overrides it to the
     *pretraining* value, because the projection head is inside the masked
-    reconstruction forward (``pretrain/simmim.py``).
+    reconstruction forward (``coffe/pretrain/simmim.py``).
     """
-    from scripts.evaluate import load_model_with_checkpoint
+    from coffe.eval.episodic import load_model_with_checkpoint
 
     params = eval_params(spec, data_root=Path("."), model_name=model_name, use_aux=use_aux)
     params["use_projection"] = use_projection
@@ -463,10 +462,10 @@ def load_eval_model_from_checkpoint(
     """Same as :func:`build_eval_model` but loading a real checkpoint file.
 
     This is the G4 path: ``load_checkpoint_with_key_mapping`` +
-    ``fix_state_dict_keys`` (scripts/evaluate.py:87-137) are the live
+    ``fix_state_dict_keys`` (coffe/eval/episodic.py:95-125) are the live
     key-mapping implementation (PAPER_CANON §8 D15).
     """
-    from scripts.evaluate import load_model_with_checkpoint
+    from coffe.eval.episodic import load_model_with_checkpoint
 
     params = eval_params(spec, data_root=Path("."), model_name=model_name, use_aux=use_aux)
     model_config = {
@@ -489,8 +488,8 @@ def build_pretrain_model(spec: SceneSpec, objective_id: str, *, use_aux: bool = 
     modules and are executed unmodified. The dispatch itself is pinned
     end-to-end by G1, which goes through ``run_pretrain``.
     """
-    from pretrain.mae_pretrain import MAEPretrainModel
-    from pretrain.simmim import SimMIMPretrainModel
+    from coffe.pretrain.mae_pretrain import MAEPretrainModel
+    from coffe.pretrain.simmim import SimMIMPretrainModel
 
     obj = dict(OBJECTIVES[objective_id])
     # The encoder must carry the PRETRAINING projection setting: the head sits
@@ -570,7 +569,7 @@ def _write_dummy_pca(path: Path, in_bands: int, n_components: int) -> str:
 
 def build_hypersigma_model(spec: SceneSpec, regime: str, work_dir: Path):
     """Build ``HyperSIGMAFewShot`` over a random-init ``HyperSIGMADual``."""
-    from models.hypersigma import HyperSIGMAFewShot, HyperSIGMADual
+    from coffe.models.hypersigma import HyperSIGMAFewShot, HyperSIGMADual
 
     cfg = HYPERSIGMA_REGIMES[regime]
     pca_path = _write_dummy_pca(
@@ -636,14 +635,14 @@ def fixed_input(spec: SceneSpec, *, batch: int = 4, seed: int = 20260231):
 
 
 def live_eval_feature(model, hsi, aux):
-    """The LIVE eval feature, mirroring scripts/evaluate.py:389-400.
+    """The LIVE eval feature, mirroring coffe/eval/episodic.py:384-395.
 
     For CoFFE this is ``z = mean_j(patch_emb_j) + lambda * cls_emb`` with
     lambda = 0.5 (PAPER_CANON §8 D3), *not* "patch tokens pooled".
     """
     import torch
 
-    from utils.spatial_weights import center_weighted_pool
+    from coffe.utils.spatial_weights import center_weighted_pool
 
     with torch.no_grad():
         patch, cls, _ = model.forward_features(hsi, aux)

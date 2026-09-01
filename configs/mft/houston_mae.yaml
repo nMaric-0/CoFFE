@@ -30,7 +30,7 @@
 # (+ the LiDAR CLS) only, and a transformer decoder reconstructs the masked
 # tokens' bands (norm_pix_loss). The decoder cross-attends to the encoded CLS so
 # the mCrossPA transformer receives a reconstruction gradient (see
-# pretrain/mft_mae.py). The transformer is the FAITHFUL MFT (Roy et al. 2023 /
+# coffe/pretrain/mft_mae.py). The transformer is the FAITHFUL MFT (Roy et al. 2023 /
 # srinadh99): FM=16 -> dim=64, 8 heads, depth 2, mlp_dim 512 (a fixed 512, = dim*8).
 # Channel counts (144 HSI + 1 LiDAR) are auto-detected from the dataset class.
 #

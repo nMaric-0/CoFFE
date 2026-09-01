@@ -1,5 +1,5 @@
 {
-  "description": "Episodic eval via scripts.evaluate.run_evaluation against the committed pre-refactor fixtures: OA to 6 decimals plus a SHA-256 over the full per-episode per-query argmin assignment matrix.",
+  "description": "Episodic eval via coffe.eval.episodic.run_evaluation against the committed pre-refactor fixtures: OA to 6 decimals plus a SHA-256 over the full per-episode per-query argmin assignment matrix.",
   "entries": {
     "coffe": {
       "OA": {
@@ -66,14 +66,14 @@
       "model_name": "mft_cpea",
       "num_keys": 52,
       "objective": "simmim_token",
-      "path": "tests/equivalence/fixtures/coffe_houston_mini_simmim_token_ep3.pth.fixture"
+      "path": "tests/equivalence/fixtures/coffe_houston_mini_simmim_token_ep3.pth"
     },
     "mft_original": {
       "bytes": 1549321,
       "model_name": "mft_original",
       "num_keys": 55,
       "objective": "simmim_token",
-      "path": "tests/equivalence/fixtures/mft_original_houston_mini_simmim_token_ep3.pth.fixture"
+      "path": "tests/equivalence/fixtures/mft_original_houston_mini_simmim_token_ep3.pth"
     }
   },
   "protocol": {

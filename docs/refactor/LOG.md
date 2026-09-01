@@ -1171,3 +1171,239 @@ Verification for this addendum: 120 tests pass, equivalence goldens unchanged
 re-verified value-by-value against their frozen runs, and the six base configs
 plus the twelve stamped cell configs confirmed to differ from the phase-4 commit
 in comments and blank lines only.
+
+---
+
+## Phase 5 — restructure into the `coffe` package + thin CLIs + `results/`
+
+Seven top-level packages became one installable package; the four fat scripts
+became argparse-only entry points over package modules; the paper-provenance
+JSONs left the runtime tree. **No computed number moved:** every Python move was
+verbatim (proved below), and the equivalence goldens' numeric fields are
+byte-identical.
+
+### Layout approved at the gate
+
+`coffe/{models,pretrain,data,eval,runners,utils}` + `coffe/compat.py`,
+`scripts/` (CLIs) with `scripts/reproduce/` (experiment drivers) and
+`scripts/reports/` (provenance builders), `results/` (paper JSONs),
+`experiments/` runtime-only. Nikola also chose: ship `third_party` as an
+installed package (no vendored file edited), and take all three deferred
+renames (`significance_report copy.json`, the `.pth.fixture` fixtures, the
+stray `configs/eval/` config).
+
+Deliberate deviation from the phase skill's default layout: it proposed writing
+new `scripts/reproduce/table2_*.sh` / `table23_*.sh` wrappers. No new pipeline
+code was invented in a restructure phase — the existing drivers moved into
+`scripts/reproduce/` with a README mapping each to its table cells instead.
+
+### What moved
+
+| Before | After |
+|---|---|
+| `models/`, `pretrain/`, `data/{datasets,samplers}/`, `utils/` | `coffe/<same>/` |
+| `lib/` | `coffe/runners/` |
+| `trainers/pretrain_trainer.py` | `coffe/pretrain/trainer.py` |
+| `coffe_compat.py` | `coffe/compat.py` |
+| body of `scripts/evaluate.py` | `coffe/eval/episodic.py` |
+| body of `scripts/evaluate_hypersigma.py` | `coffe/eval/hypersigma.py` |
+| body of `scripts/pretrain.py` | `coffe/pretrain/loop.py` |
+| body of `scripts/adapt_hypersigma.py` | `coffe/pretrain/hypersigma_adapt.py` |
+| 16 experiment drivers / 7 report builders | `scripts/reproduce/`, `scripts/reports/` |
+| 8 `experiments/*.json` | `results/` (+ `results/README.md`) |
+| `experiments/significance_report copy.json` | `results/significance_report_enhanced_v1.json` |
+| `configs/eval/hypersigma_houston.yaml` | `configs/hypersigma/houston_eval.yaml` |
+| `tests/equivalence/fixtures/*.pth.fixture` | `…/fixtures/*.pth` |
+
+162 import lines across 54 files were rewritten to absolute `coffe.<subpkg>`
+form; every `sys.path` bootstrap inside the package is gone (the scripts keep
+theirs, since `scripts/reproduce/*` import `scripts.reproduce.sig_significance_config`
+when run as files).
+
+### The four script splits are verbatim
+
+Each split was verified mechanically against `HEAD`: the `if __name__ ==
+"__main__":` block is **byte-identical** in all four new scripts, and the moved
+body differs from the old script only in (a) import lines, (b) the removed
+`sys.path` bootstrap and (c) path strings inside docstrings and comments
+(`coffe_compat` → `coffe.compat`, `data/datasets/registry.py` →
+`coffe/data/datasets/registry.py`). No executable line was reordered, rewritten
+or "fixed while I was in there".
+
+### Surprises found (reported, not fixed)
+
+1. **`create_pretrain_dataloaders` was quietly broken.**
+   `trainers/pretrain_trainer.py:472` did `from .masked_modeling import …`,
+   i.e. `trainers.masked_modeling`, which never existed — any call would have
+   raised `ModuleNotFoundError`. Nothing calls it (the only reference was the
+   `trainers/__init__` re-export), so no paper run touched it. Moving the file
+   into `coffe/pretrain/` makes that relative import resolve, so the function
+   goes from latently broken to working **as a side effect of the move** —
+   not a code change, and not something any caller can observe today.
+2. **Legacy top-level imports no longer resolve.** `from models import
+   MFTCPEACosine` used to work through the phase-4 alias layer; the package
+   `models` no longer exists, so it is now `from coffe.models import
+   MFTCPEACosine`. The legacy *class names* still resolve with their
+   `DeprecationWarning` — only the module prefix changed.
+   `tests/test_compat.py`'s parametrisation was updated accordingly, and
+   `coffe/compat.py`'s `LEGACY_CLASSES` now names `coffe.models…`.
+3. **`--output results/eval/…` in `configs/hypersigma/houston_eval.yaml`.** That
+   comment's example output path now collides with the new tracked `results/`.
+   Retargeted to `experiments/<run>/evaluations/<eval>/results.json`, the
+   convention the runner actually uses. Comment only; no config value changed.
+4. **Two `parents[1]`/`parent.parent` classes of bug** would have shipped
+   silently: every script that moved one level deeper computed the wrong repo
+   root, and the five `run_*.sh` wrappers `cd`'d to `scripts/` instead of the
+   repo root. Both fixed; caught by the from-another-cwd CLI smoke, which is why
+   that check earns its place. A third instance (`DATASETS` / `HyperSIGMAFewShot`
+   referenced by `scripts/evaluate_hypersigma.py`'s parser but left behind in the
+   package module) was caught the same way.
+
+### Golden files: three metadata strings changed
+
+The goldens' numeric content is untouched. Three provenance strings inside them
+name modules or paths that moved, and were updated so the record stays true:
+`g1_pretrain_loss.json`'s description (`scripts.pretrain.run_pretrain` →
+`coffe.pretrain.loop.run_pretrain`), `g3_episodic_eval.json`'s description
+(`scripts.evaluate.run_evaluation` → `coffe.eval.episodic.run_evaluation`) and
+its two `fixtures[*].path` fields (`.pth.fixture` → `.pth`). No test reads any
+of the three. Diffable in one line: `git diff HEAD -- tests/equivalence/golden/`.
+
+### Packaging
+
+`pyproject.toml` gained `[project]` (name `coffe`, version `0.9.0`, MIT,
+`requires-python >=3.9`, dependencies copied unchanged from `requirements.txt`
+— pruning is phase 6) and `[tool.setuptools.packages.find] include =
+["coffe*", "third_party*"]`. `pytest`'s `addopts` now measures `--cov=coffe`.
+`setuptools-scm` was dropped from the build requirements at the same time: the
+version is static and no `[tool.setuptools_scm]` section exists, so it was never
+doing anything. `.gitignore` lost the venv-layout `lib/`/`lib64/`/`parts/`/`eggs/`
+block and its
+`!/lib/**` counter-rules (**D5 closed**: the trap is gone, not neutralised),
+lost the now-unneeded `!/experiments/*.json` exception, and gained
+`!/tests/equivalence/fixtures/*.pth` plus an explicit ignore for
+`tests/equivalence/golden/real_local.json`. The removal is slightly wider than
+D5 strictly required — `lib64/`, `parts/`, `eggs/`, `.eggs/` went with `lib/`,
+as none of them names anything this repo builds.
+
+`tests/equivalence/make_golden.py` emits the two golden `description` strings,
+so it was updated in step with them; otherwise a regeneration would silently
+revert those provenance lines. `run_eval.sh` / `run_eval_trento.sh` had their
+default output directory moved from `results/eval/…` to `experiments/eval/…`,
+since `results/` is now tracked paper provenance — disclosed in CHANGES.md
+under "One default moved".
+
+### Ledger and closure
+
+`tools/refactor/build_manifest.py` gained `"move": 5` in `EXECUTED_IN_PHASE`,
+path rules for the new tree, and phase-5 move records; the four CLI records
+became `keep` with a note that they supersede phase-4's never-approved
+`coffe/cli/<x>.py` proposals. 340 records, **the 42 approved ones unchanged**.
+`closure.py`'s root set was re-pointed at both the CLIs and the package modules
+that now hold their bodies. Normalised to pre-move names, the paper closure is
+**74** against phase 4's 73: `coffe/__init__.py` and `coffe/eval/__init__.py`
+entered, `trainers/__init__.py` left with the dissolved package. Nothing else
+entered or left the paper's reachable set.
+
+### Incident: four frozen artifacts were overwritten, then restored
+
+While smoke-testing `--help` on every script, four report builders **ran their
+full pipelines** and rewrote their outputs against today's `experiments/` tree:
+`results/_report_raw.json`, `results/hypersigma_native_sem_pca100_report.json`,
+`results/gathered_results.json` and `docs/presentation/RESULTS.json`. The last
+one had its curated Table-2 entries replaced wholesale (33 kept results → 858),
+which is precisely what PAPER_CANON §6 forbids. `canon-reviewer` caught it as a
+FAIL; all four were restored from `HEAD` and re-verified byte-identical
+(`sha256` per file), so the committed tree carries the frozen artifacts
+unchanged. No paper number is affected.
+
+**The underlying hazard is pre-existing and worth fixing in phase 6:** four
+scripts take no arguments at all —
+`scripts/compile_results.py`, `scripts/reports/build_native_pca100_report.py`,
+`scripts/reports/gather_native_pca100_raw.py`,
+`scripts/reports/gather_requested_results.py` (the last has no `__main__` guard
+either). Passing them *any* flag, `--help` included, executes the pipeline and
+overwrites a frozen artifact. They are now excluded from CLI smoke by design
+(byte-compile only), and the recommendation is: give each an `argparse` front
+end with an explicit `--out`, and a `--force` before any overwrite of a
+`results/` path.
+
+### Two defects the reviews caught after the first pass
+
+1. **Every notebook was broken.** All seven bootstrap cells locate the repo root
+   with `while not (REPO / "lib" / "experiments.py").exists()`. With `lib/`
+   gone, each would have walked to `/` and raised `RuntimeError` in its first
+   cell — the README's primary workflow, dead. Fixed in all 11 such loops
+   across the seven notebooks (several carry two) to
+   `coffe/runners/experiments.py`, and verified by executing each bootstrap
+   from `notebooks/` and from the repo root.
+2. **The four thin CLIs required an install; the other 13 entry points did
+   not.** Dropping their `sys.path` bootstrap made
+   `python scripts/evaluate.py` fail with `ModuleNotFoundError: coffe` in any
+   tree that had not been `pip install -e .`-ed — including Nikola's `.venv`.
+   The bootstrap is back in all four (a script-level `sys.path.insert`, matching
+   the rest of `scripts/`; the *package* still has none), so every entry point
+   behaves the same way with or without an install. README's install section
+   says so explicitly now.
+
+### Verification
+
+- `pytest -q -m "not gpu and not data"`: **120 passed** (same count as phase 4).
+- Equivalence: G1–G5 green; goldens' numeric fields byte-identical.
+- G4 checkpoint fixtures load through the moved key-mapping code under their
+  new `.pth` names.
+- `pip install -e .` in a clean scratch venv from `pyproject.toml` alone
+  (`--no-deps`, so the ~2 GB torch download is skipped): `import coffe`,
+  `coffe.{models,data,eval,pretrain,runners,utils}` and
+  `third_party.HyperSIGMA.ImageClassification.model` all resolve.
+- CLI `--help` smoke on all **17 argparse entry points**, from the repo root and
+  from `/tmp`, in the project `.venv` (no install) **and** in the scratch venv
+  (installed): 17/17 both ways. The five argument-less scripts are byte-compiled
+  only, never executed — see the incident above.
+- Stale grep: no `from models`/`from lib`/`import utils`/`coffe_compat` imports
+  remain outside `docs/refactor/` (frozen history) and `CHANGES.md` (which
+  documents the retired forms on purpose); every relative markdown link in the
+  release docs resolves; the equivalence harness's own docstrings, README and
+  line-number citations were re-anchored to `coffe/eval/episodic.py`.
+- `verifier` battery: pytest 120 passed, equivalence **IDENTICAL** (a recursive
+  key-by-key comparison against `HEAD` found **0 numeric diffs**; exactly four
+  changed lines, all provenance strings), G4 6/6, imports 11/11.
+- `canon-reviewer`: returned **FAIL** on the first pass — the four regenerated
+  artifacts and the dead notebook bootstrap, both fixed above — plus 12
+  non-blocking items, all applied: harness/README stale module paths,
+  CHANGES.md's exclusion table naming pre-move files, two live-code citations in
+  PAPER_CANON (`lib/eval_runner.py:209`, `scripts/build_experiment_metadata.py:112-115`),
+  the `run_eval.sh` output-dir collision, prose corrupted by the mechanical path
+  rewrite ("the verbatim **coffe/pretrain**/adapt config"), the epoch-950/975
+  over-simplification in the two new READMEs (one cell is epoch 800; all six MFT
+  cells are 950), an unsupported "21 of 30" count, `pyproject`'s
+  `setuptools>=45` against the SPDX `license` string (now `>=77`), and three
+  cosmetics.
+
+### Open questions for the gate
+
+1. **`pip install -e .` was verified with `--no-deps`** in a scratch venv (the
+   dependency set is unchanged from `requirements.txt`, and a full resolve would
+   re-download torch). Nikola's `.venv` was not modified — installing the
+   package editable there is his call.
+2. **`requires-python = ">=3.9"`** was chosen to match the existing
+   `black`/badge targets; the dev `.venv` is 3.12. Confirm or narrow in phase 6
+   with the dependency prune.
+3. **Config coverage gaps for Table 3** (skill step 6 asks for the list, not
+   for invented settings). Table 2: all 30 cells have a per-cell config. Table
+   3: the 3 SEM-only pad cells and the 3 joint+SEM cells have configs, the 3
+   11×11 spatial cells have a script path
+   (`run_hypersigma_spatial_pca100.py`, which overrides `adapt_mode` in code
+   over the joint_sem config); **12 frozen 64×64 cells and the 3 11×11 spectral
+   cells have neither** — they were driven from
+   `notebooks/evaluate_hypersigma_native.ipynb` and
+   `notebooks/evaluate_hypersigma.ipynb` respectively. The frozen twelve
+   involve no adaptation at all (eval-flag variations over the released
+   checkpoints), so a config would only carry eval settings. Recorded in
+   `scripts/reproduce/README.md`; reconstructing configs for them is a phase-8
+   decision, not something phase 5 should guess.
+4. **`docs/presentation/RESULTS.{md,json}`** still carry phase-4's open
+   question (regenerate or mark superseded). Phase 5 leaves both byte-identical
+   to phase 4 — see the incident above for why that sentence needed checking.
+5. Surprise 1 above (`create_pretrain_dataloaders`) — leave the now-working
+   helper as it is, or delete it as dead code in phase 6?

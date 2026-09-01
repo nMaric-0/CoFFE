@@ -22,7 +22,7 @@ vocabulary without changing what it computes.
 | `MFT-CPEA`, `MFTCPEA`, `mft_cpea`, "MFT-CPEA-Cosine" | **CoFFE** (Cross-modal Fusion Feature Encoder) | The paper's compact encoder. Python class `CoFFE`, module `coffe/models/coffe.py`, config `model.name: "coffe"`. |
 | `MFTCPEACosine` (class) | `CoFFE` | Class rename only. **state_dict attribute names are frozen** (see §7). |
 | `models/mft_cpea_cosine.py` | `coffe/models/coffe.py` | |
-| "Cosine" in file/class/script/doc names (`evaluate_cosine.py`, `run_cosine_eval.sh`, `hypersigma_cosine.py`, `docs/COSINE_VARIANT.md`, `HyperSIGMACosine`) | Drop. Protocol name is **"Euclidean nearest-class-mean (NCM)"** | The paper protocol is Euclidean NCM (`distance_metric="euclidean"` in every Table 2 run and every Table 3 cell but one — §8 D18). `cosine` may remain as a **non-default option value** of `distance_metric`, never in a name, title, or default. **Phase-4 gate 2026-09-01: the default is now `euclidean`** everywhere (CLI, `_DEFAULT_ARGS`, every model constructor, `lib/eval_runner`); cosine stays selectable. This is the one deliberate default change of the refactor. No paper run is affected because every paper run passes `distance_metric` **explicitly**, so no default is consulted — note that value is not always `euclidean`: the Table 3 Houston 11×11 spectral cell records `cosine` (§8 D18). |
+| "Cosine" in file/class/script/doc names (`evaluate_cosine.py`, `run_cosine_eval.sh`, `hypersigma_cosine.py`, `docs/COSINE_VARIANT.md`, `HyperSIGMACosine`) | Drop. Protocol name is **"Euclidean nearest-class-mean (NCM)"** | The paper protocol is Euclidean NCM (`distance_metric="euclidean"` in every Table 2 run and every Table 3 cell but one — §8 D18). `cosine` may remain as a **non-default option value** of `distance_metric`, never in a name, title, or default. **Phase-4 gate 2026-09-01: the default is now `euclidean`** everywhere (CLI, `_DEFAULT_ARGS`, every model constructor, `coffe/runners/eval_runner`); cosine stays selectable. This is the one deliberate default change of the refactor. No paper run is affected because every paper run passes `distance_metric` **explicitly**, so no default is consulted — note that value is not always `euclidean`: the Table 3 Houston 11×11 spectral cell records `cosine` (§8 D18). |
 | `MFTOriginalCosine` | `MFTOriginal` | The architectural control: original MFT (Roy et al.), external fusion token, pretrained under the same masked objectives. Config `model.name: "mft_original"` is already correct. |
 | objective `"enhanced"` | `"simmim"` | SimMIM-style in-place masked reconstruction (Xie et al.). |
 | variant `"spectral"` | **SimMIM band** → id `simmim_band` | Band masking of (pixel, band) entries, rates `(r_b, r_s) = (0.85, 0)`. |
@@ -71,7 +71,7 @@ episodes are **N-way** where N = the scene's full class count.
 | Encoder | Frozen; projection head **off** at eval (`use_projection: False`) |
 | Metric | OA only (class-balanced queries ⇒ OA = AA; κ omitted by design) |
 | Reporting | OA mean ± 95% CI over episodes (within a training); **across-seed std** for CoFFE/MFT over 5 seeds |
-| Seeds | `[42, 123, 456, 789, 1011]` (from `scripts/sig_significance_config.py`) |
+| Seeds | `[42, 123, 456, 789, 1011]` (from `scripts/reproduce/sig_significance_config.py`) |
 
 ## 5. Datasets (paper Table 1)
 
@@ -139,7 +139,9 @@ adaptation trains 1.13M–8.45M). Headline margins over the best FM config:
    `MFTOriginal`, the HyperSIGMA wrappers, and every pretrain model are frozen,
    because they define checkpoint keys. Renaming classes, files, and configs is
    free; renaming attributes requires a key-mapping shim beside the **live**
-   key-fixing logic, `fix_state_dict_keys` in `scripts/evaluate_cosine.py`
+   key-fixing logic, `fix_state_dict_keys` in `coffe/eval/episodic.py`
+   (phase 5 moved it there with the rest of the evaluator body; it was
+   `scripts/evaluate_cosine.py` when this clause was written)
    (`utils/checkpoints.py`, the dead twin this clause used to name, was deleted
    in phase 3 — D15/R2), **plus** a loading test against a pre-refactor
    checkpoint fixture (`tests/equivalence/fixtures/`).
@@ -228,6 +230,12 @@ where the paper allows, renaming.
      The phase-2 equivalence harness must pin the **live** path, not
      `forward_episode`.
 
+  (Paths in this record are the phase-1 ones. Phase 5 moved them:
+  `lib/eval_runner.py` → `coffe/runners/eval_runner.py`; `scripts/evaluate_cosine.py`
+  → `scripts/evaluate.py` (phase-4 rename), whose body then became
+  `coffe/eval/episodic.py` (phase 5); `models/*` → `coffe/models/*`.
+  The line numbers are pre-move and are not re-anchored.)
+
   MFT control: λ is correctly inert there — `models/mft_original.py:237-245`
   overrides `adapt_embeddings` to return `patch_emb` unchanged, and its eval
   configs record `lambda_factor: None`.
@@ -237,7 +245,10 @@ where the paper allows, renaming.
   deleted.
 - **D5 — `.gitignore` contains `lib/`** (Python packaging boilerplate) while
   `lib/` holds first-party source; new files there are silently untracked.
-  Restructure must eliminate this trap.
+  Restructure must eliminate this trap. **RESOLVED phase 5:** `lib/` became
+  `coffe/runners/`, and the shadowing `lib/`/`lib64/`/`parts/`/`eggs/` rules and
+  their `!/lib/**` counter-rules were removed from `.gitignore`. The trap is
+  gone, not merely neutralised.
 - **D6 — Requirements kitchen-sink.** `requirements.txt` lists hydra-core,
   wandb, timm, rasterio, spectral, tensorboard, seaborn, etc. Compute the true
   import set; prune in Phase 6. **CONFIRMED 2026-09-01 (Nikola):** `torchvision`
@@ -317,7 +328,8 @@ where the paper allows, renaming.
   `scripts/evaluate_cosine.py:823` writes
   `"model_type": "MFTOriginalCosine" | "MFTCPEACosine"` into eval results;
   `scripts/compile_results.py:58,104` and
-  `scripts/build_experiment_metadata.py:112-115` read it back. Those readers
+  `scripts/build_experiment_metadata.py:112-115` (phase 5: `scripts/reports/`)
+  read it back. Those readers
   only compare against `"HyperSIGMADual"` / `"HyperSIGMA" in m`, both preserved
   by §1, so renaming the CoFFE/MFT values is reader-safe — but it changes the
   content of newly written `results.json`. Phase 4 adds the reader alias map
@@ -327,7 +339,7 @@ where the paper allows, renaming.
   **epoch 950 (Houston) / 975 (Trento, MUUFL)** — never the final checkpoint
   (one cell, Houston SimMIM band HSI+LiDAR, uses epoch 800). The ± column is
   the **across-seed std of a separate 5-seed experiment trained fresh to 700
-  epochs** (`scripts/sig_significance_config.py:46`), split across
+  epochs** (`scripts/reproduce/sig_significance_config.py:46`), split across
   `experiments/significance_report.json` (18 cells) and
   `experiments/significance_report copy.json` (12 `enhanced` cells, including
   all three headline numbers). All 30 cells verified exact in both columns
@@ -363,7 +375,7 @@ where the paper allows, renaming.
   carry the rate of the cell it reproduces.
 
 - **D20 — for two Trento cells the ± was measured on a different mask rate than
-  the mean.** `_ENHANCED_CANONICAL` (`scripts/sig_significance_config.py:66-74`)
+  the mean.** `_ENHANCED_CANONICAL` (`scripts/reproduce/sig_significance_config.py:66-74`)
   supplies the mask rates that the 5-seed significance runs clone. For Trento it
   names `trento_enhanced_spectral_run1` (band **0.75**) and
   `trento_enhanced_spectral_spatial_run1` (**0.75/0.75**), while Table 2's means

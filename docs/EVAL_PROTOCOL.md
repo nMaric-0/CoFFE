@@ -42,7 +42,7 @@ already do).
 For CoFFE the pooled feature is **not** simply the mean of the patch tokens.
 The live path
 ([`scripts/evaluate.py`](../scripts/evaluate.py) →
-[`CoFFE.eval_patch_embeddings`](../models/coffe.py)) folds the weighted
+[`CoFFE.eval_patch_embeddings`](../coffe/models/coffe.py)) folds the weighted
 class-agnostic token into every patch token first:
 
 ```
@@ -72,12 +72,12 @@ python scripts/evaluate.py \
 ```
 
 `--n-way` defaults to the scene's full class count, which is the paper setting.
-The shell drivers [`scripts/run_eval.sh`](../scripts/run_eval.sh) and
-[`scripts/run_eval_trento.sh`](../scripts/run_eval_trento.sh) wrap the same
+The shell drivers [`scripts/reproduce/run_eval.sh`](../scripts/reproduce/run_eval.sh) and
+[`scripts/reproduce/run_eval_trento.sh`](../scripts/reproduce/run_eval_trento.sh) wrap the same
 call, but **their built-in defaults are not the paper's** (`k_query` 30 / 600
 episodes; the Trento one also defaults to 8 heads, 4 layers, λ 1.0, `k_query`
 19 and the projection head on) — each script's header lists them. Meanwhile
-[`lib/eval_runner.py`](../lib/eval_runner.py) is the notebook entry point — it
+[`coffe/runners/eval_runner.py`](../coffe/runners/eval_runner.py) is the notebook entry point — it
 reads the architecture back out of the pretraining run's
 `pretrain_config.yaml`, so eval cannot silently drift from the checkpoint.
 
@@ -92,7 +92,7 @@ dataset. `tests/equivalence/` pins a pre-refactor fixture checkpoint loading
 through the renamed classes.
 
 Old configs that still say `model.name: "mft_cpea"` or
-`objective: "enhanced"` are accepted via [`coffe_compat.py`](../coffe_compat.py),
+`objective: "enhanced"` are accepted via [`coffe/compat.py`](../coffe/compat.py),
 which maps them and warns once.
 
 ## See also

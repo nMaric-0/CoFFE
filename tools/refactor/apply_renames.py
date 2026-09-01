@@ -56,6 +56,7 @@ EXCLUDED_DIRS = {
     ".venv",
     "third_party",
     "experiments",
+    "results",
     "archive",
     "data",
     "checkpoints",
@@ -69,7 +70,7 @@ EXCLUDED_DIRS = {
 EXCLUDED_FILES = {
     "PAPER_CANON.md",
     "CHANGES.md",
-    "coffe_compat.py",
+    "coffe/compat.py",
     "docs/refactor/AUDIT.md",
     "docs/refactor/BASELINE.md",
     "docs/refactor/ENV.md",

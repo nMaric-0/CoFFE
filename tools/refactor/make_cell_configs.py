@@ -47,7 +47,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from coffe_compat import normalize_model_name, normalize_objective  # noqa: E402
+from coffe.compat import normalize_model_name, normalize_objective  # noqa: E402
 
 AUDIT = REPO_ROOT / "docs" / "refactor" / "AUDIT.md"
 EXPERIMENTS = REPO_ROOT / "experiments"

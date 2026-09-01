@@ -31,12 +31,15 @@ designed for tuning, comparing, and revisiting runs from notebooks.
 git clone <repo-url> coffe
 cd coffe
 conda create -n coffe python=3.9 -y && conda activate coffe
-pip install -r requirements.txt
+pip install -e .
 ```
 
-Everything runs from the repository root (`python scripts/...`, notebooks from
-`notebooks/`); there is no editable install step — real packaging metadata lands
-in `pyproject.toml` in phase 6.
+That installs the `coffe` package (and the vendored HyperSIGMA sources under
+`third_party/`), so `import coffe` works from any working directory.
+`pip install -r requirements.txt` without the editable install also works: every
+entry point under `scripts/` adds the repo root to `sys.path` itself, so
+`python scripts/…` runs either way. Only `import coffe` from an unrelated
+directory needs the install.
 
 Then either:
 
@@ -46,7 +49,7 @@ Then either:
   `notebooks/compare.ipynb` to compare across runs.
 - **From the CLI (one-off runs):** `python scripts/pretrain.py
   --config configs/coffe/houston_simmim.yaml`, then
-  `./scripts/run_eval.sh <checkpoint> houston 15 5`.
+  `./scripts/reproduce/run_eval.sh <checkpoint> houston 15 5`.
 
 ## Experiment layout
 
@@ -75,9 +78,9 @@ you want to share by force-adding the relevant files.
 ## Programmatic API (used by the notebooks)
 
 ```python
-from lib.pretrain_runner import run_pretrain
-from lib.eval_runner import run_evaluation
-from lib.experiments import ExperimentLogger, load_all_evaluations
+from coffe.runners.pretrain_runner import run_pretrain
+from coffe.runners.eval_runner import run_evaluation
+from coffe.runners.experiments import ExperimentLogger, load_all_evaluations
 
 # 1. Pretrain
 exp = run_pretrain(
@@ -107,13 +110,13 @@ df = pd.DataFrame(load_all_evaluations())
 
 ## Modifying the model / pretrain / eval pipelines
 
-- **Model**: `models/coffe.py` (encoder used by both pipelines).
+- **Model**: `coffe/models/coffe.py` (encoder used by both pipelines).
   Encoder hyperparameters (depth, heads, projection head, pooling) are read
   from the YAML config under `model:`.
-- **Pretraining**: `pretrain/simmim.py` (SimMIM masking + loss) or
-  `pretrain/mae_pretrain.py` (MAE). Mask ratios, decoder hidden dim, and recon
+- **Pretraining**: `coffe/pretrain/simmim.py` (SimMIM masking + loss) or
+  `coffe/pretrain/mae_pretrain.py` (MAE). Mask ratios, decoder hidden dim, and recon
   weighting live under `pretrain:` in the config.
-- **Evaluation**: `scripts/evaluate.py` holds the live episode loop and the
+- **Evaluation**: `coffe/eval/episodic.py` holds the live episode loop and the
   class-mean maths; `CoFFE.eval_patch_embeddings` produces the per-token
   features it pools. Distance metric, temperature, and class-mean mode are
   passed as eval params at runtime.
@@ -121,26 +124,25 @@ df = pd.DataFrame(load_all_evaluations())
 ## Project structure
 
 ```
-coffe/
-├── configs/coffe/           # CoFFE pretraining configs (per scene / regime)
-├── configs/mft/             # the MFT architectural control
-├── configs/hypersigma/      # HyperSIGMA label-free adaptation
-├── data/                    # Dataset loaders + episode sampler
-├── docs/                    # Pipeline documentation
-├── experiments/             # Per-run output trees (gitignored except _example/)
-├── lib/                     # Research utilities
-│   ├── experiments.py       # ExperimentLogger / PretrainExperiment / EvalRun
-│   ├── pretrain_runner.py   # Notebook-friendly pretrain entry point
-│   └── eval_runner.py       # Notebook-friendly eval entry point
-├── models/                  # CoFFE + MFTOriginal + components
-├── notebooks/               # pretrain.ipynb, evaluate.ipynb, compare.ipynb
-├── pretrain/                # SimMIM / MAE masked-modelling pretraining
-├── scripts/                 # CLI entry points + shell wrappers
+CoFFE/
+├── coffe/                   # the installable package (`pip install -e .`)
+│   ├── models/              # CoFFE + MFTOriginal + components/ + hypersigma/
+│   ├── pretrain/            # SimMIM / MAE masked modelling, trainer, HyperSIGMA adaptation
+│   ├── data/                # dataset loaders (datasets/) + episode samplers (samplers/)
+│   ├── eval/                # the frozen-encoder episodic evaluators
+│   ├── runners/             # notebook-friendly pretrain / eval / adapt entry points
+│   ├── utils/               # seeding, IO, metrics, spatial weights, plots
+│   └── compat.py            # legacy-name aliases for pre-rename artifacts
+├── scripts/                 # thin CLIs: pretrain, evaluate, adapt, fit-PCA, compile-results
+│   ├── reproduce/           # the experiment drivers behind Tables 2 and 3
+│   └── reports/             # provenance / aggregation builders
+├── configs/{coffe,mft,hypersigma}/   # per-cell pretraining, adaptation and eval configs
+├── results/                 # the JSONs behind the paper tables (see results/README.md)
+├── experiments/             # per-run output trees (gitignored except _example/)
+├── notebooks/               # pretrain.ipynb, evaluate.ipynb, compare.ipynb, …
 ├── tests/                   # unit tests + tests/equivalence/ (behaviour goldens)
 ├── third_party/HyperSIGMA/  # vendored upstream (see its LICENSE / NOTICE)
-├── trainers/pretrain_trainer.py
-├── coffe_compat.py          # legacy-name aliases for pre-rename artifacts
-└── utils/
+└── docs/                    # pipeline documentation
 ```
 
 ## Supported Datasets

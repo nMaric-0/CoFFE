@@ -17,8 +17,8 @@ import warnings
 import pytest
 import torch
 
-import coffe_compat
-from coffe_compat import (
+from coffe import compat as coffe_compat
+from coffe.compat import (
     LEGACY_MODEL_NAMES,
     LEGACY_MODEL_TYPES,
     LEGACY_OBJECTIVES,
@@ -171,8 +171,8 @@ def test_config_without_the_optional_keys_is_left_alone():
 
 def test_frozen_config_builds_the_same_model_as_its_canonical_twin():
     """A legacy config and its canonical rewrite must construct one model."""
-    from scripts.evaluate import load_model_with_checkpoint
-    from models import CoFFE
+    from coffe.eval.episodic import load_model_with_checkpoint
+    from coffe.models import CoFFE
 
     legacy = dict(FROZEN_PRETRAIN_CONFIG["model"])
     legacy["use_projection"] = False
@@ -194,8 +194,8 @@ def test_frozen_config_builds_the_same_model_as_its_canonical_twin():
 
 def test_legacy_model_name_still_selects_the_mft_control():
     """`mft_original` was already canonical; normalization must not disturb it."""
-    from scripts.evaluate import load_model_with_checkpoint
-    from models import MFTOriginal
+    from coffe.eval.episodic import load_model_with_checkpoint
+    from coffe.models import MFTOriginal
 
     cfg = {"name": "mft_original", "embed_dim": 64, "num_heads": 8, "num_layers": 2,
            "mlp_dim": 512, "patch_size": 11}
@@ -211,10 +211,10 @@ def test_legacy_model_name_still_selects_the_mft_control():
 @pytest.mark.parametrize(
     "legacy_name, canonical_module, canonical_name",
     [
-        ("MFTCPEACosine", "models", "CoFFE"),
-        ("MFTOriginalCosine", "models", "MFTOriginal"),
-        ("HyperSIGMACosine", "models.hypersigma", "HyperSIGMAFewShot"),
-        ("EnhancedMaskedSpectralSpatialModel", "pretrain", "SimMIMPretrainModel"),
+        ("MFTCPEACosine", "coffe.models", "CoFFE"),
+        ("MFTOriginalCosine", "coffe.models", "MFTOriginal"),
+        ("HyperSIGMACosine", "coffe.models.hypersigma", "HyperSIGMAFewShot"),
+        ("EnhancedMaskedSpectralSpatialModel", "coffe.pretrain", "SimMIMPretrainModel"),
     ],
 )
 def test_legacy_class_alias_resolves_to_the_canonical_class(
@@ -237,16 +237,16 @@ def test_legacy_class_alias_resolves_to_the_canonical_class(
 @pytest.mark.parametrize(
     "package, legacy_name, canonical_name",
     [
-        ("models", "MFTCPEACosine", "CoFFE"),
-        ("models", "MFTOriginalCosine", "MFTOriginal"),
-        ("models.hypersigma", "HyperSIGMACosine", "HyperSIGMAFewShot"),
-        ("pretrain", "EnhancedMaskedSpectralSpatialModel", "SimMIMPretrainModel"),
+        ("coffe.models", "MFTCPEACosine", "CoFFE"),
+        ("coffe.models", "MFTOriginalCosine", "MFTOriginal"),
+        ("coffe.models.hypersigma", "HyperSIGMACosine", "HyperSIGMAFewShot"),
+        ("coffe.pretrain", "EnhancedMaskedSpectralSpatialModel", "SimMIMPretrainModel"),
     ],
 )
 def test_legacy_name_still_imports_from_its_original_package(
     package, legacy_name, canonical_name
 ):
-    """`from models import MFTCPEACosine` is what old notebooks actually write."""
+    """`from coffe.models import MFTCPEACosine` is what old notebooks actually write."""
     import importlib
 
     mod = importlib.import_module(package)
@@ -259,9 +259,9 @@ def test_legacy_name_still_imports_from_its_original_package(
 
 
 def test_unknown_attribute_on_a_package_is_still_an_attribute_error():
-    import models
-    import pretrain
-    from models import hypersigma
+    import coffe.models as models
+    import coffe.pretrain as pretrain
+    from coffe.models import hypersigma
 
     for mod in (models, pretrain, hypersigma):
         with pytest.raises(AttributeError):
@@ -279,7 +279,7 @@ def test_alias_class_constructs_and_shares_state_dict_keys():
         warnings.simplefilter("ignore", DeprecationWarning)
         LegacyCoFFE = coffe_compat.MFTCPEACosine
 
-    from models import CoFFE
+    from coffe.models import CoFFE
 
     kwargs = dict(hsi_channels=144, aux_channels=1, embed_dim=128, num_heads=2,
                   num_layers=2, patch_size=11, use_projection=False)

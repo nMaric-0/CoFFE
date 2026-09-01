@@ -2,7 +2,7 @@
 import pytest
 import torch
 import numpy as np
-from data.samplers import EpisodeSampler
+from coffe.data.samplers import EpisodeSampler
 
 
 class MockDataset:

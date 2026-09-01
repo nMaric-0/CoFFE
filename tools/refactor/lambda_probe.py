@@ -34,10 +34,10 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from data.datasets.patched import HoustonPatchedDataset
-from data.samplers.patched_episode_sampler import PatchedEpisodeSampler
-from scripts.evaluate import load_model_with_checkpoint
-from utils.seed import set_seed
+from coffe.data.datasets.patched import HoustonPatchedDataset
+from coffe.data.samplers.patched_episode_sampler import PatchedEpisodeSampler
+from coffe.eval.episodic import load_model_with_checkpoint
+from coffe.utils.seed import set_seed
 
 REPO = Path(__file__).resolve().parents[2]
 # The run behind Table 2's headline Houston cell (75.30), at its evaluated epoch.

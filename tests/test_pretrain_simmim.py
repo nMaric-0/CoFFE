@@ -17,9 +17,9 @@ sys.path.insert(0, str(project_root))
 
 import torch
 
-from models import CoFFE
-from pretrain.masked_modeling import UnifiedBandMasking
-from pretrain.simmim import SimMIMPretrainModel
+from coffe.models import CoFFE
+from coffe.pretrain.masked_modeling import UnifiedBandMasking
+from coffe.pretrain.simmim import SimMIMPretrainModel
 
 
 def _make_encoder(embed_dim: int = 64):

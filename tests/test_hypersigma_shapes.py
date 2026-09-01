@@ -22,7 +22,7 @@ torch = pytest.importorskip("torch")
 
 from sklearn.decomposition import PCA
 
-from models.hypersigma import (
+from coffe.models.hypersigma import (
     HyperSIGMAFewShot,
     HyperSIGMADual,
     SEM,

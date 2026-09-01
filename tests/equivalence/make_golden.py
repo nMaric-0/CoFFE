@@ -146,7 +146,7 @@ def assert_safe_to_generate(rebaseline: bool) -> None:
 
 
 def make_g1(scene_root: Path, work: Path) -> Dict[str, Any]:
-    from scripts.pretrain import run_pretrain
+    from coffe.pretrain.loop import run_pretrain
 
     spec = SCENES["houston_mini"]
     entries: Dict[str, Any] = {}
@@ -173,7 +173,7 @@ def make_g1(scene_root: Path, work: Path) -> Dict[str, Any]:
     return {
         "description": (
             "Per-epoch mean pretraining loss for every objective in PAPER_CANON "
-            "Table 2, via scripts.pretrain.run_pretrain on houston_mini."
+            "Table 2, via coffe.pretrain.loop.run_pretrain on houston_mini."
         ),
         "scene": spec.name,
         "epochs": G1_EPOCHS,
@@ -251,7 +251,7 @@ def fixture_path(key: str) -> Path:
 def make_fixtures(scene_root: Path, work: Path) -> Dict[str, Any]:
     import torch
 
-    from scripts.pretrain import run_pretrain
+    from coffe.pretrain.loop import run_pretrain
 
     spec = SCENES["houston_mini"]
     FIXTURE_DIR.mkdir(parents=True, exist_ok=True)
@@ -295,7 +295,7 @@ def _fixture_key_report(spec: SceneSpec, key: str, model_name: str) -> Dict[str,
     pretrain-only tensors the eval encoder does not have. Recording the exact
     list means any *other* key drifting into it fails the harness.
     """
-    from scripts.evaluate import (
+    from coffe.eval.episodic import (
         fix_state_dict_keys,
         load_checkpoint_with_key_mapping,
     )
@@ -315,7 +315,7 @@ def _fixture_key_report(spec: SceneSpec, key: str, model_name: str) -> Dict[str,
 
 
 def make_g3(scene_root: Path) -> Dict[str, Any]:
-    from scripts.evaluate import run_evaluation
+    from coffe.eval.episodic import run_evaluation
 
     spec = SCENES["houston_mini"]
     entries: Dict[str, Any] = {}
@@ -346,7 +346,7 @@ def make_g3(scene_root: Path) -> Dict[str, Any]:
 
     return {
         "description": (
-            "Episodic eval via scripts.evaluate.run_evaluation against the "
+            "Episodic eval via coffe.eval.episodic.run_evaluation against the "
             "committed pre-refactor fixtures: OA to 6 decimals plus a SHA-256 over "
             "the full per-episode per-query argmin assignment matrix."
         ),
@@ -430,7 +430,7 @@ def make_real(experiments_dir: Path) -> Dict[str, Any]:
     ``golden/real_local.json`` which is gitignored and never asserted against by
     ``test_equivalence.py``.
     """
-    from scripts.evaluate import run_evaluation
+    from coffe.eval.episodic import run_evaluation
 
     # PAPER_CANON §8 D14: Table 2's headline Houston cell (75.30) comes from this
     # directory, evaluated at epoch 950. The `seed52` in the name is a misnomer;

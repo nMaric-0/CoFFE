@@ -31,7 +31,7 @@ REPO = Path(__file__).resolve().parent.parent
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from coffe_compat import normalize_model_type  # noqa: E402
+from coffe.compat import normalize_model_type  # noqa: E402
 EXPERIMENTS = REPO / "experiments"
 OUT = REPO / "docs" / "presentation" / "RESULTS.json"
 

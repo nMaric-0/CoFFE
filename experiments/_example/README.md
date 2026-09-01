@@ -2,7 +2,7 @@
 
 Reference layout for an experiment directory. **Not a real run** — the
 metadata/results values are placeholders. Every real run produced by
-`lib.pretrain_runner.run_pretrain` (or `notebooks/pretrain.ipynb`) lives
+`coffe.runners.pretrain_runner.run_pretrain` (or `notebooks/pretrain.ipynb`) lives
 under `experiments/<your_name>/` with the same structure.
 
 Files you'll find in a real experiment:

@@ -1,6 +1,6 @@
 {
   "batch_size": 16,
-  "description": "Per-epoch mean pretraining loss for every objective in PAPER_CANON Table 2, via scripts.pretrain.run_pretrain on houston_mini.",
+  "description": "Per-epoch mean pretraining loss for every objective in PAPER_CANON Table 2, via coffe.pretrain.loop.run_pretrain on houston_mini.",
   "entries": {
     "coffe:mae": {
       "epochs_run": 3,

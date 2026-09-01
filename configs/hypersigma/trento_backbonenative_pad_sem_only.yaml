@@ -12,7 +12,7 @@
 #   python scripts/adapt_hypersigma.py \
 #       --config configs/hypersigma/trento_backbonenative_pad_sem_only.yaml
 #
-# Driven for all three datasets by scripts/run_native_sem_pad_experiments.sh.
+# Driven for all three datasets by scripts/reproduce/run_native_sem_pad_experiments.sh.
 
 model:
   name: "hypersigma_dual"

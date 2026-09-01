@@ -17,16 +17,16 @@ input, with one class-agnostic token prepended.
 
 | Objective | `pretrain.objective` | What it does | Code |
 |---|---|---|---|
-| **SimMIM** | `"simmim"` | In-place masking, nothing is dropped: masked entries are replaced (band masking with a learnable per-channel fill, token masking with a learnable mask token) and an MLP decoder reconstructs the full per-pixel band vector. Loss is MSE over the **union** of the two masks. | [`pretrain/simmim.py`](../pretrain/simmim.py) |
-| **MAE** | `"mae"` | Token-drop recipe (He et al.): 75 % of pixel tokens are removed before encoding, and a transformer decoder reconstructs them. No projection head. | [`pretrain/mae_pretrain.py`](../pretrain/mae_pretrain.py) |
+| **SimMIM** | `"simmim"` | In-place masking, nothing is dropped: masked entries are replaced (band masking with a learnable per-channel fill, token masking with a learnable mask token) and an MLP decoder reconstructs the full per-pixel band vector. Loss is MSE over the **union** of the two masks. | [`coffe/pretrain/simmim.py`](../coffe/pretrain/simmim.py) |
+| **MAE** | `"mae"` | Token-drop recipe (He et al.): 75 % of pixel tokens are removed before encoding, and a transformer decoder reconstructs them. No projection head. | [`coffe/pretrain/mae_pretrain.py`](../coffe/pretrain/mae_pretrain.py) |
 
 The MFT control supports the same two objectives through
-[`pretrain/mft_spatial_mae.py`](../pretrain/mft_spatial_mae.py) (SimMIM token)
-and [`pretrain/mft_mae.py`](../pretrain/mft_mae.py) (MAE).
+[`coffe/pretrain/mft_spatial_mae.py`](../coffe/pretrain/mft_spatial_mae.py) (SimMIM token)
+and [`coffe/pretrain/mft_mae.py`](../coffe/pretrain/mft_mae.py) (MAE).
 
 Frozen configs on the authors' machines spell the SimMIM objective
 `"enhanced"`; that value is still accepted and mapped by
-[`coffe_compat.py`](../coffe_compat.py) (PAPER_CANON §7.3).
+[`coffe/compat.py`](../coffe/compat.py) (PAPER_CANON §7.3).
 
 ## The three SimMIM regimes
 
@@ -52,7 +52,7 @@ Two caveats the audit established, both recorded in PAPER_CANON §8:
   | every other `configs/coffe/*_simmim*.yaml` (Houston HSI-only, both Trento, both MUUFL) | 0.9 | 0.0 | SimMIM band, at a rate **no Table 2 cell used** |
 
   The 5-seed significance experiment overrides the pair at runtime from the
-  canonical run dir (`scripts/sig_significance_config.py`). **Set both rates
+  canonical run dir (`scripts/reproduce/sig_significance_config.py`). **Set both rates
   explicitly to reproduce a specific cell** — do not assume a config's name
   implies its regime.
 
@@ -86,14 +86,14 @@ Configs live under `configs/coffe/` (CoFFE), `configs/mft/` (the control) and
 `configs/hypersigma/` (label-free foundation-model adaptation, a different
 script: `scripts/adapt_hypersigma.py`).
 
-From a notebook, [`lib/pretrain_runner.py`](../lib/pretrain_runner.py) wraps the
+From a notebook, [`coffe/runners/pretrain_runner.py`](../coffe/runners/pretrain_runner.py) wraps the
 same entry point and writes everything under `experiments/<name>/`.
 
 ## Loading a pretrained encoder
 
 ```python
 import torch
-from models import CoFFE
+from coffe.models import CoFFE
 
 model = CoFFE(hsi_channels=144, aux_channels=1, embed_dim=128,
               num_heads=2, num_layers=2, patch_size=11,

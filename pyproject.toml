@@ -1,5 +1,55 @@
+[project]
+name = "coffe"
+version = "0.9.0"
+description = "A Compact In-Domain Fusion Encoder versus a Hyperspectral Foundation Model for Few-Shot HSI-LiDAR Land-Cover Classification"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [
+    { name = "Nikola Marić", email = "nikola.maric@ijs.si" },
+    { name = "Dragi Kocev" },
+]
+keywords = ["hyperspectral", "lidar", "few-shot", "self-supervised", "remote-sensing"]
+# Unchanged from requirements.txt; pruning is phase 6.
+dependencies = [
+    "torch>=1.10.0",
+    "torchvision>=0.11.0",
+    "numpy>=1.21.0",
+    "scipy>=1.7.0",
+    "omegaconf>=2.1.0",
+    "hydra-core>=1.1.0",
+    "h5py>=3.0.0",
+    "scikit-learn>=1.0.0",
+    "scikit-image>=0.19.0",
+    "spectral>=0.22.0",
+    "rasterio>=1.2.0",
+    "matplotlib>=3.5.0",
+    "seaborn>=0.11.0",
+    "tensorboard>=2.8.0",
+    "tqdm>=4.62.0",
+    "einops>=0.4.0",
+    "timm>=0.5.0",
+    "wandb>=0.12.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=3.0.0",
+    "black>=22.0.0",
+    "isort>=5.10.0",
+    "flake8>=4.0.0",
+]
+
+[tool.setuptools.packages.find]
+# ``third_party`` ships as an installed package so the vendored HyperSIGMA
+# sources stay importable as ``third_party.HyperSIGMA...`` from any working
+# directory, without editing a single vendored file (PAPER_CANON §7.4).
+include = ["coffe*", "third_party*"]
+
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools-scm[toml]>=6.2"]
+# >=77 for the SPDX `license = "MIT"` string form and PEP 621 [project] support.
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
@@ -14,7 +64,7 @@ line_length = 100
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
-addopts = "-v --cov=models --cov=data --cov-report=term-missing"
+addopts = "-v --cov=coffe --cov-report=term-missing"
 markers = [
     "equivalence: behaviour-equivalence harness (tests/equivalence); must stay green on every refactor commit",
     "gpu: requires a CUDA device",

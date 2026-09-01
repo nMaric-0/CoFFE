@@ -17,7 +17,7 @@
 #   python scripts/pretrain.py --config configs/coffe/muufl_simmim.yaml
 #
 # ROLE: this is the **5-seed significance experiment's base config** for this
-# scene (the `enhanced` group in scripts/sig_significance_config.py). That runner
+# scene (the `enhanced` group in scripts/reproduce/sig_significance_config.py). That runner
 # CLONES the per-variant mask rates from the canonical run dir at launch, so the
 # pair in this file (0.9 / 0.0) is only what it happens to carry — it is NOT
 # the recipe of any Table 2 cell.

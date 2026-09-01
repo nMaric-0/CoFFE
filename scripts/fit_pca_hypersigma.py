@@ -26,8 +26,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from data.datasets import DATASET_REGISTRY, get_spec  # noqa: E402
-from models.hypersigma.preprocessing import (  # noqa: E402
+from coffe.data.datasets import DATASET_REGISTRY, get_spec  # noqa: E402
+from coffe.models.hypersigma.preprocessing import (  # noqa: E402
     fit_dataset_pca,
     fit_pca_output_stats,
 )

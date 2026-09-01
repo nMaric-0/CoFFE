@@ -30,7 +30,7 @@
 # spatial token masking (75% of pixel tokens -> a learnable mask token), a 2-layer
 # MLP decoder reconstructing the full 145-band HSI+LiDAR per-pixel vector, and a
 # center-weighted MSE computed only on masked entries (recon_center_sigma=1.0).
-# See pretrain/mft_spatial_mae.py — the encoded CLS is injected into each patch
+# See coffe/pretrain/mft_spatial_mae.py — the encoded CLS is injected into each patch
 # token before the decoder so the mCrossPA fusion receives a reconstruction
 # gradient. Same training schedule + eval as the MAE variant, so the two ablations
 # differ ONLY in the pretraining objective. Channel counts (144 HSI + 1 LiDAR) are

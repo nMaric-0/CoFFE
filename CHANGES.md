@@ -141,6 +141,98 @@ run artifacts.
 
 ---
 
+## Phase 5 — restructure into an installable package (2026-09-01)
+
+The release is now `pip install -e .`-able: one package, `coffe/`, plus thin
+command-line entry points under `scripts/`. **No computed number changed** —
+every Python move below was verbatim, and the equivalence goldens are
+unchanged. Paths in the phase-4 table above name pre-move locations; this table
+is where those files live now.
+
+### Packages
+
+| Before | After |
+|---|---|
+| `models/` | `coffe/models/` |
+| `pretrain/` | `coffe/pretrain/` |
+| `data/{datasets,samplers}/` | `coffe/data/{datasets,samplers}/` |
+| `utils/` | `coffe/utils/` |
+| `lib/` | `coffe/runners/` |
+| `trainers/pretrain_trainer.py` | `coffe/pretrain/trainer.py` |
+| `coffe_compat.py` | `coffe/compat.py` |
+
+The `trainers` package is dissolved; its two public names (`PretrainTrainer`,
+`create_pretrain_dataloaders`) are re-exported from `coffe.pretrain`.
+
+### Scripts became thin CLIs
+
+The paper logic moved into the package; each script keeps only its argparse
+block and calls `main()`. The script paths themselves are unchanged, so every
+documented invocation (`python scripts/evaluate.py …`) still works.
+
+| Script | Logic now lives in |
+|---|---|
+| `scripts/evaluate.py` | `coffe/eval/episodic.py` |
+| `scripts/evaluate_hypersigma.py` | `coffe/eval/hypersigma.py` |
+| `scripts/pretrain.py` | `coffe/pretrain/loop.py` |
+| `scripts/adapt_hypersigma.py` | `coffe/pretrain/hypersigma_adapt.py` |
+
+`fit_pca_hypersigma.py`, `compile_results.py` and the two `download_*.sh` stay
+as they are. The experiment drivers moved to `scripts/reproduce/` (the 5-seed
+significance runner and its workers, the per-family `run_*` pairs, the eval
+shell drivers) and the provenance/aggregation builders to `scripts/reports/`.
+
+### Paper artifacts
+
+The eight JSONs that provenance Tables 2 and 3 moved out of the runtime tree
+into `results/`, with `results/README.md` mapping each to the table cells it
+feeds. `experiments/` is now runtime-only (gitignored, `_example/` excepted) and
+still resolves existing run directories by name, unchanged.
+
+| Before | After |
+|---|---|
+| `experiments/aggregated_results.json` | `results/aggregated_results.json` |
+| `experiments/experiment_metadata.json` | `results/experiment_metadata.json` |
+| `experiments/mft_faithful_results.json` | `results/mft_faithful_results.json` |
+| `experiments/significance_report.json` | `results/significance_report.json` |
+| `experiments/significance_report copy.json` | `results/significance_report_enhanced_v1.json` |
+| `experiments/_report_raw.json` | `results/_report_raw.json` |
+| `experiments/hypersigma_native_sem_pca100_report.json` | `results/hypersigma_native_sem_pca100_report.json` |
+| `experiments/gathered_results.json` | `results/gathered_results.json` |
+| `configs/eval/hypersigma_houston.yaml` | `configs/hypersigma/houston_eval.yaml` |
+| `tests/equivalence/fixtures/*.pth.fixture` | `tests/equivalence/fixtures/*.pth` |
+
+The `copy` file's rescue (it is the only source of the across-seed std for the
+12 HSI+LiDAR SimMIM cells, including all three headline numbers) is recorded in
+`docs/refactor/AUDIT.md` §3 D8.
+
+### Two defaults moved
+
+`scripts/reproduce/run_eval.sh` and `run_eval_trento.sh` defaulted their output
+directory to `results/eval/<scene>_<N>way_<K>shot`. `results/` is now the
+tracked home of the paper-provenance JSONs, so that default became
+`experiments/eval/…` (gitignored, like every other run output). It changes where
+a bare invocation *writes*, never what it computes, and both scripts still take
+an explicit output directory as a positional argument.
+
+The second is the writer side of the artifact move above: the `--output`
+fallbacks of `scripts/reports/aggregate_experiment_results.py`,
+`build_experiment_metadata.py` and `compile_mft_faithful_results.py` now default
+to `results/<name>.json` instead of `experiments/<name>.json`, so a regeneration
+lands where the file it regenerates actually lives. `gather_native_pca100_raw.py`,
+`build_native_pca100_report.py` and `gather_requested_results.py` take no
+arguments at all; their hard-coded output paths moved with them.
+
+### Packaging
+
+`pyproject.toml` gained `[project]` (name `coffe`, version `0.9.0`, MIT,
+dependencies copied unchanged from `requirements.txt`) and installs
+`coffe*` plus `third_party*`, so the vendored HyperSIGMA sources stay importable
+as `third_party.HyperSIGMA…` from any working directory with no vendored file
+edited. `.gitignore` lost the venv-layout `lib/`/`lib64/`/`parts/`/`eggs/` rules
+that used to shadow the real `lib/` source package (PAPER_CANON §8 D5), and now
+tracks the equivalence checkpoint fixtures explicitly.
+
 ## Compatibility guarantees
 
 **1. Checkpoints load unchanged.** No `nn.Module` attribute name was renamed, so
@@ -148,7 +240,7 @@ state_dict keys are identical (PAPER_CANON §7.2). A pre-rename checkpoint
 fixture is committed under `tests/equivalence/fixtures/` and a test loads it
 through the renamed classes on every run.
 
-**2. Frozen experiment trees still read.** `coffe_compat.py` maps the retired
+**2. Frozen experiment trees still read.** `coffe/compat.py` maps the retired
 vocabulary and emits one `DeprecationWarning` per value, naming the artifact it
 came from:
 
@@ -162,9 +254,9 @@ normalize_model_type("MFTCPEACosine")  # -> "CoFFE"
 
 It is wired into every reader of a frozen artifact: the model dispatch in
 `scripts/pretrain.py` and `scripts/evaluate.py`, the architecture auto-load in
-`lib/eval_runner.py`, `scripts/compile_results.py`, and
-`scripts/build_experiment_metadata.py`. Writers emit canonical values only,
-with one disclosed exception: `scripts/aggregate_significance.py` reproduces the
+`coffe/runners/eval_runner.py`, `scripts/compile_results.py`, and
+`scripts/reports/build_experiment_metadata.py`. Writers emit canonical values only,
+with one disclosed exception: `scripts/reports/aggregate_significance.py` reproduces the
 significance experiment's own `group`/`variant` directory-name components (see
 the table below).
 
@@ -231,15 +323,15 @@ stale-vocabulary grep excludes:
 
 | File | Why |
 |---|---|
-| `coffe_compat.py`, `tests/test_compat.py` | the alias table itself, and its tests |
+| `coffe/compat.py`, `tests/test_compat.py` | the alias table itself, and its tests |
 | `tests/equivalence/test_equivalence.py`'s `test_g1_legacy_vocabulary_config_trains_identically` | drives a frozen-vocabulary config end to end on purpose |
 | `.claude/agents/*.md`, `.claude/skills/*` | the refactor tooling's own specification of the retirement (same category as `docs/refactor/`) |
-| `_LEGACY_ALIASES` in `models/__init__.py`, `models/hypersigma/__init__.py`, `pretrain/__init__.py` | the package-level import shims, which delegate to that table |
+| `_LEGACY_ALIASES` in `coffe/models/__init__.py`, `coffe/models/hypersigma/__init__.py`, `coffe/pretrain/__init__.py` | the package-level import shims, which delegate to that table |
 | `tools/refactor/apply_renames.py`, `tools/refactor/build_manifest.py` | the rename table and the audit ledger — they exist to record old→new |
 | `CHANGES.md`, `PAPER_CANON.md`, `docs/refactor/*`, `CLAUDE.md`, `WORKFLOW.md` | documents about the retirement |
 | on-disk-name literals (`_ENHANCED_CANONICAL`, dir-name substring tests, `paths:` values, experiment names in notebook parameter cells) | they name files that exist |
 | stored notebook **outputs** | execution records of runs made before the rename |
-| `scripts/aggregate_significance.py`'s emitted `group` / `variant` keys | they reproduce the significance experiment's own directory-name components and the frozen `significance_report.json` schema |
+| `scripts/reports/aggregate_significance.py`'s emitted `group` / `variant` keys | they reproduce the significance experiment's own directory-name components and the frozen `significance_report.json` schema |
 | `experiments/**` | frozen run artifacts |
 
 Anything else is a bug: a stale *reference* to a renamed module is a broken
@@ -257,7 +349,7 @@ import, not a cosmetic issue.
   PAPER_CANON §8 D18.) That is why the equivalence goldens are unchanged.
   Cosine remains fully selectable via `--distance-metric cosine`. Changed in
   `scripts/evaluate.py` (CLI + `_DEFAULT_ARGS` + config fallbacks),
-  `scripts/evaluate_hypersigma.py`, `lib/eval_runner.py`, and the `CoFFE` /
+  `scripts/evaluate_hypersigma.py`, `coffe/runners/eval_runner.py`, and the `CoFFE` /
   `MFTOriginal` / `HyperSIGMAFewShot` constructors.
 - The only defaults that did move are four **output-path fallbacks** whose names
   carried retired vocabulary and which no shipped config or reader relies on

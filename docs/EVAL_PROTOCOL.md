@@ -31,17 +31,19 @@ there are no learnable similarity parameters at all.
 
 `distance_metric` also accepts `"cosine"` (with a `temperature`), and the
 HyperSIGMA evaluator reports both blocks. **The paper is Euclidean throughout**
-— every paper run records `distance_metric: euclidean`. Note that the CLI's own
-default is still `cosine`; changing a default would change what an unflagged
-invocation computes, which the refactor is not allowed to do, so pass
-`--distance-metric euclidean` explicitly (the shell drivers under `scripts/`
-already do).
+— `distance_metric="euclidean"` in every Table 2 run and every Table 3 cell but
+one, and even that cell's quoted value is its `euclidean` sub-block; only its
+`eval_config.json` records `cosine` (PAPER_CANON §8 D18). Since the phase-4 gate
+the CLI default is `euclidean` too, so an unflagged invocation is already the
+paper protocol; that default move is the refactor's one signed-off change of a
+default, and it changes no paper number because every paper run passes the flag
+explicitly (CHANGES.md, "What deliberately did **not** change").
 
 ## What the eval feature actually is
 
 For CoFFE the pooled feature is **not** simply the mean of the patch tokens.
 The live path
-([`scripts/evaluate.py`](../scripts/evaluate.py) →
+([`coffe/eval/episodic.py`](../coffe/eval/episodic.py) →
 [`CoFFE.eval_patch_embeddings`](../coffe/models/coffe.py)) folds the weighted
 class-agnostic token into every patch token first:
 

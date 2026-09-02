@@ -26,7 +26,7 @@ import argparse
 import datetime as _dt
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import yaml
 
@@ -34,30 +34,30 @@ DATASETS = ["houston", "muufl", "trento"]
 VARIANTS = ["spatial", "mae"]
 
 
-def _read_json(path: Path) -> Optional[Any]:
+def _read_json(path: Path) -> Any | None:
     if not path.exists():
         return None
     with path.open() as f:
         return json.load(f)
 
 
-def _read_yaml(path: Path) -> Optional[Any]:
+def _read_yaml(path: Path) -> Any | None:
     if not path.exists():
         return None
     with path.open() as f:
         return yaml.safe_load(f)
 
 
-def _metric_block(results: Optional[Dict[str, Any]], key: str) -> Optional[Dict[str, Any]]:
+def _metric_block(results: dict[str, Any] | None, key: str) -> dict[str, Any] | None:
     if isinstance(results, dict) and isinstance(results.get(key), dict):
         return results[key]
     return None
 
 
-def collect(experiments_root: Path, eval_filter: Optional[str] = None) -> Dict[str, Any]:
-    experiments: Dict[str, Any] = {}
-    summary: List[Dict[str, Any]] = []
-    missing: List[str] = []
+def collect(experiments_root: Path, eval_filter: str | None = None) -> dict[str, Any]:
+    experiments: dict[str, Any] = {}
+    summary: list[dict[str, Any]] = []
+    missing: list[str] = []
     total_evals = 0
 
     for dataset in DATASETS:
@@ -71,7 +71,7 @@ def collect(experiments_root: Path, eval_filter: Optional[str] = None) -> Dict[s
             meta = _read_json(exp_dir / "pretrain_metadata.json")
             config = _read_yaml(exp_dir / "pretrain_config.yaml")
 
-            evaluations: Dict[str, Any] = {}
+            evaluations: dict[str, Any] = {}
             evals_dir = exp_dir / "evaluations"
             if evals_dir.is_dir():
                 for eval_dir in sorted(evals_dir.iterdir()):
@@ -101,7 +101,7 @@ def collect(experiments_root: Path, eval_filter: Optional[str] = None) -> Dict[s
             # Flat summary row(s) — one per evaluation.
             for eval_name, ev in evaluations.items():
                 res = ev["results"]
-                row: Dict[str, Any] = {
+                row: dict[str, Any] = {
                     "experiment": name,
                     "dataset": dataset,
                     "variant": variant,
@@ -172,10 +172,7 @@ def main() -> None:
     for row in data["summary"]:
         oa = row.get("OA_mean")
         oa_s = f"{oa:.2f}" if isinstance(oa, (int, float)) else "n/a"
-        print(
-            f"  {row['dataset']:<8} {row['variant']:<8} "
-            f"OA={oa_s:>6}  ({row['eval_name']})"
-        )
+        print(f"  {row['dataset']:<8} {row['variant']:<8} OA={oa_s:>6}  ({row['eval_name']})")
 
 
 if __name__ == "__main__":

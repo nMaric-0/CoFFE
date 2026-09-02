@@ -42,8 +42,10 @@ means — see `results/README.md`.
 | `run_native_sem_pad_experiments.sh` | the 64×64 backbone-native SEM-only (pad) family |
 
 `run_hypersigma_spatial_pca100.py` uses `configs/hypersigma/<scene>_patchnative_joint_sem.yaml`
-as its base and overrides `adapt_mode: spatial_only` in code, so the 11×11
-spatial row has a script path rather than its own config.
+as its base and overrides `adapt_mode: spatial_only`, the 100-band spatial
+front-end (`spat_resample_to: 100` + the `pca_<scene>_100band` paths) and the
+schedule (lr 1e-5, batch 128) in code, so the 11×11 spatial row has a script
+path rather than its own config.
 
 ### Table 3 coverage, row by row
 
@@ -53,7 +55,7 @@ spatial row has a script path rather than its own config.
 | 64×64 pad, SEM-only (3 cells) | `run_native_sem_pad_experiments.sh` + `configs/hypersigma/<scene>_backbonenative_pad_sem_only.yaml` |
 | 11×11 spatial (3 cells) | `run_hypersigma_spatial_pca100.{py,sh}` (config base + in-code `spatial_only` override) |
 | 11×11 spectral (3 cells) | **none committed** — the source runs (`hypersigma_baseline_spectral_only_run1`, `hypersigma_{trento,muufl}_spectral_only_run1`) were driven from `notebooks/evaluate_hypersigma.ipynb`. |
-| 11×11 joint+SEM (3 cells) | `configs/hypersigma/<scene>_patchnative_joint_sem.yaml` (+ the Houston PCA-100 variant) via `scripts/adapt_hypersigma.py` and `scripts/evaluate_hypersigma.py` |
+| 11×11 joint+SEM (3 cells) | **partially committed** (corrected in phase 6). All three cells ran with the **100-band** spatial front-end. Houston has the matching config, `configs/hypersigma/houston_patchnative_pca100_joint_sem.yaml`, but the run overrode its schedule (2000 epochs / batch 128 / lr 1e-5 / min_lr 5e-7 vs the file's 3000 / 64 / 1.5e-4 / 1e-6). Trento and MUUFL have only the 3-band `<scene>_patchnative_joint_sem.yaml`; their runs added `spat_resample_to: 100` and their own schedule at launch. In all three cases `experiments/hypersigma_adapt_<scene>_pca100_joint_sem_run1/pretrain_overrides.yaml` is the authority. |
 
 The two "none committed" rows are a **known gap**, recorded at the phase-5 gate:
 their settings were not reconstructed into configs, because inventing settings

@@ -4,41 +4,48 @@ version = "0.9.0"
 description = "A Compact In-Domain Fusion Encoder versus a Hyperspectral Foundation Model for Few-Shot HSI-LiDAR Land-Cover Classification"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 authors = [
     { name = "Nikola Marić", email = "nikola.maric@ijs.si" },
     { name = "Dragi Kocev" },
 ]
 keywords = ["hyperspectral", "lidar", "few-shot", "self-supervised", "remote-sensing"]
-# Unchanged from requirements.txt; pruning is phase 6.
+# Measured import set of ``coffe/`` + ``scripts/`` + ``tests/`` (phase 6,
+# PAPER_CANON D6). Floors are the versions this release was developed and
+# verified against (``docs/refactor/ENV.md``), not a compatibility survey:
+# nothing older has been run against the paper's numbers.
 dependencies = [
-    "torch>=1.10.0",
-    "torchvision>=0.11.0",
-    "numpy>=1.21.0",
-    "scipy>=1.7.0",
-    "omegaconf>=2.1.0",
-    "hydra-core>=1.1.0",
-    "h5py>=3.0.0",
-    "scikit-learn>=1.0.0",
-    "scikit-image>=0.19.0",
-    "spectral>=0.22.0",
-    "rasterio>=1.2.0",
-    "matplotlib>=3.5.0",
-    "seaborn>=0.11.0",
-    "tensorboard>=2.8.0",
-    "tqdm>=4.62.0",
-    "einops>=0.4.0",
-    "timm>=0.5.0",
-    "wandb>=0.12.0",
+    "torch>=2.11.0",
+    "numpy>=2.4.4",
+    "scipy>=1.17.1",
+    "scikit-learn>=1.8.0",
+    "PyYAML>=6.0.3",
+    "omegaconf>=2.3.0",
+    "matplotlib>=3.10.9",
+    "seaborn>=0.13.2",
+    "tqdm>=4.67.3",
+    # Imported by the vendored HyperSIGMA ViT sources (``third_party/``), which
+    # the HyperSIGMA route loads; not imported by ``coffe`` itself.
+    "einops>=0.8.2",
+    "timm>=1.0.27",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0.0",
-    "pytest-cov>=3.0.0",
-    "black>=22.0.0",
-    "isort>=5.10.0",
-    "flake8>=4.0.0",
+    "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.0",
+    "mypy>=1.11",
+]
+# ``PretrainTrainer`` writes TensorBoard scalars when ``tensorboard`` is
+# importable and logs a warning when it is not — the run is unaffected.
+tensorboard = ["tensorboard>=2.20.0"]
+# ``notebooks/compare.ipynb`` builds a pandas table; the rest only need the
+# runtime dependencies plus a Jupyter kernel.
+notebooks = [
+    "jupyterlab>=4.0",
+    "ipython>=8.0",
+    "pandas>=3.0.3",
 ]
 
 [tool.setuptools.packages.find]
@@ -52,14 +59,93 @@ include = ["coffe*", "third_party*"]
 requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.black]
+[tool.ruff]
+# One tool for lint and format, replacing black + isort + flake8 (phase 6).
 line-length = 100
-target-version = ['py38', 'py39', 'py310']
-include = '\.pyi?$'
+target-version = "py311"
+# ``third_party`` is vendored and never touched; ``archive``/``experiments``/
+# ``results`` hold frozen artifacts; notebooks are edited as JSON, not source.
+extend-exclude = ["third_party", "archive", "experiments", "results", "notebooks"]
 
-[tool.isort]
-profile = "black"
-line_length = 100
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+ignore = [
+    # `B, N, D = x.shape` documents the tensor layout even where one of the
+    # names goes unused — the unpacking *is* the shape comment.
+    "RUF059",
+    # `zip(..., strict=True)` turns a length mismatch from silent truncation
+    # into an exception, and `strict=False` only restates today's behaviour;
+    # either way phase 6 may not change what the code computes.
+    "B905",
+    # `int(round(x))` stays as written in the token/grid arithmetic. The cast is
+    # redundant for the Python floats these sites happen to pass today, but it
+    # states the intended type at the point where a token count is computed, and
+    # dropping it is an edit to numeric code for no behavioural gain.
+    "RUF046",
+]
+# "11×11", "×100" etc. are the paper's own vocabulary (PAPER_CANON §2).
+allowed-confusables = ["×"]
+
+[tool.ruff.lint.per-file-ignores]
+# E402: every entry point outside the package inserts the repo root on
+# ``sys.path`` before importing ``coffe``, so that ``python scripts/x.py``
+# works with or without an editable install (phase-5 gate decision).
+# E501: long parametrize rows and verbatim launch commands stay as written.
+"tests/**" = ["E402", "E501"]
+"scripts/**" = ["E402", "E501"]
+# One-shot refactor tooling, kept for provenance rather than reuse.
+"tools/**" = ["E402", "E501"]
+# F822: the four legacy class names in ``__all__`` are served lazily by the
+# module's ``__getattr__`` (that is the whole point of the alias shim).
+"coffe/compat.py" = ["F822"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["coffe", "third_party"]
+
+[tool.mypy]
+# Lenient by design (phase 6): the point is to catch obvious type slips in
+# first-party code, not to model torch's typing. No strict mode, no
+# annotation coverage requirement.
+files = ["coffe"]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+exclude = ["^third_party/"]
+
+# Not enforced (phase 6): 175 findings across these 16 modules, all of
+# them typing friction rather than defects — `register_buffer` attributes typed
+# as Module, `config: dict` values arriving as `object`, and ndarray/Tensor
+# swaps. Silencing them would mean casts inside forward passes and the training
+# loop, which phase 6 may not touch. The other 39 modules in the package are
+# checked and clean; anything added to them must stay that way.
+# ``third_party/`` is vendored upstream code (PAPER_CANON §7.4): never edited,
+# never type-checked, and not followed when imported from first-party modules.
+[[tool.mypy.overrides]]
+module = ["third_party.*"]
+ignore_errors = true
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = [
+    "coffe.eval.episodic",  # 22
+    "coffe.eval.hypersigma",  # 13
+    "coffe.models.coffe",  # 8
+    "coffe.models.hypersigma.few_shot",  # 4
+    "coffe.models.hypersigma.hypersigma_dual",  # 16
+    "coffe.models.hypersigma.preprocessing",  # 12
+    "coffe.models.mft_original",  # 5
+    "coffe.pretrain.hypersigma_adapt",  # 14
+    "coffe.pretrain.hypersigma_mae",  # 8
+    "coffe.pretrain.loop",  # 11
+    "coffe.pretrain.mae_pretrain",  # 8
+    "coffe.pretrain.mft_mae",  # 7
+    "coffe.pretrain.mft_spatial_mae",  # 6
+    "coffe.pretrain.simmim",  # 8
+    "coffe.pretrain.trainer",  # 24
+    "coffe.utils.visualization",  # 9
+]
+ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

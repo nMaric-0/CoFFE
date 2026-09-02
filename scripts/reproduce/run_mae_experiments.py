@@ -32,6 +32,7 @@ Useful flags:
     --overwrite                   # reuse/clobber existing experiment dirs
     --skip-eval                   # pretrain only
 """
+
 from __future__ import annotations
 
 import argparse
@@ -45,8 +46,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from coffe.runners.pretrain_runner import run_pretrain
 from coffe.runners.eval_runner import run_evaluation
+from coffe.runners.pretrain_runner import run_pretrain
 
 # Physical GPU is pinned by CUDA_VISIBLE_DEVICES=2 (see the .sh wrapper), which
 # remaps it to logical index 0. Keep this as cuda:0; do not hard-code cuda:2.
@@ -55,22 +56,22 @@ DEVICE = "cuda:0"
 # dataset -> {lidar setting: MAE config path}
 CONFIGS = {
     "houston": {
-        "lidar":    "configs/coffe/houston_mae.yaml",
+        "lidar": "configs/coffe/houston_mae.yaml",
         "no_lidar": "configs/coffe/houston_mae_hsi.yaml",
     },
     "trento": {
-        "lidar":    "configs/coffe/trento_mae.yaml",
+        "lidar": "configs/coffe/trento_mae.yaml",
         "no_lidar": "configs/coffe/trento_mae_hsi.yaml",
     },
     "muufl": {
-        "lidar":    "configs/coffe/muufl_mae.yaml",
+        "lidar": "configs/coffe/muufl_mae.yaml",
         "no_lidar": "configs/coffe/muufl_mae_hsi.yaml",
     },
 }
 
 # lidar setting -> (experiment-name suffix, human label)
 LIDAR_SETTINGS = {
-    "lidar":    ("lidar",    "HSI+LiDAR (use_aux=true)"),
+    "lidar": ("lidar", "HSI+LiDAR (use_aux=true)"),
     "no_lidar": ("no_lidar", "HSI-only (use_aux=false)"),
 }
 
@@ -85,7 +86,7 @@ EVAL_PARAMS = dict(
     temperature=10.0,
     prototype_mode="mean_features",
     pool_sigma=None,
-    use_projection=False,   # discard the projection head at eval (MAE has none)
+    use_projection=False,  # discard the projection head at eval (MAE has none)
     seed=42,
     num_example_episodes=1,
     max_tsne_samples=100,
@@ -94,21 +95,25 @@ EVAL_PARAMS = dict(
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--datasets", nargs="+", default=list(CONFIGS),
-                    choices=list(CONFIGS))
-    ap.add_argument("--lidar", action="store_true",
-                    help="Only the HSI+LiDAR cells.")
-    ap.add_argument("--no-lidar", dest="no_lidar", action="store_true",
-                    help="Only the HSI-only cells.")
-    ap.add_argument("--epochs", type=int, default=0,
-                    help="Epoch count applied to every cell. 0 (default) keeps "
-                         "each config's own value (3000 Houston / 1500 others).")
-    ap.add_argument("--overwrite", action="store_true",
-                    help="Reuse/overwrite an existing experiment directory.")
-    ap.add_argument("--skip-eval", action="store_true",
-                    help="Pretrain only; skip evaluation.")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument("--datasets", nargs="+", default=list(CONFIGS), choices=list(CONFIGS))
+    ap.add_argument("--lidar", action="store_true", help="Only the HSI+LiDAR cells.")
+    ap.add_argument(
+        "--no-lidar", dest="no_lidar", action="store_true", help="Only the HSI-only cells."
+    )
+    ap.add_argument(
+        "--epochs",
+        type=int,
+        default=0,
+        help="Epoch count applied to every cell. 0 (default) keeps "
+        "each config's own value (3000 Houston / 1500 others).",
+    )
+    ap.add_argument(
+        "--overwrite", action="store_true", help="Reuse/overwrite an existing experiment directory."
+    )
+    ap.add_argument("--skip-eval", action="store_true", help="Pretrain only; skip evaluation.")
     args = ap.parse_args()
 
     # Default: both settings. --lidar / --no-lidar narrow it; passing both = both.
@@ -120,8 +125,10 @@ def main():
         settings = ["lidar", "no_lidar"]
 
     cells = [(ds, s) for ds in args.datasets for s in settings]
-    print(f"Planned {len(cells)} cells on {DEVICE} "
-          f"(CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES', 'unset')}):")
+    print(
+        f"Planned {len(cells)} cells on {DEVICE} "
+        f"(CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES', 'unset')}):"
+    )
     for ds, s in cells:
         print(f"  - {ds}_mae_{LIDAR_SETTINGS[s][0]}")
     print()
@@ -165,21 +172,22 @@ def main():
                 eval_done = True
 
             summary.append((exp_name, "OK", time.time() - t0))
-            print(f"--> {exp_name}: pretrain {pretrain_secs/60:.1f} min, "
-                  f"eval {'done' if eval_done else 'skipped'}.")
+            print(
+                f"--> {exp_name}: pretrain {pretrain_secs / 60:.1f} min, "
+                f"eval {'done' if eval_done else 'skipped'}."
+            )
         except Exception as e:  # keep the matrix going if one cell fails
             summary.append((exp_name, f"FAILED: {e}", time.time() - t0))
-            print(f"!!! {exp_name} FAILED after {(time.time()-t0)/60:.1f} min:")
+            print(f"!!! {exp_name} FAILED after {(time.time() - t0) / 60:.1f} min:")
             traceback.print_exc()
 
     print("\n" + "=" * 80)
     print("RUN SUMMARY")
     print("=" * 80)
     for name, status, secs in summary:
-        print(f"  {name:<32} {status:<14} ({secs/60:.1f} min)")
+        print(f"  {name:<32} {status:<14} ({secs / 60:.1f} min)")
     failures = [s for s in summary if not s[1].startswith("OK")]
-    print(f"\n{len(summary) - len(failures)}/{len(summary)} cells OK, "
-          f"{len(failures)} failed.")
+    print(f"\n{len(summary) - len(failures)}/{len(summary)} cells OK, {len(failures)} failed.")
     sys.exit(1 if failures else 0)
 
 

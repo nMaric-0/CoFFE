@@ -36,6 +36,9 @@
 #   python scripts/pretrain.py --config configs/coffe/houston_mae.yaml
 
 # Model architecture
+#
+# RUNTIME     PAPER_CANON §3 times CoFFE pretraining at 0.7-4.3 h/scene for
+#             1500 epochs on one RTX 4090. This config runs 3000 epochs.
 model:
   name: "coffe"
   embed_dim: 128

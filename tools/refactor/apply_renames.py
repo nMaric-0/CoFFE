@@ -43,9 +43,9 @@ import difflib
 import re
 import subprocess
 import sys
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Sequence, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -101,7 +101,7 @@ class FileRename:
 
     old: str
     new: str
-    refs: Tuple[str, ...] = ()
+    refs: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -115,7 +115,7 @@ class SymbolRename:
 
 #: Files. Phase 4 changes basenames only — the move into a ``coffe/`` package
 #: is phase 5 (the manifest's `rename` targets are stated post-restructure).
-FILE_RENAMES: Tuple[FileRename, ...] = (
+FILE_RENAMES: tuple[FileRename, ...] = (
     FileRename("models/mft_cpea_cosine.py", "models/coffe.py"),
     FileRename("models/hypersigma/hypersigma_cosine.py", "models/hypersigma/few_shot.py"),
     FileRename("pretrain/masked_modeling_enhanced.py", "pretrain/simmim.py"),
@@ -132,51 +132,110 @@ FILE_RENAMES: Tuple[FileRename, ...] = (
     # each new name is the one the file's own mask rates encode — no rate is
     # changed by this rename (see LOG.md, phase 4: the three `*_pretrain_enhanced`
     # base configs do not all carry the same regime).
-    FileRename("configs/pretrain/houston_pretrain_enhanced.yaml", "configs/coffe/houston_simmim.yaml"),
-    FileRename("configs/pretrain/trento_pretrain_enhanced.yaml", "configs/coffe/trento_simmim.yaml"),
+    FileRename(
+        "configs/pretrain/houston_pretrain_enhanced.yaml", "configs/coffe/houston_simmim.yaml"
+    ),
+    FileRename(
+        "configs/pretrain/trento_pretrain_enhanced.yaml", "configs/coffe/trento_simmim.yaml"
+    ),
     FileRename("configs/pretrain/muufl_pretrain_enhanced.yaml", "configs/coffe/muufl_simmim.yaml"),
-    FileRename("configs/pretrain/houston_pretrain_hsi_only.yaml", "configs/coffe/houston_simmim_hsi.yaml"),
-    FileRename("configs/pretrain/trento_pretrain_hsi_only.yaml", "configs/coffe/trento_simmim_hsi.yaml"),
-    FileRename("configs/pretrain/muufl_pretrain_hsi_only.yaml", "configs/coffe/muufl_simmim_hsi.yaml"),
+    FileRename(
+        "configs/pretrain/houston_pretrain_hsi_only.yaml", "configs/coffe/houston_simmim_hsi.yaml"
+    ),
+    FileRename(
+        "configs/pretrain/trento_pretrain_hsi_only.yaml", "configs/coffe/trento_simmim_hsi.yaml"
+    ),
+    FileRename(
+        "configs/pretrain/muufl_pretrain_hsi_only.yaml", "configs/coffe/muufl_simmim_hsi.yaml"
+    ),
     FileRename("configs/pretrain/houston_pretrain_mae.yaml", "configs/coffe/houston_mae.yaml"),
     FileRename("configs/pretrain/trento_pretrain_mae.yaml", "configs/coffe/trento_mae.yaml"),
     FileRename("configs/pretrain/muufl_pretrain_mae.yaml", "configs/coffe/muufl_mae.yaml"),
-    FileRename("configs/pretrain/houston_pretrain_mae_hsi_only.yaml", "configs/coffe/houston_mae_hsi.yaml"),
-    FileRename("configs/pretrain/trento_pretrain_mae_hsi_only.yaml", "configs/coffe/trento_mae_hsi.yaml"),
-    FileRename("configs/pretrain/muufl_pretrain_mae_hsi_only.yaml", "configs/coffe/muufl_mae_hsi.yaml"),
-    FileRename("configs/pretrain/mft_original_houston_spatial.yaml", "configs/mft/houston_simmim_token.yaml"),
-    FileRename("configs/pretrain/mft_original_trento_spatial.yaml", "configs/mft/trento_simmim_token.yaml"),
-    FileRename("configs/pretrain/mft_original_muufl_spatial.yaml", "configs/mft/muufl_simmim_token.yaml"),
+    FileRename(
+        "configs/pretrain/houston_pretrain_mae_hsi_only.yaml", "configs/coffe/houston_mae_hsi.yaml"
+    ),
+    FileRename(
+        "configs/pretrain/trento_pretrain_mae_hsi_only.yaml", "configs/coffe/trento_mae_hsi.yaml"
+    ),
+    FileRename(
+        "configs/pretrain/muufl_pretrain_mae_hsi_only.yaml", "configs/coffe/muufl_mae_hsi.yaml"
+    ),
+    FileRename(
+        "configs/pretrain/mft_original_houston_spatial.yaml",
+        "configs/mft/houston_simmim_token.yaml",
+    ),
+    FileRename(
+        "configs/pretrain/mft_original_trento_spatial.yaml", "configs/mft/trento_simmim_token.yaml"
+    ),
+    FileRename(
+        "configs/pretrain/mft_original_muufl_spatial.yaml", "configs/mft/muufl_simmim_token.yaml"
+    ),
     FileRename("configs/pretrain/mft_original_houston_mae.yaml", "configs/mft/houston_mae.yaml"),
     FileRename("configs/pretrain/mft_original_trento_mae.yaml", "configs/mft/trento_mae.yaml"),
     FileRename("configs/pretrain/mft_original_muufl_mae.yaml", "configs/mft/muufl_mae.yaml"),
-    FileRename("configs/pretrain/hypersigma_houston_adapt.yaml", "configs/hypersigma/houston_patchnative_joint_sem.yaml"),
-    FileRename("configs/pretrain/hypersigma_trento_adapt.yaml", "configs/hypersigma/trento_patchnative_joint_sem.yaml"),
-    FileRename("configs/pretrain/hypersigma_muufl_adapt.yaml", "configs/hypersigma/muufl_patchnative_joint_sem.yaml"),
-    FileRename("configs/pretrain/hypersigma_houston_adapt_pca100.yaml", "configs/hypersigma/houston_patchnative_pca100_joint_sem.yaml"),
-    FileRename("configs/pretrain/hypersigma_houston_adapt_native_sem.yaml", "configs/hypersigma/houston_backbonenative_upscale_sem_only.yaml"),
-    FileRename("configs/pretrain/hypersigma_houston_adapt_native_sem_pad.yaml", "configs/hypersigma/houston_backbonenative_pad_sem_only.yaml"),
-    FileRename("configs/pretrain/hypersigma_trento_adapt_native_sem_pad.yaml", "configs/hypersigma/trento_backbonenative_pad_sem_only.yaml"),
-    FileRename("configs/pretrain/hypersigma_muufl_adapt_native_sem_pad.yaml", "configs/hypersigma/muufl_backbonenative_pad_sem_only.yaml"),
+    FileRename(
+        "configs/pretrain/hypersigma_houston_adapt.yaml",
+        "configs/hypersigma/houston_patchnative_joint_sem.yaml",
+    ),
+    FileRename(
+        "configs/pretrain/hypersigma_trento_adapt.yaml",
+        "configs/hypersigma/trento_patchnative_joint_sem.yaml",
+    ),
+    FileRename(
+        "configs/pretrain/hypersigma_muufl_adapt.yaml",
+        "configs/hypersigma/muufl_patchnative_joint_sem.yaml",
+    ),
+    FileRename(
+        "configs/pretrain/hypersigma_houston_adapt_pca100.yaml",
+        "configs/hypersigma/houston_patchnative_pca100_joint_sem.yaml",
+    ),
+    FileRename(
+        "configs/pretrain/hypersigma_houston_adapt_native_sem.yaml",
+        "configs/hypersigma/houston_backbonenative_upscale_sem_only.yaml",
+    ),
+    FileRename(
+        "configs/pretrain/hypersigma_houston_adapt_native_sem_pad.yaml",
+        "configs/hypersigma/houston_backbonenative_pad_sem_only.yaml",
+    ),
+    FileRename(
+        "configs/pretrain/hypersigma_trento_adapt_native_sem_pad.yaml",
+        "configs/hypersigma/trento_backbonenative_pad_sem_only.yaml",
+    ),
+    FileRename(
+        "configs/pretrain/hypersigma_muufl_adapt_native_sem_pad.yaml",
+        "configs/hypersigma/muufl_backbonenative_pad_sem_only.yaml",
+    ),
 )
 
 #: Path *templates* — the same renames as above, in the f-string / shell-variable
 #: spellings used by the experiment drivers (``configs/pretrain/{ds}_pretrain_enhanced.yaml``).
 #: They name no file on disk, so they cannot be FileRename entries, but every
 #: value they can expand to is one.
-PATH_TEMPLATES: Tuple[SymbolRename, ...] = (
+PATH_TEMPLATES: tuple[SymbolRename, ...] = (
     SymbolRename("configs/pretrain/{ds}_pretrain_enhanced.yaml", "configs/coffe/{ds}_simmim.yaml"),
-    SymbolRename("configs/pretrain/{ds}_pretrain_hsi_only.yaml", "configs/coffe/{ds}_simmim_hsi.yaml"),
+    SymbolRename(
+        "configs/pretrain/{ds}_pretrain_hsi_only.yaml", "configs/coffe/{ds}_simmim_hsi.yaml"
+    ),
     SymbolRename("configs/pretrain/{ds}_pretrain_mae.yaml", "configs/coffe/{ds}_mae.yaml"),
-    SymbolRename("configs/pretrain/{ds}_pretrain_mae_hsi_only.yaml", "configs/coffe/{ds}_mae_hsi.yaml"),
-    SymbolRename("configs/pretrain/mft_original_{ds}_spatial.yaml", "configs/mft/{ds}_simmim_token.yaml"),
+    SymbolRename(
+        "configs/pretrain/{ds}_pretrain_mae_hsi_only.yaml", "configs/coffe/{ds}_mae_hsi.yaml"
+    ),
+    SymbolRename(
+        "configs/pretrain/mft_original_{ds}_spatial.yaml", "configs/mft/{ds}_simmim_token.yaml"
+    ),
     SymbolRename("configs/pretrain/mft_original_{ds}_mae.yaml", "configs/mft/{ds}_mae.yaml"),
-    SymbolRename("configs/pretrain/hypersigma_{dataset}_adapt.yaml", "configs/hypersigma/{dataset}_patchnative_joint_sem.yaml"),
-    SymbolRename("configs/pretrain/hypersigma_${ds}_adapt_native_sem_pad.yaml", "configs/hypersigma/${ds}_backbonenative_pad_sem_only.yaml"),
+    SymbolRename(
+        "configs/pretrain/hypersigma_{dataset}_adapt.yaml",
+        "configs/hypersigma/{dataset}_patchnative_joint_sem.yaml",
+    ),
+    SymbolRename(
+        "configs/pretrain/hypersigma_${ds}_adapt_native_sem_pad.yaml",
+        "configs/hypersigma/${ds}_backbonenative_pad_sem_only.yaml",
+    ),
 )
 
 #: Classes and other importable symbols (PAPER_CANON §1). Word-boundary anchored.
-SYMBOL_RENAMES: Tuple[SymbolRename, ...] = (
+SYMBOL_RENAMES: tuple[SymbolRename, ...] = (
     SymbolRename("MFTCPEACosine", "CoFFE", "canon §1: the paper's compact encoder"),
     SymbolRename("MFTOriginalCosine", "MFTOriginal", "canon §1: the architectural control"),
     SymbolRename("HyperSIGMACosine", "HyperSIGMAFewShot", "canon §1"),
@@ -188,7 +247,7 @@ SYMBOL_RENAMES: Tuple[SymbolRename, ...] = (
 )
 
 #: Dotted and relative module paths implied by FILE_RENAMES.
-MODULE_RENAMES: Tuple[SymbolRename, ...] = (
+MODULE_RENAMES: tuple[SymbolRename, ...] = (
     SymbolRename("models.mft_cpea_cosine", "models.coffe"),
     SymbolRename("models.hypersigma.hypersigma_cosine", "models.hypersigma.few_shot"),
     SymbolRename("pretrain.masked_modeling_enhanced", "pretrain.simmim"),
@@ -213,7 +272,7 @@ def _is_excluded(rel: Path) -> bool:
     return rel.as_posix() in EXCLUDED_FILES
 
 
-def tracked_text_files() -> List[Path]:
+def tracked_text_files() -> list[Path]:
     out = subprocess.run(
         ["git", "-C", str(REPO_ROOT), "ls-files"],
         check=True,
@@ -229,9 +288,9 @@ def tracked_text_files() -> List[Path]:
     return files
 
 
-def build_rules() -> List[Tuple[re.Pattern, str, str]]:
+def build_rules() -> list[tuple[re.Pattern, str, str]]:
     """(compiled pattern, replacement, human label), most specific first."""
-    rules: List[Tuple[re.Pattern, str, str]] = []
+    rules: list[tuple[re.Pattern, str, str]] = []
     # Paths first: `scripts/evaluate_cosine.py` must not be half-rewritten by
     # the `scripts.evaluate_cosine` module rule.
     for tpl in PATH_TEMPLATES:
@@ -253,11 +312,13 @@ class Change:
     path: Path
     before: str
     after: str
-    hits: Dict[str, int] = field(default_factory=dict)
+    hits: dict[str, int] = field(default_factory=dict)
 
 
-def rewrite_text(text: str, rules: Sequence[Tuple[re.Pattern, str, str]]) -> Tuple[str, Dict[str, int]]:
-    hits: Dict[str, int] = {}
+def rewrite_text(
+    text: str, rules: Sequence[tuple[re.Pattern, str, str]]
+) -> tuple[str, dict[str, int]]:
+    hits: dict[str, int] = {}
     for pattern, replacement, label in rules:
         text, n = pattern.subn(replacement, text)
         if n:
@@ -265,7 +326,7 @@ def rewrite_text(text: str, rules: Sequence[Tuple[re.Pattern, str, str]]) -> Tup
     return text, hits
 
 
-def collect_changes(rules: Sequence[Tuple[re.Pattern, str, str]]) -> List[Change]:
+def collect_changes(rules: Sequence[tuple[re.Pattern, str, str]]) -> list[Change]:
     changes = []
     for rel in tracked_text_files():
         path = REPO_ROOT / rel
@@ -290,7 +351,7 @@ def print_diff(changes: Sequence[Change]) -> None:
 
 def print_summary(changes: Sequence[Change]) -> None:
     total = 0
-    per_rule: Dict[str, int] = {}
+    per_rule: dict[str, int] = {}
     for change in changes:
         for label, n in change.hits.items():
             per_rule[label] = per_rule.get(label, 0) + n
@@ -315,7 +376,9 @@ def do_moves(apply: bool) -> None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--apply", action="store_true", help="write the changes (default: dry run)")
     ap.add_argument("--list", action="store_true", help="print the rename table and exit")
     ap.add_argument("--quiet", action="store_true", help="summary only, no diff")

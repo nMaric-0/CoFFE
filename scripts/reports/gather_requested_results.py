@@ -15,20 +15,21 @@ Groups (see user request):
 Missing results are emitted as explicit placeholders (status="MISSING") with a note.
 Output: results/gathered_results.json
 """
+
 from __future__ import annotations
 
 import datetime as _dt
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 EXP = ROOT / "experiments"
 RESULTS = ROOT / "results"
 
 
-def read_json(p: Path) -> Optional[Any]:
+def read_json(p: Path) -> Any | None:
     if not p.exists():
         return None
     try:
@@ -38,17 +39,32 @@ def read_json(p: Path) -> Optional[Any]:
         return {"__read_error__": str(e)}
 
 
-def metrics_only(results: Optional[dict]) -> Optional[dict]:
+def metrics_only(results: dict | None) -> dict | None:
     """Pull the headline metrics + per-class out of a results.json."""
     if not results:
         return None
-    keep = ["model_type", "distance_metric", "temperature", "prototype_mode",
-            "checkpoint", "dataset", "split", "n_way", "k_shot", "k_query",
-            "seeds", "num_episodes", "OA", "AA", "Kappa", "per_class"]
+    keep = [
+        "model_type",
+        "distance_metric",
+        "temperature",
+        "prototype_mode",
+        "checkpoint",
+        "dataset",
+        "split",
+        "n_way",
+        "k_shot",
+        "k_query",
+        "seeds",
+        "num_episodes",
+        "OA",
+        "AA",
+        "Kappa",
+        "per_class",
+    ]
     return {k: results[k] for k in keep if k in results}
 
 
-def load_eval(exp: str, eval_subdir: str) -> Dict[str, Any]:
+def load_eval(exp: str, eval_subdir: str) -> dict[str, Any]:
     """Load one evaluation, returning a placeholder dict if anything is missing."""
     evdir = EXP / exp / "evaluations" / eval_subdir
     res_path = evdir / "results.json"
@@ -70,25 +86,26 @@ def load_eval(exp: str, eval_subdir: str) -> Dict[str, Any]:
         "eval_path": str(evdir.relative_to(ROOT)),
         "eval_finished_at": md.get("finished_at"),
         "eval_started_at": md.get("started_at"),
-        "results_mtime": _dt.datetime.fromtimestamp(
-            os.path.getmtime(res_path)).isoformat(timespec="seconds"),
+        "results_mtime": _dt.datetime.fromtimestamp(os.path.getmtime(res_path)).isoformat(
+            timespec="seconds"
+        ),
         "OA_mean": oa.get("mean") if isinstance(oa, dict) else oa,
         "results": metrics_only(results),
     }
 
 
-def placeholder(reason: str, **extra) -> Dict[str, Any]:
+def placeholder(reason: str, **extra) -> dict[str, Any]:
     d = {"status": "MISSING", "note": "PLACEHOLDER - " + reason}
     d.update(extra)
     return d
 
 
-def exp_metadata(exp: str) -> Optional[dict]:
+def exp_metadata(exp: str) -> dict | None:
     return read_json(EXP / exp / "pretrain_metadata.json")
 
 
 # ---------------------------------------------------------------------------
-report: Dict[str, Any] = {
+report: dict[str, Any] = {
     "generated_at": _dt.datetime.now().isoformat(timespec="seconds"),
     "experiments_root": "experiments",
     "description": (
@@ -104,59 +121,73 @@ G = report["groups"]
 
 # --- 1. CoFFE SimMIM / MAE baselines --------------------------------------
 G["coffe_baselines"] = {
-    "houston_enhanced_spatial_no_lidar":
-        load_eval("houston_enhanced_spatial_no_lidar",
-                  "houston_enhanced_spatial_no_lidar_eval"),
-    "muufl_mae_no_lidar":
-        load_eval("muufl_mae_no_lidar", "muufl_mae_no_lidar_eval"),
+    "houston_enhanced_spatial_no_lidar": load_eval(
+        "houston_enhanced_spatial_no_lidar", "houston_enhanced_spatial_no_lidar_eval"
+    ),
+    "muufl_mae_no_lidar": load_eval("muufl_mae_no_lidar", "muufl_mae_no_lidar_eval"),
 }
 
 # --- 2. HyperSIGMA PCA-100 spatial_only (most recent run) -----------------
 G["hypersigma_pca100_spatial_only"] = {
     "_note": "spatial branch, PCA-100 (Houston real PCA 144->100; MUUFL/Trento "
-             "SpectralResample 64/63->100). Adapt dirs: hypersigma_adapt_<ds>_pca100_spatial_only_run1.",
-    "houston": load_eval("hypersigma_houston_pca100_spatial_only_run1",
-                         "hypersigma_houston_pca100_C15way_5shot_adapted_spatial_only_run1"),
-    "muufl":   load_eval("hypersigma_muufl_pca100_spatial_only_run1",
-                         "hypersigma_muufl_pca100_C11way_5shot_adapted_spatial_only_run1"),
-    "trento":  load_eval("hypersigma_trento_pca100_spatial_only_run1",
-                         "hypersigma_trento_pca100_C6way_5shot_adapted_spatial_only_run1"),
+    "SpectralResample 64/63->100). Adapt dirs: hypersigma_adapt_<ds>_pca100_spatial_only_run1.",
+    "houston": load_eval(
+        "hypersigma_houston_pca100_spatial_only_run1",
+        "hypersigma_houston_pca100_C15way_5shot_adapted_spatial_only_run1",
+    ),
+    "muufl": load_eval(
+        "hypersigma_muufl_pca100_spatial_only_run1",
+        "hypersigma_muufl_pca100_C11way_5shot_adapted_spatial_only_run1",
+    ),
+    "trento": load_eval(
+        "hypersigma_trento_pca100_spatial_only_run1",
+        "hypersigma_trento_pca100_C6way_5shot_adapted_spatial_only_run1",
+    ),
 }
 
 # --- 3. HyperSIGMA PCA-100 joint_sem (most recent run, PCA-100 only) ------
 G["hypersigma_pca100_joint_sem"] = {
     "_note": "joint_sem (SEM fusion, 512-d), PCA-100 variant only.",
-    "houston": load_eval("hypersigma_houston_pca100_joint_sem_run1",
-                         "hypersigma_houston_pca100_C15way_5shot_adapted_joint_sem_run1"),
-    "muufl":   placeholder(
+    "houston": load_eval(
+        "hypersigma_houston_pca100_joint_sem_run1",
+        "hypersigma_houston_pca100_C15way_5shot_adapted_joint_sem_run1",
+    ),
+    "muufl": placeholder(
         "MUUFL PCA-100 joint_sem was never evaluated: adapt run "
         "hypersigma_adapt_muufl_pca100_joint_sem_run1 reports complete but no eval dir "
         "(hypersigma_muufl_pca100_joint_sem_run1) exists.",
-        adapt_dir="hypersigma_adapt_muufl_pca100_joint_sem_run1"),
-    "trento":  load_eval("hypersigma_trento_pca100_joint_sem_run1",
-                         "hypersigma_trento_pca100_C6way_5shot_adapted_joint_sem_run1"),
+        adapt_dir="hypersigma_adapt_muufl_pca100_joint_sem_run1",
+    ),
+    "trento": load_eval(
+        "hypersigma_trento_pca100_joint_sem_run1",
+        "hypersigma_trento_pca100_C6way_5shot_adapted_joint_sem_run1",
+    ),
 }
 
 # --- 4. HyperSIGMA spectral_only (NO PCA-100) -----------------------------
 G["hypersigma_spectral_only"] = {
     "_note": "spectral branch only, NOT PCA-100. Adapt dirs: "
-             "hypersigma_adapt_<ds>_spectral_only_run1 (checkpoints). Eval dirs: "
-             "hypersigma_<ds>_spectral_only_run1.",
+    "hypersigma_adapt_<ds>_spectral_only_run1 (checkpoints). Eval dirs: "
+    "hypersigma_<ds>_spectral_only_run1.",
     "houston": placeholder(
         "No adapted-houston spectral_only eval dir exists "
         "(hypersigma_houston_spectral_only_run1 absent). The adapt checkpoint exists "
         "(hypersigma_adapt_houston_spectral_only_run1, complete, 3000 epochs) but was "
         "never few-shot evaluated. Only an UN-adapted baseline exists: "
         "hypersigma_baseline_spectral_only_run1 (OA 15.13).",
-        adapt_dir="hypersigma_adapt_houston_spectral_only_run1"),
-    "muufl":   placeholder(
+        adapt_dir="hypersigma_adapt_houston_spectral_only_run1",
+    ),
+    "muufl": placeholder(
         "MUUFL spectral_only eval did not produce results.json (eval dir "
         "hypersigma_muufl_spectral_only_run1/.../adapted_spectral_only_run1 exists with "
         "a plots/ folder but no results.json; pretrain_metadata status='running').",
         eval_path="hypersigma_muufl_spectral_only_run1/evaluations/"
-                  "hypersigma_muufl_C11way_5shot_adapted_spectral_only_run1"),
-    "trento":  load_eval("hypersigma_trento_spectral_only_run1",
-                         "hypersigma_trento_C6way_5shot_adapted_spectral_only_run1"),
+        "hypersigma_muufl_C11way_5shot_adapted_spectral_only_run1",
+    ),
+    "trento": load_eval(
+        "hypersigma_trento_spectral_only_run1",
+        "hypersigma_trento_C6way_5shot_adapted_spectral_only_run1",
+    ),
 }
 
 # --- 5. HyperSIGMA native ablation (all 12 evals + metadata) --------------
@@ -169,8 +200,8 @@ for ds in ("houston", "muufl", "trento"):
             abl_evals[sub] = load_eval(ABL, sub)
 G["hypersigma_native_ablation"] = {
     "_note": "Off-the-shelf FROZEN HyperSIGMA single-branch feature extractor; 11x11 "
-             "patch fit to native 64x64 by zero-PAD or bicubic UPSCALE. 3 datasets x "
-             "{spatial,spectral} x {pad,upscale} = 12 evals.",
+    "patch fit to native 64x64 by zero-PAD or bicubic UPSCALE. 3 datasets x "
+    "{spatial,spectral} x {pad,upscale} = 12 evals.",
     "experiment_metadata": exp_metadata(ABL),
     "evaluations": abl_evals,
 }
@@ -179,34 +210,38 @@ G["hypersigma_native_ablation"] = {
 G["hypersigma_native_sem_pad"] = {
     "_note": "SEM-only adaptation, 11x11 padded to 64x64; 512-d fused feature.",
     "houston": load_eval("hypersigma_native_sem_pad_run1", "native_sem_pad_houston"),
-    "trento":  placeholder(
+    "trento": placeholder(
         "No native_sem_pad Trento run/eval completed. Config exists "
-        "(configs/hypersigma/trento_backbonenative_pad_sem_only.yaml) but no experiment dir."),
-    "muufl":   placeholder(
+        "(configs/hypersigma/trento_backbonenative_pad_sem_only.yaml) but no experiment dir."
+    ),
+    "muufl": placeholder(
         "No native_sem_pad MUUFL run/eval completed. Config exists "
-        "(configs/hypersigma/muufl_backbonenative_pad_sem_only.yaml) but no experiment dir."),
+        "(configs/hypersigma/muufl_backbonenative_pad_sem_only.yaml) but no experiment dir."
+    ),
 }
 
 # --- 7. MFT-original MAE (not faithful) -----------------------------------
 G["mft_original_mae"] = {
     "_note": "MFT-original masked-autoencoder pretrain runs; the *_faithful runs are EXCLUDED.",
     "houston": load_eval("mft_original_houston_mae_run1", "mft_original_houston_mae_eval"),
-    "muufl":   load_eval("mft_original_muufl_mae_run1", "mft_original_muufl_mae_eval"),
-    "trento":  load_eval("mft_original_trento_mae_run1", "mft_original_trento_mae_eval"),
+    "muufl": load_eval("mft_original_muufl_mae_run1", "mft_original_muufl_mae_eval"),
+    "trento": load_eval("mft_original_trento_mae_run1", "mft_original_trento_mae_eval"),
 }
 
 # --- 8. MFT-original spatial (not faithful) -------------------------------
 G["mft_original_spatial"] = {
     "_note": "MFT-original spatial-MAE pretrain runs; the *_faithful runs are EXCLUDED.",
     "houston": load_eval("mft_original_houston_spatial_run1", "mft_original_houston_spatial_eval"),
-    "muufl":   placeholder(
+    "muufl": placeholder(
         "MUUFL spatial eval has no results.json (mft_original_muufl_spatial, "
         "pretrain_metadata status='running').",
-        experiment="mft_original_muufl_spatial"),
-    "trento":  placeholder(
+        experiment="mft_original_muufl_spatial",
+    ),
+    "trento": placeholder(
         "Trento spatial eval has no results.json (mft_original_trento_spatial status='failed'; "
         "mft_original_trento_spatial_run1 status='running'). No completed eval.",
-        experiments=["mft_original_trento_spatial", "mft_original_trento_spatial_run1"]),
+        experiments=["mft_original_trento_spatial", "mft_original_trento_spatial_run1"],
+    ),
 }
 
 # ---------------------------------------------------------------------------
@@ -216,6 +251,8 @@ with out.open("w") as f:
 
 # summary
 n_ok = n_missing = 0
+
+
 def walk(o):
     global n_ok, n_missing
     if isinstance(o, dict):
@@ -226,6 +263,8 @@ def walk(o):
             n_missing += 1
         for v in o.values():
             walk(v)
+
+
 walk(G)
-print(f"Wrote {out}  ({out.stat().st_size/1024:.1f} KB)")
+print(f"Wrote {out}  ({out.stat().st_size / 1024:.1f} KB)")
 print(f"  OK results: {n_ok}   MISSING placeholders: {n_missing}")

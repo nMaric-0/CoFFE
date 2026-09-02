@@ -30,7 +30,6 @@ from coffe.models.mft_original import MFTOriginal
 from coffe.pretrain.mft_mae import MFTMAEPretrainModel
 from coffe.pretrain.mft_spatial_mae import MFTSpatialMaskPretrainModel
 
-
 # Faithful MFT dims (Roy et al. / srinadh99): FM=16 -> dim=64, 8 heads, depth 2,
 # mlp_dim 512 (a fixed 512). head_dim = 64/8 = 8.
 DIMS = dict(embed_dim=64, num_heads=8, num_layers=2, mlp_dim=512)
@@ -84,9 +83,17 @@ def test_hsi_only_rejected():
 def test_mae_forward_loss_and_len_keep():
     model = _encoder(144, 1)
     mae = MFTMAEPretrainModel(
-        encoder=model, hsi_channels=144, aux_channels=1, use_aux=True,
-        patch_size=11, embed_dim=DIMS["embed_dim"], mask_ratio=0.75,
-        decoder_dim=32, decoder_depth=2, decoder_heads=4, norm_pix_loss=True,
+        encoder=model,
+        hsi_channels=144,
+        aux_channels=1,
+        use_aux=True,
+        patch_size=11,
+        embed_dim=DIMS["embed_dim"],
+        mask_ratio=0.75,
+        decoder_dim=32,
+        decoder_depth=2,
+        decoder_heads=4,
+        norm_pix_loss=True,
     )
     # len_keep = round(121 * 0.25) = 30.
     assert mae.num_tokens == 121 and mae.len_keep == 30, (mae.num_tokens, mae.len_keep)
@@ -109,9 +116,17 @@ def test_mae_trains_mcrosspa_attention():
     and the fusion transformer never trains."""
     model = _encoder(144, 1)
     mae = MFTMAEPretrainModel(
-        encoder=model, hsi_channels=144, aux_channels=1, use_aux=True,
-        patch_size=11, embed_dim=DIMS["embed_dim"], mask_ratio=0.75,
-        decoder_dim=32, decoder_depth=2, decoder_heads=4, norm_pix_loss=True,
+        encoder=model,
+        hsi_channels=144,
+        aux_channels=1,
+        use_aux=True,
+        patch_size=11,
+        embed_dim=DIMS["embed_dim"],
+        mask_ratio=0.75,
+        decoder_dim=32,
+        decoder_depth=2,
+        decoder_heads=4,
+        norm_pix_loss=True,
     )
     hsi = torch.randn(2, 144, 11, 11)
     aux = torch.randn(2, 1, 11, 11)
@@ -138,9 +153,16 @@ def test_checkpoint_keys_round_trip():
     fix_state_dict_keys relies on (strip ``encoder.``, skip decoder/enc_to_dec)."""
     model = _encoder(144, 1)
     mae = MFTMAEPretrainModel(
-        encoder=model, hsi_channels=144, aux_channels=1, use_aux=True,
-        patch_size=11, embed_dim=DIMS["embed_dim"], mask_ratio=0.75,
-        decoder_dim=32, decoder_depth=2, decoder_heads=4,
+        encoder=model,
+        hsi_channels=144,
+        aux_channels=1,
+        use_aux=True,
+        patch_size=11,
+        embed_dim=DIMS["embed_dim"],
+        mask_ratio=0.75,
+        decoder_dim=32,
+        decoder_depth=2,
+        decoder_heads=4,
     )
     sd = mae.state_dict()
     assert any(k.startswith("encoder.") for k in sd)
@@ -148,11 +170,14 @@ def test_checkpoint_keys_round_trip():
     assert any(k.startswith("enc_to_dec.") for k in sd)
 
     # Stripping the ``encoder.`` prefix yields keys that load into the bare encoder.
-    bare = model.state_dict()
-    stripped = {k[len("encoder."):]: v for k, v in sd.items() if k.startswith("encoder.")}
+    stripped = {k[len("encoder.") :]: v for k, v in sd.items() if k.startswith("encoder.")}
     missing, unexpected = MFTOriginal(
-        hsi_channels=144, aux_channels=1, use_aux=True, patch_size=11,
-        attention_type="mcross", **DIMS,
+        hsi_channels=144,
+        aux_channels=1,
+        use_aux=True,
+        patch_size=11,
+        attention_type="mcross",
+        **DIMS,
     ).load_state_dict(stripped, strict=False)
     assert not missing, f"unexpected missing encoder keys: {missing[:5]}"
 
@@ -165,9 +190,15 @@ def test_checkpoint_keys_round_trip():
 def _spatial_mae(hsi_c=144, aux_c=1):
     enc = _encoder(hsi_c, aux_c)
     return enc, MFTSpatialMaskPretrainModel(
-        encoder=enc, hsi_channels=hsi_c, aux_channels=aux_c, use_aux=True,
-        patch_size=11, embed_dim=DIMS["embed_dim"], decoder_hidden_dim=64,
-        spatial_mask_ratio=0.75, recon_sigma=1.0,
+        encoder=enc,
+        hsi_channels=hsi_c,
+        aux_channels=aux_c,
+        use_aux=True,
+        patch_size=11,
+        embed_dim=DIMS["embed_dim"],
+        decoder_hidden_dim=64,
+        spatial_mask_ratio=0.75,
+        recon_sigma=1.0,
     )
 
 
@@ -183,7 +214,7 @@ def test_spatial_forward_loss_and_mask():
     # In-place spatial masking: ~75% of the 121 tokens masked (round(0.75*121)=91),
     # broadcast across all 145 bands in the per-entry mask.
     assert mae.spatial_masking.mask_token.shape == (1, 1, DIMS["embed_dim"])
-    num_masked_tokens = int(round(0.75 * 121))
+    num_masked_tokens = round(0.75 * 121)
     assert int(info["mask"][0].sum().item()) == num_masked_tokens * 145
 
 
@@ -216,9 +247,13 @@ def test_spatial_checkpoint_keys_round_trip():
     assert any(k.startswith("spatial_masking.") for k in sd)
     assert any(k.startswith("decoder.") for k in sd)
 
-    stripped = {k[len("encoder."):]: v for k, v in sd.items() if k.startswith("encoder.")}
+    stripped = {k[len("encoder.") :]: v for k, v in sd.items() if k.startswith("encoder.")}
     missing, _ = MFTOriginal(
-        hsi_channels=144, aux_channels=1, use_aux=True, patch_size=11,
-        attention_type="mcross", **DIMS,
+        hsi_channels=144,
+        aux_channels=1,
+        use_aux=True,
+        patch_size=11,
+        attention_type="mcross",
+        **DIMS,
     ).load_state_dict(stripped, strict=False)
     assert not missing, f"unexpected missing encoder keys: {missing[:5]}"

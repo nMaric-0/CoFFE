@@ -18,28 +18,31 @@ Usage:
 """
 
 import argparse
-import logging
-from pathlib import Path
-from collections import defaultdict
-
-import torch
-import torch.nn.functional as F
-import numpy as np
-from tqdm import tqdm
 import json
+import logging
+from collections import defaultdict
+from pathlib import Path
+from typing import Any
 
-from coffe.utils.spatial_weights import center_weighted_pool
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.utils.data import Dataset
+from tqdm import tqdm
 
+from coffe.compat import normalize_model_name
 from coffe.data.datasets import (
     HoustonPatchedDataset,
-    TrentoPatchedDataset,
     MUUFLPatchedDataset,
+    TrentoPatchedDataset,
 )
 from coffe.data.samplers.patched_episode_sampler import PatchedEpisodeSampler
-from coffe.compat import normalize_model_name
 from coffe.models import CoFFE, MFTOriginal
+from coffe.utils.seed import set_seed
+from coffe.utils.spatial_weights import center_weighted_pool
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -57,34 +60,52 @@ DATASET_SPECS = {
 
 CLASS_NAMES = {
     "houston": [
-        "Healthy grass", "Stressed grass", "Synthetic grass", "Trees",
-        "Soil", "Water", "Residential", "Commercial", "Road", "Highway",
-        "Railway", "Parking Lot 1", "Parking Lot 2", "Tennis Court", "Running Track"
+        "Healthy grass",
+        "Stressed grass",
+        "Synthetic grass",
+        "Trees",
+        "Soil",
+        "Water",
+        "Residential",
+        "Commercial",
+        "Road",
+        "Highway",
+        "Railway",
+        "Parking Lot 1",
+        "Parking Lot 2",
+        "Tennis Court",
+        "Running Track",
     ],
-    "trento": [
-        "Apple trees", "Buildings", "Ground", "Woods", "Vineyard", "Roads"
-    ],
+    "trento": ["Apple trees", "Buildings", "Ground", "Woods", "Vineyard", "Roads"],
     "muufl": [
-        "Trees", "Mostly grass", "Mixed ground surface", "Dirt and sand",
-        "Road", "Water", "Building shadow", "Building", "Sidewalk",
-        "Yellow curb", "Cloth panels"
+        "Trees",
+        "Mostly grass",
+        "Mixed ground surface",
+        "Dirt and sand",
+        "Road",
+        "Water",
+        "Building shadow",
+        "Building",
+        "Sidewalk",
+        "Yellow curb",
+        "Cloth panels",
     ],
 }
 
 
-def load_checkpoint_with_key_mapping(checkpoint_path: str, device: str):
+def load_checkpoint_with_key_mapping(checkpoint_path: str, device: str) -> tuple[dict, dict | None]:
     """Load checkpoint and handle various key naming conventions."""
     ckpt = torch.load(checkpoint_path, map_location=device, weights_only=True)
 
-    if 'model_state_dict' in ckpt:
-        state_dict = ckpt['model_state_dict']
-        config = ckpt.get('config')
-    elif 'state_dict' in ckpt:
-        state_dict = ckpt['state_dict']
-        config = ckpt.get('config')
-    elif 'encoder_state_dict' in ckpt:
-        state_dict = ckpt['encoder_state_dict']
-        config = ckpt.get('config')
+    if "model_state_dict" in ckpt:
+        state_dict = ckpt["model_state_dict"]
+        config = ckpt.get("config")
+    elif "state_dict" in ckpt:
+        state_dict = ckpt["state_dict"]
+        config = ckpt.get("config")
+    elif "encoder_state_dict" in ckpt:
+        state_dict = ckpt["encoder_state_dict"]
+        config = ckpt.get("config")
     else:
         state_dict = ckpt
         config = None
@@ -99,23 +120,34 @@ def fix_state_dict_keys(state_dict: dict, model_state: dict) -> dict:
     for k, v in state_dict.items():
         new_key = k
 
-        if k.startswith('module.'):
+        if k.startswith("module."):
             new_key = k[7:]
 
-        if k.startswith('encoder.encoder.'):
+        if k.startswith("encoder.encoder.") or (
+            k.startswith("encoder.")
+            and not any(mk.startswith("encoder.encoder.") for mk in model_state)
+            and k[8:] in model_state
+        ):
             new_key = k[8:]
-        elif k.startswith('encoder.') and not any(mk.startswith('encoder.encoder.') for mk in model_state.keys()):
-            if k[8:] in model_state:
-                new_key = k[8:]
 
-        if k.startswith('layers.') and 'encoder.layers.0.norm1.weight' in model_state:
-            new_key = 'encoder.' + k
+        if k.startswith("layers.") and "encoder.layers.0.norm1.weight" in model_state:
+            new_key = "encoder." + k
 
         skip_prefixes = (
-            'spatial_masking', 'spectral_masking', 'lidar_masking',
-            'spatial_decoder', 'spectral_decoder', 'lidar_decoder', 'denoise_decoder',
-            'enc_to_dec', 'mask_token', 'null_lidar', 'noise_augmentation',
-            'decoder', 'contrastive_head', 'similarity'  # Skip DenseSimilarity too
+            "spatial_masking",
+            "spectral_masking",
+            "lidar_masking",
+            "spatial_decoder",
+            "spectral_decoder",
+            "lidar_decoder",
+            "denoise_decoder",
+            "enc_to_dec",
+            "mask_token",
+            "null_lidar",
+            "noise_augmentation",
+            "decoder",
+            "contrastive_head",
+            "similarity",  # Skip DenseSimilarity too
         )
         if any(k.startswith(prefix) for prefix in skip_prefixes):
             continue
@@ -126,11 +158,8 @@ def fix_state_dict_keys(state_dict: dict, model_state: dict) -> dict:
 
 
 def load_model_with_checkpoint(
-    checkpoint_path: str,
-    dataset_name: str,
-    model_config: dict,
-    device: str
-):
+    checkpoint_path: str, dataset_name: str, model_config: dict, device: str
+) -> nn.Module:
     """Load the few-shot model (CoFFE, or the MFT control when
     model_config['name'] == 'mft_original') with checkpoint handling.
 
@@ -170,16 +199,16 @@ def load_model_with_checkpoint(
             cls_token_weight=model_config.get("lambda_factor", 2.0),
             dropout=model_config.get("dropout", 0.1),
             use_projection=model_config.get("use_projection", False),
-            proj_hidden_dim=model_config.get("proj_hidden_dim", None),
+            proj_hidden_dim=model_config.get("proj_hidden_dim"),
             proj_num_layers=model_config.get("proj_num_layers", 2),
             proj_l2_normalize=model_config.get("proj_l2_normalize", True),
             distance_metric=model_config.get("distance_metric", "euclidean"),
             temperature=model_config.get("temperature", 10.0),
             prototype_mode=model_config.get("prototype_mode", "mean_features"),
-            pool_sigma=model_config.get("pool_sigma", None)
+            pool_sigma=model_config.get("pool_sigma"),
         )
 
-    if checkpoint_path.lower() in ['none', 'null', 'random']:
+    if checkpoint_path.lower() in ["none", "null", "random"]:
         logger.info("Using random initialization (no pretrained weights)")
         model = model.to(device)
         model.eval()
@@ -189,8 +218,9 @@ def load_model_with_checkpoint(
     state_dict, config = load_checkpoint_with_key_mapping(checkpoint_path, device)
 
     if config:
-        logger.info(f"Checkpoint config: hsi={config.get('hsi_channels')}, "
-                   f"aux={config.get('aux_channels')}")
+        logger.info(
+            f"Checkpoint config: hsi={config.get('hsi_channels')}, aux={config.get('aux_channels')}"
+        )
 
     model_state = model.state_dict()
     fixed_state = fix_state_dict_keys(state_dict, model_state)
@@ -230,13 +260,13 @@ def load_model_with_checkpoint(
     shape_mismatches = []
 
     channel_keys = {
-        'channel_tokenizer.conv.0.weight',
-        'channel_tokenizer.conv.1.weight',
-        'channel_tokenizer.conv.1.bias',
-        'channel_tokenizer.conv.1.running_mean',
-        'channel_tokenizer.conv.1.running_var',
-        'aux_tokenizer.mlp.0.weight',
-        'aux_tokenizer.mlp.0.bias',
+        "channel_tokenizer.conv.0.weight",
+        "channel_tokenizer.conv.1.weight",
+        "channel_tokenizer.conv.1.bias",
+        "channel_tokenizer.conv.1.running_mean",
+        "channel_tokenizer.conv.1.running_var",
+        "aux_tokenizer.mlp.0.weight",
+        "aux_tokenizer.mlp.0.bias",
     }
 
     for k, v in fixed_state.items():
@@ -255,8 +285,10 @@ def load_model_with_checkpoint(
     truly_missing = [k for k in missing if k not in channel_keys]
 
     logger.info(f"Loaded {len(compatible_state)}/{len(fixed_state)} keys from checkpoint")
-    logger.info("Note: DenseSimilarity parameters intentionally skipped "
-                "(the evaluator is a nearest-class-mean classifier, no learnable similarity)")
+    logger.info(
+        "Note: DenseSimilarity parameters intentionally skipped "
+        "(the evaluator is a nearest-class-mean classifier, no learnable similarity)"
+    )
 
     if truly_missing:
         logger.warning(f"Missing keys (not channel-dependent): {truly_missing[:5]}")
@@ -292,18 +324,14 @@ def compute_metrics_from_confusion_matrix(confusion_matrix: np.ndarray) -> dict:
     per_class_acc = []
     for i in range(n_classes):
         class_total = confusion_matrix[i, :].sum()
-        if class_total > 0:
-            acc = confusion_matrix[i, i] / class_total * 100
-        else:
-            acc = 0.0
+        acc = confusion_matrix[i, i] / class_total * 100 if class_total > 0 else 0.0
         per_class_acc.append(acc)
 
     total = confusion_matrix.sum()
     correct = np.diag(confusion_matrix).sum()
     oa = correct / total * 100 if total > 0 else 0.0
 
-    valid_classes = [acc for i, acc in enumerate(per_class_acc)
-                     if confusion_matrix[i, :].sum() > 0]
+    valid_classes = [acc for i, acc in enumerate(per_class_acc) if confusion_matrix[i, :].sum() > 0]
     aa = np.mean(valid_classes) if valid_classes else 0.0
 
     kappa = compute_kappa(confusion_matrix) * 100
@@ -355,9 +383,7 @@ def evaluate(
 
     # Global confusion matrix in original-class space (1-indexed labels,
     # so allocate num_total_classes+1 to use label values directly as indices)
-    global_conf_matrix = np.zeros(
-        (num_total_classes + 1, num_total_classes + 1), dtype=np.int64
-    )
+    global_conf_matrix = np.zeros((num_total_classes + 1, num_total_classes + 1), dtype=np.int64)
     # Pairwise confusion tracking for co-occurrence analysis
     pairwise_confusion = defaultdict(lambda: defaultdict(int))
     pairwise_totals = defaultdict(lambda: defaultdict(int))
@@ -440,15 +466,17 @@ def evaluate(
 
         # Per-episode snapshot for example episodes
         if episode_idx < num_example_episodes:
-            example_episodes_data.append({
-                "s_features": s_features.cpu().numpy(),
-                "q_features": q_features.cpu().numpy(),
-                "prototypes": prototypes.cpu().numpy(),
-                "s_labels": support_labels.cpu().numpy(),
-                "q_labels": query_labels_cpu,
-                "q_preds": preds_cpu,
-                "original_classes": original_classes,
-            })
+            example_episodes_data.append(
+                {
+                    "s_features": s_features.cpu().numpy(),
+                    "q_features": q_features.cpu().numpy(),
+                    "prototypes": prototypes.cpu().numpy(),
+                    "s_labels": support_labels.cpu().numpy(),
+                    "q_labels": query_labels_cpu,
+                    "q_preds": preds_cpu,
+                    "original_classes": original_classes,
+                }
+            )
 
         # Accumulate query features for aggregated t-SNE (mapped to orig class)
         q_feats_np = q_features.cpu().numpy()
@@ -473,6 +501,7 @@ def evaluate(
 
     def compute_ci(values):
         from scipy.stats import t as t_dist
+
         mean = np.mean(values)
         std = np.std(values)
         ci_95 = t_dist.ppf(0.975, df=len(values) - 1) * std / np.sqrt(len(values))
@@ -485,10 +514,7 @@ def evaluate(
     per_class_results = {}
     for orig_class in sorted(class_results.keys()):
         data = class_results[orig_class]
-        if data["total"] > 0:
-            acc = data["correct"] / data["total"] * 100
-        else:
-            acc = 0.0
+        acc = data["correct"] / data["total"] * 100 if data["total"] > 0 else 0.0
 
         if class_episode_accs[orig_class]:
             accs = np.array(class_episode_accs[orig_class])
@@ -528,8 +554,20 @@ def evaluate(
     }
 
 
-def print_results_table(results: dict, dataset_name: str, n_way: int, k_shot: int, distance_metric: str, prototype_mode: str = "mean_features"):
-    """Print results in formatted table."""
+def print_results_table(
+    results: dict,
+    dataset_name: str,
+    n_way: int,
+    k_shot: int,
+    distance_metric: str,
+    prototype_mode: str = "mean_features",
+) -> None:
+    """Print the per-class and summary metric tables for one evaluation.
+
+    Deliberately ``print`` rather than ``logging``: this is the CLI's
+    user-facing report, and a timestamped log prefix on every row would
+    break the table. Everything else in the package logs.
+    """
     class_names = CLASS_NAMES.get(dataset_name, [f"Class {i}" for i in range(20)])
 
     print("\n" + "=" * 80)
@@ -545,30 +583,48 @@ def print_results_table(results: dict, dataset_name: str, n_way: int, k_shot: in
         class_data = results["per_class"][class_idx]
         # Class labels are 1-indexed (background=0 is skipped), but CLASS_NAMES is 0-indexed
         name_idx = class_idx - 1  # Convert 1-indexed to 0-indexed
-        class_name = class_names[name_idx] if 0 <= name_idx < len(class_names) else f"Class {class_idx}"
+        class_name = (
+            class_names[name_idx] if 0 <= name_idx < len(class_names) else f"Class {class_idx}"
+        )
 
         if len(class_name) > 23:
             class_name = class_name[:20] + "..."
 
-        print(f"{class_name:<25} {class_data['accuracy']:>11.2f}% "
-              f"{class_data['ci_95']:>11.2f}% {class_data['total_samples']:>12d}")
+        print(
+            f"{class_name:<25} {class_data['accuracy']:>11.2f}% "
+            f"{class_data['ci_95']:>11.2f}% {class_data['total_samples']:>12d}"
+        )
 
     print("-" * 80)
 
     print("\n" + "-" * 80)
     print("SUMMARY METRICS")
     print("-" * 80)
-    print(f"{'Overall Accuracy (OA)':<25} {results['OA']['mean']:>11.2f}% ± {results['OA']['ci_95']:.2f}%")
-    print(f"{'Average Accuracy (AA)':<25} {results['AA']['mean']:>11.2f}% ± {results['AA']['ci_95']:.2f}%")
-    print(f"{'Kappa (×100)':<25} {results['Kappa']['mean']:>11.2f}  ± {results['Kappa']['ci_95']:.2f}")
+    print(
+        f"{'Overall Accuracy (OA)':<25} {results['OA']['mean']:>11.2f}% "
+        f"± {results['OA']['ci_95']:.2f}%"
+    )
+    print(
+        f"{'Average Accuracy (AA)':<25} {results['AA']['mean']:>11.2f}% "
+        f"± {results['AA']['ci_95']:.2f}%"
+    )
+    print(
+        f"{'Kappa (×100)':<25} {results['Kappa']['mean']:>11.2f}  ± {results['Kappa']['ci_95']:.2f}"
+    )
     print("-" * 80)
     print(f"Episodes evaluated: {results['num_episodes']}")
     print("=" * 80 + "\n")
 
 
-def run_single_seed(args, seed, device, dataset, model, dataset_name):
+def run_single_seed(
+    args: argparse.Namespace,
+    seed: int,
+    device: str,
+    dataset: Dataset,
+    model: nn.Module,
+    dataset_name: str,
+) -> dict:
     """Run evaluation for a single seed."""
-    from coffe.utils.seed import set_seed
     set_seed(seed, deterministic=True)
 
     sampler = PatchedEpisodeSampler(
@@ -577,15 +633,21 @@ def run_single_seed(args, seed, device, dataset, model, dataset_name):
         k_shot=args.k_shot,
         k_query=args.k_query,
         num_episodes=args.num_episodes,
-        seed=seed
+        seed=seed,
     )
     args.n_way = sampler.n_way
 
-    logger.info(f"[Seed {seed}] Sampler: {args.n_way}-way {args.k_shot}-shot, {args.num_episodes} episodes")
+    logger.info(
+        f"[Seed {seed}] Sampler: {args.n_way}-way {args.k_shot}-shot, {args.num_episodes} episodes"
+    )
 
     num_total_classes = DATASET_SPECS[dataset_name]["num_classes"]
     results = evaluate(
-        model, sampler, device, args.num_episodes, args.n_way,
+        model,
+        sampler,
+        device,
+        args.num_episodes,
+        args.n_way,
         num_total_classes=num_total_classes,
         num_example_episodes=args.num_example_episodes,
         max_tsne_samples=args.max_tsne_samples,
@@ -593,17 +655,25 @@ def run_single_seed(args, seed, device, dataset, model, dataset_name):
     return results
 
 
-def generate_plots(results, dataset_name, n_way, k_shot, output_dir,
-                    distance_metric, prototype_mode, max_tsne_samples=0):
+def generate_plots(
+    results: dict,
+    dataset_name: str,
+    n_way: int,
+    k_shot: int,
+    output_dir: str | Path,
+    distance_metric: str,
+    prototype_mode: str,
+    max_tsne_samples: int = 0,
+) -> None:
     """Generate and save all visualization plots for few-shot evaluation."""
     from coffe.utils.visualization import (
-        plot_confusion_matrix,
-        plot_per_class_accuracy,
-        plot_episode_distributions,
-        plot_per_class_boxplots,
-        plot_pairwise_confusion_rate,
-        plot_episode_feature_space,
         plot_aggregated_feature_space,
+        plot_confusion_matrix,
+        plot_episode_distributions,
+        plot_episode_feature_space,
+        plot_pairwise_confusion_rate,
+        plot_per_class_accuracy,
+        plot_per_class_boxplots,
     )
 
     class_names_full = CLASS_NAMES.get(dataset_name, [])
@@ -623,7 +693,8 @@ def generate_plots(results, dataset_name, n_way, k_shot, output_dir,
     cm = results["global_conf_matrix"]
     cm_sub = cm[np.ix_(active_classes, active_classes)]
     plot_confusion_matrix(
-        cm_sub, display_names,
+        cm_sub,
+        display_names,
         title=f"Aggregated Confusion Matrix \u2013 {tag}",
         save_path=str(output_dir / f"{dataset_name}_confusion_matrix.png"),
     )
@@ -632,29 +703,37 @@ def generate_plots(results, dataset_name, n_way, k_shot, output_dir,
     accs = [results["per_class"][cls]["accuracy"] for cls in active_classes]
     cis = [results["per_class"][cls]["ci_95"] for cls in active_classes]
     plot_per_class_accuracy(
-        display_names, accs, cis,
+        display_names,
+        accs,
+        cis,
         title=f"Per-Class Accuracy \u2013 {tag}",
         save_path=str(output_dir / f"{dataset_name}_per_class_accuracy.png"),
     )
 
     # 3. Episode metric distributions (OA, AA, Kappa histograms)
     plot_episode_distributions(
-        results["episode_oas"], results["episode_aas"], results["episode_kappas"],
+        results["episode_oas"],
+        results["episode_aas"],
+        results["episode_kappas"],
         title=f"Episode Distributions \u2013 {tag}",
         save_path=str(output_dir / f"{dataset_name}_episode_distributions.png"),
     )
 
     # 4. Per-class accuracy box/violin plots
     plot_per_class_boxplots(
-        display_names, results["class_episode_accs"], active_classes,
+        display_names,
+        results["class_episode_accs"],
+        active_classes,
         title=f"Per-Class Accuracy Across Episodes \u2013 {tag}",
         save_path=str(output_dir / f"{dataset_name}_per_class_boxplots.png"),
     )
 
     # 5. Pairwise confusion rates heatmap
     plot_pairwise_confusion_rate(
-        results["pairwise_confusion"], results["pairwise_totals"],
-        display_names, active_classes,
+        results["pairwise_confusion"],
+        results["pairwise_totals"],
+        display_names,
+        active_classes,
         title=f"Pairwise Confusion Rates \u2013 {tag}",
         save_path=str(output_dir / f"{dataset_name}_pairwise_confusion_rates.png"),
     )
@@ -678,9 +757,9 @@ def generate_plots(results, dataset_name, n_way, k_shot, output_dir,
             q_labels=ep_data["q_labels"],
             q_preds=ep_data["q_preds"],
             class_names=ep_class_names,
-            title=f"Episode {i+1}",
-            save_path=str(output_dir / f"{dataset_name}_episode_{i+1:03d}_features.svg"),
-            legend_save_path=str(output_dir / f"{dataset_name}_episode_{i+1:03d}_legend.svg"),
+            title=f"Episode {i + 1}",
+            save_path=str(output_dir / f"{dataset_name}_episode_{i + 1:03d}_features.svg"),
+            legend_save_path=str(output_dir / f"{dataset_name}_episode_{i + 1:03d}_legend.svg"),
             dataset_label=dataset_name,
         )
 
@@ -731,12 +810,21 @@ def _resolve_eval_device(requested: str, cpu_flag: bool) -> str:
     )
 
 
-def main(args):
+def main(args: argparse.Namespace) -> dict | list[dict]:
+    """Evaluate one frozen checkpoint under the paper protocol.
+
+    N-way (every class in the scene), 5-shot, 1000 episodes, Euclidean
+    nearest-class-mean over the frozen encoder (PAPER_CANON §4). Returns the
+    single result dict, or the list of per-seed dicts when several seeds are
+    requested.
+    """
     requested = getattr(args, "device", "auto") or "auto"
     device = _resolve_eval_device(requested, getattr(args, "cpu", False))
     if device.startswith("cuda"):
         torch.cuda.set_device(device)
-        logger.info(f"Using device: {device} ({torch.cuda.get_device_name(int(device.split(':', 1)[1]))})")
+        logger.info(
+            f"Using device: {device} ({torch.cuda.get_device_name(int(device.split(':', 1)[1]))})"
+        )
     else:
         logger.info(f"Using device: {device}")
 
@@ -749,10 +837,7 @@ def main(args):
 
     DatasetClass = DATASETS[dataset_name]
     dataset = DatasetClass(
-        data_root=args.data_root,
-        patch_size=args.patch_size,
-        split=args.split,
-        normalize=True
+        data_root=args.data_root, patch_size=args.patch_size, split=args.split, normalize=True
     )
 
     logger.info(f"Loaded {dataset_name} ({args.split}): {len(dataset)} samples")
@@ -782,7 +867,10 @@ def main(args):
     }
 
     _model_label = "MFT (original)" if model_config["name"] == "mft_original" else "CoFFE"
-    logger.info(f"Loading {_model_label} (distance={args.distance_metric}, temp={args.temperature}, mode={args.prototype_mode})")
+    logger.info(
+        f"Loading {_model_label} (distance={args.distance_metric}, "
+        f"temp={args.temperature}, mode={args.prototype_mode})"
+    )
     model = load_model_with_checkpoint(args.checkpoint, dataset_name, model_config, device)
 
     total_params = sum(p.numel() for p in model.parameters())
@@ -794,7 +882,14 @@ def main(args):
     for seed in seeds:
         results = run_single_seed(args, seed, device, dataset, model, dataset_name)
         all_results.append(results)
-        print_results_table(results, dataset_name, args.n_way, args.k_shot, args.distance_metric, args.prototype_mode)
+        print_results_table(
+            results,
+            dataset_name,
+            args.n_way,
+            args.k_shot,
+            args.distance_metric,
+            args.prototype_mode,
+        )
 
     # Aggregate across seeds if multiple
     if len(seeds) > 1:
@@ -852,19 +947,27 @@ def main(args):
             output_data["per_class"] = {str(k): v for k, v in results["per_class"].items()}
             output_data["class_names"] = CLASS_NAMES.get(dataset_name, [])
 
-        with open(args.output, 'w') as f:
+        with open(args.output, "w") as f:
             json.dump(output_data, f, indent=2)
         logger.info(f"Results saved to {args.output}")
 
     # Generate visualization plots
     if not args.no_plots:
-        output_dir = Path(args.output_dir) if args.output_dir else Path(
-            f"./outputs/eval/{dataset_name}_{args.n_way}way_{args.k_shot}shot"
+        output_dir = (
+            Path(args.output_dir)
+            if args.output_dir
+            else Path(f"./outputs/eval/{dataset_name}_{args.n_way}way_{args.k_shot}shot")
         )
         output_dir.mkdir(parents=True, exist_ok=True)
         generate_plots(
-            results, dataset_name, args.n_way, args.k_shot, output_dir,
-            args.distance_metric, args.prototype_mode, args.max_tsne_samples,
+            results,
+            dataset_name,
+            args.n_way,
+            args.k_shot,
+            output_dir,
+            args.distance_metric,
+            args.prototype_mode,
+            args.max_tsne_samples,
         )
 
     return all_results if len(seeds) > 1 else results
@@ -908,7 +1011,7 @@ _DEFAULT_ARGS = {
 }
 
 
-def run_evaluation(checkpoint: str, dataset: str, **overrides):
+def run_evaluation(checkpoint: str, dataset: str, **overrides: Any) -> dict | list[dict]:
     """Programmatic entry point used by notebooks.
 
     Keyword arguments mirror the CLI flags (with underscores instead of

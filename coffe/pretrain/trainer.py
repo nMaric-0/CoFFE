@@ -8,16 +8,16 @@ Implements training loop with:
 - Checkpointing and logging
 """
 
+import logging
+from collections.abc import Callable
+from pathlib import Path
+
 import torch
 import torch.nn as nn
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torch.utils.data import DataLoader
-from typing import Dict, Optional, Callable
 from tqdm import tqdm
-import logging
-import os
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ _LOSS_ABBREV = {"band_recon": "band"}
 class PretrainTrainer:
     """
     Trainer for self-supervised pretraining of the CoFFE encoder.
-    
+
     Features:
     - AdamW optimizer with configurable weight decay
     - Learning rate warmup + cosine decay
@@ -38,16 +38,16 @@ class PretrainTrainer:
     - Periodic validation and checkpointing
     - TensorBoard / WandB logging support
     """
-    
+
     def __init__(
         self,
         model: nn.Module,
         train_loader: DataLoader,
-        val_loader: Optional[DataLoader] = None,
-        config: Optional[Dict] = None,
+        val_loader: DataLoader | None = None,
+        config: dict | None = None,
         device: str = "cuda",
         checkpoint_dir: str = "./checkpoints/pretrained",
-        log_dir: str = "./logs/pretrain"
+        log_dir: str = "./logs/pretrain",
     ):
         """
         Args:
@@ -65,11 +65,11 @@ class PretrainTrainer:
         self.device = device
         self.checkpoint_dir = Path(checkpoint_dir)
         self.log_dir = Path(log_dir)
-        
+
         # Create directories
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
         self.log_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Default config
         self.config = {
             "epochs": 800,
@@ -102,40 +102,41 @@ class PretrainTrainer:
             self.optimizer,
             start_factor=self.config["warmup_start_factor"],
             end_factor=1.0,
-            total_iters=self.config["warmup_epochs"]
+            total_iters=self.config["warmup_epochs"],
         )
         cosine_scheduler = CosineAnnealingLR(
             self.optimizer,
             T_max=self.config["epochs"] - self.config["warmup_epochs"],
-            eta_min=self.config["min_lr"]
+            eta_min=self.config["min_lr"],
         )
         self.scheduler = SequentialLR(
             self.optimizer,
             schedulers=[warmup_scheduler, cosine_scheduler],
-            milestones=[self.config["warmup_epochs"]]
+            milestones=[self.config["warmup_epochs"]],
         )
-        
+
         # Mixed precision scaler
-        self.scaler = torch.amp.GradScaler('cuda') if self.config["use_amp"] else None
-        
+        self.scaler = torch.amp.GradScaler("cuda") if self.config["use_amp"] else None
+
         # Training state
         self.current_epoch = 0
         self.global_step = 0
-        self.best_val_loss = float('inf')
-        
+        self.best_val_loss = float("inf")
+
         # Logging
         self.train_losses = []
         self.val_losses = []
-        
+
         # TensorBoard writer (optional)
         self.writer = None
         try:
             from torch.utils.tensorboard import SummaryWriter
+
             self.writer = SummaryWriter(log_dir=str(self.log_dir))
         except ImportError:
             logger.warning("TensorBoard not available. Install with: pip install tensorboard")
-    
-    def train_epoch(self) -> Dict[str, float]:
+
+    def train_epoch(self) -> dict[str, float]:
         """
         Train for one epoch.
 
@@ -150,16 +151,16 @@ class PretrainTrainer:
         pbar = tqdm(
             self.train_loader,
             desc=f"Epoch {self.current_epoch + 1}/{self.config['epochs']}",
-            leave=False
+            leave=False,
         )
 
-        for batch_idx, batch in enumerate(pbar):
+        for batch in pbar:
             hsi = batch["hsi"].to(self.device)
             aux = batch["aux"].to(self.device)
 
             # Forward pass with optional mixed precision
             if self.config["use_amp"]:
-                with torch.amp.autocast('cuda'):
+                with torch.amp.autocast("cuda"):
                     loss, info = self.model(hsi, aux)
             else:
                 loss, info = self.model(hsi, aux)
@@ -174,8 +175,7 @@ class PretrainTrainer:
                 if self.config["grad_clip"] > 0:
                     self.scaler.unscale_(self.optimizer)
                     torch.nn.utils.clip_grad_norm_(
-                        self.model.parameters(),
-                        self.config["grad_clip"]
+                        self.model.parameters(), self.config["grad_clip"]
                     )
 
                 self.scaler.step(self.optimizer)
@@ -186,8 +186,7 @@ class PretrainTrainer:
                 # Gradient clipping
                 if self.config["grad_clip"] > 0:
                     torch.nn.utils.clip_grad_norm_(
-                        self.model.parameters(),
-                        self.config["grad_clip"]
+                        self.model.parameters(), self.config["grad_clip"]
                     )
 
                 self.optimizer.step()
@@ -214,27 +213,22 @@ class PretrainTrainer:
             pbar.set_postfix(postfix)
 
             # Logging
-            if self.global_step % self.config["log_interval"] == 0:
-                if self.writer:
-                    self.writer.add_scalar("train/loss", batch_loss, self.global_step)
-                    for key, val in batch_components.items():
-                        self.writer.add_scalar(
-                            f"train/loss_{key}", val, self.global_step
-                        )
-                    self.writer.add_scalar(
-                        "train/lr",
-                        self.scheduler.get_last_lr()[0],
-                        self.global_step
-                    )
+            if self.global_step % self.config["log_interval"] == 0 and self.writer:
+                self.writer.add_scalar("train/loss", batch_loss, self.global_step)
+                for key, val in batch_components.items():
+                    self.writer.add_scalar(f"train/loss_{key}", val, self.global_step)
+                self.writer.add_scalar(
+                    "train/lr", self.scheduler.get_last_lr()[0], self.global_step
+                )
 
         result = {"total": total_loss / num_batches}
         for key in _LOSS_COMPONENTS:
             if component_sums[key] > 0:
                 result[key] = component_sums[key] / num_batches
         return result
-    
+
     @torch.no_grad()
-    def validate(self) -> Dict[str, float]:
+    def validate(self) -> dict[str, float]:
         """
         Validate the model.
 
@@ -242,7 +236,7 @@ class PretrainTrainer:
             Dictionary with 'total' average loss and per-component averages
         """
         if self.val_loader is None:
-            return {"total": float('inf')}
+            return {"total": float("inf")}
 
         self.model.eval()
         total_loss = 0.0
@@ -254,7 +248,7 @@ class PretrainTrainer:
             aux = batch["aux"].to(self.device)
 
             if self.config["use_amp"]:
-                with torch.amp.autocast('cuda'):
+                with torch.amp.autocast("cuda"):
                     loss, info = self.model(hsi, aux)
             else:
                 loss, info = self.model(hsi, aux)
@@ -270,11 +264,11 @@ class PretrainTrainer:
             if component_sums[key] > 0:
                 result[key] = component_sums[key] / num_batches
         return result
-    
-    def save_checkpoint(self, filename: str, is_best: bool = False):
+
+    def save_checkpoint(self, filename: str, is_best: bool = False) -> None:
         """
         Save training checkpoint.
-        
+
         Args:
             filename: Checkpoint filename
             is_best: Whether this is the best model so far
@@ -290,29 +284,29 @@ class PretrainTrainer:
             "train_losses": self.train_losses,
             "val_losses": self.val_losses,
         }
-        
+
         if self.scaler is not None:
             checkpoint["scaler_state_dict"] = self.scaler.state_dict()
-        
+
         path = self.checkpoint_dir / filename
         torch.save(checkpoint, path)
         logger.info(f"Saved checkpoint to {path}")
-        
+
         if is_best:
             best_path = self.checkpoint_dir / "best.pth"
             torch.save(checkpoint, best_path)
             logger.info(f"Saved best checkpoint to {best_path}")
-    
-    def load_checkpoint(self, filename: str):
+
+    def load_checkpoint(self, filename: str) -> None:
         """
         Load training checkpoint.
-        
+
         Args:
             filename: Checkpoint filename
         """
         path = self.checkpoint_dir / filename
         checkpoint = torch.load(path, map_location=self.device, weights_only=True)
-        
+
         self.model.load_state_dict(checkpoint["model_state_dict"])
         self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
@@ -321,13 +315,13 @@ class PretrainTrainer:
         self.best_val_loss = checkpoint["best_val_loss"]
         self.train_losses = checkpoint.get("train_losses", [])
         self.val_losses = checkpoint.get("val_losses", [])
-        
+
         if self.scaler is not None and "scaler_state_dict" in checkpoint:
             self.scaler.load_state_dict(checkpoint["scaler_state_dict"])
-        
+
         logger.info(f"Loaded checkpoint from {path} (epoch {self.current_epoch})")
-    
-    def save_encoder(self, filename: str = "encoder.pth"):
+
+    def save_encoder(self, filename: str = "encoder.pth") -> None:
         """
         Save only the encoder weights (for downstream tasks).
 
@@ -345,40 +339,39 @@ class PretrainTrainer:
                 "aux_channels": self.model.aux_channels,
                 "embed_dim": self.model.embed_dim,
                 "patch_size": self.model.patch_size,
-            }
+            },
         }
         torch.save(encoder_checkpoint, path)
-        logger.info(f"Saved encoder weights to {path} (hsi={self.model.hsi_channels}, aux={self.model.aux_channels})")
-    
-    def train(
-        self,
-        resume_from: Optional[str] = None,
-        callback: Optional[Callable] = None
-    ) -> Dict:
+        logger.info(
+            f"Saved encoder weights to {path} "
+            f"(hsi={self.model.hsi_channels}, aux={self.model.aux_channels})"
+        )
+
+    def train(self, resume_from: str | None = None, callback: Callable | None = None) -> dict:
         """
         Full training loop.
-        
+
         Args:
             resume_from: Optional checkpoint to resume from
             callback: Optional callback function called after each epoch
                       with signature callback(trainer, epoch, train_loss, val_loss)
-        
+
         Returns:
             Dictionary with training history
         """
         if resume_from:
             self.load_checkpoint(resume_from)
-        
+
         logger.info(f"Starting pretraining for {self.config['epochs']} epochs")
         logger.info(f"Training samples: {len(self.train_loader.dataset)}")
         if self.val_loader:
             logger.info(f"Validation samples: {len(self.val_loader.dataset)}")
-        
+
         start_epoch = self.current_epoch
-        
+
         for epoch in range(start_epoch, self.config["epochs"]):
             self.current_epoch = epoch
-            
+
             # Train
             train_result = self.train_epoch()
             train_loss = train_result["total"]
@@ -388,7 +381,7 @@ class PretrainTrainer:
             self.scheduler.step()
 
             # Validate
-            val_loss = float('inf')
+            val_loss = float("inf")
             val_components = {}
             if self.val_loader and (epoch + 1) % self.config["val_interval"] == 0:
                 val_result = self.validate()
@@ -424,22 +417,22 @@ class PretrainTrainer:
                 self.writer.add_scalar("train/epoch_loss", train_loss, epoch)
                 for key, val in train_components.items():
                     self.writer.add_scalar(f"train/epoch_loss_{key}", val, epoch)
-            
+
             # Save checkpoint
             if (epoch + 1) % self.config["save_interval"] == 0:
                 self.save_checkpoint(f"checkpoint_epoch_{epoch + 1}.pth")
-            
+
             # Callback
             if callback:
                 callback(self, epoch, train_loss, val_loss)
-        
+
         # Save final checkpoint and encoder
         self.save_checkpoint("final.pth")
         self.save_encoder("encoder_final.pth")
-        
+
         if self.writer:
             self.writer.close()
-        
+
         return {
             "train_losses": self.train_losses,
             "val_losses": self.val_losses,

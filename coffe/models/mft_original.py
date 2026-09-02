@@ -37,10 +37,9 @@ its fused feature — and the shared eval loop's ``patch_emb.mean(dim=1)`` recov
 it. No class-token folding: :meth:`eval_patch_embeddings` is a no-op (clean original-MFT
 baseline).
 """
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from typing import Dict, Optional, Tuple
 
 from .components.mft_blocks import HetConv, LearnableTokenizer, MFTEncoder
 
@@ -67,7 +66,8 @@ class MFTOriginal(nn.Module):
             for ablation).
         distance_metric: distance to the class means — "euclidean" (default,
             the paper protocol) or "cosine".
-        temperature: Temperature scaling for cosine similarity.
+        temperature: Logit scaling on the cosine path. The paper protocol is
+            Euclidean nearest-class-mean, which never consults it (PAPER_CANON §4).
         prototype_mode: "mean_features" or "mean_distances".
     """
 
@@ -86,7 +86,7 @@ class MFTOriginal(nn.Module):
         distance_metric: str = "euclidean",
         temperature: float = 10.0,
         prototype_mode: str = "mean_features",
-        pool_sigma: Optional[float] = None,
+        pool_sigma: float | None = None,
     ):
         super().__init__()
 
@@ -131,11 +131,11 @@ class MFTOriginal(nn.Module):
             nn.GELU(),
         )
         self.hsi_hetconv = HetConv(
-            in_channels=8 * self._spec_out,   # after reshape from 3D
-            out_channels=embed_dim,           # = FM*4
+            in_channels=8 * self._spec_out,  # after reshape from 3D
+            out_channels=embed_dim,  # = FM*4
             kernel_size=3,
-            groups=8,                         # 8 = the 3D-conv feature maps; divides
-            padding=1,                        # both 8*(NC-8) and embed_dim for all datasets
+            groups=8,  # 8 = the 3D-conv feature maps; divides
+            padding=1,  # both 8*(NC-8) and embed_dim for all datasets
         )
 
         # ===== Auxiliary (LiDAR) -> single external CLS token (channel tok) =====
@@ -148,14 +148,12 @@ class MFTOriginal(nn.Module):
         self.aux_tokenizer = LearnableTokenizer(
             input_dim=embed_dim,
             embed_dim=embed_dim,
-            num_tokens=1,           # single fusion / CLS token
+            num_tokens=1,  # single fusion / CLS token
             token_type="channel",
         )
 
         # ===== Positional embedding: +1 for the CLS token =====
-        self.pos_embed = nn.Parameter(
-            torch.randn(1, 1 + self.num_tokens, embed_dim) * 0.02
-        )
+        self.pos_embed = nn.Parameter(torch.randn(1, 1 + self.num_tokens, embed_dim) * 0.02)
 
         # ===== mCrossPA transformer encoder (faithful: 8 heads, depth 2, mlp 512) =====
         self.encoder = MFTEncoder(
@@ -187,7 +185,7 @@ class MFTOriginal(nn.Module):
     # ------------------------------------------------------------------
     # Tokenization (used by both the MAE wrapper and forward_features)
     # ------------------------------------------------------------------
-    def tokenize(self, hsi: torch.Tensor, aux: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def tokenize(self, hsi: torch.Tensor, aux: torch.Tensor | None = None) -> torch.Tensor:
         """HSI -> [B, num_tokens(=121), embed_dim] spatial tokens.
 
         ``aux`` is accepted (and ignored) only so the call signature matches the
@@ -195,18 +193,18 @@ class MFTOriginal(nn.Module):
         external CLS is built separately via :meth:`make_cls`.
         """
         B, C, H, W = hsi.shape
-        x = hsi.unsqueeze(1)                # [B, 1, C, H, W] (spectral = depth)
-        x = self.hsi_conv3d(x)              # [B, 8, C-8, H, W] (spectral valid)
-        x = x.reshape(B, -1, H, W)          # [B, 8*(C-8), H, W]
-        x = self.hsi_hetconv(x)             # [B, embed_dim, H, W]
-        x = x.flatten(2).transpose(1, 2)    # [B, H*W, embed_dim]
+        x = hsi.unsqueeze(1)  # [B, 1, C, H, W] (spectral = depth)
+        x = self.hsi_conv3d(x)  # [B, 8, C-8, H, W] (spectral valid)
+        x = x.reshape(B, -1, H, W)  # [B, 8*(C-8), H, W]
+        x = self.hsi_hetconv(x)  # [B, embed_dim, H, W]
+        x = x.flatten(2).transpose(1, 2)  # [B, H*W, embed_dim]
         return x
 
     def make_cls(self, aux: torch.Tensor) -> torch.Tensor:
         """LiDAR/DSM -> [B, 1, embed_dim] external CLS token (channel tokenization)."""
-        x = self.aux_conv(aux)              # [B, embed_dim, H, W]
-        x = x.flatten(2).transpose(1, 2)    # [B, H*W, embed_dim]
-        cls = self.aux_tokenizer(x)         # [B, 1, embed_dim]
+        x = self.aux_conv(aux)  # [B, embed_dim, H, W]
+        x = x.flatten(2).transpose(1, 2)  # [B, H*W, embed_dim]
+        cls = self.aux_tokenizer(x)  # [B, 1, embed_dim]
         return cls
 
     # ------------------------------------------------------------------
@@ -215,32 +213,31 @@ class MFTOriginal(nn.Module):
     def forward_features(
         self,
         hsi: torch.Tensor,
-        aux: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        aux: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Returns:
             patch_emb: [B, 1, D] — the encoded CLS packed as a single token.
             cls_emb:   [B, D]    — the encoded CLS (fused) feature.
             aux_emb:   [B, D]    — alias of cls_emb (interface compatibility).
         """
-        B = hsi.shape[0]
-        hsi_tokens = self.tokenize(hsi)         # [B, N, D]
-        cls_token = self.make_cls(aux)          # [B, 1, D]
+        hsi_tokens = self.tokenize(hsi)  # [B, N, D]
+        cls_token = self.make_cls(aux)  # [B, 1, D]
 
         tokens = torch.cat([cls_token, hsi_tokens], dim=1)  # [B, 1+N, D]
         tokens = tokens + self.pos_embed
         tokens = self.encoder(tokens)
         tokens = self.norm(tokens)
 
-        cls_emb = tokens[:, 0]                  # [B, D]
-        patch_emb = cls_emb.unsqueeze(1)        # [B, 1, D] (single-token packing)
+        cls_emb = tokens[:, 0]  # [B, D]
+        patch_emb = cls_emb.unsqueeze(1)  # [B, 1, D] (single-token packing)
         return patch_emb, cls_emb, cls_emb
 
     def eval_patch_embeddings(
         self,
         patch_emb: torch.Tensor,
         cls_emb: torch.Tensor,
-        cls_token_weight: Optional[float] = None,
+        cls_token_weight: float | None = None,
         renormalize: bool = True,
     ) -> torch.Tensor:
         """No class-token folding in the MFT control — patch tokens pass through
@@ -294,11 +291,12 @@ class MFTOriginal(nn.Module):
             all_similarities = -all_distances.pow(2)
         logits = torch.zeros(num_queries, num_classes, device=device)
         for c in range(num_classes):
-            mask = (support_labels == c)
+            mask = support_labels == c
             logits[:, c] = all_similarities[:, mask].mean(dim=1)
         return logits
 
-    def get_trainable_param_count(self) -> Dict[str, int]:
+    def get_trainable_param_count(self) -> dict[str, int]:
+        """Return ``{"total", "total_trainable"}`` parameter counts."""
         total = sum(p.numel() for p in self.parameters())
         trainable = sum(p.numel() for p in self.parameters() if p.requires_grad)
         return {"total": total, "total_trainable": trainable}
@@ -306,6 +304,12 @@ class MFTOriginal(nn.Module):
     def forward(
         self,
         hsi: torch.Tensor,
-        aux: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        aux: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Alias of :meth:`forward_features` — the eval feature is the encoded CLS.
+
+        In the MFT control the auxiliary modality enters as an *external* fusion
+        token rather than at the input, which is the architectural contrast the
+        paper draws against CoFFE's input-level fusion (PAPER_CANON §2).
+        """
         return self.forward_features(hsi, aux)

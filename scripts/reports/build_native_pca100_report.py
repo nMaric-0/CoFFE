@@ -9,13 +9,14 @@ with a hand-authored overview / methodology section and a flat results table.
 
 Output: results/hypersigma_native_sem_pca100_report.json
 """
+
 from __future__ import annotations
 
 import datetime as _dt
 import glob
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 EXP = ROOT / "experiments"
@@ -24,14 +25,13 @@ RESULTS = ROOT / "results"
 # analysis experiment-name -> raw experiment-dir alias (agents occasionally keyed
 # the eval object by the eval subdir name rather than the experiment dir).
 NAME_ALIAS = {
-    "hypersigma_trento_pca100_C6way_5shot_adapted_spatial_only_run1":
-        "hypersigma_trento_pca100_spatial_only_run1",
+    "hypersigma_trento_pca100_C6way_5shot_adapted_spatial_only_run1": "hypersigma_trento_pca100_spatial_only_run1",
 }
 
 # ---------------------------------------------------------------------------
 # Hand-authored overview (grounded in the agent audits + code tracing).
 # ---------------------------------------------------------------------------
-OVERVIEW: Dict[str, Any] = {
+OVERVIEW: dict[str, Any] = {
     "title": "HyperSIGMA native-SEM and PCA-100 few-shot experiments",
     "what_this_covers": (
         "All HyperSIGMA experiments in the 'native semantic (SEM)' and 'PCA-100' "
@@ -50,12 +50,21 @@ OVERVIEW: Dict[str, Any] = {
         "are ever trained (see 'adaptation_modes')."
     ),
     "datasets": {
-        "houston": {"hsi_bands": 144, "num_classes": 15,
-                    "note": "Houston2013; spatial branch uses a real PCA 144->100."},
-        "muufl":   {"hsi_bands": 64,  "num_classes": 11,
-                    "note": "PCA-100 impossible from 64 bands -> SpectralResample 64->100."},
-        "trento":  {"hsi_bands": 63,  "num_classes": 6,
-                    "note": "PCA-100 impossible from 63 bands -> SpectralResample 63->100."},
+        "houston": {
+            "hsi_bands": 144,
+            "num_classes": 15,
+            "note": "Houston2013; spatial branch uses a real PCA 144->100.",
+        },
+        "muufl": {
+            "hsi_bands": 64,
+            "num_classes": 11,
+            "note": "PCA-100 impossible from 64 bands -> SpectralResample 64->100.",
+        },
+        "trento": {
+            "hsi_bands": 63,
+            "num_classes": 6,
+            "note": "PCA-100 impossible from 63 bands -> SpectralResample 63->100.",
+        },
     },
     "experiment_families": {
         "native_full_band": {
@@ -193,23 +202,31 @@ OVERVIEW: Dict[str, Any] = {
         "metric": "euclidean overall accuracy (%) / cosine in parentheses",
         "native_full_band_spatial": {
             "houston": {"pad": 59.3, "upscale": 61.1},
-            "muufl":   {"pad": 54.8, "upscale": 53.2},
-            "trento":  {"pad": 85.0, "upscale": 91.1},
+            "muufl": {"pad": 54.8, "upscale": 53.2},
+            "trento": {"pad": 85.0, "upscale": 91.1},
         },
         "native_full_band_spectral": {
             "houston": {"pad": 30.1, "upscale": 30.7},
-            "muufl":   {"pad": 34.2, "upscale": 30.8},
-            "trento":  {"pad": 81.1, "upscale": 67.4},
+            "muufl": {"pad": 34.2, "upscale": 30.8},
+            "trento": {"pad": 81.1, "upscale": 67.4},
         },
-        "native_sem_houston": {"pad": {"euclidean": 45.32, "cosine": 38.18},
-                               "upscale": "CRASHED - no result"},
+        "native_sem_houston": {
+            "pad": {"euclidean": 45.32, "cosine": 38.18},
+            "upscale": "CRASHED - no result",
+        },
         "pca100_adapted": {
-            "houston": {"joint_sem": {"euclidean": 67.48, "cosine": 60.67},
-                        "spatial_only": {"euclidean": 66.37, "cosine": 59.36}},
-            "muufl":   {"joint_sem": "NO EVAL (adapt killed @1050/2000)",
-                        "spatial_only": {"euclidean": 50.25, "cosine": 43.70}},
-            "trento":  {"joint_sem": {"euclidean": 87.19, "cosine": 79.27},
-                        "spatial_only": {"euclidean": 86.02, "cosine": 83.07}},
+            "houston": {
+                "joint_sem": {"euclidean": 67.48, "cosine": 60.67},
+                "spatial_only": {"euclidean": 66.37, "cosine": 59.36},
+            },
+            "muufl": {
+                "joint_sem": "NO EVAL (adapt killed @1050/2000)",
+                "spatial_only": {"euclidean": 50.25, "cosine": 43.70},
+            },
+            "trento": {
+                "joint_sem": {"euclidean": 87.19, "cosine": 79.27},
+                "spatial_only": {"euclidean": 86.02, "cosine": 83.07},
+            },
         },
         "note": "Verbatim per-run numbers (with std and 95% CI) are in results_summary_table and in each experiment's raw results.json.",
     },
@@ -250,7 +267,7 @@ def load_json(p: Path) -> Any:
         return json.load(f)
 
 
-def normalize_acc(v: Optional[float]) -> Optional[float]:
+def normalize_acc(v: float | None) -> float | None:
     if v is None:
         return None
     return round(v * 100, 3) if v <= 1.5 else round(v, 3)
@@ -258,17 +275,18 @@ def normalize_acc(v: Optional[float]) -> Optional[float]:
 
 def main() -> None:
     raw = load_json(RESULTS / "_report_raw.json")
-    analyses = {Path(p).stem: load_json(Path(p))
-                for p in sorted(glob.glob(str(EXP / "_analysis" / "*.json")))}
+    analyses = {
+        Path(p).stem: load_json(Path(p))
+        for p in sorted(glob.glob(str(EXP / "_analysis" / "*.json")))
+    }
 
     # index analysis experiment objects by (aliased) experiment dir name
-    analysis_by_exp: Dict[str, Dict[str, Any]] = {}
-    group_ctx_by_exp: Dict[str, Dict[str, Any]] = {}
-    results_table: List[Dict[str, Any]] = []
+    analysis_by_exp: dict[str, dict[str, Any]] = {}
+    group_ctx_by_exp: dict[str, dict[str, Any]] = {}
+    results_table: list[dict[str, Any]] = []
 
     for grp in analyses.values():
-        group_ctx = {k: v for k, v in grp.items()
-                     if k not in ("experiments",)}
+        group_ctx = {k: v for k, v in grp.items() if k not in ("experiments",)}
         for e in grp.get("experiments", []):
             name = NAME_ALIAS.get(e["name"], e["name"])
             analysis_by_exp[name] = e
@@ -281,12 +299,12 @@ def main() -> None:
                     "dataset": r.get("dataset") or grp.get("dataset") or dc.get("dataset"),
                     "variant": grp.get("variant") or dc.get("variant") or dc.get("branch"),
                     "branch": r.get("branch") or dc.get("branch"),
-                    "input_handling": r.get("input_handling") or dc.get("input_handling")
-                                      or dc.get("input_geometry"),
+                    "input_handling": r.get("input_handling")
+                    or dc.get("input_handling")
+                    or dc.get("input_geometry"),
                     "eval_name": r.get("eval_name"),
                     "metric": r.get("metric"),
-                    "is_primary_metric": r.get("is_primary_metric",
-                                               r.get("metric") == "euclidean"),
+                    "is_primary_metric": r.get("is_primary_metric", r.get("metric") == "euclidean"),
                     "n_way": r.get("n_way"),
                     "k_shot": r.get("k_shot"),
                     "n_query": r.get("n_query"),
@@ -294,18 +312,27 @@ def main() -> None:
                     "accuracy_mean_raw": r.get("accuracy_mean"),
                     "accuracy_mean_pct": normalize_acc(r.get("accuracy_mean")),
                     "accuracy_std": round(r["accuracy_std"], 4)
-                                    if isinstance(r.get("accuracy_std"), (int, float)) else r.get("accuracy_std"),
+                    if isinstance(r.get("accuracy_std"), (int, float))
+                    else r.get("accuracy_std"),
                     "ci95": round(r["ci95"], 4)
-                            if isinstance(r.get("ci95"), (int, float)) else r.get("ci95"),
+                    if isinstance(r.get("ci95"), (int, float))
+                    else r.get("ci95"),
                 }
                 results_table.append(row)
 
-    results_table.sort(key=lambda x: (str(x["family"]), str(x["dataset"]),
-                                      str(x["variant"]), str(x["branch"]),
-                                      str(x["input_handling"]), str(x["metric"])))
+    results_table.sort(
+        key=lambda x: (
+            str(x["family"]),
+            str(x["dataset"]),
+            str(x["variant"]),
+            str(x["branch"]),
+            str(x["input_handling"]),
+            str(x["metric"]),
+        )
+    )
 
     # merge per-experiment: analysis + group context + verbatim raw
-    experiments: Dict[str, Any] = {}
+    experiments: dict[str, Any] = {}
     for name, rawexp in raw["experiments"].items():
         a = analysis_by_exp.get(name)
         experiments[name] = {
@@ -323,7 +350,7 @@ def main() -> None:
         "report_title": OVERVIEW["title"],
         "generated_at": _dt.datetime.now().isoformat(timespec="seconds"),
         "generator": "scripts/reports/build_native_pca100_report.py (raw: gather_native_pca100_raw.py; "
-                     "analysis: 8 parallel audit agents -> experiments/_analysis/*.json)",
+        "analysis: 8 parallel audit agents -> experiments/_analysis/*.json)",
         "num_experiments": len(experiments),
         "overview": OVERVIEW,
         "coverage_gaps_and_anomalies": COVERAGE_GAPS_AND_ANOMALIES,
@@ -335,10 +362,10 @@ def main() -> None:
     out = RESULTS / "hypersigma_native_sem_pca100_report.json"
     with out.open("w") as f:
         json.dump(report, f, indent=2, sort_keys=False)
-    print(f"Wrote {out}  ({out.stat().st_size/1024:.0f} KB)")
+    print(f"Wrote {out}  ({out.stat().st_size / 1024:.0f} KB)")
     print(f"  experiments: {len(experiments)}")
     print(f"  result rows: {len(results_table)}")
-    no_analysis = [n for n, e in experiments.items() if e['analysis'] is None]
+    no_analysis = [n for n, e in experiments.items() if e["analysis"] is None]
     if no_analysis:
         print(f"  WARNING no analysis matched: {no_analysis}")
 

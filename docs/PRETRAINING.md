@@ -95,15 +95,21 @@ same entry point and writes everything under `experiments/<name>/`.
 import torch
 from coffe.models import CoFFE
 
-model = CoFFE(hsi_channels=144, aux_channels=1, embed_dim=128,
-              num_heads=2, num_layers=2, patch_size=11,
-              use_projection=False)          # eval discards the head
-ckpt = torch.load("experiments/<run>/checkpoints/checkpoint_epoch_950.pth",
-                  map_location="cpu")
+model = CoFFE(
+    hsi_channels=144,
+    aux_channels=1,
+    embed_dim=128,
+    num_heads=2,
+    num_layers=2,
+    patch_size=11,
+    use_projection=False,
+)  # eval discards the head
+ckpt = torch.load("experiments/<run>/checkpoints/checkpoint_epoch_950.pth", map_location="cpu")
 # Pretraining wrappers save the encoder under an `encoder.` prefix; the
 # evaluator's fix_state_dict_keys strips it. By hand:
-state = {k[len("encoder."):]: v for k, v in ckpt["model_state_dict"].items()
-         if k.startswith("encoder.")}
+state = {
+    k[len("encoder.") :]: v for k, v in ckpt["model_state_dict"].items() if k.startswith("encoder.")
+}
 model.load_state_dict(state, strict=False)
 ```
 

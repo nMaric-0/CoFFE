@@ -29,6 +29,11 @@
 #
 # Run with:
 #   python scripts/pretrain.py --config configs/mft/muufl_mae.yaml
+#
+# RUNTIME     The MFT control trains through the same loop as CoFFE, which
+#             PAPER_CANON §3 times at 0.7-4.3 h/scene for 1500 epochs on one
+#             RTX 4090 (no separate figure is published for the control).
+#             This config runs 1500 epochs.
 
 model:
   name: "mft_original"

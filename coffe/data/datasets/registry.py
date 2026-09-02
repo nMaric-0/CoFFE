@@ -14,13 +14,12 @@ Adding a new dataset = add its patched ``Dataset`` class (in
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Type
 
 from .patched import (
-    PatchedMultimodalDataset,
     HoustonPatchedDataset,
-    TrentoPatchedDataset,
     MUUFLPatchedDataset,
+    PatchedMultimodalDataset,
+    TrentoPatchedDataset,
 )
 
 # Path conventions shared across fit_pca / adapt / eval. Keep these in
@@ -44,28 +43,37 @@ class DatasetSpec:
     """Immutable description of one dataset for the HyperSIGMA pipeline."""
 
     name: str
-    patched_cls: Type[PatchedMultimodalDataset]
+    patched_cls: type[PatchedMultimodalDataset]
     hsi_channels: int
     aux_channels: int
     num_classes: int
     spat_components: int = SPAT_COMPONENTS
 
     def pca_spat_path(self, root: str = DEFAULT_PCA_DIR) -> str:
+        """Conventional path of this scene's fitted spatial PCA."""
         return f"{root}/pca_{self.name}_{self.spat_components}band.pkl"
 
     def pca_stats_path(self, root: str = DEFAULT_PCA_DIR) -> str:
+        """Conventional path of the PCA output mean/std used to standardize it."""
         return f"{root}/pca_{self.name}_{self.spat_components}band_stats.pkl"
 
     def adapt_ckpt_dir(self, spat_patch_k: int = 3, root: str = DEFAULT_ADAPT_DIR) -> str:
+        """Conventional directory for this scene's adapted HyperSIGMA checkpoints."""
         return f"{root}/{self.name}_k{spat_patch_k}"
 
 
 # NOTE: band/class/aux counts here mirror the corresponding patched
 # Dataset class properties (data/datasets/{houston,trento,muufl}.py).
-DATASET_REGISTRY: Dict[str, DatasetSpec] = {
-    "houston": DatasetSpec("houston", HoustonPatchedDataset, hsi_channels=144, aux_channels=1, num_classes=15),
-    "trento": DatasetSpec("trento", TrentoPatchedDataset, hsi_channels=63, aux_channels=1, num_classes=6),
-    "muufl": DatasetSpec("muufl", MUUFLPatchedDataset, hsi_channels=64, aux_channels=2, num_classes=11),
+DATASET_REGISTRY: dict[str, DatasetSpec] = {
+    "houston": DatasetSpec(
+        "houston", HoustonPatchedDataset, hsi_channels=144, aux_channels=1, num_classes=15
+    ),
+    "trento": DatasetSpec(
+        "trento", TrentoPatchedDataset, hsi_channels=63, aux_channels=1, num_classes=6
+    ),
+    "muufl": DatasetSpec(
+        "muufl", MUUFLPatchedDataset, hsi_channels=64, aux_channels=2, num_classes=11
+    ),
 }
 
 

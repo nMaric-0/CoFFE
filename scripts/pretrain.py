@@ -30,29 +30,13 @@ if str(REPO_ROOT) not in sys.path:
 
 from coffe.pretrain.loop import main
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Per-scene masked pretraining (SimMIM / MAE) for CoFFE or the MFT control"
     )
-    parser.add_argument(
-        "--config",
-        type=str,
-        required=True,
-        help="Path to configuration file"
-    )
-    parser.add_argument(
-        "--resume",
-        type=str,
-        default=None,
-        help="Checkpoint to resume from"
-    )
-    parser.add_argument(
-        "--log-file",
-        type=str,
-        default=None,
-        help="Log file path"
-    )
+    parser.add_argument("--config", type=str, required=True, help="Path to configuration file")
+    parser.add_argument("--resume", type=str, default=None, help="Checkpoint to resume from")
+    parser.add_argument("--log-file", type=str, default=None, help="Log file path")
 
     args = parser.parse_args()
     main(args)

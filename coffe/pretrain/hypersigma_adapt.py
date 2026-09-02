@@ -9,7 +9,8 @@ transformer bodies remain frozen.
 Optimizer recipe follows the CoFFE pretraining configs: lr=1.5e-4,
 weight_decay=0.05, warmup=100, batch_size=64, AMP off. The decoders are
 HyperSIGMA-specific (`spat_decoder_hidden`/`spec_decoder_hidden` 256,
-`fused_decoder_hidden` 512) and there is no centre-weighting here. Masking here is HyperSIGMA's own 75% token masking
+`fused_decoder_hidden` 512) and there is no centre-weighting here. Masking
+here is HyperSIGMA's own 75% token masking
 (``pretrain.mask_ratio``), not CoFFE's band/token pair, and the epoch count is
 per-config (2000-3000).
 
@@ -38,11 +39,11 @@ from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torch.utils.data import DataLoader, Subset
 from tqdm import tqdm
 
-from coffe.data.datasets import get_spec  # noqa: E402
-from coffe.models.hypersigma.hypersigma_dual import HyperSIGMADual  # noqa: E402
-from coffe.pretrain.hypersigma_mae import HyperSIGMAMaskedAdaptation  # noqa: E402
-from coffe.utils.io import load_config  # noqa: E402
-from coffe.utils.seed import set_seed  # noqa: E402
+from coffe.data.datasets import get_spec
+from coffe.models.hypersigma.hypersigma_dual import HyperSIGMADual
+from coffe.pretrain.hypersigma_mae import HyperSIGMAMaskedAdaptation
+from coffe.utils.io import load_config
+from coffe.utils.seed import set_seed
 
 logger = logging.getLogger(__name__)
 
@@ -188,11 +189,14 @@ def run_adapt(config: dict, checkpoint_dir: str, log_dir: str) -> dict:
 
     counts = model.parameter_counts()
     logger.info(
-        "[HyperSIGMA-MAE] adapt_mode=%s mask_ratio=%.2f", model.adapt_mode, model.mask_ratio,
+        "[HyperSIGMA-MAE] adapt_mode=%s mask_ratio=%.2f",
+        model.adapt_mode,
+        model.mask_ratio,
     )
     logger.info(
         "[HyperSIGMA-MAE] Adaptation module params: trainable=%d, frozen=%d",
-        counts["total_trainable"], counts["total_frozen"],
+        counts["total_trainable"],
+        counts["total_frozen"],
     )
     for k, v in counts.items():
         if k.startswith("total_"):
@@ -212,14 +216,16 @@ def run_adapt(config: dict, checkpoint_dir: str, log_dir: str) -> dict:
     # Always-snapshot milestones — saved even when below save_interval, so
     # you get a quick look at the early-training trajectory regardless of
     # the interval used after them.
-    checkpoint_milestones = sorted(set(
-        int(e) for e in pretrain_cfg.get("checkpoint_milestones", [5, 10, 20, 50])
-    ))
+    checkpoint_milestones = sorted(
+        set(int(e) for e in pretrain_cfg.get("checkpoint_milestones", [5, 10, 20, 50]))
+    )
     val_interval = pretrain_cfg.get("val_interval", 50)
 
     optim = AdamW(
         _trainable_parameter_groups(model),
-        lr=lr, weight_decay=weight_decay, betas=(0.9, 0.95),
+        lr=lr,
+        weight_decay=weight_decay,
+        betas=(0.9, 0.95),
     )
     warmup = LinearLR(optim, start_factor=0.01, end_factor=1.0, total_iters=warmup_epochs)
     cosine = CosineAnnealingLR(optim, T_max=max(1, epochs - warmup_epochs), eta_min=min_lr)
@@ -249,7 +255,7 @@ def run_adapt(config: dict, checkpoint_dir: str, log_dir: str) -> dict:
             model.train()
             running = 0.0
             nb = 0
-            pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}", leave=False)
+            pbar = tqdm(train_loader, desc=f"Epoch {epoch + 1}/{epochs}", leave=False)
             for batch in pbar:
                 hsi = batch["hsi"].to(device, non_blocking=True)
                 out = model(hsi)
@@ -261,7 +267,9 @@ def run_adapt(config: dict, checkpoint_dir: str, log_dir: str) -> dict:
                 optim.step()
                 running += float(loss.detach())
                 nb += 1
-                pbar.set_postfix(loss=f"{running/max(1,nb):.4f}", lr=f"{scheduler.get_last_lr()[0]:.2e}")
+                pbar.set_postfix(
+                    loss=f"{running / max(1, nb):.4f}", lr=f"{scheduler.get_last_lr()[0]:.2e}"
+                )
             scheduler.step()
             train_loss = running / max(1, nb)
             history["train_loss"].append(train_loss)
@@ -278,7 +286,9 @@ def run_adapt(config: dict, checkpoint_dir: str, log_dir: str) -> dict:
                         vb += 1
                 val_loss = val_loss / max(1, vb)
                 history["val_loss"].append({"epoch": epoch + 1, "loss": val_loss})
-                logger.info("epoch=%d train_loss=%.4f val_loss=%.4f", epoch + 1, train_loss, val_loss)
+                logger.info(
+                    "epoch=%d train_loss=%.4f val_loss=%.4f", epoch + 1, train_loss, val_loss
+                )
                 if val_loss < best_val:
                     best_val = val_loss
                     torch.save(
@@ -368,9 +378,11 @@ def run_adapt(config: dict, checkpoint_dir: str, log_dir: str) -> dict:
     return history
 
 
-def main(args):
+def main(args: argparse.Namespace) -> dict:
+    """CLI entry point: load the YAML config and run label-free adaptation."""
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
     config = load_config(args.config)
     logger.info("Loaded config from %s", args.config)

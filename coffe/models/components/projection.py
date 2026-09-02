@@ -1,8 +1,8 @@
 """Projection head for embedding transformation."""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional
 
 
 class ProjectionHead(nn.Module):
@@ -24,12 +24,12 @@ class ProjectionHead(nn.Module):
     def __init__(
         self,
         embed_dim: int,
-        hidden_dim: Optional[int] = None,
-        output_dim: Optional[int] = None,
+        hidden_dim: int | None = None,
+        output_dim: int | None = None,
         num_layers: int = 2,
         use_bn: bool = True,
         l2_normalize: bool = True,
-        dropout: float = 0.0
+        dropout: float = 0.0,
     ):
         """
         Args:
@@ -54,11 +54,11 @@ class ProjectionHead(nn.Module):
         self.num_layers = num_layers
 
         # Build MLP layers
-        layers = []
+        layers: list[nn.Module] = []
         in_dim = embed_dim
 
         for i in range(num_layers):
-            is_last = (i == num_layers - 1)
+            is_last = i == num_layers - 1
             out_dim = output_dim if is_last else hidden_dim
 
             layers.append(nn.Linear(in_dim, out_dim))
@@ -143,10 +143,10 @@ class ModalitySpecificProjection(nn.Module):
         self,
         embed_dim: int,
         num_modalities: int = 2,
-        hidden_dim: Optional[int] = None,
-        output_dim: Optional[int] = None,
+        hidden_dim: int | None = None,
+        output_dim: int | None = None,
         shared_output_space: bool = True,
-        **kwargs
+        **kwargs,
     ):
         """
         Args:
@@ -160,21 +160,16 @@ class ModalitySpecificProjection(nn.Module):
         super().__init__()
 
         self.num_modalities = num_modalities
-        self.projectors = nn.ModuleList([
-            ProjectionHead(
-                embed_dim=embed_dim,
-                hidden_dim=hidden_dim,
-                output_dim=output_dim,
-                **kwargs
-            )
-            for _ in range(num_modalities)
-        ])
+        self.projectors = nn.ModuleList(
+            [
+                ProjectionHead(
+                    embed_dim=embed_dim, hidden_dim=hidden_dim, output_dim=output_dim, **kwargs
+                )
+                for _ in range(num_modalities)
+            ]
+        )
 
-    def forward(
-        self,
-        *inputs: torch.Tensor,
-        modality_idx: Optional[int] = None
-    ) -> tuple:
+    def forward(self, *inputs: torch.Tensor, modality_idx: int | None = None) -> tuple:
         """
         Args:
             *inputs: Variable number of tensors, one per modality
@@ -187,8 +182,6 @@ class ModalitySpecificProjection(nn.Module):
             return self.projectors[modality_idx](inputs[0])
 
         if len(inputs) != self.num_modalities:
-            raise ValueError(
-                f"Expected {self.num_modalities} inputs, got {len(inputs)}"
-            )
+            raise ValueError(f"Expected {self.num_modalities} inputs, got {len(inputs)}")
 
         return tuple(proj(x) for proj, x in zip(self.projectors, inputs))

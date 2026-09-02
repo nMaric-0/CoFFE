@@ -197,8 +197,14 @@ def test_legacy_model_name_still_selects_the_mft_control():
     from coffe.eval.episodic import load_model_with_checkpoint
     from coffe.models import MFTOriginal
 
-    cfg = {"name": "mft_original", "embed_dim": 64, "num_heads": 8, "num_layers": 2,
-           "mlp_dim": 512, "patch_size": 11}
+    cfg = {
+        "name": "mft_original",
+        "embed_dim": 64,
+        "num_heads": 8,
+        "num_layers": 2,
+        "mlp_dim": 512,
+        "patch_size": 11,
+    }
     model = load_model_with_checkpoint("random", "houston", cfg, "cpu")
     assert isinstance(model, MFTOriginal)
 
@@ -243,9 +249,7 @@ def test_legacy_class_alias_resolves_to_the_canonical_class(
         ("coffe.pretrain", "EnhancedMaskedSpectralSpatialModel", "SimMIMPretrainModel"),
     ],
 )
-def test_legacy_name_still_imports_from_its_original_package(
-    package, legacy_name, canonical_name
-):
+def test_legacy_name_still_imports_from_its_original_package(package, legacy_name, canonical_name):
     """`from coffe.models import MFTCPEACosine` is what old notebooks actually write."""
     import importlib
 
@@ -265,12 +269,12 @@ def test_unknown_attribute_on_a_package_is_still_an_attribute_error():
 
     for mod in (models, pretrain, hypersigma):
         with pytest.raises(AttributeError):
-            getattr(mod, "NoSuchThing")
+            mod.NoSuchThing  # noqa: B018 — the attribute access IS the test
 
 
 def test_unknown_attribute_is_still_an_attribute_error():
     with pytest.raises(AttributeError):
-        coffe_compat.NoSuchThing
+        coffe_compat.NoSuchThing  # noqa: B018 — the attribute access IS the test
 
 
 def test_alias_class_constructs_and_shares_state_dict_keys():
@@ -281,8 +285,15 @@ def test_alias_class_constructs_and_shares_state_dict_keys():
 
     from coffe.models import CoFFE
 
-    kwargs = dict(hsi_channels=144, aux_channels=1, embed_dim=128, num_heads=2,
-                  num_layers=2, patch_size=11, use_projection=False)
+    kwargs = dict(
+        hsi_channels=144,
+        aux_channels=1,
+        embed_dim=128,
+        num_heads=2,
+        num_layers=2,
+        patch_size=11,
+        use_projection=False,
+    )
     torch.manual_seed(0)
     via_alias = LegacyCoFFE(**kwargs)
     torch.manual_seed(0)

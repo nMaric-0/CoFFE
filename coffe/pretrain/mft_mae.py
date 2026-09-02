@@ -31,10 +31,10 @@ bare ``MFTOriginal`` and the evaluator's ``fix_state_dict_keys`` strips the
 
 import torch
 import torch.nn as nn
-from typing import Tuple, Optional, Dict
+
+from coffe.utils.spatial_weights import make_center_weights
 
 from .decoders import TransformerDecoder
-from coffe.utils.spatial_weights import make_center_weights
 
 
 class MFTMAEPretrainModel(nn.Module):
@@ -77,7 +77,7 @@ class MFTMAEPretrainModel(nn.Module):
         decoder_mlp_ratio: float = 4.0,
         decoder_dropout: float = 0.0,
         norm_pix_loss: bool = True,
-        recon_sigma: Optional[float] = None,
+        recon_sigma: float | None = None,
     ):
         super().__init__()
 
@@ -90,8 +90,7 @@ class MFTMAEPretrainModel(nn.Module):
             raise ValueError(f"mask_ratio must be in (0, 1), got {mask_ratio}")
         if decoder_dim % decoder_heads != 0:
             raise ValueError(
-                f"decoder_dim ({decoder_dim}) must be divisible by "
-                f"decoder_heads ({decoder_heads})"
+                f"decoder_dim ({decoder_dim}) must be divisible by decoder_heads ({decoder_heads})"
             )
 
         self.encoder = encoder
@@ -138,7 +137,7 @@ class MFTMAEPretrainModel(nn.Module):
 
     def random_masking(
         self, x: torch.Tensor, mask_ratio: float
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Per-sample random masking by shuffle (He et al. 2022).
 
         Visible tokens occupy the FRONT of the shuffled order and
@@ -151,7 +150,7 @@ class MFTMAEPretrainModel(nn.Module):
         len_keep = int(round(N * (1.0 - mask_ratio)))
 
         noise = torch.rand(B, N, device=x.device)
-        ids_shuffle = torch.argsort(noise, dim=1)        # ascending; front = kept
+        ids_shuffle = torch.argsort(noise, dim=1)  # ascending; front = kept
         ids_restore = torch.argsort(ids_shuffle, dim=1)  # inverse permutation
 
         ids_keep = ids_shuffle[:, :len_keep]
@@ -166,7 +165,7 @@ class MFTMAEPretrainModel(nn.Module):
         self,
         hsi: torch.Tensor,
         aux: torch.Tensor,
-    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+    ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
         """
         Args:
             hsi: [B, C_hsi, H, W]
@@ -181,11 +180,11 @@ class MFTMAEPretrainModel(nn.Module):
         assert H * W == N, f"Patch size mismatch: H*W={H * W}, num_tokens={N}"
 
         # 1. Reconstruction target (HSI + aux) in original token order.
-        combined = torch.cat([hsi, aux], dim=1)             # [B, C_total, H, W]
-        target = combined.flatten(2).transpose(1, 2)        # [B, N, C_total]
+        combined = torch.cat([hsi, aux], dim=1)  # [B, C_total, H, W]
+        target = combined.flatten(2).transpose(1, 2)  # [B, N, C_total]
 
         # 2. Tokenize HSI into 121 spatial tokens (CLS built separately).
-        patch_tokens = self.encoder.tokenize(hsi)           # [B, N, D]
+        patch_tokens = self.encoder.tokenize(hsi)  # [B, N, D]
 
         # 3. Add PATCH positional embedding (original order) before masking, so
         #    each surviving token keeps the position it has at eval. The encoder
@@ -196,9 +195,9 @@ class MFTMAEPretrainModel(nn.Module):
         x_visible, mask, ids_restore = self.random_masking(patch_tokens, self.mask_ratio)
 
         # 5. Prepend the data-dependent external CLS (+ its positional slice).
-        cls = self.encoder.make_cls(aux)                    # [B, 1, D]
+        cls = self.encoder.make_cls(aux)  # [B, 1, D]
         cls = cls + self.encoder.pos_embed[:, :1]
-        x = torch.cat([cls, x_visible], dim=1)              # [B, 1+len_keep, D]
+        x = torch.cat([cls, x_visible], dim=1)  # [B, 1+len_keep, D]
 
         # 6. Encode the visible-only sequence (mCrossPA updates only the CLS).
         x = self.encoder.encoder(x)
@@ -207,8 +206,8 @@ class MFTMAEPretrainModel(nn.Module):
         # 7. Project the full encoded sequence to decoder width. The CLS carries
         #    the fused signal; passing it as cross-attention context is what gives
         #    the mCrossPA transformer a reconstruction gradient (deviation #2).
-        context = self.enc_to_dec(x)                        # [B, 1+len_keep, decoder_dim]
-        visible_dec = context[:, 1:]                        # [B, len_keep, decoder_dim]
+        context = self.enc_to_dec(x)  # [B, 1+len_keep, decoder_dim]
+        visible_dec = context[:, 1:]  # [B, len_keep, decoder_dim]
 
         # 8. Decode to all-token predictions in original order, cross-attending to
         #    the encoded sequence (incl. the trained CLS).
@@ -222,7 +221,7 @@ class MFTMAEPretrainModel(nn.Module):
         else:
             target_used = target
 
-        per_token = ((pred - target_used) ** 2).mean(dim=-1)   # [B, N]
+        per_token = ((pred - target_used) ** 2).mean(dim=-1)  # [B, N]
         if self.recon_sigma is not None:
             per_token = per_token * self._recon_center_weights.view(1, N)
         denom = mask.sum().clamp_min(1.0)
@@ -237,4 +236,9 @@ class MFTMAEPretrainModel(nn.Module):
         return loss, info
 
     def get_encoder(self) -> nn.Module:
+        """Return the encoder alone — the only part kept for evaluation.
+
+        The decoder and (where present) the projection head exist for the
+        pretext task and are discarded at eval time (PAPER_CANON §2).
+        """
         return self.encoder

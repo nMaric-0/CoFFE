@@ -10,28 +10,30 @@ needed for Houston few-shot evaluation:
 * a four-stage gated SEM fusion module (output 512-d)
 """
 
+from typing import Any
+
+from .few_shot import HyperSIGMAFewShot
+from .hypersigma_dual import HyperSIGMADual
 from .preprocessing import (
-    PCAPreprocessor,
     DATASET_PCA_CONFIG,
+    PCAPreprocessor,
     fit_dataset_pca,
     load_pca,
 )
 from .sem import SEM
 from .spat_vit_branch import SpatViTBranch
 from .spec_vit_branch import SpecViTBranch
-from .hypersigma_dual import HyperSIGMADual
-from .few_shot import HyperSIGMAFewShot
 
 __all__ = [
-    "PCAPreprocessor",
     "DATASET_PCA_CONFIG",
-    "fit_dataset_pca",
-    "load_pca",
     "SEM",
-    "SpatViTBranch",
-    "SpecViTBranch",
     "HyperSIGMADual",
     "HyperSIGMAFewShot",
+    "PCAPreprocessor",
+    "SpatViTBranch",
+    "SpecViTBranch",
+    "fit_dataset_pca",
+    "load_pca",
 ]
 
 
@@ -41,7 +43,7 @@ __all__ = [
 _LEGACY_ALIASES = {"HyperSIGMACosine": "HyperSIGMAFewShot"}
 
 
-def __getattr__(name):
+def __getattr__(name: str) -> Any:
     canonical = _LEGACY_ALIASES.get(name)
     if canonical is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -50,5 +52,5 @@ def __getattr__(name):
     return getattr(coffe_compat, name)
 
 
-def __dir__():
+def __dir__() -> list[str]:
     return sorted(set(__all__) | set(_LEGACY_ALIASES))

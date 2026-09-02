@@ -23,6 +23,14 @@
 #       --config configs/hypersigma/houston_backbonenative_upscale_sem_only.yaml
 #
 # Driven for all three datasets by notebooks/adapt_hypersigma_native_sem.ipynb.
+#
+# REPRODUCES  No published cell. This is the UPSCALE sibling of
+#             houston_backbonenative_pad_sem_only.yaml; Table 3's SEM-only row
+#             is the padded variant. Kept because the pad-vs-upscale pair is
+#             what makes that row interpretable (source run of this side:
+#             experiments/hypersigma_native_sem_run1).
+# RUNTIME     PAPER_CANON §3 times HyperSIGMA adaptation at ~36 h for 2000
+#             epochs on one RTX 4090. This config runs 3000 epochs.
 
 model:
   name: "hypersigma_dual"

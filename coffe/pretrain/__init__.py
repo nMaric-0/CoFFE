@@ -13,23 +13,23 @@ Main components:
 - PretrainDataset, CombinedPretrainDataset: Dataset wrappers
 """
 
-from .masked_modeling import (
-    UnifiedBandMasking,
-    SpatialTokenMasking,
-    MLPDecoder,
-    PretrainDataset,
-    CombinedPretrainDataset,
-)
-
-from .simmim import (
-    SimMIMPretrainModel,
-)
+from typing import Any
 
 from .decoders import (
-    TransformerDecoder,
     SimpleMLPDecoder,
+    TransformerDecoder,
     TwoLayerMLPDecoder,
     build_decoder,
+)
+from .masked_modeling import (
+    CombinedPretrainDataset,
+    MLPDecoder,
+    PretrainDataset,
+    SpatialTokenMasking,
+    UnifiedBandMasking,
+)
+from .simmim import (
+    SimMIMPretrainModel,
 )
 
 # Moved here in phase 5 from the dissolved top-level ``trainers`` package
@@ -39,16 +39,16 @@ from .decoders import (
 from .trainer import PretrainTrainer
 
 __all__ = [
-    "SimMIMPretrainModel",
-    "PretrainTrainer",
-    "UnifiedBandMasking",
-    "SpatialTokenMasking",
+    "CombinedPretrainDataset",
     "MLPDecoder",
     "PretrainDataset",
-    "CombinedPretrainDataset",
-    "TransformerDecoder",
+    "PretrainTrainer",
+    "SimMIMPretrainModel",
     "SimpleMLPDecoder",
+    "SpatialTokenMasking",
+    "TransformerDecoder",
     "TwoLayerMLPDecoder",
+    "UnifiedBandMasking",
     "build_decoder",
 ]
 
@@ -59,7 +59,7 @@ __all__ = [
 _LEGACY_ALIASES = {"EnhancedMaskedSpectralSpatialModel": "SimMIMPretrainModel"}
 
 
-def __getattr__(name):
+def __getattr__(name: str) -> Any:
     canonical = _LEGACY_ALIASES.get(name)
     if canonical is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -68,5 +68,5 @@ def __getattr__(name):
     return getattr(compat, name)
 
 
-def __dir__():
+def __dir__() -> list[str]:
     return sorted(set(__all__) | set(_LEGACY_ALIASES))

@@ -23,9 +23,9 @@ torch = pytest.importorskip("torch")
 from sklearn.decomposition import PCA
 
 from coffe.models.hypersigma import (
-    HyperSIGMAFewShot,
-    HyperSIGMADual,
     SEM,
+    HyperSIGMADual,
+    HyperSIGMAFewShot,
 )
 
 
@@ -52,7 +52,7 @@ def test_dual_forward_shapes_random_init(tmp_path):
     pca_path = _make_dummy_pca(tmp_path)
     dual = HyperSIGMADual(
         pca_spat_path=pca_path,
-        spat_ckpt=None,   # skip checkpoint loading; transformer body random
+        spat_ckpt=None,  # skip checkpoint loading; transformer body random
         spec_ckpt=None,
         hsi_channels=144,
         spat_patch_k=3,

@@ -24,7 +24,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from scripts.reproduce import sig_significance_config as cfg  # noqa: E402
+from scripts.reproduce import sig_significance_config as cfg
 
 
 def main() -> int:
@@ -40,13 +40,12 @@ def main() -> int:
 
     group = cfg.GROUPS[args.group]
     if args.variant not in group.variants:
-        p.error(f"variant '{args.variant}' not valid for group '{args.group}' "
-                f"(valid: {group.variants})")
+        p.error(
+            f"variant '{args.variant}' not valid for group '{args.group}' (valid: {group.variants})"
+        )
 
     name = group.experiment_name(args.dataset, args.variant, args.seed)
-    results_path = (
-        cfg.EXPERIMENTS_ROOT / name / "evaluations" / cfg.EVAL_NAME / "results.json"
-    )
+    results_path = cfg.EXPERIMENTS_ROOT / name / "evaluations" / cfg.EVAL_NAME / "results.json"
     if results_path.exists() and not args.overwrite:
         print(f"[skip] {name}: {cfg.EVAL_NAME}/results.json exists.")
         return 0

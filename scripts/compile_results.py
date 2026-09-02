@@ -20,6 +20,7 @@ names use the pre-paper vocabulary (``spectral``/``spatial``/``both``) and are
 frozen (PAPER_CANON §7.3): the substring tests below match them as-is and the
 canonical regime label is what gets written out.
 """
+
 from __future__ import annotations
 
 import json
@@ -31,7 +32,8 @@ REPO = Path(__file__).resolve().parent.parent
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from coffe.compat import normalize_model_type  # noqa: E402
+from coffe.compat import normalize_model_type
+
 EXPERIMENTS = REPO / "experiments"
 OUT = REPO / "docs" / "presentation" / "RESULTS.json"
 
@@ -63,7 +65,7 @@ def classify(exp: str, ev: str, data: dict):
     ``regime`` is taken from the *experiment* name (pretraining config), since
     eval names occasionally relabel the same checkpoint.
     """
-    exp_l, ev_l = exp.lower(), ev.lower()
+    exp_l = exp.lower()
     ds = data.get("dataset")
     # Old results.json files record the pre-paper class names
     # (PAPER_CANON §8 D16); normalise before any comparison.
@@ -93,10 +95,7 @@ def classify(exp: str, ev: str, data: dict):
     # come from `model_type`, not from the schema. Both used to get the same
     # label, which let an MFT-control run stand in as the representative of a
     # CoFFE cell.
-    if mt == "MFTOriginal" or "mft_original" in exp_l:
-        model = "MFT (original)"
-    else:
-        model = "CoFFE"
+    model = "MFT (original)" if mt == "MFTOriginal" or "mft_original" in exp_l else "CoFFE"
 
     modality = "HSI-only" if "no_lidar" in exp_l else "HSI+LiDAR"
     if "_mae_" in exp_l or exp_l.endswith("_mae"):
@@ -219,13 +218,16 @@ def main() -> None:
                 for o in others
             ]
         datasets_out.setdefault(
-            ds, {"n_classes": N_CLASSES.get(ds), "natural_n_way": NATURAL_N_WAY.get(ds), "entries": []}
+            ds,
+            {"n_classes": N_CLASSES.get(ds), "natural_n_way": NATURAL_N_WAY.get(ds), "entries": []},
         )["entries"].append(entry)
 
     # Stable, presentation-friendly ordering of entries within each dataset.
     model_order = {"CoFFE": 0, "MFT (original)": 1, "HyperSIGMA": 2}
     for ds in datasets_out.values():
-        ds["entries"].sort(key=lambda e: (model_order.get(e["model"], 9), e["regime"], e["modality"]))
+        ds["entries"].sort(
+            key=lambda e: (model_order.get(e["model"], 9), e["regime"], e["modality"])
+        )
 
     out = {
         "_meta": {

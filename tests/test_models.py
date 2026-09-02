@@ -1,9 +1,11 @@
 """Tests for model components."""
+
 import torch
+
 from coffe.models.components import (
+    AuxTokenizer,
     ChannelTokenizer,
     SpatialTokenizer,
-    AuxTokenizer,
 )
 
 

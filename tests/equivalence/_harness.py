@@ -20,8 +20,8 @@ tensors precisely so that ``PatchedMultimodalDataset._load_split`` /
 ``_build_class_indices`` all execute unmodified.
 
 The one place a *sequence* of repo calls is reproduced here is
-:func:`live_eval_feature`, which mirrors the five lines of
-``coffe/eval/episodic.py:384-395``. That is the LIVE eval feature path
+:func:`live_eval_feature`, which mirrors the feature lines of
+``coffe/eval/episodic.py:410-425``. That is the LIVE eval feature path
 (PAPER_CANON §8 D3: ``CoFFE.forward_episode`` is dead code and must not
 be what the harness pins). G3 exercises the real evaluator end-to-end, so the
 mirror is only used for the G2 encoder-forward fingerprints; a dedicated test
@@ -33,9 +33,10 @@ from __future__ import annotations
 import hashlib
 import os
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterable, List
+from typing import Any
 
 import numpy as np
 
@@ -83,22 +84,40 @@ class SceneSpec:
         return self.num_classes * (self.per_class_train + self.per_class_test)
 
 
-SCENES: Dict[str, SceneSpec] = {
+SCENES: dict[str, SceneSpec] = {
     # ~30 px/class, 11x11 patches. Sized to be fast but shape-faithful.
     "houston_mini": SceneSpec(
-        name="houston_mini", key="houston", folder="Houston11x11",
-        hsi_channels=144, aux_channels=1, num_classes=15,
-        per_class_train=10, per_class_test=20, seed=20260231,
+        name="houston_mini",
+        key="houston",
+        folder="Houston11x11",
+        hsi_channels=144,
+        aux_channels=1,
+        num_classes=15,
+        per_class_train=10,
+        per_class_test=20,
+        seed=20260231,
     ),
     "trento_mini": SceneSpec(
-        name="trento_mini", key="trento", folder="Trento11x11",
-        hsi_channels=63, aux_channels=1, num_classes=6,
-        per_class_train=10, per_class_test=20, seed=20260232,
+        name="trento_mini",
+        key="trento",
+        folder="Trento11x11",
+        hsi_channels=63,
+        aux_channels=1,
+        num_classes=6,
+        per_class_train=10,
+        per_class_test=20,
+        seed=20260232,
     ),
     "muufl_mini": SceneSpec(
-        name="muufl_mini", key="muufl", folder="MUUFL11x11",
-        hsi_channels=64, aux_channels=2, num_classes=11,
-        per_class_train=10, per_class_test=20, seed=20260233,
+        name="muufl_mini",
+        key="muufl",
+        folder="MUUFL11x11",
+        hsi_channels=64,
+        aux_channels=2,
+        num_classes=11,
+        per_class_train=10,
+        per_class_test=20,
+        seed=20260233,
     ),
 }
 
@@ -145,12 +164,8 @@ def write_scene(spec: SceneSpec, data_root: Path) -> Path:
     n_cls = spec.num_classes
     base_hsi = rng.uniform(0.30, 0.70, size=spec.hsi_channels)
     base_aux = rng.uniform(0.30, 0.70, size=spec.aux_channels)
-    class_hsi = base_hsi[None, :] + rng.normal(
-        0.0, _CLASS_SPREAD, size=(n_cls, spec.hsi_channels)
-    )
-    class_aux = base_aux[None, :] + rng.normal(
-        0.0, _CLASS_SPREAD, size=(n_cls, spec.aux_channels)
-    )
+    class_hsi = base_hsi[None, :] + rng.normal(0.0, _CLASS_SPREAD, size=(n_cls, spec.hsi_channels))
+    class_aux = base_aux[None, :] + rng.normal(0.0, _CLASS_SPREAD, size=(n_cls, spec.aux_channels))
     bump = _center_bump()[None, :, :, None]  # [1, P, P, 1]
 
     for suffix, n_per in (("Tr", spec.per_class_train), ("Te", spec.per_class_test)):
@@ -193,7 +208,10 @@ def load_scene_dataset(spec: SceneSpec, data_root: Path, split: str = "all"):
     from coffe.eval.episodic import DATASETS  # the repo's own map
 
     return DATASETS[spec.key](
-        data_root=str(data_root), patch_size=PATCH_SIZE, split=split, normalize=True,
+        data_root=str(data_root),
+        patch_size=PATCH_SIZE,
+        split=split,
+        normalize=True,
     )
 
 
@@ -206,7 +224,7 @@ def load_scene_dataset(spec: SceneSpec, data_root: Path, split: str = "all"):
 
 # CoFFE encoder arch, from experiments/houston_enhanced_spatial_mask_test_run1_seed52
 # (the headline Houston run, PAPER_CANON §8 D14) — and PAPER_CANON §2.
-COFFE_ARCH: Dict[str, Any] = {
+COFFE_ARCH: dict[str, Any] = {
     "embed_dim": 128,
     "num_heads": 2,
     "num_layers": 2,
@@ -218,7 +236,7 @@ COFFE_ARCH: Dict[str, Any] = {
 }
 
 # MFTOriginal arch, from experiments/mft_original_houston_spatial_faithful.
-MFT_ARCH: Dict[str, Any] = {
+MFT_ARCH: dict[str, Any] = {
     "embed_dim": 64,
     "num_heads": 8,
     "num_layers": 2,
@@ -232,7 +250,7 @@ MFT_ARCH: Dict[str, Any] = {
 # the band/spatial mask-rate pair naming the regime). Frozen configs spell the
 # SimMIM objective "enhanced"; `coffe.compat` maps it, and
 # `tests/test_compat.py` pins that path.
-OBJECTIVES: Dict[str, Dict[str, Any]] = {
+OBJECTIVES: dict[str, dict[str, Any]] = {
     "simmim_band": {
         "objective": "simmim",
         "band_mask_ratio": 0.85,
@@ -279,13 +297,13 @@ OBJECTIVES: Dict[str, Dict[str, Any]] = {
         "norm_pix_loss": True,
         "recon_center_sigma": None,
         # The MAE recipe has no projection head; run_pretrain forces this off
-        # anyway (scripts/pretrain.py:304-309).
+        # anyway (coffe/pretrain/loop.py:309-315).
         "use_projection": False,
     },
 }
 
 # MFTOriginal supports only these two objectives
-# (scripts/pretrain.py:316-320).
+# (coffe/pretrain/loop.py:319-326).
 MFT_OBJECTIVES = ("simmim_token", "mae")
 
 G1_EPOCHS = 3
@@ -306,7 +324,7 @@ def pretrain_config(
     epochs: int = G1_EPOCHS,
     batch_size: int = G1_BATCH_SIZE,
     seed: int = 42,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Build a `run_pretrain` config dict for one (scene, objective) pair."""
     if objective_id not in OBJECTIVES:
         raise KeyError(f"unknown objective id {objective_id!r}")
@@ -319,7 +337,7 @@ def pretrain_config(
     use_projection = obj.pop("use_projection")
 
     arch = dict(MFT_ARCH) if model_name == "mft_original" else dict(COFFE_ARCH)
-    model_cfg: Dict[str, Any] = {"name": model_name, **arch, "use_aux": use_aux}
+    model_cfg: dict[str, Any] = {"name": model_name, **arch, "use_aux": use_aux}
     if model_name == "mft_original":
         model_cfg["use_projection"] = False
     else:
@@ -369,14 +387,14 @@ def eval_params(
     k_shot: int = G3_K_SHOT,
     k_query: int = G3_K_QUERY,
     seed: int = G3_SEED,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Keyword arguments for ``coffe.eval.episodic.run_evaluation``."""
     arch = dict(MFT_ARCH) if model_name == "mft_original" else dict(COFFE_ARCH)
     arch.pop("proj_hidden_dim", None)
     arch.pop("proj_num_layers", None)
     arch.pop("proj_l2_normalize", None)
 
-    params: Dict[str, Any] = {
+    params: dict[str, Any] = {
         "dataset": spec.key,
         "name": model_name,
         "data_root": str(data_root),
@@ -397,7 +415,7 @@ def eval_params(
         "no_plots": True,
         # Capture every episode's assignment, not just the plotting sample.
         # Pure collection flag: it touches no RNG and no arithmetic
-        # (coffe/eval/episodic.py:442-451).
+        # (coffe/eval/episodic.py:464-476).
         "num_example_episodes": num_episodes,
         "max_tsne_samples": 0,
         "output": None,
@@ -442,14 +460,29 @@ def build_eval_model(
     model_config = {
         k: params[k]
         for k in (
-            "name", "embed_dim", "num_heads", "num_layers", "patch_size", "dropout",
-            "distance_metric", "temperature", "prototype_mode", "use_projection",
-            "use_aux", "pool_sigma",
+            "name",
+            "embed_dim",
+            "num_heads",
+            "num_layers",
+            "patch_size",
+            "dropout",
+            "distance_metric",
+            "temperature",
+            "prototype_mode",
+            "use_projection",
+            "use_aux",
+            "pool_sigma",
         )
         if k in params
     }
-    for k in ("lambda_factor", "mlp_dim", "attention_type", "proj_hidden_dim",
-              "proj_num_layers", "proj_l2_normalize"):
+    for k in (
+        "lambda_factor",
+        "mlp_dim",
+        "attention_type",
+        "proj_hidden_dim",
+        "proj_num_layers",
+        "proj_l2_normalize",
+    ):
         if k in params:
             model_config[k] = params[k]
 
@@ -457,24 +490,44 @@ def build_eval_model(
 
 
 def load_eval_model_from_checkpoint(
-    spec: SceneSpec, checkpoint: Path, *, model_name: str = "coffe", use_aux: bool = True,
+    spec: SceneSpec,
+    checkpoint: Path,
+    *,
+    model_name: str = "coffe",
+    use_aux: bool = True,
 ):
     """Same as :func:`build_eval_model` but loading a real checkpoint file.
 
     This is the G4 path: ``load_checkpoint_with_key_mapping`` +
-    ``fix_state_dict_keys`` (coffe/eval/episodic.py:95-125) are the live
+    ``fix_state_dict_keys`` (coffe/eval/episodic.py:96-157) are the live
     key-mapping implementation (PAPER_CANON §8 D15).
     """
     from coffe.eval.episodic import load_model_with_checkpoint
 
     params = eval_params(spec, data_root=Path("."), model_name=model_name, use_aux=use_aux)
     model_config = {
-        k: v for k, v in params.items()
-        if k in {
-            "name", "embed_dim", "num_heads", "num_layers", "patch_size", "dropout",
-            "distance_metric", "temperature", "prototype_mode", "use_projection",
-            "use_aux", "pool_sigma", "lambda_factor", "mlp_dim", "attention_type",
-            "proj_hidden_dim", "proj_num_layers", "proj_l2_normalize",
+        k: v
+        for k, v in params.items()
+        if k
+        in {
+            "name",
+            "embed_dim",
+            "num_heads",
+            "num_layers",
+            "patch_size",
+            "dropout",
+            "distance_metric",
+            "temperature",
+            "prototype_mode",
+            "use_projection",
+            "use_aux",
+            "pool_sigma",
+            "lambda_factor",
+            "mlp_dim",
+            "attention_type",
+            "proj_hidden_dim",
+            "proj_num_layers",
+            "proj_l2_normalize",
         }
     }
     return load_model_with_checkpoint(str(checkpoint), spec.key, model_config, "cpu")
@@ -483,7 +536,7 @@ def load_eval_model_from_checkpoint(
 def build_pretrain_model(spec: SceneSpec, objective_id: str, *, use_aux: bool = True):
     """Construct the pretraining model for a G5 masking probe.
 
-    Constructor arguments mirror ``scripts/pretrain.py:351-454``; the
+    Constructor arguments mirror ``coffe/pretrain/loop.py:340-474``; the
     masking and loss *semantics* under test live entirely inside the repo's
     modules and are executed unmodified. The dispatch itself is pinned
     end-to-end by G1, which goes through ``run_pretrain``.
@@ -532,7 +585,7 @@ def build_pretrain_model(spec: SceneSpec, objective_id: str, *, use_aux: bool = 
 # encoders; `backbone_native` = 64x64 with the encoders at their pretrained
 # input size. Both with randomly initialised ViT bodies — the wrapper's
 # plumbing is what is under test, so no released checkpoint is needed.
-HYPERSIGMA_REGIMES: Dict[str, Dict[str, Any]] = {
+HYPERSIGMA_REGIMES: dict[str, dict[str, Any]] = {
     "patch_native_fused": {
         "pca_components": 3,
         "native_geometry": False,
@@ -569,7 +622,7 @@ def _write_dummy_pca(path: Path, in_bands: int, n_components: int) -> str:
 
 def build_hypersigma_model(spec: SceneSpec, regime: str, work_dir: Path):
     """Build ``HyperSIGMAFewShot`` over a random-init ``HyperSIGMADual``."""
-    from coffe.models.hypersigma import HyperSIGMAFewShot, HyperSIGMADual
+    from coffe.models.hypersigma import HyperSIGMADual, HyperSIGMAFewShot
 
     cfg = HYPERSIGMA_REGIMES[regime]
     pca_path = _write_dummy_pca(
@@ -577,7 +630,7 @@ def build_hypersigma_model(spec: SceneSpec, regime: str, work_dir: Path):
         spec.hsi_channels,
         cfg["pca_components"],
     )
-    kwargs: Dict[str, Any] = dict(
+    kwargs: dict[str, Any] = dict(
         pca_spat_path=pca_path,
         spat_ckpt=None,
         spec_ckpt=None,
@@ -603,7 +656,7 @@ def build_hypersigma_model(spec: SceneSpec, regime: str, work_dir: Path):
 # ----------------------------------------------------------------------
 
 
-def tensor_fingerprint(tensor) -> Dict[str, Any]:
+def tensor_fingerprint(tensor) -> dict[str, Any]:
     """``sum`` / ``abs().sum()`` / ``norm()`` of a tensor, in float64.
 
     Full precision is stored; ``test_equivalence.py`` owns the tolerance.
@@ -619,7 +672,7 @@ def tensor_fingerprint(tensor) -> Dict[str, Any]:
     }
 
 
-def state_dict_fingerprint(state_dict) -> Dict[str, Dict[str, Any]]:
+def state_dict_fingerprint(state_dict) -> dict[str, dict[str, Any]]:
     return {k: tensor_fingerprint(v) for k, v in state_dict.items()}
 
 
@@ -635,7 +688,7 @@ def fixed_input(spec: SceneSpec, *, batch: int = 4, seed: int = 20260231):
 
 
 def live_eval_feature(model, hsi, aux):
-    """The LIVE eval feature, mirroring coffe/eval/episodic.py:384-395.
+    """The LIVE eval feature, mirroring coffe/eval/episodic.py:410-425.
 
     For CoFFE this is ``z = mean_j(patch_emb_j) + lambda * cls_emb`` with
     lambda = 0.5 (PAPER_CANON §8 D3), *not* "patch tokens pooled".
@@ -652,7 +705,7 @@ def live_eval_feature(model, hsi, aux):
         return adapted.mean(dim=1)
 
 
-def assignment_hash(episodes: Iterable[Dict[str, Any]]) -> str:
+def assignment_hash(episodes: Iterable[dict[str, Any]]) -> str:
     """SHA-256 over every episode's (classes, query labels, argmin assignment).
 
     Compared exactly: a single flipped query prediction changes the digest.
@@ -664,7 +717,7 @@ def assignment_hash(episodes: Iterable[Dict[str, Any]]) -> str:
     return digest.hexdigest()
 
 
-def episode_assignments(results: Dict[str, Any]) -> List[Dict[str, Any]]:
+def episode_assignments(results: dict[str, Any]) -> list[dict[str, Any]]:
     """Pull the per-episode assignment records out of an evaluator result."""
     return [
         {
@@ -676,7 +729,7 @@ def episode_assignments(results: Dict[str, Any]) -> List[Dict[str, Any]]:
     ]
 
 
-def oa_fingerprint(results: Dict[str, Any], places: int = 6) -> Dict[str, float]:
+def oa_fingerprint(results: dict[str, Any], places: int = 6) -> dict[str, float]:
     return {
         "mean": round(float(results["OA"]["mean"]), places),
         "std": round(float(results["OA"]["std"]), places),
@@ -690,7 +743,7 @@ def oa_fingerprint(results: Dict[str, Any], places: int = 6) -> Dict[str, float]
 # ----------------------------------------------------------------------
 
 
-def environment_metadata() -> Dict[str, Any]:
+def environment_metadata() -> dict[str, Any]:
     import subprocess
 
     import torch
@@ -698,7 +751,11 @@ def environment_metadata() -> Dict[str, Any]:
     def _git(*args: str) -> str:
         try:
             return subprocess.run(
-                ["git", *args], cwd=REPO_ROOT, capture_output=True, text=True, check=True,
+                ["git", *args],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+                check=True,
             ).stdout.strip()
         except Exception:  # pragma: no cover - git always present in this repo
             return "<unavailable>"

@@ -1433,3 +1433,340 @@ unchanged.
 unchanged, `import coffe.pretrain` exposes 11 public names instead of 12, and
 the stale grep finds no reference to the deleted symbol outside `CHANGES.md`
 (which documents the deletion) and this log.
+
+## Phase 6 — release quality (2026-09-02)
+
+Highest coding standard, zero behaviour change. Six blocks, one arbiter: the
+equivalence harness, which reports every fingerprint IDENTICAL.
+
+### 1. ruff replaces black + isort + flake8
+
+`[tool.ruff]` in `pyproject.toml`: line length 100, `target-version = "py311"`,
+`select = ["E","F","W","I","UP","B","SIM","RUF"]`,
+`extend-exclude = ["third_party","archive","experiments","results","notebooks"]`.
+`ruff format` reformatted 89 of 117 files; `ruff check --fix` applied **683 safe
+fixes**; the remaining **111 findings were resolved by hand**. No unsafe fix was
+applied anywhere.
+
+Where a rule was right in general and wrong here, the reason is recorded at the
+decision point rather than in a blanket ignore:
+
+| Disabled repo-wide | Why |
+|---|---|
+| `B905` | `zip(strict=True)` would turn silent truncation into an exception; `strict=False` only restates today's behaviour. Either way it is a behaviour edit phase 6 may not make. |
+| `RUF046` | `int(round(x))` is not the no-op the rule assumes: `round()` of a NumPy scalar returns a NumPy scalar, and these sites compute token counts and grid sides. |
+| `RUF059` | `B, N, D = x.shape` documents the tensor layout even where one name goes unused — the unpacking *is* the shape comment. |
+
+`E402` is per-file-ignored for `scripts/`, `tests/` and `tools/`, whose entry
+points insert the repo root on `sys.path` before importing `coffe` (the phase-5
+gate decision). Six `# noqa`s carry their reason inline: `F822` on
+`coffe/compat.py`'s `__all__` (the four legacy names are served by the module's
+`__getattr__`), `SIM108` on the three `if self.use_aux:` fusion branches (a
+ternary would drop one of the two shape comments), `B018` on the two
+`pytest.raises` attribute probes in `tests/test_compat.py` (the access *is* the
+test), `SIM115` on the log handle owned by a child process, and `RUF022` on two
+deliberately grouped `__all__` lists.
+
+Two findings were real defects rather than style:
+
+1. **`tests/test_pretrain_simmim.py`'s `main()` called three functions that do
+   not exist** (`test_enhanced_model_{band_only,spatial_only,combined}`) —
+   phase 4 renamed the test functions to `test_simmim_model_*` and missed the
+   hand-run harness at the bottom of the file. `F821` caught it; the three calls
+   now name the canonical functions. pytest never executed that path, so no
+   result changes.
+2. **`tools/refactor/make_cell_configs.py` computed two values it never used**
+   (`modality`, `note`) — dead since the header refactor. Removed.
+
+### 2. Dependencies pruned to the measured import set (PAPER_CANON D6)
+
+The import set was computed by AST-walking `coffe/`, `scripts/`, `tests/` and
+`tools/` (stdlib subtracted), then extended with what the *vendored* HyperSIGMA
+modules actually import, since `coffe.models.hypersigma` loads them:
+
+- **Runtime:** torch, numpy, scipy, scikit-learn, PyYAML, omegaconf, matplotlib,
+  seaborn, tqdm, and — via `third_party/HyperSIGMA/.../Sp{at,ec}ViT_fusion*.py` —
+  einops and timm.
+- **Dropped (7):** torchvision, hydra-core, h5py, scikit-image, spectral,
+  rasterio, wandb. Each was grepped against `coffe/`, `scripts/`, `tests/`,
+  `configs/` *and* the notebooks before dropping; none appears.
+- **Moved to extras:** `tensorboard` (the trainer imports it in a try/except and
+  logs a warning when absent), `pandas` + a Jupyter kernel (`notebooks` extra,
+  needed by `compare.ipynb`), and the dev tools.
+- **Not a dependency:** `mmengine`, imported by the vendored ViTs inside
+  `try/except ImportError` and absent from the dev venv.
+
+`requires-python` is now `>=3.11` with floors taken from
+`docs/refactor/ENV.md` — **gate open question 2, answered by Nikola at the start
+of this phase**: the release should claim what it was verified against, and
+NumPy 2.4.4 already requires 3.11, so any lower floor was a claim nobody had
+run. README badges (3.8+/1.10+ → 3.11+/2.11+) and the Quick start environment
+line follow; the conda line became `python -m venv` (also closing the E1
+CLAUDE.md/ENV.md discrepancy in the user-facing doc).
+
+`requirements.txt` was **regenerated as a one-line mirror** (`-e .[dev]`) rather
+than deleted, because the README documents it as an install path; the dependency
+set now has exactly one source of truth.
+
+Verified: `uv pip install -e . --no-deps` in a fresh scratch venv imports
+`coffe` and the vendored ViT package, and a full `--dry-run` resolve of
+`.[dev,tensorboard,notebooks]` succeeds (so the floors are mutually
+satisfiable), without downloading torch.
+
+### 3. Public API, type hints, mypy
+
+`coffe/__init__.py` exports `CoFFE`, `MFTOriginal`, `HyperSIGMAFewShot`, the four
+runner entry points and `__version__` — all through a lazy `__getattr__`, so
+`import coffe` still pulls in neither torch nor numpy (checked in the battery).
+`coffe.runners` re-exports the same four `run_*` functions beside the logger
+classes. Purely additive: every existing submodule import in the notebooks keeps
+working.
+
+45 public functions and classes gained type hints. mypy runs lenient
+(`ignore_missing_imports`, no strict, `third_party` neither checked nor
+followed) and **exits 0**: 39 of 55 modules are checked and clean, and the 16
+listed in the overrides block are not enforced — 175 findings, all typing
+friction (`register_buffer` attributes typed as `Module`, `config: dict` values
+arriving as `object`, ndarray→Tensor in-place conversion). Silencing those means
+casts inside forward passes and the training loop, which this phase may not
+touch; the count and the reason are in `pyproject.toml` beside the list, so the
+gap is visible rather than implied. 19 findings *were* fixed where an annotation
+was the fix, plus four `# type: ignore[...]` with reasons.
+
+**mypy status: adopted-lenient (partially enforced).**
+
+### 4–5. Docstrings and consistency
+
+Module docstrings were already universal. Docstrings were added to the
+paper-relevant public API — Eq. 1's union-mask loss on
+`SimMIMPretrainModel.forward`, the N-way NCM prototypes on
+`HyperSIGMAFewShot.compute_prototypes`, why λ is inert on that route
+(§8 D3), the four `adapt_mode`s and what each trains, the backbone-native vs
+patch-native regimes on `load_model`, and "the encoder is the only part kept" on
+the four `get_encoder`s.
+
+Three stale docstrings were fixed: two described `temperature` as "temperature
+scaling for cosine similarity" without noting the paper protocol never consults
+it, and `coffe/pretrain/mft_spatial_mae.py` still called `SimMIMPretrainModel`
+"the enhanced wrapper" (phase-4 vocabulary leak in prose).
+
+Consistency findings, mostly negative: no bare `except`, no commented-out code,
+no `%`/`.format` string building outside logging format specifiers, and
+`coffe.utils.seed.set_seed` was already the only seeding utility (its
+function-local import in the evaluator was hoisted to module level — the one
+code-shaped edit of the block). `print` survives in exactly one place,
+`coffe/eval/episodic.py`'s results table and aggregate banner: those are the
+CLI's user-facing report and a timestamped log prefix would break the table.
+The docstring now says so. `os.path` in the dataset loaders was left alone
+deliberately (recorded in CHANGES.md).
+
+### 6. Config headers
+
+All 45 configs gained a `RUNTIME` line quoting PAPER_CANON §3's published timing
+(0.7–4.3 h/scene for 1500 CoFFE epochs; ≈36 h for 2000 HyperSIGMA adaptation
+epochs, one RTX 4090) plus this config's own epoch count — the two numbers a
+reader needs, with no interpolation invented between them. The 30 CoFFE and 6
+MFT per-cell configs already carried their Table 2 cell from phase 4, so they
+needed only the runtime line. `base.yaml` needed no verdict: D4 records it
+deleted in phase 3.
+
+The eight HyperSIGMA adaptation configs gained a `REPRODUCES` block, and writing
+those honestly surfaced the phase's one real discovery — below.
+
+### Surprise: the Table 3 `11x11` configs are not the recipes of their cells
+
+Verified from the frozen runs, not inferred:
+
+- Every Table 3 `11x11` cell was produced with the **100-band** spatial
+  front-end. `experiments/hypersigma_{houston,trento,muufl}_pca100_joint_sem_run1`
+  report OA **67.4789 / 87.1861 / 44.7020** and the `*_pca100_spatial_only_run1`
+  runs report **66.3671 / 86.0210 / 50.2548** — the joint+SEM and 11×11-spatial
+  rows of Table 3, to the decimal.
+- The committed `configs/hypersigma/{trento,muufl}_patchnative_joint_sem.yaml`
+  point at `pca_<scene>_3band.pkl`. Their published runs added
+  `spat_resample_to: 100`, the 100-band paths, and their own schedule at launch
+  (`pretrain_overrides.yaml` in each adapt run dir).
+- Houston has a committed 100-band config
+  (`houston_patchnative_pca100_joint_sem.yaml`), but its run overrode
+  2000 epochs / batch 128 / lr 1e-5 / min_lr 5e-7 against the file's
+  3000 / 64 / 1.5e-4 / 1e-6 — the config-vs-run drift AUDIT already records for
+  that family.
+
+`scripts/reproduce/README.md` (written in phase 5) presented
+`<scene>_patchnative_joint_sem.yaml` as the reproduction path for the three
+joint+SEM cells. That row is now corrected to "partially committed", stating per
+scene what is and is not carried by a committed config, and each affected config
+header says the same thing at the file. Four of the eight HyperSIGMA configs
+therefore reproduce **no** published cell and now say so:
+`houston_backbonenative_upscale_sem_only.yaml` (the pad sibling is the published
+one) and the three 3-band `*_patchnative_joint_sem.yaml`, which remain live as
+the config base of `run_hypersigma_spatial_pca100.py`.
+
+The three `*_backbonenative_pad_sem_only.yaml` configs, by contrast, *are* the
+recipes of their cells: `run_native_sem_pad_experiments.sh` passes them to
+`scripts/adapt_hypersigma.py` unchanged, and
+`experiments/hypersigma_native_sem_pad_run1` reports **45.3197 / 73.7633 /
+44.3431**, matching Table 3's 45.32 / 73.76 / 44.34.
+
+### One stale document corrected
+
+`docs/EVAL_PROTOCOL.md` still told readers "the CLI's own default is still
+`cosine`" and to pass `--distance-metric euclidean` explicitly. The default has
+been `euclidean` since the phase-4 gate. The paragraph now states the current
+default and points at CHANGES.md's account of the move. Found by the battery's
+stale-vocabulary grep.
+
+The grep's other three hits (`docs/EVAL_PROTOCOL.md`'s legacy-config paragraph,
+`results/README.md`'s on-disk-name list, the `normalize_model_name` call-site
+comment in `coffe/pretrain/loop.py`) are legacy-reader documentation that fell
+inside allowlisted *categories* but outside the allowlisted *file* list; they
+are now named in CHANGES.md's "Where the retired names still appear" table, so
+the battery's exclusions and the document agree.
+
+### Line-number citations re-anchored
+
+The format pass moved code, so every live `file.py:NNN` citation was re-checked
+and re-anchored, and each new anchor was asserted to land on the claimed line:
+three in `PAPER_CANON.md` (`compile_results.py:45`/`:75-76`, `:72,124` +
+`scripts/reports/build_experiment_metadata.py:121-123`,
+`sig_significance_config.py:45`), seven in `tests/equivalence/_harness.py`, one
+in `tests/equivalence/test_equivalence.py`. Three of those still pointed at
+`scripts/pretrain.py` line numbers from before phase 5 moved that body into
+`coffe/pretrain/loop.py`; they now point at the loop. The pre-move citations
+inside PAPER_CANON's phase-1 D-records were left alone, as phase 5 declared.
+
+### Incident: `docs/presentation/RESULTS.json` was regenerated again
+
+The phase-5 log recorded the hazard; this phase tripped it. `scripts/compile_results.py`
+takes **no arguments**, ignores `argv`, and writes `docs/presentation/RESULTS.json`
+at import-time-of-`main`, so the battery's CLI smoke (`--help` on every entry
+point) ran the whole compilation. The file came back with `generated_at`
+2026-09-02, `kept_results` 33 → 858 and `excluded_results` 6 → 9.
+
+**Restored from `HEAD` and verified byte-identical** (`sha256`
+`41514256…9c7662` before and after). `git status` shows no artifact under
+`docs/presentation/`, `results/` or `experiments/` modified by this phase.
+Caught by `canon-reviewer`, which returned FAIL on it; the other three report
+scripts with the same shape (`build_native_pca100_report.py`,
+`gather_native_pca100_raw.py`, `gather_requested_results.py`, all writing under
+`results/`) were **not** triggered this time.
+
+To stop the third occurrence, `.claude/agents/verifier.md` step 7 now names the
+four argument-less scripts explicitly as byte-compile-only, and tells the
+verifier to shout if any tracked file under `docs/presentation/`, `results/` or
+`experiments/` is modified when its run ends. Note `.gitignore:50` ignores
+`.claude/`, so that hardening lives on this machine only and does not travel
+with the repo. The real fix is
+still the phase-5 recommendation — an `argparse` front end with `--out` and a
+`--force` gate before any overwrite of a committed artifact — which is a change
+to four entry points' CLI contract and therefore a gate decision, not something
+phase 6 took on its own.
+
+### Two defects found in the regenerated artifact (reported, not fixed)
+
+Both are **pre-existing** and were visible only because the file had been
+regenerated; per hard rule 7 they are recorded here rather than repaired.
+
+1. **`scripts/compile_results.py:100` knows only one of the two HSI-only naming
+   conventions.** `modality = "HSI-only" if "no_lidar" in exp_l else "HSI+LiDAR"`
+   — so the 5-seed significance runs, which
+   `scripts/reproduce/sig_significance_config.py:125` names
+   `<scene>_hsi_only_<variant>_seed<s>` (and `<scene>_enhanced_mae_hsi_only_seed<s>`),
+   are labelled **HSI+LiDAR**. Blast radius: `RESULTS.json` only if regenerated.
+   No paper number is affected — Table 2's means come from the canonical
+   `*_no_lidar` dirs, which the substring does match, and the ± column is
+   aggregated by `scripts/reports/aggregate_significance.py`, which reads the
+   declared group structure instead of sniffing directory names.
+2. **A regenerated `RESULTS.json` disagrees with Table 2.** It sourced the
+   Houston `CoFFE / MAE / HSI+LiDAR` cell as OA **75.244** from
+   `houston_enhanced_mae_lidar_seed789/evaluations/sig_eval_epoch700` — a
+   700-epoch significance run — against Table 2's **72.15** from the canonical
+   epoch-950 run (D17). This is the same "RESULTS.{md,json} describe an earlier
+   generation" problem AUDIT already records; regenerating them would *not*
+   reproduce the paper, which is the concrete argument for marking both
+   superseded (phase-4/5 open question, still open).
+
+Note also that D14's evidence in `PAPER_CANON.md` (":306-317": "RESULTS.json has
+no Houston 'Enhanced: spatial / HSI+LiDAR' entry and 75.3 appears nowhere") and
+CHANGES.md's guarantee that every number in those two files is unchanged both
+hold **only** for the committed file — which is again the committed file.
+
+### canon-reviewer
+
+Returned **FAIL** on the first pass: the regenerated artifact (above) plus 13
+non-blocking items. All 13 were applied:
+
+- `docs/EVAL_PROTOCOL.md`: the euclidean claim now uses canon §1's exact form
+  (including that the one exceptional cell's *quoted value* is still its
+  euclidean sub-block), and the CHANGES.md cross-reference names a section that
+  exists.
+- `coffe/eval/hypersigma.py`'s new `main` docstring: same D18 correction.
+- `coffe/pretrain/simmim.py`: the Eq. 1 claim is now hedged on
+  `recon_loss="mse"` being the default (`l1`/`smooth_l1` are selectable, unused
+  for the paper).
+- `coffe/models/coffe.py` and `docs/EVAL_PROTOCOL.md` still called
+  `scripts/evaluate.py` "the live evaluation path" — a phase-5 leftover the
+  harness re-anchoring had not reached. Both now point at
+  `coffe/eval/episodic.py`.
+- `pyproject.toml`'s `RUF046` rationale claimed a NumPy-scalar case that no site
+  in the tree exhibits; the reason now says what is actually true (redundant
+  today, kept because dropping it edits numeric code for no gain).
+- `coffe/pretrain/masked_modeling.py`'s annotation-only
+  `MultimodalEODataset` import moved under `TYPE_CHECKING`, so no
+  `coffe.pretrain → coffe.data` runtime edge is added (verified: importing the
+  module does not load `coffe.data.datasets.base`).
+- `PAPER_CANON.md` D20's `sig_significance_config.py:66-74` re-anchored to
+  `:66-76`; `README.md`'s compare snippet notes that `pandas` comes from the
+  `.[notebooks]` extra.
+- Confirmed rather than changed: `ruff check` **is** clean on
+  `coffe/utils/visualization.py` despite `matplotlib.use("Agg")` sitting between
+  imports; and the three `C == self.num_channels` → `self.num_channels == C`
+  reorderings the review read as gratuitous were ruff `SIM300` fixes, not churn.
+
+Two review notes are deliberately left standing and belong at the gate: the 45
+new annotations that live inside the 16 `ignore_errors` mypy modules are not
+type-checked, and `requires-python = ">=3.11"` is one minor version below the
+only interpreter this repo has ever been run on (3.12.3) — the floor Nikola
+chose, but nothing verifies 3.11.
+
+### Verification
+
+- `pytest -q -m "not gpu and not data and not slow"`: **118 passed**, 0 failed
+  (2 deselected; phase 5's 120 counted the two `slow` tests).
+- Equivalence: **IDENTICAL**, 33/33. Re-run twice with the harness tolerances
+  forced to zero: G2–G5 are bit-exact at `rtol=atol=0`, and the only deltas
+  anywhere were ~1e-9 on the G1 loss trajectories, exactly the goldens' own
+  `round(x, 8)` storage precision (`make_golden.py:169`). Every compared number
+  reproduces its golden to the full precision the golden records.
+- `ruff check .` clean; `ruff format --check .` clean (117 files); `mypy`
+  "Success: no issues found in 55 source files".
+- Stale-vocabulary grep: **CLEAN** — 690 raw hits, 134 surviving the allowlist,
+  every one accounted for; zero `cosine` in a file name, class name, `def` name
+  or heading.
+- `import coffe` → `'torch' in sys.modules` is `False`; `import coffe.runners`
+  likewise.
+- All 45 configs `yaml.safe_load` cleanly with zero deleted lines
+  (`git diff --numstat -- configs/`).
+- Fresh scratch venv: `uv pip install -e . --no-deps` imports `coffe` and the
+  vendored ViT package; `--dry-run` resolve of `.[dev,tensorboard,notebooks]`
+  succeeds.
+- CLI `--help` smoke on every argparse entry point: PASS.
+
+### Open questions for the gate
+
+1. **The argument-less report scripts.** Phase 5 recommended an `argparse`
+   front end with `--out` and `--force`; phase 6 has now been bitten by the same
+   scripts a second time and has only hardened the verifier's instructions.
+   Apply the recommendation (in phase 7 or 8), or leave the scripts as they are
+   and rely on the exclusion list?
+2. **`docs/presentation/RESULTS.{md,json}`** — the phase-4/5 open question is now
+   sharper: regenerating them does **not** reproduce Table 2 (see defect 2
+   above). Recommendation: mark both **superseded** in phase 8, pointing at
+   `results/` + PAPER_CANON §6, rather than regenerating.
+3. **`compile_results.py`'s modality mislabel** (defect 1): fix in phase 7 with
+   a test, or leave and document, given no paper number depends on it?
+4. **mypy's unenforced 16 modules**: accept as recorded debt, or spend phase 7
+   on the ~175 findings (mostly `cast`s in forward passes — my recommendation is
+   to accept)?
+5. **`requires-python = ">=3.11"`** is untested; the dev venv is 3.12.3. Narrow
+   to `>=3.12`, or keep 3.11 as the intended floor?

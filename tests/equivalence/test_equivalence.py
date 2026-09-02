@@ -23,7 +23,7 @@ from __future__ import annotations
 import json
 import tempfile
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 import torch
@@ -58,7 +58,7 @@ from .make_golden import FIXTURES, fixture_path
 pytestmark = pytest.mark.equivalence
 
 
-def _golden(name: str) -> Dict[str, Any]:
+def _golden(name: str) -> dict[str, Any]:
     path = GOLDEN_DIR / f"{name}.json"
     if not path.exists():
         pytest.fail(
@@ -76,13 +76,13 @@ def assert_close(actual: float, expected: float, what: str) -> None:
     )
 
 
-def assert_fingerprint(actual: Dict[str, Any], expected: Dict[str, Any], what: str) -> None:
+def assert_fingerprint(actual: dict[str, Any], expected: dict[str, Any], what: str) -> None:
     assert actual["shape"] == expected["shape"], f"{what}: shape changed"
     for stat in ("sum", "abs_sum", "norm"):
         assert_close(actual[stat], expected[stat], f"{what}.{stat}")
 
 
-def assert_state_dict(actual: Dict[str, Any], expected: Dict[str, Any], what: str) -> None:
+def assert_state_dict(actual: dict[str, Any], expected: dict[str, Any], what: str) -> None:
     # PAPER_CANON §7.2: nn.Module attribute names define checkpoint keys and are
     # frozen. A key set change fails here before any number is compared.
     assert set(actual) == set(expected), (
@@ -270,7 +270,7 @@ def test_g2_hypersigma_forward(tmp_path: Path, regime: str) -> None:
 
 def test_dead_forward_episode_still_matches_live_path(scene_root: Path) -> None:
     """PAPER_CANON §8 D3: ``CoFFE.forward_episode`` is dead code — the
-    live eval path is the inlined loop in ``scripts/evaluate.py:387-400``.
+    live eval path is the inlined loop in ``coffe/eval/episodic.py:410-425``.
 
     The two are meant to be equivalent. This test records that they still are,
     so a phase that edits one and not the other is caught (and so that pruning
@@ -354,7 +354,9 @@ def test_g4_fixture_forward(key: str) -> None:
 
     set_determinism()
     model = load_eval_model_from_checkpoint(
-        spec, fixture_path(key), model_name=FIXTURES[key]["model_name"],
+        spec,
+        fixture_path(key),
+        model_name=FIXTURES[key]["model_name"],
     )
     feature = live_eval_feature(model, *fixed_input(spec))
     assert_fingerprint(tensor_fingerprint(feature), expected, f"G4[{key}].z")
@@ -400,7 +402,9 @@ def test_g4_fixture_keys_load_without_gaps(key: str) -> None:
 
     set_determinism()
     model = build_eval_model(
-        spec, model_name=FIXTURES[key]["model_name"], use_aux=True,
+        spec,
+        model_name=FIXTURES[key]["model_name"],
+        use_aux=True,
     )
     model_state = model.state_dict()
     state_dict, _ = load_checkpoint_with_key_mapping(str(fixture_path(key)), "cpu")
@@ -481,8 +485,11 @@ def test_g5_masking_semantics(objective_id: str) -> None:
         # (`rw / rw.mean()`), so a tight absolute tolerance is right here.
         actual = float(model._recon_center_weights.mean())
         assert actual == pytest.approx(1.0, abs=1e-6)
-        assert_close(actual, expected["recon_center_weight_mean"],
-                     f"G5[{objective_id}].recon_center_weight_mean")
+        assert_close(
+            actual,
+            expected["recon_center_weight_mean"],
+            f"G5[{objective_id}].recon_center_weight_mean",
+        )
 
 
 def test_g5_union_is_maximum_of_both_masks() -> None:

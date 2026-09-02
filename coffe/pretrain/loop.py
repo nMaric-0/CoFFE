@@ -12,31 +12,32 @@ Usage:
     python scripts/pretrain.py --config configs/coffe/houston_simmim.yaml
 
     # Resume training
-    python scripts/pretrain.py --config configs/coffe/houston_simmim.yaml --resume checkpoint_epoch_400.pth
+    python scripts/pretrain.py --config configs/coffe/houston_simmim.yaml \\
+        --resume checkpoint_epoch_400.pth
 """
 
 import argparse
 import logging
-from pathlib import Path
+from collections.abc import Sequence
+
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 from coffe.compat import normalize_model_name, normalize_objective
-from coffe.utils.io import load_config
-from coffe.utils.logging import setup_logging
 from coffe.data.datasets import (
     HoustonPatchedDataset,
-    TrentoPatchedDataset,
     MUUFLPatchedDataset,
+    TrentoPatchedDataset,
 )
 from coffe.models import CoFFE, MFTOriginal
-from coffe.pretrain.simmim import SimMIMPretrainModel
 from coffe.pretrain.mae_pretrain import MAEPretrainModel
 from coffe.pretrain.mft_mae import MFTMAEPretrainModel
 from coffe.pretrain.mft_spatial_mae import MFTSpatialMaskPretrainModel
+from coffe.pretrain.simmim import SimMIMPretrainModel
 from coffe.pretrain.trainer import PretrainTrainer
-
+from coffe.utils.io import load_config
+from coffe.utils.logging import setup_logging
 
 # Map dataset names to classes (using patched format)
 DATASETS = {
@@ -52,7 +53,7 @@ class CombinedPatchedDataset(torch.utils.data.ConcatDataset):
     Handles different channel counts by padding.
     """
 
-    def __init__(self, datasets):
+    def __init__(self, datasets: Sequence[Dataset]) -> None:
         super().__init__(datasets)
 
         # Determine max channels for padding
@@ -62,7 +63,7 @@ class CombinedPatchedDataset(torch.utils.data.ConcatDataset):
         # Store original datasets for reference
         self.source_datasets = datasets
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
         sample = super().__getitem__(idx)
 
         # Pad HSI if needed
@@ -90,8 +91,10 @@ def _log_gpu_diagnostics(logger: logging.Logger) -> None:
     Always called regardless of which device is requested so misconfigured
     environments leave a paper trail in pretrain.log.
     """
-    logger.info(f"torch={torch.__version__} cuda_build={torch.version.cuda} "
-                f"cuda_available={torch.cuda.is_available()}")
+    logger.info(
+        f"torch={torch.__version__} cuda_build={torch.version.cuda} "
+        f"cuda_available={torch.cuda.is_available()}"
+    )
     if torch.cuda.is_available():
         count = torch.cuda.device_count()
         logger.info(f"Visible GPUs ({count}):")
@@ -135,8 +138,10 @@ def _resolve_device(requested: str, logger: logging.Logger) -> str:
                     f"device(s) visible (valid indices: 0..{count - 1})."
                 )
             chosen = requested
-        logger.info(f"device={requested} → selected {chosen} "
-                    f"({torch.cuda.get_device_name(int(chosen.split(':', 1)[1]))})")
+        logger.info(
+            f"device={requested} → selected {chosen} "
+            f"({torch.cuda.get_device_name(int(chosen.split(':', 1)[1]))})"
+        )
     else:
         raise RuntimeError(
             f"Unrecognised hardware.device={requested!r}. "
@@ -152,7 +157,7 @@ def run_pretrain(
     config: dict,
     checkpoint_dir: str,
     log_dir: str,
-    resume: str = None,
+    resume: str | None = None,
 ) -> dict:
     """Programmatic entry point used by notebooks and CLI alike.
 
@@ -165,6 +170,7 @@ def run_pretrain(
 
     # Set seed
     from coffe.utils.seed import set_seed
+
     seed = config.get("hardware", {}).get("seed", 42)
     deterministic = config.get("hardware", {}).get("deterministic", False)
     set_seed(seed, deterministic=deterministic)
@@ -193,7 +199,7 @@ def run_pretrain(
             data_root=config["paths"]["data_root"],
             patch_size=data_config.get("patch_size", 11),
             split="all",  # Use all data for pretraining
-            normalize=True
+            normalize=True,
         )
         all_datasets.append(ds)
         logger.info(f"Loaded {ds_name}: HSI {ds.hsi.shape}, Aux {ds.aux.shape}, {len(ds)} samples")
@@ -214,8 +220,10 @@ def run_pretrain(
 
     use_aux = config.get("model", {}).get("use_aux", True)
     logger.info(f"Total samples: {len(full_dataset)}")
-    logger.info(f"HSI channels: {hsi_channels}, Aux channels: {aux_channels}, "
-                f"use_aux={use_aux} ({'HSI+aux' if use_aux else 'HSI-only'})")
+    logger.info(
+        f"HSI channels: {hsi_channels}, Aux channels: {aux_channels}, "
+        f"use_aux={use_aux} ({'HSI+aux' if use_aux else 'HSI-only'})"
+    )
 
     # Split into train/val (stratified by label to preserve class distribution).
     # val_split <= 0 disables validation: the full dataset becomes the train set
@@ -227,7 +235,7 @@ def run_pretrain(
         val_dataset = None
     else:
         # Extract labels for stratification
-        if hasattr(full_dataset, 'labels'):
+        if hasattr(full_dataset, "labels"):
             all_labels = full_dataset.labels.numpy()
         else:
             # CombinedPatchedDataset or similar: extract labels from sub-datasets
@@ -237,6 +245,7 @@ def run_pretrain(
             all_labels = np.concatenate(all_labels)
 
         from sklearn.model_selection import StratifiedShuffleSplit
+
         splitter = StratifiedShuffleSplit(n_splits=1, test_size=val_split, random_state=seed)
         train_idx, val_idx = next(splitter.split(np.zeros(len(all_labels)), all_labels))
         train_dataset = torch.utils.data.Subset(full_dataset, train_idx)
@@ -288,9 +297,7 @@ def run_pretrain(
     # normalize_model_name maps that to "coffe" (PAPER_CANON §7.3).
     model_config = config.get("model", {})
     embed_dim = model_config.get("embed_dim", 128)
-    model_name = normalize_model_name(
-        model_config.get("name", "coffe"), origin="model.name"
-    )
+    model_name = normalize_model_name(model_config.get("name", "coffe"), origin="model.name")
 
     # Pretraining objective: "simmim" (default; in-place band/spatial masking +
     # MLP decoder) or "mae" (token-drop recipe: remove 75% of tokens, encode
@@ -372,8 +379,10 @@ def run_pretrain(
         logger.info("Objective: standard MAE (transformer decoder, cross-attn to encoded CLS)")
         logger.info(f"Total parameters: {total_params:,}")
         logger.info(f"Encoder parameters: {encoder_params:,}")
-        logger.info(f"Mask ratio: {pretrain_model.mask_ratio} "
-                    f"({pretrain_model.len_keep}/{pretrain_model.num_tokens} tokens visible)")
+        logger.info(
+            f"Mask ratio: {pretrain_model.mask_ratio} "
+            f"({pretrain_model.len_keep}/{pretrain_model.num_tokens} tokens visible)"
+        )
     elif model_name == "mft_original" and objective == "simmim":
         spatial_mask_ratio = pretrain_config.get("spatial_mask_ratio", 0.75)
         pretrain_model = MFTSpatialMaskPretrainModel(
@@ -391,14 +400,18 @@ def run_pretrain(
         total_params = sum(p.numel() for p in pretrain_model.parameters())
         encoder_params = sum(p.numel() for p in encoder.parameters())
         logger.info("Model: original-MFT baseline (channel tokenization, mCrossPA)")
-        logger.info("Objective: SimMIM token (in-place spatial-token masking + MLP "
-                    "decoder, CLS-injection, center-weighted MSE)")
+        logger.info(
+            "Objective: SimMIM token (in-place spatial-token masking + MLP "
+            "decoder, CLS-injection, center-weighted MSE)"
+        )
         logger.info(f"Total parameters: {total_params:,}")
         logger.info(f"Encoder parameters: {encoder_params:,}")
         logger.info(f"Spatial mask ratio: {spatial_mask_ratio}")
         if pretrain_config.get("band_mask_ratio", 0.0):
-            logger.warning("band_mask_ratio is ignored for model.name='mft_original' "
-                           "(only spatial masking is supported).")
+            logger.warning(
+                "band_mask_ratio is ignored for model.name='mft_original' "
+                "(only spatial masking is supported)."
+            )
     elif objective == "mae":
         mask_ratio = pretrain_config.get("mask_ratio", 0.75)
         decoder_dim = pretrain_config.get("decoder_dim", 64)
@@ -424,17 +437,23 @@ def run_pretrain(
 
         total_params = sum(p.numel() for p in pretrain_model.parameters())
         encoder_params = sum(p.numel() for p in encoder.parameters())
-        logger.info(f"Objective: MAE (transformer decoder, no projection head)")
+        logger.info("Objective: MAE (transformer decoder, no projection head)")
         logger.info(f"Total parameters: {total_params:,}")
         logger.info(f"Encoder parameters: {encoder_params:,}")
-        logger.info(f"Mask ratio: {mask_ratio} "
-                    f"({pretrain_model.len_keep}/{pretrain_model.num_tokens} tokens visible)")
-        logger.info(f"Decoder: dim={decoder_dim}, depth={decoder_depth}, "
-                    f"heads={decoder_heads}, norm_pix_loss={norm_pix_loss}")
+        logger.info(
+            f"Mask ratio: {mask_ratio} "
+            f"({pretrain_model.len_keep}/{pretrain_model.num_tokens} tokens visible)"
+        )
+        logger.info(
+            f"Decoder: dim={decoder_dim}, depth={decoder_depth}, "
+            f"heads={decoder_heads}, norm_pix_loss={norm_pix_loss}"
+        )
     else:
-        logger.info(f"Projection head: hidden_dim={model_config.get('proj_hidden_dim', embed_dim * 4)}, "
-                    f"num_layers={model_config.get('proj_num_layers', 2)}, "
-                    f"l2_normalize={model_config.get('proj_l2_normalize', False)}")
+        logger.info(
+            f"Projection head: hidden_dim={model_config.get('proj_hidden_dim', embed_dim * 4)}, "
+            f"num_layers={model_config.get('proj_num_layers', 2)}, "
+            f"l2_normalize={model_config.get('proj_l2_normalize', False)}"
+        )
 
         # Create unified-mask pretraining model
         band_mask_ratio = pretrain_config.get("band_mask_ratio", 0.9)
@@ -504,7 +523,8 @@ def run_pretrain(
     return history
 
 
-def main(args):
+def main(args: argparse.Namespace) -> dict:
+    """CLI entry point: load the YAML config and run per-scene pretraining."""
     setup_logging(args.log_file, level=logging.INFO)
     logger = logging.getLogger(__name__)
 

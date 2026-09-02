@@ -1,17 +1,19 @@
 """Dataset implementations."""
+
 from .base import MultimodalEODataset
 from .houston import HoustonDataset
-from .trento import TrentoDataset
 from .muufl import MUUFLDataset
 from .patched import (
-    PatchedMultimodalDataset,
     HoustonPatchedDataset,
-    TrentoPatchedDataset,
     MUUFLPatchedDataset,
+    PatchedMultimodalDataset,
+    TrentoPatchedDataset,
 )
 from .registry import DATASET_REGISTRY, DatasetSpec, get_spec
+from .trento import TrentoDataset
 
-__all__ = [
+# Grouped by dataset family, with the comments below carrying the grouping.
+__all__ = [  # noqa: RUF022
     "MultimodalEODataset",
     "HoustonDataset",
     "TrentoDataset",

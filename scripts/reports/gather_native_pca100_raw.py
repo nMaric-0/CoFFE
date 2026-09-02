@@ -11,11 +11,13 @@ and is merged in by build_native_pca100_report.py.
 
 Output: results/_report_raw.json
 """
+
 from __future__ import annotations
 
+import contextlib
 import json
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -57,21 +59,21 @@ BASE_CONFIGS = [
 ]
 
 
-def read_json(p: Path) -> Optional[Any]:
+def read_json(p: Path) -> Any | None:
     if not p.exists():
         return None
     with p.open() as f:
         return json.load(f)
 
 
-def read_yaml(p: Path) -> Optional[Any]:
+def read_yaml(p: Path) -> Any | None:
     if not p.exists():
         return None
     with p.open() as f:
         return yaml.safe_load(f)
 
 
-def read_text(p: Path) -> Optional[str]:
+def read_text(p: Path) -> str | None:
     if not p.exists():
         return None
     return p.read_text()
@@ -84,10 +86,8 @@ def list_checkpoints(ckpt_dir: Path) -> dict:
     epochs = []
     for f in files:
         if f.startswith("checkpoint_epoch_") and f.endswith(".pth"):
-            try:
-                epochs.append(int(f[len("checkpoint_epoch_"):-len(".pth")]))
-            except ValueError:
-                pass
+            with contextlib.suppress(ValueError):
+                epochs.append(int(f[len("checkpoint_epoch_") : -len(".pth")]))
     return {
         "present": True,
         "files": files,

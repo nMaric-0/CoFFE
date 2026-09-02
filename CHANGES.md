@@ -238,6 +238,135 @@ edited. `.gitignore` lost the venv-layout `lib/`/`lib64/`/`parts/`/`eggs/` rules
 that used to shadow the real `lib/` source package (PAPER_CANON §8 D5), and now
 tracks the equivalence checkpoint fixtures explicitly.
 
+## Phase 6 — release quality (2026-09-02)
+
+Zero behaviour change: the equivalence harness reports every fingerprint
+IDENTICAL, re-checked with its tolerances forced to zero (the only residual
+deltas were the goldens' own 8-decimal storage rounding, ~4e-9).
+
+### Tooling: black + isort + flake8 -> ruff
+
+One tool, one config block in `pyproject.toml`: line length 100,
+`target-version = "py311"`, `select = ["E","F","W","I","UP","B","SIM","RUF"]`,
+`third_party`/`archive`/`experiments`/`results`/`notebooks` excluded. `ruff
+format` reformatted 89 files and `ruff check --fix` applied 683 safe fixes
+(import sorting, PEP 585/604 annotations, unused imports, `dict.get(k, None)`
+-> `dict.get(k)`); the remaining 111 findings were resolved by hand. **No
+unsafe fix was applied.**
+
+Three rules are switched off repo-wide, each because the "fix" would be a
+behaviour edit or a documentation loss (reasons inline in `pyproject.toml`):
+`B905` (`zip(strict=)` would turn silent truncation into an exception),
+`RUF046` (`int(round(x))` is not a no-op when `x` is a NumPy scalar), and
+`RUF059` (`B, N, D = x.shape` documents the tensor layout even where a name is
+unused). `E402` is per-file-ignored for `scripts/`, `tests/` and `tools/`,
+whose entry points insert the repo root on `sys.path` before importing
+`coffe`. Six `# noqa` comments carry their reason at the site (`F822` for
+`coffe/compat.py`'s lazily-served aliases, `SIM108` for the three fusion
+branches whose per-branch shape comments a ternary would drop, `B018` for the
+two `pytest.raises` attribute probes, `SIM115` for the log handle a child
+process owns, `RUF022` for two grouped `__all__` lists).
+
+### Dependencies pruned to the measured import set (PAPER_CANON D6)
+
+`requires-python` is now **`>=3.11`** and the floors are the versions this
+release was developed and verified against (`docs/refactor/ENV.md`) rather than
+a compatibility survey — Nikola's decision at the phase-6 start, since NumPy
+2.4.4 itself requires 3.11 and nothing older has ever been run against the
+paper's numbers. The README badges and the environment line in Quick start
+follow.
+
+| | |
+|---|---|
+| Runtime | `torch`, `numpy`, `scipy`, `scikit-learn`, `PyYAML`, `omegaconf`, `matplotlib`, `seaborn`, `tqdm`, plus `einops` + `timm` (imported by the vendored HyperSIGMA ViT sources) |
+| Dropped | `torchvision` (its only consumer died in phase 3), `hydra-core`, `h5py`, `scikit-image`, `spectral`, `rasterio`, `wandb` — none is imported anywhere in `coffe/`, `scripts/`, `tests/` or the notebooks |
+| Moved to extras | `tensorboard` (the trainer already warns and continues without it), `pandas` + a Jupyter kernel (`notebooks` extra, for `compare.ipynb`), `pytest`/`pytest-cov`/`ruff`/`mypy` (`dev`) |
+| Kept but unused by the package | none |
+
+`mmengine` is **not** a dependency: the two vendored modules import it inside a
+`try/except ImportError`.
+
+`requirements.txt` is now a one-line mirror of `pyproject.toml` (`-e .[dev]`),
+so the dependency set has exactly one source of truth. It was kept rather than
+deleted because the README documents it as an install path.
+
+### Public API
+
+`coffe/__init__.py` exports a curated surface, still lazily so that `import
+coffe` does not pull in torch (verified): `CoFFE`, `MFTOriginal`,
+`HyperSIGMAFewShot`, the four runner entry points (`run_pretrain`,
+`run_adapt_hypersigma`, `run_evaluation`, `run_hypersigma_evaluation`) and
+`__version__`. `coffe.runners` re-exports the same four run functions beside
+the `ExperimentLogger` / `PretrainExperiment` / `EvalRun` classes. Nothing was
+removed, so every existing `from coffe.x.y import z` in the notebooks still
+works.
+
+Type hints were added to the 45 public functions and classes that lacked them,
+and docstrings to the paper-relevant part of the API (Eq. 1's union-mask loss,
+the N-way NCM prototypes, the backbone-native vs patch-native regimes, why λ is
+inert on the HyperSIGMA route).
+
+### mypy: adopted, lenient, partially enforced
+
+`[tool.mypy]` runs over `coffe/` with `ignore_missing_imports`, no strict mode,
+and `third_party` neither checked nor followed. `mypy` exits 0. Of the 55
+modules, **39 are checked and clean**; the 16 listed in the overrides block are
+not enforced (175 findings, all typing friction — `register_buffer` attributes
+typed as `Module`, `config: dict` values arriving as `object`, ndarray/Tensor
+swaps). Silencing those would mean casts inside forward passes and the training
+loop, which this phase may not touch. 19 findings *were* fixed where the fix
+was an annotation (`list[nn.Module]`, `dict[int, list[int]]`, a `cast` on
+`OmegaConf.to_container`) plus four `# type: ignore[...]` with reasons.
+
+### Consistency
+
+- `print` stays in exactly one place — `coffe/eval/episodic.py`'s results table
+  and aggregate banner, which are the CLI's user-facing report; a timestamped
+  log prefix would break the table, and the docstring now says so. Everything
+  else in the package logs.
+- One seeding utility (`coffe.utils.seed.set_seed`) was already the only one;
+  its function-local import in the evaluator was hoisted to module level.
+- No bare `except`, no commented-out code, no `%`/`.format` string building
+  outside logging format specifiers: checked, nothing to change.
+- `os.path` in the dataset loaders was **left alone** (see "What deliberately
+  did not change").
+
+### Config headers
+
+All 45 configs now carry a `RUNTIME` line citing PAPER_CANON §3's published
+timing and this config's own epoch count. The eight HyperSIGMA adaptation
+configs also carry a `REPRODUCES` block naming the Table 3 cell — including the four that
+reproduce **no** published cell, which now say so and why. `base.yaml` needed
+no decision: PAPER_CANON D4 records it as deleted in phase 3.
+
+### Two side effects of the tooling, recorded
+
+- **ruff formats Python code blocks inside Markdown**, so
+  `docs/PRETRAINING.md`'s load-a-checkpoint example was restyled (wrapped
+  arguments, magic trailing comma). Prose is untouched; the example runs the
+  same.
+- **Live `file.py:NNN` citations were re-anchored** after the format pass moved
+  code: three in `PAPER_CANON.md` (`compile_results.py:45`, `:75-76`, `:72,124`,
+  `scripts/reports/build_experiment_metadata.py:121-123`,
+  `sig_significance_config.py:45` and `:66-76`), seven in
+  `tests/equivalence/_harness.py`, one in `tests/equivalence/test_equivalence.py`.
+  Each new anchor was asserted to land on the line it claims. Three of them
+  still pointed into `scripts/pretrain.py` from before phase 5 moved that body
+  to `coffe/pretrain/loop.py`. Editing PAPER_CANON is normally out of scope; the
+  edits here are citation line numbers only — no verdict, constant or table
+  value was touched.
+
+### One documentation error corrected
+
+`docs/EVAL_PROTOCOL.md` still told readers the CLI default was `cosine`. It has
+been `euclidean` since the phase-4 gate. Fixed.
+
+`scripts/reproduce/README.md`'s Table 3 coverage row for `11x11 joint+SEM` said
+the three cells reproduce from `configs/hypersigma/<scene>_patchnative_joint_sem.yaml`.
+They do not: all three published runs used the **100-band** spatial front-end,
+and the committed Trento/MUUFL configs are 3-band. Corrected there, and each
+affected config's own header now states its true relationship to the cell.
+
 ## Compatibility guarantees
 
 **1. Checkpoints load unchanged.** No `nn.Module` attribute name was renamed, so
@@ -251,9 +380,10 @@ came from:
 
 ```python
 from coffe_compat import normalize_model_name, normalize_objective
-normalize_model_name("mft_cpea")     # -> "coffe"
-normalize_objective("enhanced")      # -> "simmim"
-normalize_variant("spatial")         # -> "simmim_token"
+
+normalize_model_name("mft_cpea")  # -> "coffe"
+normalize_objective("enhanced")  # -> "simmim"
+normalize_variant("spatial")  # -> "simmim_token"
 normalize_model_type("MFTCPEACosine")  # -> "CoFFE"
 ```
 
@@ -270,11 +400,11 @@ packages they used to live in, and from the compat module, each with a
 deprecation warning:
 
 ```python
-from models import MFTCPEACosine                     # -> models.coffe.CoFFE
-from models import MFTOriginalCosine                 # -> MFTOriginal
-from models.hypersigma import HyperSIGMACosine       # -> HyperSIGMAFewShot
+from models import MFTCPEACosine  # -> models.coffe.CoFFE
+from models import MFTOriginalCosine  # -> MFTOriginal
+from models.hypersigma import HyperSIGMACosine  # -> HyperSIGMAFewShot
 from pretrain import EnhancedMaskedSpectralSpatialModel  # -> SimMIMPretrainModel
-from coffe_compat import MFTCPEACosine               # same object
+from coffe_compat import MFTCPEACosine  # same object
 ```
 
 The alias *is* the canonical class, so `isinstance` checks and checkpoint loads
@@ -338,6 +468,8 @@ stale-vocabulary grep excludes:
 | stored notebook **outputs** | execution records of runs made before the rename |
 | `scripts/reports/aggregate_significance.py`'s emitted `group` / `variant` keys | they reproduce the significance experiment's own directory-name components and the frozen `significance_report.json` schema |
 | `experiments/**` | frozen run artifacts |
+| `docs/EVAL_PROTOCOL.md`'s legacy-config paragraph, `results/README.md`'s on-disk-name list | they document what the readers accept and what the frozen artifacts contain |
+| the `normalize_model_name` call sites' comments (`coffe/pretrain/loop.py`) | they name the frozen value being normalised |
 
 Anything else is a bug: a stale *reference* to a renamed module is a broken
 import, not a cosmetic issue.
@@ -372,3 +504,10 @@ import, not a cosmetic issue.
 - `third_party/HyperSIGMA/`, which is vendored.
 - Stored notebook *outputs*: they are execution records of past runs and still
   show the old log lines. Only notebook sources were edited.
+- `os.path` in the dataset loaders (phase 6). Converting those to `pathlib`
+  would touch the code that decides which files a dataset reads, for no
+  behavioural gain; `pathlib` is used in the signatures phase 6 did touch.
+- The 21 one-line dataset property overrides (`num_classes`, `hsi_channels`,
+  `aux_channels`) have no docstrings: the contract is documented on
+  `MultimodalEODataset` and each subclass's docstring carries its Table 1
+  numbers. Adding 21 restatements would be noise.

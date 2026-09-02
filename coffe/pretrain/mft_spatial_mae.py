@@ -18,7 +18,7 @@ recon_center_sigma=1.0`` (see
 It differs from ``SimMIMPretrainModel`` only where the original
 MFT architecture demands it:
 
-1. **Data-dependent CLS.** The enhanced wrapper prepends a learnable
+1. **Data-dependent CLS.** ``SimMIMPretrainModel`` prepends a learnable
    ``class_agnostic_emb``; the MFT CLS is instead built from the auxiliary
    modality via ``encoder.make_cls(aux)`` (the external LiDAR CLS — the essence
    of MFT's multimodal fusion). There is also no projection head (the original
@@ -44,10 +44,10 @@ prefix and skips ``spatial_masking`` / ``decoder``.
 
 import torch
 import torch.nn as nn
-from typing import Tuple, Optional, Dict
 
-from .masked_modeling import SpatialTokenMasking, MLPDecoder
 from coffe.utils.spatial_weights import make_center_weights
+
+from .masked_modeling import MLPDecoder, SpatialTokenMasking
 
 
 class MFTSpatialMaskPretrainModel(nn.Module):
@@ -80,7 +80,7 @@ class MFTSpatialMaskPretrainModel(nn.Module):
         embed_dim: int = 128,
         decoder_hidden_dim: int = 256,
         spatial_mask_ratio: float = 0.75,
-        recon_sigma: Optional[float] = 1.0,
+        recon_sigma: float | None = 1.0,
     ):
         super().__init__()
 
@@ -90,9 +90,7 @@ class MFTSpatialMaskPretrainModel(nn.Module):
                 "token is derived from the auxiliary modality)."
             )
         if not (0.0 < spatial_mask_ratio < 1.0):
-            raise ValueError(
-                f"spatial_mask_ratio must be in (0, 1), got {spatial_mask_ratio}"
-            )
+            raise ValueError(f"spatial_mask_ratio must be in (0, 1), got {spatial_mask_ratio}")
 
         self.encoder = encoder
         self.hsi_channels = hsi_channels
@@ -125,7 +123,7 @@ class MFTSpatialMaskPretrainModel(nn.Module):
         self,
         hsi: torch.Tensor,
         aux: torch.Tensor,
-    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+    ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
         """
         Args:
             hsi: [B, C_hsi, H, W]
@@ -140,16 +138,16 @@ class MFTSpatialMaskPretrainModel(nn.Module):
         assert H * W == N, f"Patch size mismatch: H*W={H * W}, num_tokens={N}"
 
         # 1. Reconstruction target: full HSI + aux per pixel, original token order.
-        combined = torch.cat([hsi, aux], dim=1)             # [B, C_total, H, W]
-        target = combined.flatten(2).transpose(1, 2)        # [B, N, C_total]
+        combined = torch.cat([hsi, aux], dim=1)  # [B, C_total, H, W]
+        target = combined.flatten(2).transpose(1, 2)  # [B, N, C_total]
 
         # 2. Tokenize HSI -> 121 spatial tokens, then in-place spatial masking.
-        patch_tokens = self.encoder.tokenize(hsi)           # [B, N, D]
+        patch_tokens = self.encoder.tokenize(hsi)  # [B, N, D]
         patch_tokens, token_mask = self.spatial_masking(patch_tokens)  # token_mask [B, N]
 
         # 3. Prepend the data-dependent external LiDAR CLS, add pos embed, encode.
-        cls = self.encoder.make_cls(aux)                    # [B, 1, D]
-        tokens = torch.cat([cls, patch_tokens], dim=1)      # [B, 1+N, D]
+        cls = self.encoder.make_cls(aux)  # [B, 1, D]
+        tokens = torch.cat([cls, patch_tokens], dim=1)  # [B, 1+N, D]
         tokens = tokens + self.encoder.pos_embed
         encoded = self.encoder.encoder(tokens)
         encoded = self.encoder.norm(encoded)
@@ -157,15 +155,15 @@ class MFTSpatialMaskPretrainModel(nn.Module):
         # 4. CLS injection: add the encoded CLS into every encoded patch token so
         #    the mCrossPA projections get a reconstruction gradient and the LiDAR
         #    signal is available for reconstruction (see module docstring).
-        patch_enc = encoded[:, 1:] + encoded[:, :1]         # [B, N, D]
+        patch_enc = encoded[:, 1:] + encoded[:, :1]  # [B, N, D]
 
         # 5. Decode to per-pixel band predictions.
-        pred = self.decoder(patch_enc)                      # [B, N, C_total]
+        pred = self.decoder(patch_enc)  # [B, N, C_total]
 
         # 6. Center-weighted MSE on masked entries only (union over all bands of a
         #    masked pixel token), matching the Spatial version's loss.
         mask_per_entry = token_mask.unsqueeze(-1).expand(-1, -1, self.total_channels)
-        sq = (pred - target) ** 2                           # [B, N, C_total]
+        sq = (pred - target) ** 2  # [B, N, C_total]
         if self.recon_sigma is not None:
             sq = sq * self._recon_center_weights.view(1, N, 1)
         denom = mask_per_entry.sum().clamp_min(1.0)
@@ -180,4 +178,9 @@ class MFTSpatialMaskPretrainModel(nn.Module):
         return loss, info
 
     def get_encoder(self) -> nn.Module:
+        """Return the encoder alone — the only part kept for evaluation.
+
+        The decoder and (where present) the projection head exist for the
+        pretext task and are discarded at eval time (PAPER_CANON §2).
+        """
         return self.encoder

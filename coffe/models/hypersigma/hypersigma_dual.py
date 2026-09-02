@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
 
 import torch
 import torch.nn as nn
@@ -61,8 +60,8 @@ class HyperSIGMADual(nn.Module):
     def __init__(
         self,
         pca_spat_path: str,
-        spat_ckpt: Optional[str],
-        spec_ckpt: Optional[str],
+        spat_ckpt: str | None,
+        spec_ckpt: str | None,
         hsi_channels: int = 144,
         spat_patch_k: int = 3,
         freeze_body: bool = True,
@@ -70,8 +69,8 @@ class HyperSIGMADual(nn.Module):
         num_tokens: int = 100,
         dr_dim: int = 128,
         num_stages: int = 4,
-        pca_stats_path: Optional[str] = None,
-        spat_resample_to: Optional[int] = None,
+        pca_stats_path: str | None = None,
+        spat_resample_to: int | None = None,
         build_spat: bool = True,
         build_spec: bool = True,
         build_sem: bool = True,
@@ -79,7 +78,7 @@ class HyperSIGMADual(nn.Module):
         input_fit: str = "upscale",
         pad_anchor: str = "center",
         interp_mode: str = "bicubic",
-        native_pca_spat_path: Optional[str] = None,
+        native_pca_spat_path: str | None = None,
         native_spat_in_chans: int = 100,
         native_spat_img_size: int = 64,
         native_spat_patch: int = 8,
@@ -125,9 +124,8 @@ class HyperSIGMADual(nn.Module):
                     pad_anchor=pad_anchor,
                     interp_mode=interp_mode,
                 )
-            elif (
-                spat_resample_to is not None
-                and not (pca_spat_path is not None and Path(pca_spat_path).exists())
+            elif spat_resample_to is not None and not (
+                pca_spat_path is not None and Path(pca_spat_path).exists()
             ):
                 # Fixed-width spatial input without a PCA pickle: datasets whose
                 # band count is below `spat_resample_to` (e.g. Trento 63, MUUFL 64
@@ -217,7 +215,7 @@ class HyperSIGMADual(nn.Module):
 
     def _build_native_spat_front_end(
         self,
-        pca_spat_path: Optional[str],
+        pca_spat_path: str | None,
         in_chans: int,
     ) -> None:
         """Build the spatial channel front-end for the native ablation.
@@ -263,7 +261,7 @@ class HyperSIGMADual(nn.Module):
     # Sanity / introspection helpers
     # ------------------------------------------------------------------
 
-    def parameter_counts(self) -> Dict[str, int]:
+    def parameter_counts(self) -> dict[str, int]:
         """Return (trainable, frozen) parameter counts for the whole module."""
         trainable = 0
         frozen = 0
@@ -275,13 +273,20 @@ class HyperSIGMADual(nn.Module):
         return {"trainable": trainable, "frozen": frozen, "total": trainable + frozen}
 
     def log_sanity(self) -> None:
+        """Log which branches were built, what is trainable, and the input fit.
+
+        Written once per run: the adaptation's parameter budget and geometry
+        are the two things a reader needs to tell the Table 3 rows apart.
+        """
         spat = self.spat
         spec = self.spec
         sem = self.sem
         counts = self.parameter_counts()
         logger.info(
             "[HyperSIGMA] Built branches: spat=%s, spec=%s, sem=%s",
-            self.build_spat, self.build_spec, self.build_sem,
+            self.build_spat,
+            self.build_spec,
+            self.build_sem,
         )
         if self.native_geometry:
             logger.info(
@@ -292,25 +297,27 @@ class HyperSIGMADual(nn.Module):
             if isinstance(self.pca_spat, PCAPreprocessor):
                 logger.info(
                     "[HyperSIGMA] Spatial PCA cumulative explained variance: %d -> %d : %.4f",
-                    self.hsi_channels, self.pca_spat.out_channels,
+                    self.hsi_channels,
+                    self.pca_spat.out_channels,
                     self.pca_spat.cumulative_explained_variance,
                 )
             else:
                 logger.info(
                     "[HyperSIGMA] Spatial channel front-end: %s (%d -> %d, spectral resample)",
-                    type(self.pca_spat).__name__, self.hsi_channels, self.pca_spat.out_channels,
+                    type(self.pca_spat).__name__,
+                    self.hsi_channels,
+                    self.pca_spat.out_channels,
                 )
             if isinstance(self.pca_standardize, PCAStandardize):
                 logger.info(
-                    "[HyperSIGMA] PCA standardize (post-PCA, pre-SpatViT): mean=%s, std=%s, source=%s",
+                    "[HyperSIGMA] PCA standardize (post-PCA, pre-SpatViT): "
+                    "mean=%s, std=%s, source=%s",
                     self.pca_standardize.mean.flatten().tolist(),
                     self.pca_standardize.std.flatten().tolist(),
                     self.pca_stats_path,
                 )
             else:
-                logger.info(
-                    "[HyperSIGMA] PCA standardize: disabled (raw PCA output -> SpatViT)"
-                )
+                logger.info("[HyperSIGMA] PCA standardize: disabled (raw PCA output -> SpatViT)")
             logger.info(
                 "[HyperSIGMA] SpatViT branch (SpatViT_fusion_patch): cls_token=None, "
                 "patch_embed.proj.weight.shape=%s, pos_embed source=%s, pos_embed.shape=%s, "
@@ -340,20 +347,35 @@ class HyperSIGMADual(nn.Module):
             logger.info(
                 "[HyperSIGMA] SEM: %d DR convs (Conv2d(%d,%d,1) each); "
                 "%d fc_spec MLPs (Linear(%d,%d)+ReLU+Linear(%d,%d)+Sigmoid); output dim=%d",
-                sem.num_stages, self.embed_dim, sem.dr_dim,
-                sem.num_stages, sem.num_tokens, sem.dr_dim, sem.dr_dim, sem.dr_dim,
+                sem.num_stages,
+                self.embed_dim,
+                sem.dr_dim,
+                sem.num_stages,
+                sem.num_tokens,
+                sem.dr_dim,
+                sem.dr_dim,
+                sem.dr_dim,
                 sem.num_stages * sem.dr_dim,
             )
         logger.info(
             "[HyperSIGMA] Parameter counts: trainable=%d, frozen=%d, total=%d",
-            counts["trainable"], counts["frozen"], counts["total"],
+            counts["trainable"],
+            counts["frozen"],
+            counts["total"],
         )
 
     # ------------------------------------------------------------------
     # Forward
     # ------------------------------------------------------------------
 
-    def forward(self, hsi: torch.Tensor) -> Dict[str, object]:
+    def forward(self, hsi: torch.Tensor) -> dict[str, object]:
+        """Run the fused path: SpatViT + SpecViT + gated SEM fusion.
+
+        Requires all three branches. The single-branch eval modes
+        (``spat_pool`` / ``spec_pool``) bypass this and call the submodules
+        directly, which is why a partially built instance raises here rather
+        than silently returning a half-fused dict.
+        """
         if not (self.build_spat and self.build_spec and self.build_sem):
             raise RuntimeError(
                 "HyperSIGMADual.forward (fused path) requires all branches; this "
@@ -361,14 +383,14 @@ class HyperSIGMADual(nn.Module):
                 f"spat={self.build_spat}, spec={self.build_spec}, sem={self.build_sem}. "
                 "Use the per-branch submodules directly for spat_pool/spec_pool modes."
             )
-        spat_in = self.pca_spat(hsi)                       # [B, 3, H, W]
-        spat_in = self.pca_standardize(spat_in)            # (x - mu) / sigma; no-op if disabled
-        spat_features = self.spat(spat_in)                 # 4 x [B, 768, Hp, Wp]
-        spec_features = self.spec(hsi)                     # 4 x [B, 100, *]
+        spat_in = self.pca_spat(hsi)  # [B, 3, H, W]
+        spat_in = self.pca_standardize(spat_in)  # (x - mu) / sigma; no-op if disabled
+        spat_features = self.spat(spat_in)  # 4 x [B, 768, Hp, Wp]
+        spec_features = self.spec(hsi)  # 4 x [B, 100, *]
         # features[0] has had `l1` applied -> [B, 100, 128]; the rest stay 768.
-        spec_first = spec_features[0]                      # [B, 100, 128]
+        spec_first = spec_features[0]  # [B, 100, 128]
         spec_pooled = self.spec_pool(spec_first).flatten(1)  # [B, 100]
-        fused = self.sem(spat_features, spec_pooled)       # [B, 512]
+        fused = self.sem(spat_features, spec_pooled)  # [B, 512]
         return {
             "fused": fused,
             "spat_features": spat_features,

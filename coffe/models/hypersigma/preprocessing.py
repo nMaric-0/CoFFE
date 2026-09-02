@@ -26,12 +26,13 @@ from __future__ import annotations
 import logging
 import pickle
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 import torch
 import torch.nn as nn
+from numpy.typing import ArrayLike
 from sklearn.decomposition import PCA
+from torch.utils.data import Dataset
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +48,9 @@ DATASET_PCA_CONFIG = {
 
 
 def fit_dataset_pca(
-    dataset,
+    dataset: Dataset,
     n_components: int,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> PCA:
     """Fit a PCA to the per-pixel spectral vectors of ``dataset``.
 
@@ -62,10 +63,7 @@ def fit_dataset_pca(
         The fitted sklearn ``PCA`` instance.
     """
     hsi = dataset.hsi  # [N, C, H, W], torch.FloatTensor in [0,1]
-    if isinstance(hsi, torch.Tensor):
-        hsi_np = hsi.detach().cpu().numpy()
-    else:
-        hsi_np = np.asarray(hsi)
+    hsi_np = hsi.detach().cpu().numpy() if isinstance(hsi, torch.Tensor) else np.asarray(hsi)
     N, C, H, W = hsi_np.shape
     pixels = hsi_np.transpose(0, 2, 3, 1).reshape(-1, C)  # [N*H*W, C]
 
@@ -75,7 +73,9 @@ def fit_dataset_pca(
     cum_var = float(np.cumsum(pca.explained_variance_ratio_)[-1])
     logger.info(
         "[HyperSIGMA] PCA fit: %d -> %d, cumulative explained variance = %.4f",
-        C, n_components, cum_var,
+        C,
+        n_components,
+        cum_var,
     )
 
     if save_path is not None:
@@ -89,18 +89,20 @@ def fit_dataset_pca(
 
 
 def load_pca(path: str) -> PCA:
+    """Load a PCA fitted by :func:`fit_dataset_pca` from its pickle."""
     with open(path, "rb") as f:
         return pickle.load(f)
 
 
 def cumulative_explained_variance(pca: PCA) -> float:
+    """Fraction of input variance retained by all components of ``pca``."""
     return float(np.cumsum(pca.explained_variance_ratio_)[-1])
 
 
 def fit_pca_output_stats(
-    dataset,
+    dataset: Dataset,
     pca: PCA,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ) -> dict:
     """Compute per-channel mean/std of ``pca(dataset.hsi)``.
 
@@ -110,10 +112,7 @@ def fit_pca_output_stats(
     pickle alongside the PCA itself.
     """
     hsi = dataset.hsi
-    if isinstance(hsi, torch.Tensor):
-        hsi_np = hsi.detach().cpu().numpy()
-    else:
-        hsi_np = np.asarray(hsi)
+    hsi_np = hsi.detach().cpu().numpy() if isinstance(hsi, torch.Tensor) else np.asarray(hsi)
     N, C, H, W = hsi_np.shape
     pixels = hsi_np.transpose(0, 2, 3, 1).reshape(-1, C)  # [N*H*W, C]
 
@@ -131,7 +130,8 @@ def fit_pca_output_stats(
     }
     logger.info(
         "[HyperSIGMA] PCA output stats over %d pixels: mean=%s, std=%s",
-        stats["n_pixels"], np.array2string(mean, precision=4),
+        stats["n_pixels"],
+        np.array2string(mean, precision=4),
         np.array2string(std, precision=4),
     )
 
@@ -146,6 +146,7 @@ def fit_pca_output_stats(
 
 
 def load_pca_output_stats(path: str) -> dict:
+    """Load the per-channel mean/std written by :func:`fit_pca_output_stats`."""
     with open(path, "rb") as f:
         return pickle.load(f)
 
@@ -172,7 +173,7 @@ class SpectralResample(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, C, H, W = x.shape
-        if C == self.out_channels:
+        if self.out_channels == C:
             return x
         # Interpolate along the band axis: fold (B,H,W) into the batch and
         # treat each pixel's spectrum as a length-C 1-D signal.
@@ -195,7 +196,7 @@ class PCAStandardize(nn.Module):
     HyperSIGMA pretraining target.
     """
 
-    def __init__(self, mean, std):
+    def __init__(self, mean: ArrayLike, std: ArrayLike) -> None:
         super().__init__()
         mean_t = torch.as_tensor(mean, dtype=torch.float32).view(1, -1, 1, 1)
         std_t = torch.as_tensor(std, dtype=torch.float32).view(1, -1, 1, 1)
@@ -230,7 +231,7 @@ class PCAPreprocessor(nn.Module):
     def __init__(self, pca: PCA):
         super().__init__()
         components = pca.components_.astype(np.float32)  # [k, C]
-        mean = pca.mean_.astype(np.float32)              # [C]
+        mean = pca.mean_.astype(np.float32)  # [C]
         k, c = components.shape
         # Conv2d weight shape: [k, C, 1, 1]
         weight = torch.from_numpy(components).view(k, c, 1, 1)

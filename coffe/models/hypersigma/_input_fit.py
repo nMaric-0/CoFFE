@@ -42,17 +42,13 @@ def fit_input(
     if input_fit == "upscale":
         if (h, w) == (size, size):
             return x
-        return F.interpolate(
-            x, size=(size, size), mode=interp_mode, align_corners=False
-        )
+        return F.interpolate(x, size=(size, size), mode=interp_mode, align_corners=False)
 
     if input_fit == "pad":
         pad_h = size - h
         pad_w = size - w
         if pad_h < 0 or pad_w < 0:
-            raise ValueError(
-                f"fit_input(pad): target size {size} smaller than input {(h, w)}"
-            )
+            raise ValueError(f"fit_input(pad): target size {size} smaller than input {(h, w)}")
         if pad_anchor == "center":
             top = pad_h // 2
             bottom = pad_h - top

@@ -21,10 +21,10 @@ by the unified mask below.
 
 import torch
 import torch.nn as nn
-from typing import Tuple, Optional, Dict
 
-from .masked_modeling import UnifiedBandMasking, SpatialTokenMasking, MLPDecoder
 from coffe.utils.spatial_weights import make_center_weights
+
+from .masked_modeling import MLPDecoder, SpatialTokenMasking, UnifiedBandMasking
 
 
 class SimMIMPretrainModel(nn.Module):
@@ -77,7 +77,7 @@ class SimMIMPretrainModel(nn.Module):
         decoder_hidden_dim: int = 256,
         band_mask_ratio: float = 0.9,
         spatial_mask_ratio: float = 0.0,
-        recon_sigma: Optional[float] = None,
+        recon_sigma: float | None = None,
         recon_loss: str = "mse",
     ):
         super().__init__()
@@ -90,9 +90,7 @@ class SimMIMPretrainModel(nn.Module):
         self.recon_loss = recon_loss
 
         if band_mask_ratio <= 0 and spatial_mask_ratio <= 0:
-            raise ValueError(
-                "At least one of band_mask_ratio / spatial_mask_ratio must be > 0"
-            )
+            raise ValueError("At least one of band_mask_ratio / spatial_mask_ratio must be > 0")
 
         self.encoder = encoder
         self.hsi_channels = hsi_channels
@@ -112,7 +110,7 @@ class SimMIMPretrainModel(nn.Module):
         if recon_sigma is not None:
             rw = make_center_weights(patch_size, recon_sigma, normalize=False)
             rw = rw / rw.mean()  # mean weight 1.0 so loss scale is preserved
-            self.register_buffer('_recon_center_weights', rw)
+            self.register_buffer("_recon_center_weights", rw)
 
         if self.use_band_mask:
             self.band_masking = UnifiedBandMasking(
@@ -136,10 +134,8 @@ class SimMIMPretrainModel(nn.Module):
         self.enc_to_dec = nn.Linear(embed_dim, embed_dim)
 
     def forward_combined(
-        self,
-        hsi: torch.Tensor,
-        aux: torch.Tensor
-    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+        self, hsi: torch.Tensor, aux: torch.Tensor
+    ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
         """
         Unified forward pass.
 
@@ -153,13 +149,14 @@ class SimMIMPretrainModel(nn.Module):
         """
         B, _, H, W = hsi.shape
         N = self.num_tokens
-        assert H * W == N, f"Patch size mismatch: H*W={H*W}, num_tokens={N}"
+        assert H * W == N, f"Patch size mismatch: H*W={H * W}, num_tokens={N}"
 
         # 1. Concatenate HSI + aux bands (HSI-only when use_aux is False).
-        if self.use_aux:
-            combined = torch.cat([hsi, aux], dim=1)             # [B, C_total, H, W]
+        # Kept as if/else (not a ternary) so both branch shapes stay documented.
+        if self.use_aux:  # noqa: SIM108
+            combined = torch.cat([hsi, aux], dim=1)  # [B, C_total, H, W]
         else:
-            combined = hsi                                      # [B, C_hsi, H, W]
+            combined = hsi  # [B, C_hsi, H, W]
 
         # 2. Per-(pixel, band) masking (if enabled).
         if self.use_band_mask:
@@ -170,11 +167,11 @@ class SimMIMPretrainModel(nn.Module):
 
         # 3. Split back and tokenize through the encoder (which re-concatenates).
         if self.use_aux:
-            hsi_masked = combined_masked[:, :self.hsi_channels]
-            aux_masked = combined_masked[:, self.hsi_channels:]
+            hsi_masked = combined_masked[:, : self.hsi_channels]
+            aux_masked = combined_masked[:, self.hsi_channels :]
             patch_tokens = self.encoder.tokenize(hsi_masked, aux_masked)  # [B, N, D]
         else:
-            patch_tokens = self.encoder.tokenize(combined_masked)         # [B, N, D]
+            patch_tokens = self.encoder.tokenize(combined_masked)  # [B, N, D]
 
         # 4. Spatial token masking (if enabled).
         if self.use_spatial_mask:
@@ -184,12 +181,12 @@ class SimMIMPretrainModel(nn.Module):
 
         # 5. Build [CLS, patch_tokens] and encode.
         cls_token = self.encoder.class_agnostic_emb.expand(B, -1, -1)
-        tokens = torch.cat([cls_token, patch_tokens], dim=1)    # [B, 1+N, D]
+        tokens = torch.cat([cls_token, patch_tokens], dim=1)  # [B, 1+N, D]
         tokens = tokens + self.encoder.pos_embed
         encoded = self.encoder.encoder(tokens)
         encoded = self.encoder.norm(encoded)
 
-        patch_encoded = encoded[:, 1:]                          # [B, N, D]
+        patch_encoded = encoded[:, 1:]  # [B, N, D]
 
         # Run through the projection head so its gradients are shaped by the
         # reconstruction objective, matching the previous behavior.
@@ -197,10 +194,10 @@ class SimMIMPretrainModel(nn.Module):
         patch_encoded = self.enc_to_dec(patch_encoded)
 
         # 6. Decode.
-        pred = self.decoder(patch_encoded)                      # [B, N, C_total]
+        pred = self.decoder(patch_encoded)  # [B, N, C_total]
 
         # 7. Target and per-entry mask (union of band + spatial).
-        target = combined.flatten(2).transpose(1, 2)            # [B, N, C_total]
+        target = combined.flatten(2).transpose(1, 2)  # [B, N, C_total]
 
         if band_mask is not None:
             mask_per_entry = band_mask.flatten(2).transpose(1, 2)  # [B, N, C_total]
@@ -214,7 +211,7 @@ class SimMIMPretrainModel(nn.Module):
         # 8. Reconstruction loss on masked entries only (per-element error,
         #    then optional center-weighting, then masked mean).
         if self.recon_loss == "mse":
-            sq = (pred - target) ** 2                           # [B, N, C_total]
+            sq = (pred - target) ** 2  # [B, N, C_total]
         elif self.recon_loss == "l1":
             sq = (pred - target).abs()
         else:  # smooth_l1 / huber (beta=1.0)
@@ -233,11 +230,21 @@ class SimMIMPretrainModel(nn.Module):
         return loss, info
 
     def forward(
-        self,
-        hsi: torch.Tensor,
-        aux: torch.Tensor
-    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+        self, hsi: torch.Tensor, aux: torch.Tensor
+    ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+        """Run the SimMIM objective; see :meth:`forward_combined`.
+
+        Returns ``(loss, info)``. The loss is averaged over the **union** of the
+        band and spatial-token masks, with the optional mean-one Gaussian centre
+        weight applied — Eq. 1 with the default ``recon_loss="mse"``
+        (``l1``/``smooth_l1`` are selectable and were not used for the paper).
+        """
         return self.forward_combined(hsi, aux)
 
     def get_encoder(self) -> nn.Module:
+        """Return the encoder alone — the only part kept for evaluation.
+
+        The decoder and (where present) the projection head exist for the
+        pretext task and are discarded at eval time (PAPER_CANON §2).
+        """
         return self.encoder

@@ -57,8 +57,7 @@ def _run_and_check(pretrain_model, batch_size: int = 4):
     loss.backward()
 
     missing = [
-        n for n, p in pretrain_model.named_parameters()
-        if p.requires_grad and p.grad is None
+        n for n, p in pretrain_model.named_parameters() if p.requires_grad and p.grad is None
     ]
     assert not missing, f"Missing gradients: {missing}"
 
@@ -180,11 +179,11 @@ def main():
 
     test_unified_band_masking()
     print()
-    test_enhanced_model_band_only()
+    test_simmim_model_band_only()
     print()
-    test_enhanced_model_spatial_only()
+    test_simmim_model_spatial_only()
     print()
-    test_enhanced_model_combined()
+    test_simmim_model_combined()
     print()
 
     print("=" * 60)

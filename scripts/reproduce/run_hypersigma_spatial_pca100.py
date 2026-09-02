@@ -43,10 +43,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from coffe.data.datasets import get_spec  # noqa: E402
-from coffe.runners.adapt_runner import run_adapt_hypersigma  # noqa: E402
-from coffe.runners.eval_runner import run_hypersigma_evaluation  # noqa: E402
-from coffe.runners.experiments import ExperimentLogger  # noqa: E402
+from coffe.data.datasets import get_spec
+from coffe.runners.adapt_runner import run_adapt_hypersigma
+from coffe.runners.eval_runner import run_hypersigma_evaluation
+from coffe.runners.experiments import ExperimentLogger
 
 logger = logging.getLogger(__name__)
 
@@ -98,15 +98,18 @@ def run_dataset(
         f"hypersigma_{dataset}_pca{SPAT_COMPONENTS}_C{spec.num_classes}way_"
         f"{k_shot}shot_adapted_spatial_only_run1"
     )
-    adapted_checkpoint = (
-        f"experiments/{adapt_experiment_name}/checkpoints/checkpoint_final.pth"
-    )
+    adapted_checkpoint = f"experiments/{adapt_experiment_name}/checkpoints/checkpoint_final.pth"
 
     logger.info(
         "[%s] bands=%d -> spatial input=%d (%s); epochs=%d lr=%g batch=%d device=%s",
-        dataset, bands, SPAT_COMPONENTS,
+        dataset,
+        bands,
+        SPAT_COMPONENTS,
         "PCA->100 + stats" if uses_pca else "spectral resample -> 100",
-        epochs, lr, batch_size, device,
+        epochs,
+        lr,
+        batch_size,
+        device,
     )
 
     # --- Step 5: Level-2 MAE adaptation (spatial branch only) ---------------
@@ -198,22 +201,31 @@ def run_dataset(
 
 def main() -> None:
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", required=True, choices=["houston", "trento", "muufl"])
-    parser.add_argument("--device", default="cuda",
-                        help='Device for adapt + eval, e.g. "cuda", "cuda:1", "cpu".')
+    parser.add_argument(
+        "--device", default="cuda", help='Device for adapt + eval, e.g. "cuda", "cuda:1", "cpu".'
+    )
     parser.add_argument("--epochs", type=int, default=2000)
-    parser.add_argument("--lr", type=float, default=1e-5,
-                        help="Adaptation LR for the trainable input/decoder pieces "
-                             "(matches evaluate_hypersigma_pca100.ipynb; base config is 1.5e-4).")
+    parser.add_argument(
+        "--lr",
+        type=float,
+        default=1e-5,
+        help="Adaptation LR for the trainable input/decoder pieces "
+        "(matches evaluate_hypersigma_pca100.ipynb; base config is 1.5e-4).",
+    )
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--k-shot", type=int, default=5)
     parser.add_argument("--k-query", type=int, default=100)
     parser.add_argument("--num-episodes", type=int, default=2000)
-    parser.add_argument("--no-overwrite", action="store_true",
-                        help="Fail instead of reusing an existing experiment dir.")
+    parser.add_argument(
+        "--no-overwrite",
+        action="store_true",
+        help="Fail instead of reusing an existing experiment dir.",
+    )
     args = parser.parse_args()
 
     out = run_dataset(

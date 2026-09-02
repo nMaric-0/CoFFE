@@ -34,7 +34,7 @@ import math
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import yaml
 
@@ -42,22 +42,21 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from coffe.compat import normalize_model_name, normalize_objective  # noqa: E402
-
+from coffe.compat import normalize_model_name, normalize_objective
 
 # --------------------------------------------------------------------------- #
 # small readers / sanitisers
 # --------------------------------------------------------------------------- #
 
 
-def _read_json(path: Path) -> Optional[Any]:
+def _read_json(path: Path) -> Any | None:
     if not path.exists():
         return None
     with path.open() as f:
         return json.load(f)  # tolerant of Infinity/NaN (non-standard JSON)
 
 
-def _read_yaml(path: Path) -> Optional[Any]:
+def _read_yaml(path: Path) -> Any | None:
     if not path.exists():
         return None
     with path.open() as f:
@@ -75,7 +74,7 @@ def _clean(obj: Any) -> Any:
     return obj
 
 
-def _parse_iso(ts: Optional[str]) -> Optional[_dt.datetime]:
+def _parse_iso(ts: str | None) -> _dt.datetime | None:
     if not ts:
         return None
     try:
@@ -84,25 +83,23 @@ def _parse_iso(ts: Optional[str]) -> Optional[_dt.datetime]:
         return None
 
 
-def _round(x: Optional[float], n: int = 2) -> Optional[float]:
+def _round(x: float | None, n: int = 2) -> float | None:
     return None if x is None else round(x, n)
 
 
 # --------------------------------------------------------------------------- #
 # derivations
 # --------------------------------------------------------------------------- #
-def _is_example(meta: Optional[Dict[str, Any]], name: str) -> bool:
+def _is_example(meta: dict[str, Any] | None, name: str) -> bool:
     if name == "_example":
         return True
-    if isinstance(meta, dict) and meta.get("status") == "example":
-        return True
-    return False
+    return isinstance(meta, dict) and meta.get("status") == "example"
 
 
 def _method_family(
     name: str,
-    config: Optional[Dict[str, Any]],
-    evals: Dict[str, Any],
+    config: dict[str, Any] | None,
+    evals: dict[str, Any],
 ) -> str:
     """Group runs by the actual model/objective, not the (often misleading) name."""
     model = (config or {}).get("model") if isinstance(config, dict) else None
@@ -122,22 +119,28 @@ def _method_family(
                 return "coffe_mae"
             return "coffe_simmim"
     # configs without a model block (ablation / notebook-only): use eval model_type
-    model_types = {
-        (e.get("model_type") or "") for e in evals.values()
-    }
+    model_types = {(e.get("model_type") or "") for e in evals.values()}
     if any("HyperSIGMA" in m for m in model_types):
-        adapted = any(
-            (e.get("checkpoint") or "none") not in ("none", None)
-            for e in evals.values()
-        )
+        adapted = any((e.get("checkpoint") or "none") not in ("none", None) for e in evals.values())
         return "hypersigma_adapt" if adapted else "hypersigma_ablation"
     # meta-only configs / runs whose eval has no results yet: fall back to name
     low = name.lower()
     if "hypersigma" in low or "native" in low:
         if "ablation" in low:
             return "hypersigma_ablation"
-        if any(t in low for t in ("adapt", "sem", "spatial_only", "spat_only",
-                                  "spectral_only", "joint", "pca", "native")):
+        if any(
+            t in low
+            for t in (
+                "adapt",
+                "sem",
+                "spatial_only",
+                "spat_only",
+                "spectral_only",
+                "joint",
+                "pca",
+                "native",
+            )
+        ):
             return "hypersigma_adapt"
         return "hypersigma"
     return "unknown"
@@ -146,7 +149,7 @@ def _method_family(
 _EPOCH_RE = re.compile(r"epoch_(\d+)")
 
 
-def _checkpoint_epoch(ckpt: Optional[str]) -> Optional[Any]:
+def _checkpoint_epoch(ckpt: str | None) -> Any | None:
     if not ckpt or ckpt == "none":
         return None
     base = Path(ckpt).name
@@ -158,9 +161,7 @@ def _checkpoint_epoch(ckpt: Optional[str]) -> Optional[Any]:
     return None
 
 
-def _estimate_runtime(
-    exp_dir: Path, started: Optional[_dt.datetime]
-) -> Optional[Dict[str, Any]]:
+def _estimate_runtime(exp_dir: Path, started: _dt.datetime | None) -> dict[str, Any] | None:
     """Fallback wall-clock estimate from latest checkpoint mtime - start time."""
     if started is None:
         return None
@@ -188,7 +189,7 @@ def _estimate_runtime(
 _METRIC_KEYS = ("OA", "AA", "Kappa")
 
 
-def _metric_block(d: Dict[str, Any]) -> Dict[str, Any]:
+def _metric_block(d: dict[str, Any]) -> dict[str, Any]:
     out = {}
     for k in _METRIC_KEYS:
         v = d.get(k)
@@ -201,7 +202,7 @@ def _metric_block(d: Dict[str, Any]) -> Dict[str, Any]:
     return out
 
 
-def _distill_eval(eval_dir: Path) -> Dict[str, Any]:
+def _distill_eval(eval_dir: Path) -> dict[str, Any]:
     cfg = _read_json(eval_dir / "eval_config.json") or {}
     meta = _read_json(eval_dir / "eval_metadata.json") or {}
     res = _read_json(eval_dir / "results.json") or {}
@@ -213,11 +214,9 @@ def _distill_eval(eval_dir: Path) -> Dict[str, Any]:
     if wall is None and started and finished:
         wall = (finished - started).total_seconds()
 
-    ckpt = res.get("checkpoint") or cfg.get("checkpoint") or res.get(
-        "adapted_checkpoint"
-    )
+    ckpt = res.get("checkpoint") or cfg.get("checkpoint") or res.get("adapted_checkpoint")
 
-    out: Dict[str, Any] = {
+    out: dict[str, Any] = {
         "eval_name": eval_dir.name,
         "status": meta.get("status", "complete" if res else "incomplete"),
         "has_results": bool(res),
@@ -231,8 +230,7 @@ def _distill_eval(eval_dir: Path) -> Dict[str, Any]:
             "k_query": res.get("k_query") or cfg.get("k_query"),
             "num_episodes": res.get("num_episodes") or cfg.get("num_episodes"),
             "seed": res.get("seed") or cfg.get("seed"),
-            "distance_metric": res.get("distance_metric")
-            or cfg.get("distance_metric"),
+            "distance_metric": res.get("distance_metric") or cfg.get("distance_metric"),
             "temperature": res.get("temperature") or cfg.get("temperature"),
             "prototype_mode": res.get("prototype_mode") or cfg.get("prototype_mode"),
             "use_projection": cfg.get("use_projection"),
@@ -275,9 +273,7 @@ def _distill_eval(eval_dir: Path) -> Dict[str, Any]:
                 pass
             if isinstance(stats, dict):
                 per_class[label] = {
-                    "accuracy": _round(
-                        stats.get("accuracy", stats.get("mean")), 3
-                    ),
+                    "accuracy": _round(stats.get("accuracy", stats.get("mean")), 3),
                     "std": _round(stats.get("std"), 3),
                     "ci_95": _round(stats.get("ci_95"), 4),
                 }
@@ -291,13 +287,13 @@ def _distill_eval(eval_dir: Path) -> Dict[str, Any]:
 # --------------------------------------------------------------------------- #
 # experiment distillation
 # --------------------------------------------------------------------------- #
-def _distill_experiment(exp_dir: Path) -> Dict[str, Any]:
+def _distill_experiment(exp_dir: Path) -> dict[str, Any]:
     meta = _read_json(exp_dir / "pretrain_metadata.json") or {}
     config = _read_yaml(exp_dir / "pretrain_config.yaml")
     config = config if isinstance(config, dict) else {}
 
     # evaluations
-    evaluations: Dict[str, Any] = {}
+    evaluations: dict[str, Any] = {}
     evals_dir = exp_dir / "evaluations"
     if evals_dir.is_dir():
         for ed in sorted(p for p in evals_dir.iterdir() if p.is_dir()):
@@ -309,7 +305,7 @@ def _distill_experiment(exp_dir: Path) -> Dict[str, Any]:
     if wall is None and started and finished:
         wall = (finished - started).total_seconds()
 
-    timing: Dict[str, Any] = {
+    timing: dict[str, Any] = {
         "started_at": meta.get("started_at"),
         "finished_at": meta.get("finished_at"),
         "wallclock_seconds": _round(wall),
@@ -321,11 +317,13 @@ def _distill_experiment(exp_dir: Path) -> Dict[str, Any]:
             timing.update(est)
 
     history = meta.get("history") or {}
-    n_ckpt = len(list((exp_dir / "checkpoints").glob("*.pth"))) if (
-        exp_dir / "checkpoints"
-    ).is_dir() else 0
+    n_ckpt = (
+        len(list((exp_dir / "checkpoints").glob("*.pth")))
+        if (exp_dir / "checkpoints").is_dir()
+        else 0
+    )
 
-    record: Dict[str, Any] = {
+    record: dict[str, Any] = {
         "name": meta.get("name", exp_dir.name),
         "method_family": _method_family(exp_dir.name, config, evaluations),
         "description": meta.get("description"),
@@ -336,8 +334,7 @@ def _distill_experiment(exp_dir: Path) -> Dict[str, Any]:
         "timing": timing,
         "hardware": {
             "gpu": meta.get("cuda_device_name"),
-            "device": meta.get("resolved_device")
-            or (config.get("hardware") or {}).get("device"),
+            "device": meta.get("resolved_device") or (config.get("hardware") or {}).get("device"),
             "seed": (config.get("hardware") or {}).get("seed"),
             "deterministic": (config.get("hardware") or {}).get("deterministic"),
         },
@@ -352,9 +349,7 @@ def _distill_experiment(exp_dir: Path) -> Dict[str, Any]:
         },
         "overrides": meta.get("overrides"),
         "num_evaluations": len(evaluations),
-        "num_evaluations_with_results": sum(
-            1 for e in evaluations.values() if e["has_results"]
-        ),
+        "num_evaluations_with_results": sum(1 for e in evaluations.values() if e["has_results"]),
         "evaluations": evaluations,
     }
     return record
@@ -363,9 +358,9 @@ def _distill_experiment(exp_dir: Path) -> Dict[str, Any]:
 # --------------------------------------------------------------------------- #
 # orchestration
 # --------------------------------------------------------------------------- #
-def build(experiments_root: Path) -> Dict[str, Any]:
-    experiments: Dict[str, Any] = {}
-    skipped: List[str] = []
+def build(experiments_root: Path) -> dict[str, Any]:
+    experiments: dict[str, Any] = {}
+    skipped: list[str] = []
 
     for exp_dir in sorted(p for p in experiments_root.iterdir() if p.is_dir()):
         meta = _read_json(exp_dir / "pretrain_metadata.json")
@@ -376,31 +371,23 @@ def build(experiments_root: Path) -> Dict[str, Any]:
             or (exp_dir / "pretrain_config.yaml").exists()
             or (exp_dir / "evaluations").is_dir()
         )
-        if (
-            _is_example(meta, exp_dir.name)
-            or exp_dir.name.startswith("_")
-            or not is_real
-        ):
+        if _is_example(meta, exp_dir.name) or exp_dir.name.startswith("_") or not is_real:
             skipped.append(exp_dir.name)
             continue
         experiments[exp_dir.name] = _distill_experiment(exp_dir)
 
     # ---- summary roll-up -------------------------------------------------- #
     total_wall = 0.0
-    family_counts: Dict[str, int] = {}
-    gpus: Dict[str, int] = {}
-    starts: List[_dt.datetime] = []
+    family_counts: dict[str, int] = {}
+    gpus: dict[str, int] = {}
+    starts: list[_dt.datetime] = []
     n_eval = n_eval_done = 0
-    status_counts: Dict[str, int] = {}
+    status_counts: dict[str, int] = {}
 
     for e in experiments.values():
-        family_counts[e["method_family"]] = (
-            family_counts.get(e["method_family"], 0) + 1
-        )
+        family_counts[e["method_family"]] = family_counts.get(e["method_family"], 0) + 1
         status_counts[e["status"]] = status_counts.get(e["status"], 0) + 1
-        w = e["timing"].get("wallclock_seconds") or e["timing"].get(
-            "estimated_wallclock_seconds"
-        )
+        w = e["timing"].get("wallclock_seconds") or e["timing"].get("estimated_wallclock_seconds")
         if w:
             total_wall += w
         g = e["hardware"].get("gpu")
@@ -422,12 +409,8 @@ def build(experiments_root: Path) -> Dict[str, Any]:
         "experiments_by_status": dict(sorted(status_counts.items())),
         "gpus_used": gpus,
         "date_range": {
-            "earliest_start": min(starts).isoformat(timespec="seconds")
-            if starts
-            else None,
-            "latest_start": max(starts).isoformat(timespec="seconds")
-            if starts
-            else None,
+            "earliest_start": min(starts).isoformat(timespec="seconds") if starts else None,
+            "latest_start": max(starts).isoformat(timespec="seconds") if starts else None,
         },
         "skipped": skipped,
         "note": (
@@ -449,9 +432,7 @@ def build(experiments_root: Path) -> Dict[str, Any]:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--experiments-root", default="experiments", type=Path)
-    ap.add_argument(
-        "--output", default="results/experiment_metadata.json", type=Path
-    )
+    ap.add_argument("--output", default="results/experiment_metadata.json", type=Path)
     args = ap.parse_args()
 
     data = build(args.experiments_root)
@@ -463,8 +444,7 @@ def main() -> None:
     print(f"Wrote {args.output}")
     print(f"  experiments: {s['num_experiments']}")
     print(
-        f"  evaluations: {s['num_evaluations']} "
-        f"({s['num_evaluations_with_results']} with results)"
+        f"  evaluations: {s['num_evaluations']} ({s['num_evaluations_with_results']} with results)"
     )
     print(f"  total GPU-hours (incl. estimates): {s['total_gpu_hours']}")
     print(f"  by family: {s['experiments_by_family']}")

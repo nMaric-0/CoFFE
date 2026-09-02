@@ -38,7 +38,7 @@ def make_center_weights(
     coords = torch.arange(patch_size, dtype=torch.float32)
     y, x = torch.meshgrid(coords, coords, indexing="ij")
     dist_sq = (x - center) ** 2 + (y - center) ** 2
-    weights = torch.exp(-dist_sq / (2 * sigma ** 2))
+    weights = torch.exp(-dist_sq / (2 * sigma**2))
 
     if normalize:
         weights = weights / weights.sum()

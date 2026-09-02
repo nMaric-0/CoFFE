@@ -22,8 +22,6 @@ Mirrors the public surface of ``CoFFE`` so the existing
 
 from __future__ import annotations
 
-from typing import Optional, Tuple
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -43,7 +41,7 @@ class HyperSIGMAFewShot(nn.Module):
         distance_metric: str = "euclidean",
         temperature: float = 10.0,
         prototype_mode: str = "mean_features",
-        pool_sigma: Optional[float] = None,
+        pool_sigma: float | None = None,
     ) -> None:
         super().__init__()
         if mode not in self.SUPPORTED_MODES:
@@ -70,22 +68,31 @@ class HyperSIGMAFewShot(nn.Module):
         if self.mode == "fused":
             return F.normalize(out["fused"], p=2, dim=-1)
         if self.mode == "spat_pool":
-            last = out["spat_features"][-1]              # [B, 768, Hp, Wp]
+            last = out["spat_features"][-1]  # [B, 768, Hp, Wp]
             pooled = F.adaptive_avg_pool2d(last, 1).flatten(1)
             return F.normalize(pooled, p=2, dim=-1)
         if self.mode == "spec_pool":
             # Use the deepest spectral stage (post-norm, [B, 100, 768])
             # rather than features[0] (which is the l1-projected [B, 100, 128]).
             last = out["spec_features"][-1]
-            pooled = last.mean(dim=1)                     # [B, 768]
+            pooled = last.mean(dim=1)  # [B, 768]
             return F.normalize(pooled, p=2, dim=-1)
         raise ValueError(self.mode)
 
     def forward_features(
         self,
         hsi: torch.Tensor,
-        aux: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        aux: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Encode a patch batch into the frozen eval feature.
+
+        Returns the ``(patch_emb, cls_emb, aux_emb)`` triple that the shared
+        evaluator expects; for HyperSIGMA all three carry the same L2-normalised
+        vector — spatial 768-d (``spat_pool``), spectral 768-d (``spec_pool``)
+        or fused SEM 512-d (``fused``), the three feature columns of
+        PAPER_CANON Table 3. ``aux`` is accepted and ignored: this route is
+        HSI-only.
+        """
         # Skip the unused branch when the eval mode only needs one side.
         # `mode="fused"` still requires both (SEM consumes spat + spec).
         # Saves ~half the eval wallclock for `spat_pool` / `spec_pool` runs.
@@ -103,16 +110,23 @@ class HyperSIGMAFewShot(nn.Module):
         else:  # "fused"
             out = self.dual(hsi)
             feats = self._extract(out)
-        patch = feats.unsqueeze(1)                        # [B, 1, D]
+        patch = feats.unsqueeze(1)  # [B, 1, D]
         return patch, feats, feats
 
     def eval_patch_embeddings(
         self,
         patch_emb: torch.Tensor,
         cls_emb: torch.Tensor,
-        cls_token_weight: Optional[float] = None,
+        cls_token_weight: float | None = None,
         renormalize: bool = True,
     ) -> torch.Tensor:
+        """Return ``patch_emb`` unchanged — there is no class token to fold in.
+
+        CoFFE mixes the class-agnostic token into the patch embedding with
+        weight λ; HyperSIGMA has no such token, so λ is inert on this route
+        (PAPER_CANON §8 D3). The signature matches CoFFE's only so the one
+        evaluator can drive both.
+        """
         # No class-token folding in HyperSIGMA — patch tokens pass through.
         return patch_emb
 
@@ -125,6 +139,12 @@ class HyperSIGMAFewShot(nn.Module):
         features: torch.Tensor,
         labels: torch.Tensor,
     ) -> torch.Tensor:
+        """Class means of the support features — the NCM prototypes of §4.
+
+        With K=5 support samples per class this is the mean of five feature
+        vectors per class. Duplicated from CoFFE rather than shared, so the two
+        routes cannot drift into each other's state.
+        """
         num_classes = labels.max().item() + 1
         prototypes = torch.zeros(num_classes, features.shape[-1], device=features.device)
         counts = torch.zeros(num_classes, device=features.device)
@@ -163,6 +183,6 @@ class HyperSIGMAFewShot(nn.Module):
 
         logits = torch.zeros(num_queries, num_classes, device=device)
         for c in range(num_classes):
-            mask = (support_labels == c)
+            mask = support_labels == c
             logits[:, c] = all_sim[:, mask].mean(dim=1)
         return logits

@@ -9,11 +9,10 @@ Components:
 - MFTBlock: Transformer block with MCrossAttention
 - MFTEncoder: Stack of MFT blocks
 """
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional
-import math
 
 
 class HetConv(nn.Module):
@@ -32,7 +31,7 @@ class HetConv(nn.Module):
         out_channels: int,
         kernel_size: int = 3,
         groups: int = 64,
-        padding: int = 1
+        padding: int = 1,
     ):
         """
         Args:
@@ -51,19 +50,16 @@ class HetConv(nn.Module):
 
         # Groupwise convolution (spatial processing)
         self.gwconv = nn.Conv2d(
-            in_channels, out_channels,
+            in_channels,
+            out_channels,
             kernel_size=kernel_size,
             padding=padding,
             groups=self.groups,
-            bias=False
+            bias=False,
         )
 
         # Pointwise convolution (channel mixing)
-        self.pwconv = nn.Conv2d(
-            in_channels, out_channels,
-            kernel_size=1,
-            bias=False
-        )
+        self.pwconv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -93,12 +89,12 @@ class MCrossAttention(nn.Module):
         num_heads: int = 8,
         qkv_bias: bool = False,
         attn_drop: float = 0.1,
-        proj_drop: float = 0.1
+        proj_drop: float = 0.1,
     ):
         super().__init__()
         self.num_heads = num_heads
         self.head_dim = dim // num_heads
-        self.scale = self.head_dim ** -0.5
+        self.scale = self.head_dim**-0.5
 
         # Separate projections for Q (first token) and KV (all tokens)
         self.q_proj = nn.Linear(dim, dim, bias=qkv_bias)
@@ -135,7 +131,7 @@ class MCrossAttention(nn.Module):
         attn = self.attn_drop(attn)
 
         # Apply attention to values
-        out = (attn @ v)  # [B, heads, 1, head_dim]
+        out = attn @ v  # [B, heads, 1, head_dim]
         out = out.transpose(1, 2).reshape(B, 1, D)  # [B, 1, D]
         out = self.proj(out)
         out = self.proj_drop(out)
@@ -159,12 +155,12 @@ class StandardSelfAttention(nn.Module):
         num_heads: int = 8,
         qkv_bias: bool = False,
         attn_drop: float = 0.1,
-        proj_drop: float = 0.1
+        proj_drop: float = 0.1,
     ):
         super().__init__()
         self.num_heads = num_heads
         self.head_dim = dim // num_heads
-        self.scale = self.head_dim ** -0.5
+        self.scale = self.head_dim**-0.5
 
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
         self.attn_drop = nn.Dropout(attn_drop)
@@ -198,12 +194,7 @@ class StandardSelfAttention(nn.Module):
 class MLP(nn.Module):
     """Feed-forward network with GELU activation."""
 
-    def __init__(
-        self,
-        dim: int,
-        mlp_dim: Optional[int] = None,
-        dropout: float = 0.1
-    ):
+    def __init__(self, dim: int, mlp_dim: int | None = None, dropout: float = 0.1):
         super().__init__()
         mlp_dim = mlp_dim or dim * 4
 
@@ -219,6 +210,7 @@ class MLP(nn.Module):
         nn.init.zeros_(self.fc2.bias)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Two-layer feed-forward block (Xavier-initialised, as in MFT)."""
         x = self.fc1(x)
         x = self.act(x)
         x = self.drop(x)
@@ -238,29 +230,29 @@ class MFTBlock(nn.Module):
         self,
         dim: int,
         num_heads: int = 8,
-        mlp_dim: Optional[int] = None,
+        mlp_dim: int | None = None,
         dropout: float = 0.1,
-        attention_type: str = "mcross"  # "mcross" or "standard"
+        attention_type: str = "mcross",  # "mcross" or "standard"
     ):
         super().__init__()
 
         self.norm1 = nn.LayerNorm(dim)
         self.norm2 = nn.LayerNorm(dim)
 
+        self.attn: nn.Module
         if attention_type == "mcross":
             self.attn = MCrossAttention(
-                dim, num_heads=num_heads,
-                attn_drop=dropout, proj_drop=dropout
+                dim, num_heads=num_heads, attn_drop=dropout, proj_drop=dropout
             )
         else:
             self.attn = StandardSelfAttention(
-                dim, num_heads=num_heads,
-                attn_drop=dropout, proj_drop=dropout
+                dim, num_heads=num_heads, attn_drop=dropout, proj_drop=dropout
             )
 
         self.mlp = MLP(dim, mlp_dim, dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Pre-norm attention + MLP with residual connections."""
         x = x + self.attn(self.norm1(x))
         x = x + self.mlp(self.norm2(x))
         return x
@@ -276,16 +268,15 @@ class MFTEncoder(nn.Module):
         dim: int,
         depth: int = 2,
         num_heads: int = 8,
-        mlp_dim: Optional[int] = None,
+        mlp_dim: int | None = None,
         dropout: float = 0.1,
-        attention_type: str = "mcross"
+        attention_type: str = "mcross",
     ):
         super().__init__()
 
-        self.blocks = nn.ModuleList([
-            MFTBlock(dim, num_heads, mlp_dim, dropout, attention_type)
-            for _ in range(depth)
-        ])
+        self.blocks = nn.ModuleList(
+            [MFTBlock(dim, num_heads, mlp_dim, dropout, attention_type) for _ in range(depth)]
+        )
         self.norm = nn.LayerNorm(dim)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -319,7 +310,7 @@ class LearnableTokenizer(nn.Module):
         input_dim: int,
         embed_dim: int,
         num_tokens: int,
-        token_type: str = "channel"  # "channel" or "pixel"
+        token_type: str = "channel",  # "channel" or "pixel"
     ):
         """
         Args:
@@ -397,11 +388,7 @@ class HSI3DConv(nn.Module):
     """
 
     def __init__(
-        self,
-        in_channels: int,
-        out_channels: int,
-        spectral_kernel: int = 7,
-        spatial_kernel: int = 3
+        self, in_channels: int, out_channels: int, spectral_kernel: int = 7, spatial_kernel: int = 3
     ):
         """
         Args:
@@ -415,9 +402,10 @@ class HSI3DConv(nn.Module):
         # 3D conv: (in_channels, D, H, W) -> (out_channels, D', H', W')
         # We treat spectral as depth dimension
         self.conv3d = nn.Conv3d(
-            1, out_channels,
+            1,
+            out_channels,
             kernel_size=(spectral_kernel, spatial_kernel, spatial_kernel),
-            padding=(spectral_kernel // 2, spatial_kernel // 2, spatial_kernel // 2)
+            padding=(spectral_kernel // 2, spatial_kernel // 2, spatial_kernel // 2),
         )
         self.bn = nn.BatchNorm3d(out_channels)
         self.act = nn.GELU()

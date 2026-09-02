@@ -1,4 +1,7 @@
 """Model architectures."""
+
+from typing import Any
+
 from .coffe import CoFFE
 from .mft_original import MFTOriginal
 
@@ -14,7 +17,7 @@ __all__ = [
 _LEGACY_ALIASES = {"MFTCPEACosine": "CoFFE", "MFTOriginalCosine": "MFTOriginal"}
 
 
-def __getattr__(name):
+def __getattr__(name: str) -> Any:
     canonical = _LEGACY_ALIASES.get(name)
     if canonical is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -23,5 +26,5 @@ def __getattr__(name):
     return getattr(coffe_compat, name)
 
 
-def __dir__():
+def __dir__() -> list[str]:
     return sorted(set(__all__) | set(_LEGACY_ALIASES))

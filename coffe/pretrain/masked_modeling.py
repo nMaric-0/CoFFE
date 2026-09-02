@@ -1,7 +1,7 @@
 """
 Masked Spectral-Spatial Modeling for Self-Supervised Pretraining.
 
-This module implements masked autoencoder pretraining for multimodal 
+This module implements masked autoencoder pretraining for multimodal
 Earth observation data (HSI + LiDAR/SAR).
 
 Based on:
@@ -16,13 +16,13 @@ Key design decisions:
 - LiDAR: Can be used as unmasked context OR also masked
 """
 
+from typing import TYPE_CHECKING
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from typing import Tuple, Optional, Dict
-import math
 
-from coffe.utils.spatial_weights import make_center_weights
+if TYPE_CHECKING:  # annotation only — keeps coffe.pretrain free of a coffe.data edge
+    from coffe.data.datasets.base import MultimodalEODataset
 
 
 class UnifiedBandMasking(nn.Module):
@@ -45,7 +45,7 @@ class UnifiedBandMasking(nn.Module):
         self.mask_value = nn.Parameter(torch.zeros(1, num_channels, 1, 1))
         nn.init.normal_(self.mask_value, std=0.02)
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Args:
             x: [B, C, H, W] combined HSI+aux input
@@ -56,7 +56,7 @@ class UnifiedBandMasking(nn.Module):
             mask: [B, C, H, W] binary mask (1 = masked, 0 = visible)
         """
         B, C, H, W = x.shape
-        assert C == self.num_channels, (
+        assert self.num_channels == C, (
             f"UnifiedBandMasking expected {self.num_channels} channels, got {C}"
         )
         noise = torch.rand(B, C, H, W, device=x.device, dtype=x.dtype)
@@ -82,7 +82,7 @@ class SpatialTokenMasking(nn.Module):
         self.mask_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         nn.init.normal_(self.mask_token, std=0.02)
 
-    def forward(self, tokens: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, tokens: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Args:
             tokens: [B, N, D] patch-token embeddings (CLS not included).
@@ -98,7 +98,7 @@ class SpatialTokenMasking(nn.Module):
 
         noise = torch.rand(B, N, device=tokens.device)
         ids_shuffle = noise.argsort(dim=1)
-        masked_idx = ids_shuffle[:, N - num_mask:]
+        masked_idx = ids_shuffle[:, N - num_mask :]
         token_mask = torch.zeros(B, N, device=tokens.device, dtype=tokens.dtype)
         token_mask.scatter_(1, masked_idx, 1.0)
 
@@ -110,18 +110,12 @@ class SpatialTokenMasking(nn.Module):
 class MLPDecoder(nn.Module):
     """
     Lightweight 2-layer MLP decoder for reconstruction.
-    
+
     Following the principle that a lightweight decoder forces
     the encoder to learn meaningful representations.
     """
-    
-    def __init__(
-        self,
-        embed_dim: int,
-        hidden_dim: int,
-        output_dim: int,
-        dropout: float = 0.1
-    ):
+
+    def __init__(self, embed_dim: int, hidden_dim: int, output_dim: int, dropout: float = 0.1):
         """
         Args:
             embed_dim: Input embedding dimension
@@ -130,14 +124,14 @@ class MLPDecoder(nn.Module):
             dropout: Dropout rate
         """
         super().__init__()
-        
+
         self.decoder = nn.Sequential(
             nn.Linear(embed_dim, hidden_dim),
             nn.GELU(),
             nn.Dropout(dropout),
-            nn.Linear(hidden_dim, output_dim)
+            nn.Linear(hidden_dim, output_dim),
         )
-    
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Args:
@@ -151,15 +145,11 @@ class MLPDecoder(nn.Module):
 class PretrainDataset(torch.utils.data.Dataset):
     """
     Dataset wrapper for pretraining.
-    
+
     Provides all pixels (including unlabeled) for self-supervised learning.
     """
-    
-    def __init__(
-        self,
-        base_dataset,
-        include_unlabeled: bool = True
-    ):
+
+    def __init__(self, base_dataset: "MultimodalEODataset", include_unlabeled: bool = True) -> None:
         """
         Args:
             base_dataset: Base multimodal EO dataset
@@ -168,43 +158,36 @@ class PretrainDataset(torch.utils.data.Dataset):
         self.base_dataset = base_dataset
         self.patch_size = base_dataset.patch_size
         self.pad = self.patch_size // 2
-        
+
         # Build index of all valid pixels
         H, W = base_dataset.labels.shape
         self.valid_coords = []
-        
+
         for y in range(self.pad, H - self.pad):
             for x in range(self.pad, W - self.pad):
                 if include_unlabeled or base_dataset.labels[y, x] > 0:
                     self.valid_coords.append((y, x))
-    
+
     def __len__(self) -> int:
         return len(self.valid_coords)
-    
-    def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+
+    def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
         y, x = self.valid_coords[idx]
         hsi, aux = self.base_dataset.extract_patch(y, x)
-        
-        return {
-            "hsi": hsi,
-            "aux": aux,
-            "coords": torch.tensor([y, x], dtype=torch.long)
-        }
+
+        return {"hsi": hsi, "aux": aux, "coords": torch.tensor([y, x], dtype=torch.long)}
 
 
 class CombinedPretrainDataset(torch.utils.data.Dataset):
     """
     Combines multiple datasets for pretraining.
-    
+
     Useful for pretraining on Houston + Trento + MUUFL together.
     Handles different numbers of spectral bands via padding/truncation.
     """
-    
+
     def __init__(
-        self,
-        datasets: list,
-        target_hsi_channels: int = 144,
-        target_aux_channels: int = 2
+        self, datasets: list, target_hsi_channels: int = 144, target_aux_channels: int = 2
     ):
         """
         Args:
@@ -215,34 +198,31 @@ class CombinedPretrainDataset(torch.utils.data.Dataset):
         self.datasets = datasets
         self.target_hsi_channels = target_hsi_channels
         self.target_aux_channels = target_aux_channels
-        
+
         # Build cumulative index
         self.cumulative_sizes = []
         total = 0
         for ds in datasets:
             total += len(ds)
             self.cumulative_sizes.append(total)
-    
+
     def __len__(self) -> int:
         return self.cumulative_sizes[-1] if self.cumulative_sizes else 0
-    
-    def _find_dataset(self, idx: int) -> Tuple[int, int]:
+
+    def _find_dataset(self, idx: int) -> tuple[int, int]:
         """Find which dataset and local index for global index."""
         for i, cum_size in enumerate(self.cumulative_sizes):
             if idx < cum_size:
-                local_idx = idx - (self.cumulative_sizes[i-1] if i > 0 else 0)
+                local_idx = idx - (self.cumulative_sizes[i - 1] if i > 0 else 0)
                 return i, local_idx
         raise IndexError(f"Index {idx} out of range")
-    
+
     def _pad_or_truncate(
-        self,
-        tensor: torch.Tensor,
-        target_channels: int,
-        dim: int = 0
+        self, tensor: torch.Tensor, target_channels: int, dim: int = 0
     ) -> torch.Tensor:
         """Pad or truncate tensor to target number of channels."""
         current_channels = tensor.shape[dim]
-        
+
         if current_channels == target_channels:
             return tensor
         elif current_channels < target_channels:
@@ -257,18 +237,14 @@ class CombinedPretrainDataset(torch.utils.data.Dataset):
             indices = [slice(None)] * tensor.ndim
             indices[dim] = slice(0, target_channels)
             return tensor[tuple(indices)]
-    
-    def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+
+    def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
         ds_idx, local_idx = self._find_dataset(idx)
         sample = self.datasets[ds_idx][local_idx]
-        
+
         # Normalize channel counts
-        sample["hsi"] = self._pad_or_truncate(
-            sample["hsi"], self.target_hsi_channels, dim=0
-        )
-        sample["aux"] = self._pad_or_truncate(
-            sample["aux"], self.target_aux_channels, dim=0
-        )
+        sample["hsi"] = self._pad_or_truncate(sample["hsi"], self.target_hsi_channels, dim=0)
+        sample["aux"] = self._pad_or_truncate(sample["aux"], self.target_aux_channels, dim=0)
         sample["dataset_idx"] = torch.tensor(ds_idx, dtype=torch.long)
-        
+
         return sample

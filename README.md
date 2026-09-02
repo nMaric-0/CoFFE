@@ -1,7 +1,7 @@
 # CoFFE — A Compact In-Domain Fusion Encoder vs. a Hyperspectral Foundation Model
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![PyTorch 1.10+](https://img.shields.io/badge/pytorch-1.10+-red.svg)](https://pytorch.org/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![PyTorch 2.11+](https://img.shields.io/badge/pytorch-2.11+-red.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Public code release for *"A Compact In-Domain Fusion Encoder versus a
@@ -30,16 +30,20 @@ designed for tuning, comparing, and revisiting runs from notebooks.
 ```bash
 git clone <repo-url> coffe
 cd coffe
-conda create -n coffe python=3.9 -y && conda activate coffe
+python -m venv .venv && source .venv/bin/activate   # Python 3.11+
 pip install -e .
 ```
 
 That installs the `coffe` package (and the vendored HyperSIGMA sources under
 `third_party/`), so `import coffe` works from any working directory.
-`pip install -r requirements.txt` without the editable install also works: every
-entry point under `scripts/` adds the repo root to `sys.path` itself, so
-`python scripts/…` runs either way. Only `import coffe` from an unrelated
-directory needs the install.
+`requirements.txt` is a one-line mirror of `pyproject.toml` (`-e .[dev]`), so
+`pip install -r requirements.txt` does the same thing plus the test and lint
+tools. Every entry point under `scripts/` adds the repo root to `sys.path`
+itself, so `python scripts/…` runs with or without the install; only
+`import coffe` from an unrelated directory needs it.
+
+Optional extras: `.[tensorboard]` for pretraining scalars, `.[notebooks]` for
+the Jupyter workflow below, `.[dev]` for pytest + ruff + mypy.
 
 Then either:
 
@@ -87,7 +91,7 @@ exp = run_pretrain(
     name="houston_coffe_simmim_token_hsi_lidar_seed42",
     description="Houston CoFFE pretrain, SimMIM token regime, 2-layer 2-head encoder.",
     config="configs/coffe/houston_simmim.yaml",
-    overrides={"pretrain": {"lr": 3e-4}},   # optional deep-merge
+    overrides={"pretrain": {"lr": 3e-4}},  # optional deep-merge
 )
 
 # 2. Evaluate (loads the latest checkpoint from the experiment)
@@ -97,14 +101,18 @@ ev = run_evaluation(
     eval_params={
         # n_way defaults to the scene's full class count, which is the paper
         # protocol; use_projection is off at eval.
-        "dataset": "houston", "k_shot": 5, "k_query": 100,
-        "num_episodes": 1000, "distance_metric": "euclidean",
+        "dataset": "houston",
+        "k_shot": 5,
+        "k_query": 100,
+        "num_episodes": 1000,
+        "distance_metric": "euclidean",
         "use_projection": False,
     },
 )
 
 # 3. Compare
-import pandas as pd
+import pandas as pd  # ships with the `.[notebooks]` extra
+
 df = pd.DataFrame(load_all_evaluations())
 ```
 

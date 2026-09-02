@@ -32,8 +32,8 @@ can read them, then cleared in a ``finally``.
 
 from __future__ import annotations
 
+import contextlib
 import logging
-from typing import Dict, List, Optional
 
 import torch
 import torch.nn as nn
@@ -62,12 +62,14 @@ def _masked_token_mse(pred: torch.Tensor, target: torch.Tensor, mask: torch.Tens
         pred, target: ``[B, N, D]``.
         mask: ``[B, N]``, 1 = masked (contributes), 0 = visible (ignored).
     """
-    se = (pred - target).pow(2).mean(dim=-1)            # [B, N]
+    se = (pred - target).pow(2).mean(dim=-1)  # [B, N]
     denom = mask.sum().clamp(min=1.0)
     return (se * mask).sum() / denom
 
 
-def _build_per_token_mlp(in_dim: int, hidden_dim: int, out_dim: int, dropout: float) -> nn.Sequential:
+def _build_per_token_mlp(
+    in_dim: int, hidden_dim: int, out_dim: int, dropout: float
+) -> nn.Sequential:
     return nn.Sequential(
         nn.Linear(in_dim, hidden_dim),
         nn.GELU(),
@@ -95,9 +97,7 @@ class HyperSIGMAMaskedAdaptation(nn.Module):
     ) -> None:
         super().__init__()
         if adapt_mode not in _SUPPORTED_MODES:
-            raise ValueError(
-                f"adapt_mode must be one of {_SUPPORTED_MODES}, got {adapt_mode!r}"
-            )
+            raise ValueError(f"adapt_mode must be one of {_SUPPORTED_MODES}, got {adapt_mode!r}")
         if not (0.0 < mask_ratio < 1.0):
             raise ValueError(f"mask_ratio must be in (0, 1), got {mask_ratio}")
 
@@ -201,11 +201,11 @@ class HyperSIGMAMaskedAdaptation(nn.Module):
                 p.requires_grad_(True)
 
         # Mask cache slots, populated inside forward() so hooks can read them.
-        self._pending_spat_mask: Optional[torch.Tensor] = None
-        self._pending_spec_mask: Optional[torch.Tensor] = None
+        self._pending_spat_mask: torch.Tensor | None = None
+        self._pending_spec_mask: torch.Tensor | None = None
 
         # Attach forward hooks for mask-token substitution.
-        self._hook_handles: List = []
+        self._hook_handles: list = []
         if self.mask_spat:
             self._hook_handles.append(
                 dual.spat.model.patch_embed.register_forward_hook(self._spat_patch_embed_hook)
@@ -220,20 +220,17 @@ class HyperSIGMAMaskedAdaptation(nn.Module):
     # ------------------------------------------------------------------
 
     def remove_hooks(self) -> None:
+        """Detach the forward hooks used to inject mask tokens into the branches."""
         for h in self._hook_handles:
-            try:
+            with contextlib.suppress(Exception):
                 h.remove()
-            except Exception:
-                pass
         self._hook_handles = []
 
-    def __del__(self):
+    def __del__(self) -> None:
         # Best-effort cleanup; module deletion can race during interpreter
         # shutdown so we swallow any exceptions.
-        try:
+        with contextlib.suppress(Exception):
             self.remove_hooks()
-        except Exception:
-            pass
 
     # ------------------------------------------------------------------
     # Hooks
@@ -261,7 +258,9 @@ class HyperSIGMAMaskedAdaptation(nn.Module):
     # Mask sampling and target computation
     # ------------------------------------------------------------------
 
-    def _sample_mask(self, batch_size: int, num_tokens: int, device: torch.device, dtype: torch.dtype) -> torch.Tensor:
+    def _sample_mask(
+        self, batch_size: int, num_tokens: int, device: torch.device, dtype: torch.dtype
+    ) -> torch.Tensor:
         noise = torch.rand(batch_size, num_tokens, device=device)
         return (noise < self.mask_ratio).to(dtype)
 
@@ -293,16 +292,16 @@ class HyperSIGMAMaskedAdaptation(nn.Module):
         """
         with torch.no_grad():
             spec_model = self.dual.spec.model
-            x = spec_model.patch_embed(hsi)            # [B, 121, 144]
-            x = spec_model.spec_embed(x)               # [B, 121, 100]
-            x = x.transpose(1, 2)                      # [B, 100, 121]
+            x = spec_model.patch_embed(hsi)  # [B, 121, 144]
+            x = spec_model.spec_embed(x)  # [B, 121, 100]
+            x = x.transpose(1, 2)  # [B, 100, 121]
             return _per_token_zscore(x)
 
     def _fused_target(self, hsi: torch.Tensor) -> torch.Tensor:
         """Per-channel z-scored 11x11 PCA-standardized cube for the fused decoder."""
         with torch.no_grad():
             x = self.dual.pca_spat(hsi)
-            x = self.dual.pca_standardize(x)           # [B, 3, 11, 11]
+            x = self.dual.pca_standardize(x)  # [B, 3, 11, 11]
             mu = x.mean(dim=(2, 3), keepdim=True)
             var = x.var(dim=(2, 3), keepdim=True, unbiased=False)
             return (x - mu) / torch.sqrt(var + _EPS)
@@ -311,10 +310,20 @@ class HyperSIGMAMaskedAdaptation(nn.Module):
     # Forward
     # ------------------------------------------------------------------
 
-    def forward(self, hsi: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(self, hsi: torch.Tensor) -> dict[str, torch.Tensor]:
+        """Masked HSI reconstruction over the frozen HyperSIGMA branches.
+
+        Which losses are returned depends on ``adapt_mode``: ``spatial_only`` /
+        ``spectral_only`` train one branch's random-init pieces,
+        ``joint_sem`` trains both plus the SEM, and ``sem_only`` trains the
+        fusion path alone on top of natively-shaped frozen encoders. The
+        transformer bodies never see gradients in any mode; adaptation is
+        label-free (PAPER_CANON §5).
+        """
         B, C, H, W = hsi.shape
-        assert C == self.hsi_channels and H == W == self.patch_size, (
-            f"expected [B, {self.hsi_channels}, {self.patch_size}, {self.patch_size}], got {tuple(hsi.shape)}"
+        assert self.hsi_channels == C and H == W == self.patch_size, (
+            f"expected [B, {self.hsi_channels}, {self.patch_size}, {self.patch_size}], "
+            f"got {tuple(hsi.shape)}"
         )
 
         device = hsi.device
@@ -323,7 +332,7 @@ class HyperSIGMAMaskedAdaptation(nn.Module):
         loss_spat = zero
         loss_spec = zero
         loss_fused = zero
-        out: Dict[str, torch.Tensor] = {}
+        out: dict[str, torch.Tensor] = {}
 
         if self.mask_spat:
             self._pending_spat_mask = self._sample_mask(B, self.num_spat_tokens, device, dtype)
@@ -347,10 +356,10 @@ class HyperSIGMAMaskedAdaptation(nn.Module):
                 x = self.dual.pca_spat(hsi)
                 x = self.dual.pca_standardize(x)
                 spat_features = self.dual.spat(x)
-                f = spat_features[-1]                                   # [B, 768, 4, 4]
-                tokens = f.flatten(2).transpose(1, 2)                   # [B, 16, 768]
-                pred_spat = self.spat_decoder(tokens)                   # [B, 16, 27]
-                tgt_spat = self._spat_target(hsi)                       # [B, 16, 27]
+                f = spat_features[-1]  # [B, 768, 4, 4]
+                tokens = f.flatten(2).transpose(1, 2)  # [B, 16, 768]
+                pred_spat = self.spat_decoder(tokens)  # [B, 16, 27]
+                tgt_spat = self._spat_target(hsi)  # [B, 16, 27]
                 loss_spat = _masked_token_mse(pred_spat, tgt_spat, self._pending_spat_mask)
                 out.update(
                     pred_spat=pred_spat, target_spat=tgt_spat, mask_spat=self._pending_spat_mask
@@ -358,8 +367,8 @@ class HyperSIGMAMaskedAdaptation(nn.Module):
 
             elif self.adapt_mode == "spectral_only":
                 spec_features = self.dual.spec(hsi)
-                f = spec_features[0]                                    # [B, 100, 128] post-l1
-                pred_spec = self.spec_decoder(f)                        # [B, 100, 121]
+                f = spec_features[0]  # [B, 100, 128] post-l1
+                pred_spec = self.spec_decoder(f)  # [B, 100, 121]
                 tgt_spec = self._spec_target(hsi)
                 loss_spec = _masked_token_mse(pred_spec, tgt_spec, self._pending_spec_mask)
                 out.update(
@@ -376,21 +385,28 @@ class HyperSIGMAMaskedAdaptation(nn.Module):
                 loss_spat = _masked_token_mse(pred_spat, tgt_spat, self._pending_spat_mask)
 
                 # Spectral
-                f_spec = dual_out["spec_first"]                         # [B, 100, 128]
+                f_spec = dual_out["spec_first"]  # [B, 100, 128]
                 pred_spec = self.spec_decoder(f_spec)
                 tgt_spec = self._spec_target(hsi)
                 loss_spec = _masked_token_mse(pred_spec, tgt_spec, self._pending_spec_mask)
 
                 # Fused
-                pred_fused_flat = self.fused_decoder(dual_out["fused"]) # [B, 3*11*11]
-                pred_fused = pred_fused_flat.view(B, self.fused_out_chans, self.patch_size, self.patch_size)
+                pred_fused_flat = self.fused_decoder(dual_out["fused"])  # [B, 3*11*11]
+                pred_fused = pred_fused_flat.view(
+                    B, self.fused_out_chans, self.patch_size, self.patch_size
+                )
                 tgt_fused = self._fused_target(hsi)
                 loss_fused = F.mse_loss(pred_fused, tgt_fused)
 
                 out.update(
-                    pred_spat=pred_spat, target_spat=tgt_spat, mask_spat=self._pending_spat_mask,
-                    pred_spec=pred_spec, target_spec=tgt_spec, mask_spec=self._pending_spec_mask,
-                    pred_fused=pred_fused, target_fused=tgt_fused,
+                    pred_spat=pred_spat,
+                    target_spat=tgt_spat,
+                    mask_spat=self._pending_spat_mask,
+                    pred_spec=pred_spec,
+                    target_spec=tgt_spec,
+                    mask_spec=self._pending_spec_mask,
+                    pred_fused=pred_fused,
+                    target_fused=tgt_fused,
                 )
         finally:
             self._pending_spat_mask = None
@@ -407,9 +423,9 @@ class HyperSIGMAMaskedAdaptation(nn.Module):
     # Introspection
     # ------------------------------------------------------------------
 
-    def parameter_counts(self) -> Dict[str, int]:
+    def parameter_counts(self) -> dict[str, int]:
         """Return a per-component breakdown of trainable parameters."""
-        counts: Dict[str, int] = {}
+        counts: dict[str, int] = {}
 
         def _train(module_or_param) -> int:
             if isinstance(module_or_param, nn.Module):

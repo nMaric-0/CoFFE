@@ -27,7 +27,7 @@ torch = pytest.importorskip("torch")
 
 from sklearn.decomposition import PCA
 
-from coffe.models.hypersigma import HyperSIGMAFewShot, HyperSIGMADual
+from coffe.models.hypersigma import HyperSIGMADual, HyperSIGMAFewShot
 from coffe.models.hypersigma._input_fit import fit_input
 from coffe.models.hypersigma.preprocessing import SpectralResample
 
@@ -92,8 +92,8 @@ def test_spectral_resample_to_100():
 @pytest.mark.parametrize("bands", [144, 63, 64])
 def test_native_spatial_forward(fit, bands):
     dual = HyperSIGMADual(
-        pca_spat_path=None,        # native spatial uses native_pca_spat_path / resample
-        spat_ckpt=None,            # random body; skips the clean-load assert
+        pca_spat_path=None,  # native spatial uses native_pca_spat_path / resample
+        spat_ckpt=None,  # random body; skips the clean-load assert
         spec_ckpt=None,
         hsi_channels=bands,
         native_geometry=True,
@@ -144,12 +144,18 @@ def test_native_spectral_forward(fit, bands):
 def test_native_pca_front_end_selected(tmp_path):
     pca_path = _make_dummy_pca(tmp_path, in_bands=144, n_components=100)
     dual = HyperSIGMADual(
-        pca_spat_path=None, spat_ckpt=None, spec_ckpt=None,
-        hsi_channels=144, native_geometry=True,
+        pca_spat_path=None,
+        spat_ckpt=None,
+        spec_ckpt=None,
+        hsi_channels=144,
+        native_geometry=True,
         native_pca_spat_path=pca_path,
-        build_spat=True, build_spec=False, build_sem=False,
+        build_spat=True,
+        build_spec=False,
+        build_sem=False,
     )
     from coffe.models.hypersigma.preprocessing import PCAPreprocessor
+
     assert isinstance(dual.pca_spat, PCAPreprocessor)
     assert dual.pca_spat.out_channels == 100
 
@@ -169,9 +175,15 @@ def test_adapted_pca100_resample_when_under_100_bands(tmp_path):
     # Trento-like: 63 bands, adapted geometry, target 100ch, no PCA pickle -> resample.
     missing = str(tmp_path / "pca_trento_100band.pkl")  # never created
     dual = HyperSIGMADual(
-        pca_spat_path=missing, spat_ckpt=None, spec_ckpt=None, hsi_channels=63,
-        spat_patch_k=3, spat_resample_to=100,
-        build_spat=True, build_spec=False, build_sem=False,
+        pca_spat_path=missing,
+        spat_ckpt=None,
+        spec_ckpt=None,
+        hsi_channels=63,
+        spat_patch_k=3,
+        spat_resample_to=100,
+        build_spat=True,
+        build_spec=False,
+        build_sem=False,
     )
     assert isinstance(dual.pca_spat, SpectralResample)
     assert dual.spat.in_chans == 100
@@ -184,11 +196,18 @@ def test_adapted_pca100_resample_when_under_100_bands(tmp_path):
 
 def test_adapted_pca100_uses_pca_when_available(tmp_path):
     from coffe.models.hypersigma.preprocessing import PCAPreprocessor
+
     pca_path = _make_dummy_pca(tmp_path, in_bands=144, n_components=100)
     dual = HyperSIGMADual(
-        pca_spat_path=pca_path, spat_ckpt=None, spec_ckpt=None, hsi_channels=144,
-        spat_patch_k=3, spat_resample_to=100,
-        build_spat=True, build_spec=False, build_sem=False,
+        pca_spat_path=pca_path,
+        spat_ckpt=None,
+        spec_ckpt=None,
+        hsi_channels=144,
+        spat_patch_k=3,
+        spat_resample_to=100,
+        build_spat=True,
+        build_spec=False,
+        build_sem=False,
     )
     assert isinstance(dual.pca_spat, PCAPreprocessor)
     assert dual.pca_spat.out_channels == 100
@@ -206,13 +225,23 @@ def test_native_sem_only_adaptation(fit):
 
     # Native FULL dual (both branches + SEM), random body, resample 144->100.
     dual = HyperSIGMADual(
-        pca_spat_path=None, spat_ckpt=None, spec_ckpt=None,
-        hsi_channels=144, native_geometry=True, input_fit=fit,
-        native_pca_spat_path=None,            # -> SpectralResample(100)
-        build_spat=True, build_spec=True, build_sem=True,
+        pca_spat_path=None,
+        spat_ckpt=None,
+        spec_ckpt=None,
+        hsi_channels=144,
+        native_geometry=True,
+        input_fit=fit,
+        native_pca_spat_path=None,  # -> SpectralResample(100)
+        build_spat=True,
+        build_spec=True,
+        build_sem=True,
     )
     model = HyperSIGMAMaskedAdaptation(
-        dual=dual, adapt_mode="sem_only", hsi_channels=144, patch_size=11, mask_ratio=0.75,
+        dual=dual,
+        adapt_mode="sem_only",
+        hsi_channels=144,
+        patch_size=11,
+        mask_ratio=0.75,
     )
     # Native spatial patch grid is 8x8 = 64 tokens (not the pad_to//k = 1 of the old formula).
     assert model.num_spat_tokens == 64, model.num_spat_tokens
@@ -226,8 +255,13 @@ def test_native_sem_only_adaptation(fit):
 
     # Only the fusion path trains: SEM + fused_decoder + spectral l1 + mask tokens.
     trainable = {n for n, p in model.named_parameters() if p.requires_grad}
-    allowed = ("dual.sem.", "fused_decoder.", "dual.spec.model.l1.",
-               "spat_mask_token", "spec_mask_token")
+    allowed = (
+        "dual.sem.",
+        "fused_decoder.",
+        "dual.spec.model.l1.",
+        "spat_mask_token",
+        "spec_mask_token",
+    )
     bad = [n for n in trainable if not any(n.startswith(p) for p in allowed)]
     assert not bad, f"unexpected trainable params: {bad[:10]}"
     # The pretrained encoder bodies + input projections are frozen.
@@ -243,10 +277,16 @@ def test_native_sem_only_adaptation(fit):
 def test_native_fused_forward_runs():
     # The dual must build + forward fused at native geometry (guard relaxed).
     dual = HyperSIGMADual(
-        pca_spat_path=None, spat_ckpt=None, spec_ckpt=None,
-        hsi_channels=144, native_geometry=True, input_fit="upscale",
+        pca_spat_path=None,
+        spat_ckpt=None,
+        spec_ckpt=None,
+        hsi_channels=144,
+        native_geometry=True,
+        input_fit="upscale",
         native_pca_spat_path=None,
-        build_spat=True, build_spec=True, build_sem=True,
+        build_spat=True,
+        build_spec=True,
+        build_sem=True,
     )
     model = HyperSIGMAFewShot(dual=dual, mode="fused", distance_metric="cosine")
     x = torch.randn(2, 144, 11, 11)
@@ -258,10 +298,16 @@ def test_native_fused_forward_runs():
 @pytest.mark.skipif(not SPAT_CKPT.exists(), reason="spat-vit-base.pth not present")
 def test_native_spatial_loads_pretrained():
     dual = HyperSIGMADual(
-        pca_spat_path=None, spat_ckpt=str(SPAT_CKPT), spec_ckpt=None,
-        hsi_channels=144, native_geometry=True, input_fit="upscale",
+        pca_spat_path=None,
+        spat_ckpt=str(SPAT_CKPT),
+        spec_ckpt=None,
+        hsi_channels=144,
+        native_geometry=True,
+        input_fit="upscale",
         native_pca_spat_path=None,  # resample -> 100ch matches the 100ch patch_embed
-        build_spat=True, build_spec=False, build_sem=False,
+        build_spat=True,
+        build_spec=False,
+        build_sem=False,
     )
     assert dual.spat.pos_embed_source == "loaded"
     assert dual.spat.patch_embed_source == "loaded"
@@ -272,9 +318,15 @@ def test_native_spatial_loads_pretrained():
 @pytest.mark.skipif(not SPEC_CKPT.exists(), reason="spec-vit-base.pth not present")
 def test_native_spectral_loads_pretrained():
     dual = HyperSIGMADual(
-        pca_spat_path=None, spat_ckpt=None, spec_ckpt=str(SPEC_CKPT),
-        hsi_channels=144, native_geometry=True, input_fit="upscale",
-        build_spat=False, build_spec=True, build_sem=False,
+        pca_spat_path=None,
+        spat_ckpt=None,
+        spec_ckpt=str(SPEC_CKPT),
+        hsi_channels=144,
+        native_geometry=True,
+        input_fit="upscale",
+        build_spat=False,
+        build_spec=True,
+        build_sem=False,
     )
     assert dual.spec.pos_embed_source == "loaded"
     assert dual.spec.spat_map_source == "loaded"

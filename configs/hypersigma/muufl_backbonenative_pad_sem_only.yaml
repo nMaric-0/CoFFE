@@ -14,6 +14,14 @@
 #       --config configs/hypersigma/muufl_backbonenative_pad_sem_only.yaml
 #
 # Driven for all three datasets by scripts/reproduce/run_native_sem_pad_experiments.sh.
+#
+# REPRODUCES  Table 3 row `64x64 pad / SEM-only / fused`, MUUFL: OA 44.34 ± 0.13.
+#             Source run experiments/hypersigma_native_sem_pad_run1/
+#             evaluations/native_sem_pad_muufl (2000 episodes, euclidean).
+#             Driver: scripts/reproduce/run_native_sem_pad_experiments.sh,
+#             which passes this file to scripts/adapt_hypersigma.py unchanged.
+# RUNTIME     PAPER_CANON §3 times HyperSIGMA adaptation at ~36 h for 2000
+#             epochs on one RTX 4090. This config runs 2000 epochs.
 
 model:
   name: "hypersigma_dual"

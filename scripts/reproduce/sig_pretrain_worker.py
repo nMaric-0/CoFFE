@@ -24,7 +24,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from scripts.reproduce import sig_significance_config as cfg  # noqa: E402
+from scripts.reproduce import sig_significance_config as cfg
 
 
 def main() -> int:
@@ -40,8 +40,9 @@ def main() -> int:
 
     group = cfg.GROUPS[args.group]
     if args.variant not in group.variants:
-        p.error(f"variant '{args.variant}' not valid for group '{args.group}' "
-                f"(valid: {group.variants})")
+        p.error(
+            f"variant '{args.variant}' not valid for group '{args.group}' (valid: {group.variants})"
+        )
 
     name = group.experiment_name(args.dataset, args.variant, args.seed)
     ckpt = cfg.EXPERIMENTS_ROOT / name / "checkpoints" / f"checkpoint_epoch_{args.epochs}.pth"

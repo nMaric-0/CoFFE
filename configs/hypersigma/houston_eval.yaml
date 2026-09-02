@@ -19,6 +19,8 @@
 #
 # (`results/` at the repo root holds the paper-provenance JSONs, not run
 # output; evaluation runs write under `experiments/`.)
+#
+# RUNTIME     Evaluation only; PAPER_CANON §3 times training, not evaluation.
 
 dataset: houston
 n_way: 15

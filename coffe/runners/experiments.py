@@ -33,15 +33,14 @@ import subprocess
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import yaml
-
 
 DEFAULT_EXPERIMENTS_ROOT = "experiments"
 
 
-def _git_sha(repo_root: Path) -> Optional[str]:
+def _git_sha(repo_root: Path) -> str | None:
     try:
         out = subprocess.check_output(
             ["git", "-C", str(repo_root), "rev-parse", "HEAD"],
@@ -64,24 +63,24 @@ def _slugify(name: str) -> str:
     return out
 
 
-def _write_json(path: Path, data: Dict[str, Any]) -> None:
+def _write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w") as f:
         json.dump(data, f, indent=2, default=str, sort_keys=True)
 
 
-def _write_yaml(path: Path, data: Dict[str, Any]) -> None:
+def _write_yaml(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w") as f:
         yaml.safe_dump(data, f, sort_keys=False)
 
 
-def _read_json(path: Path) -> Dict[str, Any]:
+def _read_json(path: Path) -> dict[str, Any]:
     with path.open() as f:
         return json.load(f)
 
 
-def _read_yaml(path: Path) -> Dict[str, Any]:
+def _read_yaml(path: Path) -> dict[str, Any]:
     with path.open() as f:
         return yaml.safe_load(f) or {}
 
@@ -93,8 +92,8 @@ class PretrainExperiment:
     name: str
     root: Path
     description: str
-    config: Dict[str, Any]
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    config: dict[str, Any]
+    metadata: dict[str, Any] = field(default_factory=dict)
     _started_at: float = field(default_factory=time.monotonic)
 
     @property
@@ -121,9 +120,14 @@ class PretrainExperiment:
     def evaluations_dir(self) -> Path:
         return self.root / "evaluations"
 
-    def finalize(self, history: Optional[Dict[str, Any]] = None, **extra: Any) -> None:
+    def finalize(self, history: dict[str, Any] | None = None, **extra: Any) -> None:
+        """Mark the run complete and record wallclock, history and extras.
+
+        Writes ``pretrain_metadata.json``; a run without this record is an
+        interrupted run, which is how the report scripts tell the two apart.
+        """
         wall = time.monotonic() - self._started_at
-        update: Dict[str, Any] = {
+        update: dict[str, Any] = {
             "status": "complete",
             "finished_at": _now_iso(),
             "wallclock_seconds": round(wall, 2),
@@ -142,11 +146,14 @@ class PretrainExperiment:
         _write_json(self.metadata_path, self.metadata)
 
     def mark_failed(self, error: str) -> None:
-        self.metadata.update({
-            "status": "failed",
-            "finished_at": _now_iso(),
-            "error": error,
-        })
+        """Record the run as failed, with the error text, in its metadata."""
+        self.metadata.update(
+            {
+                "status": "failed",
+                "finished_at": _now_iso(),
+                "error": error,
+            }
+        )
         _write_json(self.metadata_path, self.metadata)
 
 
@@ -157,8 +164,8 @@ class EvalRun:
     experiment_name: str
     eval_name: str
     root: Path
-    config: Dict[str, Any]
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    config: dict[str, Any]
+    metadata: dict[str, Any] = field(default_factory=dict)
     _started_at: float = field(default_factory=time.monotonic)
 
     @property
@@ -181,15 +188,20 @@ class EvalRun:
     def plots_dir(self) -> Path:
         return self.root / "plots"
 
-    def finalize(self, results: Optional[Dict[str, Any]] = None, **extra: Any) -> None:
+    def finalize(self, results: dict[str, Any] | None = None, **extra: Any) -> None:
+        """Mark the evaluation complete and store its OA/AA/Kappa summary.
+
+        Only the mean, std and 95% CI of each metric are copied into the
+        metadata; the full per-episode results stay in ``results.json``.
+        """
         wall = time.monotonic() - self._started_at
-        update: Dict[str, Any] = {
+        update: dict[str, Any] = {
             "status": "complete",
             "finished_at": _now_iso(),
             "wallclock_seconds": round(wall, 2),
         }
         if results is not None:
-            summary = {}
+            summary: dict[str, Any] = {}
             for key in ("OA", "AA", "Kappa"):
                 if key in results and isinstance(results[key], dict):
                     summary[key] = {k: results[key].get(k) for k in ("mean", "std", "ci_95")}
@@ -201,11 +213,14 @@ class EvalRun:
         _write_json(self.metadata_path, self.metadata)
 
     def mark_failed(self, error: str) -> None:
-        self.metadata.update({
-            "status": "failed",
-            "finished_at": _now_iso(),
-            "error": error,
-        })
+        """Record the run as failed, with the error text, in its metadata."""
+        self.metadata.update(
+            {
+                "status": "failed",
+                "finished_at": _now_iso(),
+                "error": error,
+            }
+        )
         _write_json(self.metadata_path, self.metadata)
 
 
@@ -219,13 +234,13 @@ class ExperimentLogger:
     def __init__(
         self,
         experiments_root: os.PathLike | str = DEFAULT_EXPERIMENTS_ROOT,
-        repo_root: Optional[os.PathLike | str] = None,
+        repo_root: os.PathLike | str | None = None,
     ) -> None:
         self.root = Path(experiments_root).resolve()
         self.root.mkdir(parents=True, exist_ok=True)
         self._repo_root = Path(repo_root).resolve() if repo_root else Path.cwd()
 
-    def _git_sha(self) -> Optional[str]:
+    def _git_sha(self) -> str | None:
         return _git_sha(self._repo_root)
 
     def _experiment_dir(self, name: str) -> Path:
@@ -235,11 +250,11 @@ class ExperimentLogger:
         self,
         name: str,
         description: str,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         *,
         overwrite: bool = False,
-        overrides: Optional[Dict[str, Any]] = None,
-        base_config_path: Optional[str] = None,
+        overrides: dict[str, Any] | None = None,
+        base_config_path: str | None = None,
     ) -> PretrainExperiment:
         """Create a new pretraining experiment directory.
 
@@ -295,7 +310,7 @@ class ExperimentLogger:
         self,
         experiment_name: str,
         eval_name: str,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         *,
         overwrite: bool = False,
     ) -> EvalRun:
@@ -306,9 +321,7 @@ class ExperimentLogger:
         """
         exp_dir = self._experiment_dir(experiment_name)
         if not exp_dir.exists():
-            raise FileNotFoundError(
-                f"Experiment '{experiment_name}' not found at {exp_dir}"
-            )
+            raise FileNotFoundError(f"Experiment '{experiment_name}' not found at {exp_dir}")
 
         eval_dir = exp_dir / "evaluations" / _slugify(eval_name)
         if eval_dir.exists() and not overwrite:
@@ -337,14 +350,15 @@ class ExperimentLogger:
         )
 
     def get_experiment(self, name: str) -> Path:
+        """Return an existing experiment directory, or raise ``FileNotFoundError``."""
         exp_dir = self._experiment_dir(name)
         if not exp_dir.exists():
             raise FileNotFoundError(f"Experiment '{name}' not found at {exp_dir}")
         return exp_dir
 
-    def list_experiments(self) -> List[Dict[str, Any]]:
+    def list_experiments(self) -> list[dict[str, Any]]:
         """Return one summary dict per experiment under the root."""
-        out: List[Dict[str, Any]] = []
+        out: list[dict[str, Any]] = []
         for child in sorted(self.root.iterdir()):
             if not child.is_dir():
                 continue
@@ -352,23 +366,26 @@ class ExperimentLogger:
             if not meta_path.exists():
                 continue
             meta = _read_json(meta_path)
-            out.append({
-                "name": meta.get("name", child.name),
-                "description": meta.get("description", ""),
-                "status": meta.get("status", "unknown"),
-                "started_at": meta.get("started_at"),
-                "finished_at": meta.get("finished_at"),
-                "path": str(child),
-                "history": meta.get("history", {}),
-            })
+            out.append(
+                {
+                    "name": meta.get("name", child.name),
+                    "description": meta.get("description", ""),
+                    "status": meta.get("status", "unknown"),
+                    "started_at": meta.get("started_at"),
+                    "finished_at": meta.get("finished_at"),
+                    "path": str(child),
+                    "history": meta.get("history", {}),
+                }
+            )
         return out
 
-    def list_evaluations(self, experiment_name: str) -> List[Dict[str, Any]]:
+    def list_evaluations(self, experiment_name: str) -> list[dict[str, Any]]:
+        """Return one summary dict per evaluation under an experiment."""
         exp_dir = self.get_experiment(experiment_name)
         evals_dir = exp_dir / "evaluations"
         if not evals_dir.exists():
             return []
-        out: List[Dict[str, Any]] = []
+        out: list[dict[str, Any]] = []
         for child in sorted(evals_dir.iterdir()):
             if not child.is_dir():
                 continue
@@ -390,7 +407,7 @@ class ExperimentLogger:
 
 def load_all_evaluations(
     experiments_root: os.PathLike | str = DEFAULT_EXPERIMENTS_ROOT,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Walk the experiments tree and return a flat list of every evaluation run.
 
     Each entry contains the experiment name + description, the eval config,
@@ -398,7 +415,7 @@ def load_all_evaluations(
     cross-experiment comparison.
     """
     logger = ExperimentLogger(experiments_root)
-    rows: List[Dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
     for exp in logger.list_experiments():
         for ev in logger.list_evaluations(exp["name"]):
             cfg = ev["config"]
@@ -416,19 +433,33 @@ def load_all_evaluations(
                 "temperature": cfg.get("temperature"),
                 "prototype_mode": cfg.get("prototype_mode"),
                 "num_episodes": res.get("num_episodes"),
-                "OA_mean": (res.get("OA") or {}).get("mean") if isinstance(res.get("OA"), dict) else res.get("OA"),
-                "OA_ci": (res.get("OA") or {}).get("ci_95") if isinstance(res.get("OA"), dict) else None,
-                "AA_mean": (res.get("AA") or {}).get("mean") if isinstance(res.get("AA"), dict) else res.get("AA"),
-                "AA_ci": (res.get("AA") or {}).get("ci_95") if isinstance(res.get("AA"), dict) else None,
-                "Kappa_mean": (res.get("Kappa") or {}).get("mean") if isinstance(res.get("Kappa"), dict) else res.get("Kappa"),
-                "Kappa_ci": (res.get("Kappa") or {}).get("ci_95") if isinstance(res.get("Kappa"), dict) else None,
+                "OA_mean": (res.get("OA") or {}).get("mean")
+                if isinstance(res.get("OA"), dict)
+                else res.get("OA"),
+                "OA_ci": (res.get("OA") or {}).get("ci_95")
+                if isinstance(res.get("OA"), dict)
+                else None,
+                "AA_mean": (res.get("AA") or {}).get("mean")
+                if isinstance(res.get("AA"), dict)
+                else res.get("AA"),
+                "AA_ci": (res.get("AA") or {}).get("ci_95")
+                if isinstance(res.get("AA"), dict)
+                else None,
+                "Kappa_mean": (res.get("Kappa") or {}).get("mean")
+                if isinstance(res.get("Kappa"), dict)
+                else res.get("Kappa"),
+                "Kappa_ci": (res.get("Kappa") or {}).get("ci_95")
+                if isinstance(res.get("Kappa"), dict)
+                else None,
                 "path": ev["path"],
             }
             rows.append(row)
     return rows
 
 
-def attach_file_logger(handle, log_file: Optional[Path] = None) -> logging.Handler:
+def attach_file_logger(
+    handle: PretrainExperiment | EvalRun, log_file: Path | None = None
+) -> logging.Handler:
     """Add a FileHandler routing the root logger to handle.log_file.
 
     Returns the handler so the caller can remove it after the run (avoids
@@ -443,5 +474,6 @@ def attach_file_logger(handle, log_file: Optional[Path] = None) -> logging.Handl
 
 
 def detach_file_logger(handler: logging.Handler) -> None:
+    """Remove and close a handler returned by :func:`attach_file_logger`."""
     logging.getLogger().removeHandler(handler)
     handler.close()

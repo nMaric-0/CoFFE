@@ -1,18 +1,21 @@
 """Visualization utilities for few-shot evaluation."""
+
 import matplotlib
+
 matplotlib.use("Agg")
+
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from typing import Optional
+from matplotlib.figure import Figure
 
 
 def plot_confusion_matrix(
     cm: np.ndarray,
-    class_names: Optional[list] = None,
+    class_names: list | None = None,
     title: str = "Confusion Matrix",
-    save_path: Optional[str] = None,
-):
+    save_path: str | None = None,
+) -> Figure:
     """Plot confusion matrix with row-normalized colors and raw count annotations.
 
     Args:
@@ -27,8 +30,10 @@ def plot_confusion_matrix(
 
     row_sums = cm.sum(axis=1, keepdims=True)
     cm_norm = np.divide(
-        cm.astype(float), row_sums,
-        where=row_sums != 0, out=np.zeros_like(cm, dtype=float),
+        cm.astype(float),
+        row_sums,
+        where=row_sums != 0,
+        out=np.zeros_like(cm, dtype=float),
     )
 
     labels = class_names if class_names else [str(i) for i in range(n)]
@@ -61,8 +66,8 @@ def plot_confusion_matrix(
 def plot_embeddings(
     embeddings: np.ndarray,
     labels: np.ndarray,
-    save_path: Optional[str] = None,
-):
+    save_path: str | None = None,
+) -> Figure:
     """Plot t-SNE visualization of embeddings."""
     from sklearn.manifold import TSNE
 
@@ -70,11 +75,11 @@ def plot_embeddings(
     emb_2d = tsne.fit_transform(embeddings)
 
     fig, ax = plt.subplots(figsize=(10, 10))
-    scatter = ax.scatter(emb_2d[:, 0], emb_2d[:, 1], c=labels, cmap='tab10')
+    scatter = ax.scatter(emb_2d[:, 0], emb_2d[:, 1], c=labels, cmap="tab10")
     ax.legend(*scatter.legend_elements(), title="Classes")
 
     if save_path:
-        plt.savefig(save_path, dpi=150, bbox_inches='tight')
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
 
     return fig
 
@@ -89,8 +94,8 @@ def plot_per_class_accuracy(
     accuracies: list,
     ci_95: list,
     title: str = "Per-Class Accuracy",
-    save_path: Optional[str] = None,
-):
+    save_path: str | None = None,
+) -> Figure:
     """Horizontal bar chart of per-class accuracy with 95% CI error bars.
 
     Args:
@@ -108,12 +113,25 @@ def plot_per_class_accuracy(
 
     colors = ["#e74c3c" if a < mean_acc - 10 else "#3498db" for a in accuracies]
 
-    ax.barh(y_pos, accuracies, xerr=ci_95, capsize=3,
-            color=colors, edgecolor="white", linewidth=0.5,
-            error_kw={"linewidth": 1.0, "capthick": 1.0})
+    ax.barh(
+        y_pos,
+        accuracies,
+        xerr=ci_95,
+        capsize=3,
+        color=colors,
+        edgecolor="white",
+        linewidth=0.5,
+        error_kw={"linewidth": 1.0, "capthick": 1.0},
+    )
 
-    ax.axvline(mean_acc, color="gray", linestyle="--", linewidth=1.2,
-               alpha=0.7, label=f"Mean: {mean_acc:.1f}%")
+    ax.axvline(
+        mean_acc,
+        color="gray",
+        linestyle="--",
+        linewidth=1.2,
+        alpha=0.7,
+        label=f"Mean: {mean_acc:.1f}%",
+    )
 
     ax.set_yticks(y_pos)
     ax.set_yticklabels(class_names, fontsize=9)
@@ -125,8 +143,7 @@ def plot_per_class_accuracy(
     ax.invert_yaxis()
 
     for i, (acc, ci) in enumerate(zip(accuracies, ci_95)):
-        ax.text(min(acc + ci + 1.5, 104), i, f"{acc:.1f}%",
-                va="center", fontsize=8)
+        ax.text(min(acc + ci + 1.5, 104), i, f"{acc:.1f}%", va="center", fontsize=8)
 
     plt.tight_layout()
     if save_path:
@@ -140,9 +157,9 @@ def plot_episode_distributions(
     episode_aas: np.ndarray,
     episode_kappas: np.ndarray,
     title: str = "Episode Metric Distributions",
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
     n_bins: int = 40,
-):
+) -> Figure:
     """Histogram + KDE of per-episode OA, AA, and Kappa.
 
     Args:
@@ -165,22 +182,28 @@ def plot_episode_distributions(
         mean_val = np.mean(values)
         std_val = np.std(values)
 
-        ax.hist(values, bins=n_bins, color="#3498db", edgecolor="white",
-                alpha=0.7, density=True)
+        ax.hist(values, bins=n_bins, color="#3498db", edgecolor="white", alpha=0.7, density=True)
 
         # KDE overlay
         try:
             from scipy.stats import gaussian_kde
+
             kde = gaussian_kde(values)
             x_grid = np.linspace(values.min(), values.max(), 200)
             ax.plot(x_grid, kde(x_grid), color="#2c3e50", linewidth=1.5)
         except Exception:
             pass
 
-        ax.axvline(mean_val, color="#e74c3c", linestyle="--", linewidth=2,
-                   label=f"Mean: {mean_val:.2f}")
-        ax.axvspan(mean_val - 1.96 * std_val, mean_val + 1.96 * std_val,
-                   color="#e74c3c", alpha=0.08, label="95% range")
+        ax.axvline(
+            mean_val, color="#e74c3c", linestyle="--", linewidth=2, label=f"Mean: {mean_val:.2f}"
+        )
+        ax.axvspan(
+            mean_val - 1.96 * std_val,
+            mean_val + 1.96 * std_val,
+            color="#e74c3c",
+            alpha=0.08,
+            label="95% range",
+        )
 
         ax.set_xlabel(xlabel, fontsize=11)
         ax.set_ylabel("Density", fontsize=11)
@@ -201,8 +224,8 @@ def plot_per_class_boxplots(
     class_episode_accs: dict,
     class_order: list,
     title: str = "Per-Class Accuracy Across Episodes",
-    save_path: Optional[str] = None,
-):
+    save_path: str | None = None,
+) -> Figure:
     """Violin + box plots of per-class accuracy distributions across episodes.
 
     Args:
@@ -220,8 +243,9 @@ def plot_per_class_boxplots(
         accs = class_episode_accs.get(cls, [])
         data.append(np.array(accs) if len(accs) > 0 else np.array([0.0]))
 
-    parts = ax.violinplot(data, positions=range(n), showmeans=True,
-                          showmedians=True, showextrema=False)
+    parts = ax.violinplot(
+        data, positions=range(n), showmeans=True, showmedians=True, showextrema=False
+    )
     for pc in parts["bodies"]:
         pc.set_facecolor("#3498db")
         pc.set_alpha(0.3)
@@ -238,8 +262,7 @@ def plot_per_class_boxplots(
 
     for i, cls in enumerate(class_order):
         n_eps = len(class_episode_accs.get(cls, []))
-        ax.text(i, -3, f"n={n_eps}", ha="center", va="top",
-                fontsize=7, color="gray")
+        ax.text(i, -3, f"n={n_eps}", ha="center", va="top", fontsize=7, color="gray")
 
     plt.tight_layout()
     if save_path:
@@ -254,8 +277,8 @@ def plot_pairwise_confusion_rate(
     class_names: list,
     class_order: list,
     title: str = "Pairwise Confusion Rates",
-    save_path: Optional[str] = None,
-):
+    save_path: str | None = None,
+) -> Figure:
     """Heatmap of off-diagonal confusion rates between co-occurring class pairs.
 
     For each pair (i, j), shows how often class i was predicted as class j
@@ -343,16 +366,26 @@ def _get_class_colors(n_classes: int):
 # defines the order classes appear in the legend.
 _FIXED_COLOR_IDX = {
     "houston": {
-        "Healthy grass": 5, "Stressed grass": 12, "Synthetic grass": 17,
-        "Trees": 14, "Soil": 11, "Water": 1, "Residential": 0,
-        "Commercial": 2, "Road": 4, "Highway": 7, "Railway": 15,
-        "Parking Lot 1": 18, "Parking Lot 2": 10, "Tennis Court": 19,
+        "Healthy grass": 5,
+        "Stressed grass": 12,
+        "Synthetic grass": 17,
+        "Trees": 14,
+        "Soil": 11,
+        "Water": 1,
+        "Residential": 0,
+        "Commercial": 2,
+        "Road": 4,
+        "Highway": 7,
+        "Railway": 15,
+        "Parking Lot 1": 18,
+        "Parking Lot 2": 10,
+        "Tennis Court": 19,
         "Running Track": 8,
     },
 }
 
 
-def _fixed_color_map(dataset_label: Optional[str]):
+def _fixed_color_map(dataset_label: str | None):
     """Return an ordered {class_name: rgba} map pinned for the dataset, else None."""
     idx_map = _FIXED_COLOR_IDX.get((dataset_label or "").lower())
     if idx_map is None:
@@ -370,9 +403,9 @@ def plot_episode_feature_space(
     q_preds: np.ndarray,
     class_names: list,
     title: str = "Episode Feature Space",
-    save_path: Optional[str] = None,
-    legend_save_path: Optional[str] = None,
-    dataset_label: Optional[str] = None,
+    save_path: str | None = None,
+    legend_save_path: str | None = None,
+    dataset_label: str | None = None,
 ):
     """t-SNE scatter plot of prototypes, support, and query samples for one episode.
 
@@ -399,28 +432,31 @@ def plot_episode_feature_space(
     all_features = np.concatenate([prototypes, s_features, q_features], axis=0)
 
     perplexity = min(30, max(5, all_features.shape[0] // 4))
-    tsne = TSNE(n_components=2, perplexity=perplexity, random_state=42,
-                init="pca", learning_rate="auto")
+    tsne = TSNE(
+        n_components=2, perplexity=perplexity, random_state=42, init="pca", learning_rate="auto"
+    )
     coords_2d = tsne.fit_transform(all_features)
 
     proto_coords = coords_2d[:n_classes]
-    support_coords = coords_2d[n_classes:n_classes + n_support]
-    query_coords = coords_2d[n_classes + n_support:]
+    support_coords = coords_2d[n_classes : n_classes + n_support]
+    query_coords = coords_2d[n_classes + n_support :]
 
     fixed_map = _fixed_color_map(dataset_label)
     use_fixed = fixed_map is not None and all(n in fixed_map for n in class_names)
-    if use_fixed:
-        colors = [fixed_map[n] for n in class_names]
-    else:
-        colors = _get_class_colors(n_classes)
+    colors = [fixed_map[n] for n in class_names] if use_fixed else _get_class_colors(n_classes)
     fig, ax = plt.subplots(figsize=(11, 10))
 
     # Plot support samples (medium circles)
     for c in range(n_classes):
         mask = s_labels == c
         ax.scatter(
-            support_coords[mask, 0], support_coords[mask, 1],
-            c=[colors[c]], s=60, alpha=0.6, edgecolors="white", linewidths=0.5,
+            support_coords[mask, 0],
+            support_coords[mask, 1],
+            c=[colors[c]],
+            s=60,
+            alpha=0.6,
+            edgecolors="white",
+            linewidths=0.5,
             marker="o",
         )
 
@@ -432,29 +468,45 @@ def plot_episode_feature_space(
         ok = c_mask & correct_mask
         if ok.any():
             ax.scatter(
-                query_coords[ok, 0], query_coords[ok, 1],
-                c=[colors[c]], s=30, alpha=0.5, edgecolors="gray",
-                linewidths=0.3, marker="s",
+                query_coords[ok, 0],
+                query_coords[ok, 1],
+                c=[colors[c]],
+                s=30,
+                alpha=0.5,
+                edgecolors="gray",
+                linewidths=0.3,
+                marker="s",
             )
         # Misclassified
         bad = c_mask & ~correct_mask
         if bad.any():
             ax.scatter(
-                query_coords[bad, 0], query_coords[bad, 1],
-                c=[colors[c]], s=50, alpha=0.9, edgecolors="red",
-                linewidths=1.5, marker="X",
+                query_coords[bad, 0],
+                query_coords[bad, 1],
+                c=[colors[c]],
+                s=50,
+                alpha=0.9,
+                edgecolors="red",
+                linewidths=1.5,
+                marker="X",
             )
 
     # Plot prototypes (large stars)
     for c in range(n_classes):
         ax.scatter(
-            proto_coords[c, 0], proto_coords[c, 1],
-            c=[colors[c]], s=350, marker="*", edgecolors="black",
-            linewidths=1.2, zorder=10,
+            proto_coords[c, 0],
+            proto_coords[c, 1],
+            c=[colors[c]],
+            s=350,
+            marker="*",
+            edgecolors="black",
+            linewidths=1.2,
+            zorder=10,
         )
 
     # Build legend
     from matplotlib.lines import Line2D
+
     legend_elements = []
     if use_fixed:
         # All dataset classes, in the fixed order, so the legend is reproducible.
@@ -463,24 +515,47 @@ def plot_episode_feature_space(
         legend_class_items = [(class_names[c], colors[c]) for c in range(n_classes)]
     for name, col in legend_class_items:
         legend_elements.append(
-            Line2D([0], [0], marker="o", color="w", markerfacecolor=col,
-                   markersize=14, label=name)
+            Line2D([0], [0], marker="o", color="w", markerfacecolor=col, markersize=14, label=name)
         )
     legend_elements.append(
-        Line2D([0], [0], marker="*", color="w", markerfacecolor="gray",
-               markeredgecolor="black", markersize=22, label="Prototype")
+        Line2D(
+            [0],
+            [0],
+            marker="*",
+            color="w",
+            markerfacecolor="gray",
+            markeredgecolor="black",
+            markersize=22,
+            label="Prototype",
+        )
     )
     legend_elements.append(
-        Line2D([0], [0], marker="o", color="w", markerfacecolor="gray",
-               markersize=13, label="Support")
+        Line2D(
+            [0], [0], marker="o", color="w", markerfacecolor="gray", markersize=13, label="Support"
+        )
     )
     legend_elements.append(
-        Line2D([0], [0], marker="s", color="w", markerfacecolor="gray",
-               markersize=12, label="Query (correct)")
+        Line2D(
+            [0],
+            [0],
+            marker="s",
+            color="w",
+            markerfacecolor="gray",
+            markersize=12,
+            label="Query (correct)",
+        )
     )
     legend_elements.append(
-        Line2D([0], [0], marker="X", color="w", markerfacecolor="gray",
-               markeredgecolor="red", markersize=14, label="Query (wrong)")
+        Line2D(
+            [0],
+            [0],
+            marker="X",
+            color="w",
+            markerfacecolor="gray",
+            markeredgecolor="red",
+            markersize=14,
+            label="Query (wrong)",
+        )
     )
     # Legend is rendered as a separate image (see below), so the t-SNE plot
     # itself stays clean with no inset legend.
@@ -501,8 +576,14 @@ def plot_episode_feature_space(
         heading = f"{dataset_label.capitalize()} classes" if dataset_label else "Classes"
         ncol = min(len(legend_elements), 5)
         fig_leg = plt.figure(figsize=(max(6, 2.2 * ncol), 3))
-        leg = fig_leg.legend(handles=legend_elements, loc="center", fontsize=16,
-                             ncol=ncol, framealpha=1.0, title=heading)
+        leg = fig_leg.legend(
+            handles=legend_elements,
+            loc="center",
+            fontsize=16,
+            ncol=ncol,
+            framealpha=1.0,
+            title=heading,
+        )
         leg.get_title().set_fontsize(20)
         fig_leg.savefig(legend_save_path, dpi=200, bbox_inches="tight")
         plt.close(fig_leg)
@@ -515,9 +596,9 @@ def plot_aggregated_feature_space(
     class_names: list,
     class_order: list,
     title: str = "Aggregated Feature Space",
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
     max_samples_per_class: int = 0,
-):
+) -> Figure:
     """t-SNE of features accumulated across all episodes, colored by original class.
 
     Args:
@@ -556,8 +637,9 @@ def plot_aggregated_feature_space(
     n_classes = len(class_order)
 
     perplexity = min(50, max(5, n_samples // 4))
-    tsne = TSNE(n_components=2, perplexity=perplexity, random_state=42,
-                init="pca", learning_rate="auto")
+    tsne = TSNE(
+        n_components=2, perplexity=perplexity, random_state=42, init="pca", learning_rate="auto"
+    )
     coords_2d = tsne.fit_transform(all_feats)
 
     colors = _get_class_colors(n_classes)
@@ -568,8 +650,12 @@ def plot_aggregated_feature_space(
         if not mask.any():
             continue
         ax.scatter(
-            coords_2d[mask, 0], coords_2d[mask, 1],
-            c=[colors[idx]], s=12, alpha=0.45, edgecolors="none",
+            coords_2d[mask, 0],
+            coords_2d[mask, 1],
+            c=[colors[idx]],
+            s=12,
+            alpha=0.45,
+            edgecolors="none",
             label=f"{class_names[idx]} ({mask.sum()})",
         )
 
@@ -581,17 +667,25 @@ def plot_aggregated_feature_space(
         cx = coords_2d[mask, 0].mean()
         cy = coords_2d[mask, 1].mean()
         ax.scatter(
-            cx, cy, c=[colors[idx]], s=200, marker="*",
-            edgecolors="black", linewidths=1.0, zorder=10,
+            cx,
+            cy,
+            c=[colors[idx]],
+            s=200,
+            marker="*",
+            edgecolors="black",
+            linewidths=1.0,
+            zorder=10,
         )
         ax.annotate(
-            class_names[idx], (cx, cy), fontsize=7,
-            textcoords="offset points", xytext=(6, 6),
+            class_names[idx],
+            (cx, cy),
+            fontsize=7,
+            textcoords="offset points",
+            xytext=(6, 6),
             bbox=dict(boxstyle="round,pad=0.2", fc="white", alpha=0.7, lw=0),
         )
 
-    ax.legend(fontsize=7, loc="best", framealpha=0.8, ncol=2,
-              markerscale=2.5)
+    ax.legend(fontsize=7, loc="best", framealpha=0.8, ncol=2, markerscale=2.5)
     ax.set_title(f"{title}  (n={n_samples})", fontsize=13)
     ax.set_xlabel("t-SNE dim 1", fontsize=10)
     ax.set_ylabel("t-SNE dim 2", fontsize=10)

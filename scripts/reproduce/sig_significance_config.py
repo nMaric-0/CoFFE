@@ -24,8 +24,9 @@ from __future__ import annotations
 
 import json
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
@@ -38,7 +39,7 @@ EXPERIMENTS_ROOT = REPO_ROOT / "experiments"
 # ---------------------------------------------------------------------------
 
 #: Five independent seeds per cell -> mean +/- std +/- 95% CI (t, df=4).
-SEEDS: List[int] = [42, 123, 456, 789, 1011]
+SEEDS: list[int] = [42, 123, 456, 789, 1011]
 
 #: Every run trains fresh to this many epochs with an identical schedule.
 EPOCHS: int = 700
@@ -53,16 +54,16 @@ EVAL_EPOCH: int = EPOCHS
 EVAL_NAME: str = "sig_eval_epoch700"
 
 #: GPUs the global scheduler may use, max MAX_PARALLEL_PER_GPU runs on each.
-GPUS: List[str] = ["cuda:0", "cuda:2", "cuda:3"]
+GPUS: list[str] = ["cuda:0", "cuda:2", "cuda:3"]
 MAX_PARALLEL_PER_GPU: int = 2
 
-DATASETS: List[str] = ["houston", "trento", "muufl"]
+DATASETS: list[str] = ["houston", "trento", "muufl"]
 
 #: Front-load the slowest dataset so the bottleneck starts earliest.
-DATASET_COST_ORDER: List[str] = ["muufl", "trento", "houston"]
+DATASET_COST_ORDER: list[str] = ["muufl", "trento", "houston"]
 
 #: Canonical seed-42 dirs for the v1 `enhanced` group (with LiDAR).
-_ENHANCED_CANONICAL: Dict[tuple, str] = {
+_ENHANCED_CANONICAL: dict[tuple, str] = {
     ("houston", "spatial"): "houston_enhanced_spatial_run1",
     ("houston", "spectral"): "houston_enhanced_spectral_run2",
     ("houston", "both"): "houston_enhanced_spec_spat_combined",
@@ -82,16 +83,17 @@ _NO_LIDAR_SUFFIX = {"spatial": "spatial", "spectral": "spectral", "both": "spect
 # Group registry
 # ---------------------------------------------------------------------------
 
+
 class Group:
     def __init__(
         self,
         name: str,
-        variants: List[str],
+        variants: list[str],
         base_config: Callable[[str, str], str],
         experiment_name: Callable[[str, str, int], str],
         *,
         clone_mask: bool = False,
-        canonical_dir: Optional[Callable[[str, str], str]] = None,
+        canonical_dir: Callable[[str, str], str] | None = None,
     ):
         self.name = name
         self.variants = variants
@@ -103,11 +105,11 @@ class Group:
     def experiment_name(self, dataset: str, variant: str, seed: int) -> str:
         return self._experiment_name(dataset, variant, seed)
 
-    def canonical_dir(self, dataset: str, variant: str) -> Optional[str]:
+    def canonical_dir(self, dataset: str, variant: str) -> str | None:
         return self._canonical_dir(dataset, variant) if self._canonical_dir else None
 
 
-GROUPS: Dict[str, Group] = {
+GROUPS: dict[str, Group] = {
     "enhanced": Group(
         "enhanced",
         ["spatial", "spectral", "both"],
@@ -128,8 +130,7 @@ GROUPS: Dict[str, Group] = {
         "enhanced_mae",
         ["lidar", "hsi_only"],
         base_config=lambda ds, v: (
-            f"configs/coffe/{ds}_mae.yaml" if v == "lidar"
-            else f"configs/coffe/{ds}_mae_hsi.yaml"
+            f"configs/coffe/{ds}_mae.yaml" if v == "lidar" else f"configs/coffe/{ds}_mae_hsi.yaml"
         ),
         experiment_name=lambda ds, v, s: f"{ds}_enhanced_mae_{v}_seed{s}",
         clone_mask=False,
@@ -151,19 +152,19 @@ GROUPS: Dict[str, Group] = {
 }
 
 #: Default order groups are processed / reported in.
-GROUP_ORDER: List[str] = ["enhanced", "hsi_only", "enhanced_mae", "mft_mae", "mft_spatial"]
+GROUP_ORDER: list[str] = ["enhanced", "hsi_only", "enhanced_mae", "mft_mae", "mft_spatial"]
 
 
-def cells(groups: Optional[List[str]] = None):
+def cells(groups: list[str] | None = None):
     """Yield (group, dataset, variant) for the selected groups (all by default)."""
-    for gname in (groups or GROUP_ORDER):
+    for gname in groups or GROUP_ORDER:
         g = GROUPS[gname]
         for dataset in DATASETS:
             for variant in g.variants:
                 yield gname, dataset, variant
 
 
-def runs(groups: Optional[List[str]] = None, seeds: Optional[List[int]] = None):
+def runs(groups: list[str] | None = None, seeds: list[int] | None = None):
     """Yield (group, dataset, variant, seed, experiment_name) for all selected runs."""
     seeds = seeds or SEEDS
     for gname, dataset, variant in cells(groups):
@@ -172,7 +173,7 @@ def runs(groups: Optional[List[str]] = None, seeds: Optional[List[int]] = None):
             yield gname, dataset, variant, seed, g.experiment_name(dataset, variant, seed)
 
 
-def canonical_pretrain_overrides(group: str, dataset: str, variant: str) -> Dict[str, Any]:
+def canonical_pretrain_overrides(group: str, dataset: str, variant: str) -> dict[str, Any]:
     """Return the cloned ``pretrain`` override block for a cell.
 
     For clone_mask groups (enhanced, hsi_only) this reads the canonical seed-42
@@ -199,7 +200,7 @@ def canonical_pretrain_overrides(group: str, dataset: str, variant: str) -> Dict
     return dict(pretrain)
 
 
-def eval_params(dataset: str) -> Dict[str, Any]:
+def eval_params(dataset: str) -> dict[str, Any]:
     """Shared eval protocol (matches the existing enhanced/MFT evals).
 
     ``n_way`` is omitted so the evaluator defaults to all classes for the

@@ -39,7 +39,6 @@ if str(REPO_ROOT) not in sys.path:
 
 from coffe.pretrain.hypersigma_adapt import main
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=str, required=True)

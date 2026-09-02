@@ -46,9 +46,12 @@ names are unchanged.
 from __future__ import annotations
 
 import warnings
-from typing import Any, Dict, Iterable, Mapping, Optional, Tuple
+from collections.abc import Iterable, Mapping
+from typing import Any
 
-__all__ = [
+# Grouped by kind (tables, then normalizers, then the lazy class aliases)
+# rather than sorted, so the shim reads as the map it is.
+__all__ = [  # noqa: RUF022
     "LEGACY_MODEL_NAMES",
     "LEGACY_OBJECTIVES",
     "LEGACY_VARIANTS",
@@ -69,13 +72,13 @@ __all__ = [
 
 
 #: ``model.name`` config values.
-LEGACY_MODEL_NAMES: Dict[str, str] = {"mft_cpea": "coffe"}
+LEGACY_MODEL_NAMES: dict[str, str] = {"mft_cpea": "coffe"}
 
 #: ``pretrain.objective`` config values.
-LEGACY_OBJECTIVES: Dict[str, str] = {"enhanced": "simmim"}
+LEGACY_OBJECTIVES: dict[str, str] = {"enhanced": "simmim"}
 
 #: Masking-regime ids ("variant" in the significance experiment's vocabulary).
-LEGACY_VARIANTS: Dict[str, str] = {
+LEGACY_VARIANTS: dict[str, str] = {
     "spectral": "simmim_band",
     "spatial": "simmim_token",
     "both": "simmim_band_token",
@@ -83,14 +86,14 @@ LEGACY_VARIANTS: Dict[str, str] = {
 
 #: ``model_type`` values written into ``results.json`` (PAPER_CANON §8 D16).
 #: ``HyperSIGMADual`` is canonical already and is intentionally absent.
-LEGACY_MODEL_TYPES: Dict[str, str] = {
+LEGACY_MODEL_TYPES: dict[str, str] = {
     "MFTCPEACosine": "CoFFE",
     "MFTOriginalCosine": "MFTOriginal",
     "HyperSIGMACosine": "HyperSIGMAFewShot",
 }
 
 #: Legacy class name -> (module, canonical class name).
-LEGACY_CLASSES: Dict[str, Tuple[str, str]] = {
+LEGACY_CLASSES: dict[str, tuple[str, str]] = {
     "MFTCPEACosine": ("coffe.models.coffe", "CoFFE"),
     "MFTOriginalCosine": ("coffe.models.mft_original", "MFTOriginal"),
     "HyperSIGMACosine": ("coffe.models.hypersigma.few_shot", "HyperSIGMAFewShot"),
@@ -106,7 +109,7 @@ def reset_deprecation_state() -> None:
     _warned.clear()
 
 
-def _warn_once(kind: str, legacy: str, canonical: str, origin: Optional[str]) -> None:
+def _warn_once(kind: str, legacy: str, canonical: str, origin: str | None) -> None:
     key = (kind, legacy, origin)
     if key in _warned:
         return
@@ -121,7 +124,7 @@ def _warn_once(kind: str, legacy: str, canonical: str, origin: Optional[str]) ->
     )
 
 
-def _normalize(mapping: Mapping[str, str], kind: str, value: Any, origin: Optional[str]) -> Any:
+def _normalize(mapping: Mapping[str, str], kind: str, value: Any, origin: str | None) -> Any:
     """Map one legacy value; pass everything else (canonical, unknown, non-str) through.
 
     Unknown values are *not* rejected here: validation stays with the caller, so
@@ -136,17 +139,17 @@ def _normalize(mapping: Mapping[str, str], kind: str, value: Any, origin: Option
     return canonical
 
 
-def normalize_model_name(value: Any, *, origin: Optional[str] = None) -> Any:
+def normalize_model_name(value: Any, *, origin: str | None = None) -> Any:
     """``"mft_cpea"`` -> ``"coffe"``. ``origin`` names where the value came from."""
     return _normalize(LEGACY_MODEL_NAMES, "model.name", value, origin)
 
 
-def normalize_objective(value: Any, *, origin: Optional[str] = None) -> Any:
+def normalize_objective(value: Any, *, origin: str | None = None) -> Any:
     """``"enhanced"`` -> ``"simmim"``."""
     return _normalize(LEGACY_OBJECTIVES, "pretrain.objective", value, origin)
 
 
-def normalize_variant(value: Any, *, origin: Optional[str] = None) -> Any:
+def normalize_variant(value: Any, *, origin: str | None = None) -> Any:
     """``"spectral"/"spatial"/"both"`` -> ``"simmim_band"/"simmim_token"/"simmim_band_token"``.
 
     Only for values used as a *regime label*. Variant ids that are components of
@@ -155,14 +158,14 @@ def normalize_variant(value: Any, *, origin: Optional[str] = None) -> Any:
     return _normalize(LEGACY_VARIANTS, "masking regime", value, origin)
 
 
-def normalize_model_type(value: Any, *, origin: Optional[str] = None) -> Any:
+def normalize_model_type(value: Any, *, origin: str | None = None) -> Any:
     """``"MFTCPEACosine"`` -> ``"CoFFE"`` etc., for ``results.json`` readers."""
     return _normalize(LEGACY_MODEL_TYPES, "model_type", value, origin)
 
 
 def normalize_pretrain_config(
-    config: Mapping[str, Any], *, origin: Optional[str] = None
-) -> Dict[str, Any]:
+    config: Mapping[str, Any], *, origin: str | None = None
+) -> dict[str, Any]:
     """Return a copy of a pretrain config with its vocabulary canonicalised.
 
     Normalises ``model.name`` and ``pretrain.objective`` only — the two keys a

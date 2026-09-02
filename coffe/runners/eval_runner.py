@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 import yaml
 
@@ -21,17 +21,15 @@ from .experiments import (
     detach_file_logger,
 )
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 from coffe.compat import normalize_model_name  # noqa: E402
-
 
 # Keys read from the pretrain experiment's saved config to seed eval defaults.
 # Eval-time overrides in `eval_params` still win.
 _ARCH_KEYS_FROM_MODEL = (
-    "name",            # selects the eval model (coffe | mft_original)
+    "name",  # selects the eval model (coffe | mft_original)
     "attention_type",  # original-MFT: mcross | standard
-    "mlp_dim",         # original-MFT feed-forward width (faithful: 512)
+    "mlp_dim",  # original-MFT feed-forward width (faithful: 512)
     "embed_dim",
     "num_heads",
     "num_layers",
@@ -49,8 +47,8 @@ _ARCH_KEYS_FROM_DATA = ("patch_size",)
 def load_pretrain_config(
     experiment_name: str,
     *,
-    experiments_root: Union[str, Path] = DEFAULT_EXPERIMENTS_ROOT,
-) -> Dict[str, Any]:
+    experiments_root: str | Path = DEFAULT_EXPERIMENTS_ROOT,
+) -> dict[str, Any]:
     """Read experiments/<name>/pretrain_config.yaml as a plain dict."""
     logger_ = ExperimentLogger(experiments_root=experiments_root, repo_root=REPO_ROOT)
     exp_dir = logger_.get_experiment(experiment_name)
@@ -61,7 +59,7 @@ def load_pretrain_config(
         return yaml.safe_load(f) or {}
 
 
-def _arch_defaults_from_pretrain(pretrain_cfg: Dict[str, Any]) -> Dict[str, Any]:
+def _arch_defaults_from_pretrain(pretrain_cfg: dict[str, Any]) -> dict[str, Any]:
     """Extract architecture-shaped keys from a pretrain config dict.
 
     ``model.name`` is normalised: frozen experiments record the pre-paper value
@@ -69,7 +67,7 @@ def _arch_defaults_from_pretrain(pretrain_cfg: Dict[str, Any]) -> Dict[str, Any]
     """
     model_cfg = pretrain_cfg.get("model", {}) or {}
     data_cfg = pretrain_cfg.get("data", {}) or {}
-    out: Dict[str, Any] = {}
+    out: dict[str, Any] = {}
     for k in _ARCH_KEYS_FROM_MODEL:
         if k in model_cfg:
             out[k] = model_cfg[k]
@@ -84,8 +82,8 @@ def _arch_defaults_from_pretrain(pretrain_cfg: Dict[str, Any]) -> Dict[str, Any]
 def find_checkpoint(
     experiment_name: str,
     *,
-    epoch: Optional[int] = None,
-    experiments_root: Union[str, Path] = DEFAULT_EXPERIMENTS_ROOT,
+    epoch: int | None = None,
+    experiments_root: str | Path = DEFAULT_EXPERIMENTS_ROOT,
 ) -> str:
     """Locate a checkpoint inside experiments/<name>/checkpoints/.
 
@@ -117,9 +115,9 @@ def run_hypersigma_evaluation(
     experiment_name: str,
     eval_name: str,
     *,
-    adapted_checkpoint: Optional[str] = None,
-    eval_params: Optional[Dict[str, Any]] = None,
-    experiments_root: Union[str, Path] = DEFAULT_EXPERIMENTS_ROOT,
+    adapted_checkpoint: str | None = None,
+    eval_params: dict[str, Any] | None = None,
+    experiments_root: str | Path = DEFAULT_EXPERIMENTS_ROOT,
     overwrite: bool = False,
 ) -> EvalRun:
     """Run HyperSIGMA few-shot evaluation under ``experiments/<name>/``.
@@ -147,15 +145,18 @@ def run_hypersigma_evaluation(
     }
 
     eval_run = logger_.start_eval(
-        experiment_name, eval_name, config_for_logging, overwrite=overwrite,
+        experiment_name,
+        eval_name,
+        config_for_logging,
+        overwrite=overwrite,
     )
 
     handler = attach_file_logger(eval_run)
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-    log = logging.getLogger(__name__)
-    log.info(
-        f"Starting HyperSIGMA eval '{eval_name}' for experiment '{experiment_name}'"
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
     )
+    log = logging.getLogger(__name__)
+    log.info(f"Starting HyperSIGMA eval '{eval_name}' for experiment '{experiment_name}'")
 
     eval_run.plots_dir.mkdir(parents=True, exist_ok=True)
     forwarded = dict(params)
@@ -165,14 +166,13 @@ def run_hypersigma_evaluation(
 
     try:
         results = _run(dataset=dataset, **forwarded)
-        if isinstance(results, list):
-            summary = results[-1]
-        else:
-            summary = results
+        summary = results[-1] if isinstance(results, list) else results
         # ``summary`` from the HyperSIGMA eval has separate cosine/euclidean
         # blocks; pick the primary metric for the EvalRun.finalize summary.
         primary_metric = forwarded.get("distance_metric", "euclidean")
-        finalize_payload = summary.get(primary_metric, summary) if isinstance(summary, dict) else summary
+        finalize_payload = (
+            summary.get(primary_metric, summary) if isinstance(summary, dict) else summary
+        )
         eval_run.finalize(results=finalize_payload)
         log.info(f"HyperSIGMA eval '{eval_name}' complete.")
         return eval_run
@@ -188,10 +188,10 @@ def run_evaluation(
     experiment_name: str,
     eval_name: str,
     *,
-    epoch: Optional[int] = None,
-    checkpoint: Optional[str] = None,
-    eval_params: Optional[Dict[str, Any]] = None,
-    experiments_root: Union[str, Path] = DEFAULT_EXPERIMENTS_ROOT,
+    epoch: int | None = None,
+    checkpoint: str | None = None,
+    eval_params: dict[str, Any] | None = None,
+    experiments_root: str | Path = DEFAULT_EXPERIMENTS_ROOT,
     overwrite: bool = False,
 ) -> EvalRun:
     """Run few-shot evaluation (nearest class mean) against a saved experiment.
@@ -221,7 +221,9 @@ def run_evaluation(
             checkpoint = user_params.pop("checkpoint")
         else:
             checkpoint = find_checkpoint(
-                experiment_name, epoch=epoch, experiments_root=experiments_root,
+                experiment_name,
+                epoch=epoch,
+                experiments_root=experiments_root,
             )
 
     # Pull architecture defaults from the pretraining experiment so the
@@ -229,7 +231,7 @@ def run_evaluation(
     # User-supplied keys win.
     pretrain_cfg = load_pretrain_config(experiment_name, experiments_root=experiments_root)
     arch_defaults = _arch_defaults_from_pretrain(pretrain_cfg)
-    params: Dict[str, Any] = {**arch_defaults, **user_params}
+    params: dict[str, Any] = {**arch_defaults, **user_params}
 
     arch_summary = ", ".join(f"{k}={params[k]}" for k in arch_defaults if k in params)
     logging.getLogger(__name__).info(
@@ -247,11 +249,16 @@ def run_evaluation(
     }
 
     eval_run = logger_.start_eval(
-        experiment_name, eval_name, config_for_logging, overwrite=overwrite,
+        experiment_name,
+        eval_name,
+        config_for_logging,
+        overwrite=overwrite,
     )
 
     handler = attach_file_logger(eval_run)
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+    )
     log = logging.getLogger(__name__)
     log.info(f"Starting eval '{eval_name}' for experiment '{experiment_name}'")
     log.info(f"Checkpoint: {checkpoint}")
@@ -270,10 +277,7 @@ def run_evaluation(
             dataset=dataset,
             **forwarded,
         )
-        if isinstance(results, list):
-            summary = results[-1]
-        else:
-            summary = results
+        summary = results[-1] if isinstance(results, list) else results
         eval_run.finalize(results=summary)
         log.info(f"Eval '{eval_name}' complete.")
         return eval_run

@@ -306,8 +306,8 @@ where the paper allows, renaming.
 - **D14 — the headline Houston cell comes from a run the repo filters as
   scratch.** Table 2 CoFFE SimMIM token HSI+LiDAR / Houston = **75.30** comes
   from `experiments/houston_enhanced_spatial_mask_test_run1_seed52`.
-  `scripts/compile_results.py:35` sets
-  `_TEST_MARKERS = ("test_run", "spatial_mask_test", "_example")` and `:61-62`
+  `scripts/compile_results.py:45` sets
+  `_TEST_MARKERS = ("test_run", "spatial_mask_test", "_example")` and `:75-76`
   drops matching experiments as `"scratch/test run"` — which is why
   `docs/presentation/RESULTS.json` has no Houston "Enhanced: spatial /
   HSI+LiDAR" entry and why `75.3` appears nowhere under `datasets.houston`.
@@ -327,8 +327,8 @@ where the paper allows, renaming.
 - **D16 — `model_type` is a written-and-read artifact value.**
   `scripts/evaluate_cosine.py:823` writes
   `"model_type": "MFTOriginalCosine" | "MFTCPEACosine"` into eval results;
-  `scripts/compile_results.py:58,104` and
-  `scripts/build_experiment_metadata.py:112-115` (phase 5: `scripts/reports/`)
+  `scripts/compile_results.py:72,124` and
+  `scripts/reports/build_experiment_metadata.py:121-123`
   read it back. Those readers
   only compare against `"HyperSIGMADual"` / `"HyperSIGMA" in m`, both preserved
   by §1, so renaming the CoFFE/MFT values is reader-safe — but it changes the
@@ -339,7 +339,7 @@ where the paper allows, renaming.
   **epoch 950 (Houston) / 975 (Trento, MUUFL)** — never the final checkpoint
   (one cell, Houston SimMIM band HSI+LiDAR, uses epoch 800). The ± column is
   the **across-seed std of a separate 5-seed experiment trained fresh to 700
-  epochs** (`scripts/reproduce/sig_significance_config.py:46`), split across
+  epochs** (`scripts/reproduce/sig_significance_config.py:45`), split across
   `experiments/significance_report.json` (18 cells) and
   `experiments/significance_report copy.json` (12 `enhanced` cells, including
   all three headline numbers). All 30 cells verified exact in both columns
@@ -375,7 +375,7 @@ where the paper allows, renaming.
   carry the rate of the cell it reproduces.
 
 - **D20 — for two Trento cells the ± was measured on a different mask rate than
-  the mean.** `_ENHANCED_CANONICAL` (`scripts/reproduce/sig_significance_config.py:66-74`)
+  the mean.** `_ENHANCED_CANONICAL` (`scripts/reproduce/sig_significance_config.py:66-76`)
   supplies the mask rates that the 5-seed significance runs clone. For Trento it
   names `trento_enhanced_spectral_run1` (band **0.75**) and
   `trento_enhanced_spectral_spatial_run1` (**0.75/0.75**), while Table 2's means

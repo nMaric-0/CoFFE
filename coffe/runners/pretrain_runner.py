@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 import yaml
 
@@ -22,10 +22,10 @@ from .experiments import (
     detach_file_logger,
 )
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-def _load_config(config: Union[str, Path, Dict[str, Any]]) -> Dict[str, Any]:
+
+def _load_config(config: str | Path | dict[str, Any]) -> dict[str, Any]:
     if isinstance(config, dict):
         return config
     with open(config) as f:
@@ -35,11 +35,11 @@ def _load_config(config: Union[str, Path, Dict[str, Any]]) -> Dict[str, Any]:
 def run_pretrain(
     name: str,
     description: str,
-    config: Union[str, Path, Dict[str, Any]],
+    config: str | Path | dict[str, Any],
     *,
-    overrides: Optional[Dict[str, Any]] = None,
-    resume: Optional[str] = None,
-    experiments_root: Union[str, Path] = DEFAULT_EXPERIMENTS_ROOT,
+    overrides: dict[str, Any] | None = None,
+    resume: str | None = None,
+    experiments_root: str | Path = DEFAULT_EXPERIMENTS_ROOT,
     overwrite: bool = False,
 ) -> PretrainExperiment:
     """Run a masked-pretraining experiment end-to-end.
@@ -75,7 +75,9 @@ def run_pretrain(
     )
 
     handler = attach_file_logger(exp)
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+    )
     log = logging.getLogger(__name__)
     log.info(f"Starting pretrain experiment '{name}' at {exp.root}")
 
@@ -97,7 +99,7 @@ def run_pretrain(
         detach_file_logger(handler)
 
 
-def _deep_merge(base: Dict[str, Any], overrides: Dict[str, Any]) -> Dict[str, Any]:
+def _deep_merge(base: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any]:
     out = dict(base)
     for k, v in overrides.items():
         if k in out and isinstance(out[k], dict) and isinstance(v, dict):

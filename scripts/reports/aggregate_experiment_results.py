@@ -25,35 +25,33 @@ import argparse
 import datetime as _dt
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import yaml
 
 
-def _read_json(path: Path) -> Optional[Any]:
+def _read_json(path: Path) -> Any | None:
     if not path.exists():
         return None
     with path.open() as f:
         return json.load(f)
 
 
-def _read_yaml(path: Path) -> Optional[Any]:
+def _read_yaml(path: Path) -> Any | None:
     if not path.exists():
         return None
     with path.open() as f:
         return yaml.safe_load(f)
 
 
-def _is_example(meta: Optional[Dict[str, Any]], name: str) -> bool:
+def _is_example(meta: dict[str, Any] | None, name: str) -> bool:
     if name == "_example":
         return True
-    if isinstance(meta, dict) and meta.get("status") == "example":
-        return True
-    return False
+    return isinstance(meta, dict) and meta.get("status") == "example"
 
 
-def collect(experiments_root: Path) -> Dict[str, Any]:
-    experiments: Dict[str, Any] = {}
+def collect(experiments_root: Path) -> dict[str, Any]:
+    experiments: dict[str, Any] = {}
     skipped: list[str] = []
     total_evals = 0
 
@@ -67,7 +65,7 @@ def collect(experiments_root: Path) -> Dict[str, Any]:
 
         config = _read_yaml(exp_dir / "pretrain_config.yaml")
 
-        evaluations: Dict[str, Any] = {}
+        evaluations: dict[str, Any] = {}
         evals_dir = exp_dir / "evaluations"
         if evals_dir.is_dir():
             for eval_dir in sorted(evals_dir.iterdir()):
@@ -115,14 +113,9 @@ def main() -> None:
     with args.output.open("w") as f:
         json.dump(data, f, indent=2, sort_keys=False)
 
-    n_with_evals = sum(
-        1 for e in data["experiments"].values() if e["num_evaluations"] > 0
-    )
+    n_with_evals = sum(1 for e in data["experiments"].values() if e["num_evaluations"] > 0)
     print(f"Wrote {args.output}")
-    print(
-        f"  experiments: {data['num_experiments']} "
-        f"({n_with_evals} with >=1 evaluation)"
-    )
+    print(f"  experiments: {data['num_experiments']} ({n_with_evals} with >=1 evaluation)")
     print(f"  evaluations: {data['num_evaluations']}")
     print(f"  skipped:     {data['skipped']}")
 

@@ -9,11 +9,9 @@ The choice of decoder affects what the encoder learns:
 - Lightweight decoder forces encoder to learn better representations
 - Full decoder can model more complex reconstruction but may "offload" work from encoder
 """
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from typing import Optional, Tuple
-import math
 
 
 class TransformerDecoderLayer(nn.Module):
@@ -32,16 +30,14 @@ class TransformerDecoderLayer(nn.Module):
         num_heads: int,
         mlp_ratio: float = 4.0,
         dropout: float = 0.1,
-        use_cross_attention: bool = False
+        use_cross_attention: bool = False,
     ):
         super().__init__()
 
         # Self-attention
         self.norm1 = nn.LayerNorm(embed_dim)
         self.self_attn = nn.MultiheadAttention(
-            embed_dim, num_heads,
-            dropout=dropout,
-            batch_first=True
+            embed_dim, num_heads, dropout=dropout, batch_first=True
         )
 
         # Cross-attention (optional)
@@ -49,9 +45,7 @@ class TransformerDecoderLayer(nn.Module):
         if use_cross_attention:
             self.norm_cross = nn.LayerNorm(embed_dim)
             self.cross_attn = nn.MultiheadAttention(
-                embed_dim, num_heads,
-                dropout=dropout,
-                batch_first=True
+                embed_dim, num_heads, dropout=dropout, batch_first=True
             )
 
         # MLP
@@ -62,14 +56,14 @@ class TransformerDecoderLayer(nn.Module):
             nn.GELU(),
             nn.Dropout(dropout),
             nn.Linear(mlp_dim, embed_dim),
-            nn.Dropout(dropout)
+            nn.Dropout(dropout),
         )
 
     def forward(
         self,
         x: torch.Tensor,
-        encoder_output: Optional[torch.Tensor] = None,
-        attn_mask: Optional[torch.Tensor] = None
+        encoder_output: torch.Tensor | None = None,
+        attn_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Args:
@@ -120,7 +114,7 @@ class TransformerDecoder(nn.Module):
         num_heads: int = 8,
         mlp_ratio: float = 4.0,
         dropout: float = 0.1,
-        use_cross_attention: bool = False
+        use_cross_attention: bool = False,
     ):
         """
         Args:
@@ -148,16 +142,18 @@ class TransformerDecoder(nn.Module):
         nn.init.normal_(self.pos_embed, std=0.02)
 
         # Transformer decoder layers
-        self.layers = nn.ModuleList([
-            TransformerDecoderLayer(
-                embed_dim=embed_dim,
-                num_heads=num_heads,
-                mlp_ratio=mlp_ratio,
-                dropout=dropout,
-                use_cross_attention=use_cross_attention
-            )
-            for _ in range(num_layers)
-        ])
+        self.layers = nn.ModuleList(
+            [
+                TransformerDecoderLayer(
+                    embed_dim=embed_dim,
+                    num_heads=num_heads,
+                    mlp_ratio=mlp_ratio,
+                    dropout=dropout,
+                    use_cross_attention=use_cross_attention,
+                )
+                for _ in range(num_layers)
+            ]
+        )
 
         self.norm = nn.LayerNorm(embed_dim)
 
@@ -168,7 +164,7 @@ class TransformerDecoder(nn.Module):
         self,
         visible_tokens: torch.Tensor,
         ids_restore: torch.Tensor,
-        encoder_output: Optional[torch.Tensor] = None
+        encoder_output: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Args:
@@ -190,10 +186,7 @@ class TransformerDecoder(nn.Module):
         tokens = torch.cat([visible_tokens, mask_tokens], dim=1)  # [B, N, D]
 
         # Restore original spatial order
-        tokens = torch.gather(
-            tokens, 1,
-            ids_restore.unsqueeze(-1).expand(-1, -1, D)
-        )
+        tokens = torch.gather(tokens, 1, ids_restore.unsqueeze(-1).expand(-1, -1, D))
 
         # Add position embeddings
         tokens = tokens + self.pos_embed
@@ -218,12 +211,7 @@ class SimpleMLPDecoder(nn.Module):
     Just a single linear projection from embed_dim to output_dim.
     """
 
-    def __init__(
-        self,
-        embed_dim: int,
-        output_dim: int,
-        num_tokens: int
-    ):
+    def __init__(self, embed_dim: int, output_dim: int, num_tokens: int):
         """
         Args:
             embed_dim: Input embedding dimension
@@ -247,7 +235,7 @@ class SimpleMLPDecoder(nn.Module):
         self,
         visible_tokens: torch.Tensor,
         ids_restore: torch.Tensor,
-        encoder_output: Optional[torch.Tensor] = None
+        encoder_output: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Args:
@@ -267,10 +255,7 @@ class SimpleMLPDecoder(nn.Module):
 
         # Concatenate and restore order
         tokens = torch.cat([visible_tokens, mask_tokens], dim=1)
-        tokens = torch.gather(
-            tokens, 1,
-            ids_restore.unsqueeze(-1).expand(-1, -1, D)
-        )
+        tokens = torch.gather(tokens, 1, ids_restore.unsqueeze(-1).expand(-1, -1, D))
 
         # Simple projection
         pred = self.decoder(tokens)
@@ -292,7 +277,7 @@ class TwoLayerMLPDecoder(nn.Module):
         hidden_dim: int,
         output_dim: int,
         num_tokens: int,
-        dropout: float = 0.1
+        dropout: float = 0.1,
     ):
         """
         Args:
@@ -317,14 +302,14 @@ class TwoLayerMLPDecoder(nn.Module):
             nn.Linear(embed_dim, hidden_dim),
             nn.GELU(),
             nn.Dropout(dropout),
-            nn.Linear(hidden_dim, output_dim)
+            nn.Linear(hidden_dim, output_dim),
         )
 
     def forward(
         self,
         visible_tokens: torch.Tensor,
         ids_restore: torch.Tensor,
-        encoder_output: Optional[torch.Tensor] = None
+        encoder_output: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Args:
@@ -344,10 +329,7 @@ class TwoLayerMLPDecoder(nn.Module):
 
         # Concatenate and restore order
         tokens = torch.cat([visible_tokens, mask_tokens], dim=1)
-        tokens = torch.gather(
-            tokens, 1,
-            ids_restore.unsqueeze(-1).expand(-1, -1, D)
-        )
+        tokens = torch.gather(tokens, 1, ids_restore.unsqueeze(-1).expand(-1, -1, D))
 
         # Two-layer MLP
         pred = self.decoder(tokens)
@@ -364,7 +346,7 @@ def build_decoder(
     num_layers: int = 4,
     num_heads: int = 8,
     dropout: float = 0.1,
-    use_cross_attention: bool = False
+    use_cross_attention: bool = False,
 ) -> nn.Module:
     """
     Factory function to build decoder based on type.
@@ -391,21 +373,17 @@ def build_decoder(
             num_layers=num_layers,
             num_heads=num_heads,
             dropout=dropout,
-            use_cross_attention=use_cross_attention
+            use_cross_attention=use_cross_attention,
         )
     elif decoder_type == "mlp_1layer":
-        return SimpleMLPDecoder(
-            embed_dim=embed_dim,
-            output_dim=output_dim,
-            num_tokens=num_tokens
-        )
+        return SimpleMLPDecoder(embed_dim=embed_dim, output_dim=output_dim, num_tokens=num_tokens)
     elif decoder_type == "mlp_2layer":
         return TwoLayerMLPDecoder(
             embed_dim=embed_dim,
             hidden_dim=hidden_dim,
             output_dim=output_dim,
             num_tokens=num_tokens,
-            dropout=dropout
+            dropout=dropout,
         )
     else:
         raise ValueError(f"Unknown decoder type: {decoder_type}")

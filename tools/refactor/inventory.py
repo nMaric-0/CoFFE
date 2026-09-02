@@ -66,9 +66,7 @@ def should_skip_dir(path: Path, root: Path) -> bool:
     if rel.as_posix() in SKIP_RELDIRS:
         return True
     # experiments/<run>/ is skipped; experiments/ itself is not.
-    if len(rel.parts) >= 2 and rel.parts[0] in SKIP_GLOB_PARENTS:
-        return True
-    return False
+    return len(rel.parts) >= 2 and rel.parts[0] in SKIP_GLOB_PARENTS
 
 
 def iter_files(root: Path):
@@ -188,8 +186,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--root", default=".", help="repository root (default: cwd)")
     ap.add_argument("--out", default="docs/refactor/inventory.json")
-    ap.add_argument("--force", action="store_true",
-                    help="overwrite --out if it already exists")
+    ap.add_argument("--force", action="store_true", help="overwrite --out if it already exists")
     args = ap.parse_args()
 
     root = Path(args.root).resolve()

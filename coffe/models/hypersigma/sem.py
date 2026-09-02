@@ -11,8 +11,6 @@ ships the downstream SEM weights) and trainable.
 
 from __future__ import annotations
 
-from typing import List
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -59,14 +57,12 @@ class SEM(nn.Module):
 
     def _init_weights(self) -> None:
         for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.trunc_normal_(m.weight, std=0.02)
-            elif isinstance(m, nn.Conv2d):
+            if isinstance(m, (nn.Linear, nn.Conv2d)):
                 nn.init.trunc_normal_(m.weight, std=0.02)
 
     def forward(
         self,
-        spat_features: List[torch.Tensor],
+        spat_features: list[torch.Tensor],
         spec_pooled: torch.Tensor,
     ) -> torch.Tensor:
         """
@@ -84,10 +80,10 @@ class SEM(nn.Module):
             f"SEM expects spec_pooled with {self.num_tokens} tokens, got {spec_pooled.shape[-1]}"
         )
 
-        pooled_stages: List[torch.Tensor] = []
+        pooled_stages: list[torch.Tensor] = []
         for i in range(self.num_stages):
-            dr_i = self.dr[i](spat_features[i])             # [B, dr_dim, Hp, Wp]
-            w_i = self.fc_spec[i](spec_pooled)              # [B, dr_dim]
+            dr_i = self.dr[i](spat_features[i])  # [B, dr_dim, Hp, Wp]
+            w_i = self.fc_spec[i](spec_pooled)  # [B, dr_dim]
             fused_i = (1.0 + w_i[:, :, None, None]) * dr_i  # [B, dr_dim, Hp, Wp]
             pooled_i = F.adaptive_avg_pool2d(fused_i, 1).flatten(1)  # [B, dr_dim]
             pooled_stages.append(pooled_i)

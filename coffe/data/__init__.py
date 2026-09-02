@@ -1,10 +1,11 @@
 """Data loading and processing module."""
-from .datasets import HoustonDataset, TrentoDataset, MUUFLDataset
+
+from .datasets import HoustonDataset, MUUFLDataset, TrentoDataset
 from .samplers import EpisodeSampler
 
 __all__ = [
-    "HoustonDataset",
-    "TrentoDataset", 
-    "MUUFLDataset",
     "EpisodeSampler",
+    "HoustonDataset",
+    "MUUFLDataset",
+    "TrentoDataset",
 ]

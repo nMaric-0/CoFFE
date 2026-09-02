@@ -29,7 +29,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from inventory import iter_files, module_index, resolve, absolutise  # noqa: E402
+from inventory import absolutise, iter_files, module_index, resolve
 
 # ---------------------------------------------------------------------------
 # Root sets. Each maps a name -> list of repo-relative entry-point paths.
@@ -230,8 +230,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--root", default=".")
     ap.add_argument("--out", default="docs/refactor/closure.json")
-    ap.add_argument("--force", action="store_true",
-                    help="overwrite --out if it already exists")
+    ap.add_argument("--force", action="store_true", help="overwrite --out if it already exists")
     args = ap.parse_args()
 
     root = Path(args.root).resolve()
@@ -264,7 +263,7 @@ def main() -> int:
                 ed.append(
                     {"to": tgt, "module": i["module"], "line": i["line"]}
                     if tgt == i["resolved"]
-                    else {"to": tgt, "module": f'<pkg init for {i["module"]}>', "line": i["line"]}
+                    else {"to": tgt, "module": f"<pkg init for {i['module']}>", "line": i["line"]}
                 )
         edges[rel] = ed
     for src, dst, why in EXTRA_EDGES:
@@ -294,7 +293,7 @@ def main() -> int:
             reached[cur] = chain
             for e in edges.get(cur, []):
                 if e["to"] not in reached:
-                    frontier.append((e["to"], chain + [f'{cur}:{e["line"]} -> {e["to"]}']))
+                    frontier.append((e["to"], [*chain, f"{cur}:{e['line']} -> {e['to']}"]))
         closures[name] = reached
 
     union_paper: set[str] = set()
@@ -330,7 +329,10 @@ def main() -> int:
         "paper_closure": sorted(union_paper),
         "unreached": unreached,
         "reached_by": dict(sorted(reached_by.items())),
-        "closures": {k: {p: v[-1] if len(v) > 1 else "ROOT" for p, v in c.items()} for k, c in closures.items()},
+        "closures": {
+            k: {p: v[-1] if len(v) > 1 else "ROOT" for p, v in c.items()}
+            for k, c in closures.items()
+        },
         "edges": edges,
     }
 

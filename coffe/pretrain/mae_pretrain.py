@@ -30,10 +30,10 @@ front of the shuffled order, ``ids_restore = argsort(ids_shuffle)``).
 
 import torch
 import torch.nn as nn
-from typing import Tuple, Optional, Dict
+
+from coffe.utils.spatial_weights import make_center_weights
 
 from .decoders import TransformerDecoder
-from coffe.utils.spatial_weights import make_center_weights
 
 
 class MAEPretrainModel(nn.Module):
@@ -79,7 +79,7 @@ class MAEPretrainModel(nn.Module):
         decoder_mlp_ratio: float = 4.0,
         decoder_dropout: float = 0.0,
         norm_pix_loss: bool = True,
-        recon_sigma: Optional[float] = None,
+        recon_sigma: float | None = None,
     ):
         super().__init__()
 
@@ -87,8 +87,7 @@ class MAEPretrainModel(nn.Module):
             raise ValueError(f"mask_ratio must be in (0, 1), got {mask_ratio}")
         if decoder_dim % decoder_heads != 0:
             raise ValueError(
-                f"decoder_dim ({decoder_dim}) must be divisible by "
-                f"decoder_heads ({decoder_heads})"
+                f"decoder_dim ({decoder_dim}) must be divisible by decoder_heads ({decoder_heads})"
             )
 
         self.encoder = encoder
@@ -115,7 +114,7 @@ class MAEPretrainModel(nn.Module):
         if recon_sigma is not None:
             rw = make_center_weights(patch_size, recon_sigma, normalize=False)
             rw = rw / rw.mean()
-            self.register_buffer('_recon_center_weights', rw)
+            self.register_buffer("_recon_center_weights", rw)
 
         # Encoder dim -> decoder dim. Named ``enc_to_dec`` so the evaluator's
         # fix_state_dict_keys skip-list drops it at load time.
@@ -137,7 +136,7 @@ class MAEPretrainModel(nn.Module):
 
     def random_masking(
         self, x: torch.Tensor, mask_ratio: float
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Per-sample random masking by shuffle (He et al. 2022).
 
@@ -161,13 +160,11 @@ class MAEPretrainModel(nn.Module):
         # Explicit fp32 noise (independent of x's dtype under AMP); driven by the
         # global RNG seeded via utils.seed.set_seed.
         noise = torch.rand(B, N, device=x.device)
-        ids_shuffle = torch.argsort(noise, dim=1)          # ascending; front = kept
-        ids_restore = torch.argsort(ids_shuffle, dim=1)    # inverse permutation
+        ids_shuffle = torch.argsort(noise, dim=1)  # ascending; front = kept
+        ids_restore = torch.argsort(ids_shuffle, dim=1)  # inverse permutation
 
         ids_keep = ids_shuffle[:, :len_keep]
-        x_visible = torch.gather(
-            x, 1, ids_keep.unsqueeze(-1).expand(-1, -1, D)
-        )
+        x_visible = torch.gather(x, 1, ids_keep.unsqueeze(-1).expand(-1, -1, D))
 
         # mask: 1 = removed, 0 = kept, restored to original token order.
         mask = torch.ones(B, N, device=x.device, dtype=x.dtype)
@@ -180,7 +177,7 @@ class MAEPretrainModel(nn.Module):
         self,
         hsi: torch.Tensor,
         aux: torch.Tensor,
-    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+    ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
         """
         MAE forward pass.
 
@@ -197,17 +194,18 @@ class MAEPretrainModel(nn.Module):
         assert H * W == N, f"Patch size mismatch: H*W={H * W}, num_tokens={N}"
 
         # 1. Reconstruction target in original token order: [B, N, C_total].
-        if self.use_aux:
-            combined = torch.cat([hsi, aux], dim=1)         # [B, C_total, H, W]
+        # Kept as if/else (not a ternary) so both branch shapes stay documented.
+        if self.use_aux:  # noqa: SIM108
+            combined = torch.cat([hsi, aux], dim=1)  # [B, C_total, H, W]
         else:
-            combined = hsi                                  # [B, C_hsi, H, W]
-        target = combined.flatten(2).transpose(1, 2)        # [B, N, C_total]
+            combined = hsi  # [B, C_hsi, H, W]
+        target = combined.flatten(2).transpose(1, 2)  # [B, N, C_total]
 
         # 2. Tokenize (no CLS / pos yet). Encoder re-concatenates aux internally.
         if self.use_aux:
             patch_tokens = self.encoder.tokenize(hsi, aux)  # [B, N, D]
         else:
-            patch_tokens = self.encoder.tokenize(hsi)       # [B, N, D]
+            patch_tokens = self.encoder.tokenize(hsi)  # [B, N, D]
 
         # 3. Add PATCH positional embedding (original order) BEFORE masking, so
         #    each surviving token keeps the position it would have at eval. The
@@ -215,24 +213,22 @@ class MAEPretrainModel(nn.Module):
         patch_tokens = patch_tokens + self.encoder.pos_embed[:, 1:]
 
         # 4. Remove mask_ratio of tokens; encode visible only.
-        x_visible, mask, ids_restore = self.random_masking(
-            patch_tokens, self.mask_ratio
-        )
+        x_visible, mask, ids_restore = self.random_masking(patch_tokens, self.mask_ratio)
 
         # 5. Prepend CLS (+ its positional slice).
         cls = self.encoder.class_agnostic_emb.expand(B, -1, -1)
         cls = cls + self.encoder.pos_embed[:, :1]
-        x = torch.cat([cls, x_visible], dim=1)              # [B, 1+len_keep, D]
+        x = torch.cat([cls, x_visible], dim=1)  # [B, 1+len_keep, D]
 
         # 6. Encode the visible-only sequence.
         x = self.encoder.encoder(x)
         x = self.encoder.norm(x)
 
         # 7. Drop CLS, project to decoder width.
-        x = self.enc_to_dec(x[:, 1:])                       # [B, len_keep, decoder_dim]
+        x = self.enc_to_dec(x[:, 1:])  # [B, len_keep, decoder_dim]
 
         # 8. Decode to all-token predictions in original order.
-        pred = self.decoder(x, ids_restore)                 # [B, N, C_total]
+        pred = self.decoder(x, ids_restore)  # [B, N, C_total]
 
         # 9. MSE loss on masked tokens only.
         if self.norm_pix_loss:
@@ -242,7 +238,7 @@ class MAEPretrainModel(nn.Module):
         else:
             target_used = target
 
-        per_token = ((pred - target_used) ** 2).mean(dim=-1)   # [B, N]
+        per_token = ((pred - target_used) ** 2).mean(dim=-1)  # [B, N]
         if self.recon_sigma is not None:
             per_token = per_token * self._recon_center_weights.view(1, N)
         denom = mask.sum().clamp_min(1.0)
@@ -257,4 +253,9 @@ class MAEPretrainModel(nn.Module):
         return loss, info
 
     def get_encoder(self) -> nn.Module:
+        """Return the encoder alone — the only part kept for evaluation.
+
+        The decoder and (where present) the projection head exist for the
+        pretext task and are discarded at eval time (PAPER_CANON §2).
+        """
         return self.encoder

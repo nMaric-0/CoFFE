@@ -28,13 +28,12 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from scripts.reproduce import sig_significance_config as cfg  # noqa: E402
+from scripts.reproduce import sig_significance_config as cfg
 
 LOG_DIR = cfg.EXPERIMENTS_ROOT / "_significance_logs"
 
@@ -42,7 +41,7 @@ LOG_DIR = cfg.EXPERIMENTS_ROOT / "_significance_logs"
 class Job:
     """A single worker invocation; device is assigned at launch time."""
 
-    def __init__(self, label: str, dataset: str, argv: List[str], logfile: Path):
+    def __init__(self, label: str, dataset: str, argv: list[str], logfile: Path):
         self.label = label
         self.dataset = dataset
         self.argv = argv  # without --device
@@ -53,19 +52,23 @@ def _dataset_rank(dataset: str) -> int:
     return cfg.DATASET_COST_ORDER.index(dataset) if dataset in cfg.DATASET_COST_ORDER else 99
 
 
-def build_jobs(stage: str, groups: Optional[List[str]], seeds: Optional[List[int]]) -> List[Job]:
+def build_jobs(stage: str, groups: list[str] | None, seeds: list[int] | None) -> list[Job]:
     """stage is 'train' or 'eval'. Returns the ordered job queue."""
     worker = "sig_pretrain_worker.py" if stage == "train" else "sig_eval_worker.py"
     suffix = "train" if stage == "train" else "eval"
-    jobs: List[Job] = []
+    jobs: list[Job] = []
     for group, dataset, variant, seed, name in cfg.runs(groups, seeds):
         argv = [
             sys.executable,
             str(REPO_ROOT / "scripts" / "reproduce" / worker),
-            "--group", group,
-            "--dataset", dataset,
-            "--variant", variant,
-            "--seed", str(seed),
+            "--group",
+            group,
+            "--dataset",
+            dataset,
+            "--variant",
+            variant,
+            "--seed",
+            str(seed),
         ]
         jobs.append(Job(name, dataset, argv, LOG_DIR / f"{name}.{suffix}.log"))
     # Slow dataset first, then stable by label.
@@ -73,14 +76,14 @@ def build_jobs(stage: str, groups: Optional[List[str]], seeds: Optional[List[int
     return jobs
 
 
-def run_global(jobs: List[Job], stage: str) -> List[Tuple[str, int]]:
+def run_global(jobs: list[Job], stage: str) -> list[tuple[str, int]]:
     """Run jobs through a global queue with <= MAX_PARALLEL_PER_GPU per GPU."""
-    results: List[Tuple[str, int]] = []
+    results: list[tuple[str, int]] = []
     load = {gpu: 0 for gpu in cfg.GPUS}
-    running: List[Tuple[Job, subprocess.Popen, "object", str]] = []
+    running: list[tuple[Job, subprocess.Popen, object, str]] = []
     queue = list(jobs)
 
-    def free_gpu() -> Optional[str]:
+    def free_gpu() -> str | None:
         # pick the least-loaded GPU that still has a free slot
         candidates = [g for g in cfg.GPUS if load[g] < cfg.MAX_PARALLEL_PER_GPU]
         if not candidates:
@@ -95,15 +98,20 @@ def run_global(jobs: List[Job], stage: str) -> List[Tuple[str, int]]:
                 break
             job = queue.pop(0)
             job.logfile.parent.mkdir(parents=True, exist_ok=True)
-            fh = open(job.logfile, "w")
-            argv = job.argv + ["--device", gpu]
+            # Deliberately not a context manager: the handle is the child
+            # process's stdout and is closed when that process is reaped.
+            fh = open(job.logfile, "w")  # noqa: SIM115
+            argv = [*job.argv, "--device", gpu]
             proc = subprocess.Popen(argv, stdout=fh, stderr=subprocess.STDOUT, cwd=str(REPO_ROOT))
             load[gpu] += 1
             running.append((job, proc, fh, gpu))
-            print(f"  [{stage}|{gpu}] START {job.label} "
-                  f"(log: {job.logfile.relative_to(REPO_ROOT)}) "
-                  f"[load {sum(load.values())}/{len(cfg.GPUS) * cfg.MAX_PARALLEL_PER_GPU}, "
-                  f"queue {len(queue)}]", flush=True)
+            print(
+                f"  [{stage}|{gpu}] START {job.label} "
+                f"(log: {job.logfile.relative_to(REPO_ROOT)}) "
+                f"[load {sum(load.values())}/{len(cfg.GPUS) * cfg.MAX_PARALLEL_PER_GPU}, "
+                f"queue {len(queue)}]",
+                flush=True,
+            )
 
         time.sleep(2.0)
 
@@ -123,16 +131,18 @@ def run_global(jobs: List[Job], stage: str) -> List[Tuple[str, int]]:
     return results
 
 
-def print_schedule(jobs: List[Job], stage: str):
+def print_schedule(jobs: list[Job], stage: str):
     n_slots = len(cfg.GPUS) * cfg.MAX_PARALLEL_PER_GPU
-    print(f"\n=== {stage.upper()} schedule: {len(jobs)} jobs, global queue, "
-          f"{n_slots} slots ({cfg.MAX_PARALLEL_PER_GPU}/GPU on {cfg.GPUS}) ===")
+    print(
+        f"\n=== {stage.upper()} schedule: {len(jobs)} jobs, global queue, "
+        f"{n_slots} slots ({cfg.MAX_PARALLEL_PER_GPU}/GPU on {cfg.GPUS}) ==="
+    )
     for i, job in enumerate(jobs):
         print(f"  [{i + 1:3d}] {job.label}")
         print(f"        $ {' '.join(job.argv)} --device <auto>")
 
 
-def summarize(results: List[Tuple[str, int]], stage: str) -> int:
+def summarize(results: list[tuple[str, int]], stage: str) -> int:
     failed = [lbl for lbl, rc in results if rc != 0]
     print(f"\n=== {stage} summary: {len(results)} jobs, {len(failed)} failed ===")
     for lbl in failed:
@@ -141,15 +151,23 @@ def summarize(results: List[Tuple[str, int]], stage: str) -> int:
 
 
 def main() -> int:
-    p = argparse.ArgumentParser(description=__doc__,
-                                formatter_class=argparse.RawDescriptionHelpFormatter)
+    p = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     p.add_argument("--stage", choices=["train", "eval", "aggregate", "all"], default="all")
-    p.add_argument("--groups", nargs="+", choices=list(cfg.GROUPS), default=None,
-                   help="Groups to run (default: all).")
-    p.add_argument("--seeds", nargs="+", type=int, default=None,
-                   help="Seeds to run (default: all 5).")
-    p.add_argument("--dry-run", action="store_true",
-                   help="Print the full queue without launching anything.")
+    p.add_argument(
+        "--groups",
+        nargs="+",
+        choices=list(cfg.GROUPS),
+        default=None,
+        help="Groups to run (default: all).",
+    )
+    p.add_argument(
+        "--seeds", nargs="+", type=int, default=None, help="Seeds to run (default: all 5)."
+    )
+    p.add_argument(
+        "--dry-run", action="store_true", help="Print the full queue without launching anything."
+    )
     args = p.parse_args()
 
     train_jobs = build_jobs("train", args.groups, args.seeds)
@@ -161,8 +179,10 @@ def main() -> int:
         if args.stage in ("eval", "all"):
             print_schedule(eval_jobs, "eval")
         if args.stage in ("aggregate", "all"):
-            print(f"\n=== AGGREGATE ===\n  $ {sys.executable} "
-                  f"{REPO_ROOT / 'scripts' / 'reports' / 'aggregate_significance.py'}")
+            print(
+                f"\n=== AGGREGATE ===\n  $ {sys.executable} "
+                f"{REPO_ROOT / 'scripts' / 'reports' / 'aggregate_significance.py'}"
+            )
         print("\n(dry-run: nothing launched)")
         return 0
 

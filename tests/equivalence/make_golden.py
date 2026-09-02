@@ -39,17 +39,17 @@ import json
 import logging
 import re
 import subprocess
-from datetime import datetime, timezone
 import sys
 import tempfile
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tests.equivalence._harness import (  # noqa: E402
+from tests.equivalence._harness import (
     COFFE_ARCH,
     FIXTURE_DIR,
     FIXTURE_SUFFIX,
@@ -99,7 +99,11 @@ def _git_raw(*args: str) -> str:
     """Unstripped stdout — `git status --porcelain` encodes state in columns 0-1,
     so the leading space of an unstaged change must survive."""
     return subprocess.run(
-        ["git", *args], cwd=REPO_ROOT, capture_output=True, text=True, check=True,
+        ["git", *args],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
     ).stdout
 
 
@@ -109,16 +113,12 @@ def assert_safe_to_generate(rebaseline: bool) -> None:
         for line in _git_raw("status", "--porcelain").splitlines()
         if line and line[:2] != "??"
     ]
-    offenders = [
-        path for path in modified
-        if not path.startswith(ALLOWED_DIRTY_PREFIXES)
-    ]
+    offenders = [path for path in modified if not path.startswith(ALLOWED_DIRTY_PREFIXES)]
     if offenders:
         raise SystemExit(
             "REFUSING to regenerate goldens: tracked files outside the phase-2 "
             "scope have uncommitted modifications, so the goldens would not "
-            "describe pre-refactor behaviour.\n  "
-            + "\n  ".join(offenders)
+            "describe pre-refactor behaviour.\n  " + "\n  ".join(offenders)
         )
 
     if rebaseline:
@@ -126,8 +126,7 @@ def assert_safe_to_generate(rebaseline: bool) -> None:
         return
 
     subjects = [
-        line for line in
-        _git("log", "--format=%s", "pre-refactor..HEAD").splitlines() if line
+        line for line in _git("log", "--format=%s", "pre-refactor..HEAD").splitlines() if line
     ]
     bad = [s for s in subjects if not PHASE_RE.match(s)]
     if bad:
@@ -136,7 +135,7 @@ def assert_safe_to_generate(rebaseline: bool) -> None:
             "this branch, so the code is already refactored.\n  "
             + "\n  ".join(bad)
             + "\n\nTo re-baseline deliberately (e.g. after a torch upgrade), read "
-              "the module docstring and pass --rebaseline from the pre-refactor tag."
+            "the module docstring and pass --rebaseline from the pre-refactor tag."
         )
 
 
@@ -145,11 +144,11 @@ def assert_safe_to_generate(rebaseline: bool) -> None:
 # ----------------------------------------------------------------------
 
 
-def make_g1(scene_root: Path, work: Path) -> Dict[str, Any]:
+def make_g1(scene_root: Path, work: Path) -> dict[str, Any]:
     from coffe.pretrain.loop import run_pretrain
 
     spec = SCENES["houston_mini"]
-    entries: Dict[str, Any] = {}
+    entries: dict[str, Any] = {}
 
     for objective_id in OBJECTIVES:
         for model_name in ("coffe", "mft_original"):
@@ -157,7 +156,10 @@ def make_g1(scene_root: Path, work: Path) -> Dict[str, Any]:
                 continue
             key = f"{model_name}:{objective_id}"
             cfg = pretrain_config(
-                spec, objective_id, data_root=scene_root, model_name=model_name,
+                spec,
+                objective_id,
+                data_root=scene_root,
+                model_name=model_name,
             )
             set_determinism()
             out = work / "g1" / key.replace(":", "_")
@@ -187,7 +189,7 @@ def make_g1(scene_root: Path, work: Path) -> Dict[str, Any]:
 # ----------------------------------------------------------------------
 
 
-def _g2_entry(model, spec: SceneSpec, use_aux: bool) -> Dict[str, Any]:
+def _g2_entry(model, spec: SceneSpec, use_aux: bool) -> dict[str, Any]:
     hsi, aux = fixed_input(spec)
     feature = live_eval_feature(model, hsi, aux if use_aux else None)
     return {
@@ -197,9 +199,9 @@ def _g2_entry(model, spec: SceneSpec, use_aux: bool) -> Dict[str, Any]:
     }
 
 
-def make_g2(work: Path) -> Dict[str, Any]:
+def make_g2(work: Path) -> dict[str, Any]:
     spec = SCENES["houston_mini"]
-    entries: Dict[str, Any] = {}
+    entries: dict[str, Any] = {}
 
     for key, model_name, use_aux in (
         ("coffe_hsi_lidar", "coffe", True),
@@ -215,8 +217,9 @@ def make_g2(work: Path) -> Dict[str, Any]:
         set_determinism()
         model = build_hypersigma_model(spec, regime, work / "hypersigma")
         entries[f"hypersigma_{regime}"] = _g2_entry(model, spec, use_aux=False)
-        log.info("G2 hypersigma_%-20s params=%d", regime,
-                 entries[f"hypersigma_{regime}"]["param_count"])
+        log.info(
+            "G2 hypersigma_%-20s params=%d", regime, entries[f"hypersigma_{regime}"]["param_count"]
+        )
 
     return {
         "description": (
@@ -248,24 +251,26 @@ def fixture_path(key: str) -> Path:
     return FIXTURE_DIR / f"{key}_houston_mini_simmim_token_ep3{FIXTURE_SUFFIX}"
 
 
-def make_fixtures(scene_root: Path, work: Path) -> Dict[str, Any]:
+def make_fixtures(scene_root: Path, work: Path) -> dict[str, Any]:
     import torch
 
     from coffe.pretrain.loop import run_pretrain
 
     spec = SCENES["houston_mini"]
     FIXTURE_DIR.mkdir(parents=True, exist_ok=True)
-    written: Dict[str, Any] = {}
+    written: dict[str, Any] = {}
 
     for key, meta in FIXTURES.items():
         cfg = pretrain_config(
-            spec, meta["objective"], data_root=scene_root, model_name=meta["model_name"],
+            spec,
+            meta["objective"],
+            data_root=scene_root,
+            model_name=meta["model_name"],
         )
         set_determinism()
         out = work / "fixture" / key
         run_pretrain(cfg, str(out / "checkpoints"), str(out / "log"))
-        full = torch.load(out / "checkpoints" / "final.pth", map_location="cpu",
-                          weights_only=True)
+        full = torch.load(out / "checkpoints" / "final.pth", map_location="cpu", weights_only=True)
         slim = {
             "epoch": full["epoch"],
             "global_step": full["global_step"],
@@ -282,13 +287,18 @@ def make_fixtures(scene_root: Path, work: Path) -> Dict[str, Any]:
             "model_name": meta["model_name"],
             "objective": meta["objective"],
         }
-        log.info("fixture %-14s %s (%.2f MB, %d keys)", key, dest.name,
-                 written[key]["bytes"] / 1e6, written[key]["num_keys"])
+        log.info(
+            "fixture %-14s %s (%.2f MB, %d keys)",
+            key,
+            dest.name,
+            written[key]["bytes"] / 1e6,
+            written[key]["num_keys"],
+        )
 
     return written
 
 
-def _fixture_key_report(spec: SceneSpec, key: str, model_name: str) -> Dict[str, Any]:
+def _fixture_key_report(spec: SceneSpec, key: str, model_name: str) -> dict[str, Any]:
     """What `fix_state_dict_keys` makes of a fixture, against the eval model.
 
     `unexpected` is legitimately non-empty: a pretraining checkpoint carries
@@ -314,11 +324,11 @@ def _fixture_key_report(spec: SceneSpec, key: str, model_name: str) -> Dict[str,
     }
 
 
-def make_g3(scene_root: Path) -> Dict[str, Any]:
+def make_g3(scene_root: Path) -> dict[str, Any]:
     from coffe.eval.episodic import run_evaluation
 
     spec = SCENES["houston_mini"]
-    entries: Dict[str, Any] = {}
+    entries: dict[str, Any] = {}
 
     for key, meta in FIXTURES.items():
         params = eval_params(spec, data_root=scene_root, model_name=meta["model_name"])
@@ -334,15 +344,21 @@ def make_g3(scene_root: Path) -> Dict[str, Any]:
             "loaded_feature": tensor_fingerprint(
                 live_eval_feature(
                     load_eval_model_from_checkpoint(
-                        spec, fixture_path(key), model_name=meta["model_name"],
+                        spec,
+                        fixture_path(key),
+                        model_name=meta["model_name"],
                     ),
                     *fixed_input(spec),
                 )
             ),
             "key_report": _fixture_key_report(spec, key, meta["model_name"]),
         }
-        log.info("G3 %-14s OA=%s hash=%s", key,
-                 entries[key]["OA"]["mean"], entries[key]["assignment_hash"][:16])
+        log.info(
+            "G3 %-14s OA=%s hash=%s",
+            key,
+            entries[key]["OA"]["mean"],
+            entries[key]["assignment_hash"][:16],
+        )
 
     return {
         "description": (
@@ -352,9 +368,14 @@ def make_g3(scene_root: Path) -> Dict[str, Any]:
         ),
         "scene": spec.name,
         "protocol": {
-            "n_way": "full-class", "k_shot": 5, "k_query": 10,
-            "num_episodes": G3_EPISODES, "distance_metric": "euclidean",
-            "use_projection": False, "pool_sigma": None, "seed": 42,
+            "n_way": "full-class",
+            "k_shot": 5,
+            "k_query": 10,
+            "num_episodes": G3_EPISODES,
+            "distance_metric": "euclidean",
+            "use_projection": False,
+            "pool_sigma": None,
+            "seed": 42,
         },
         "entries": entries,
     }
@@ -365,11 +386,11 @@ def make_g3(scene_root: Path) -> Dict[str, Any]:
 # ----------------------------------------------------------------------
 
 
-def make_g5(work: Path) -> Dict[str, Any]:
+def make_g5(work: Path) -> dict[str, Any]:
     import torch
 
     spec = SCENES["houston_mini"]
-    entries: Dict[str, Any] = {}
+    entries: dict[str, Any] = {}
     hsi, aux = fixed_input(spec, batch=8, seed=20260505)
 
     for objective_id in OBJECTIVES:
@@ -377,7 +398,7 @@ def make_g5(work: Path) -> Dict[str, Any]:
         model = build_pretrain_model(spec, objective_id)
         model.eval()
 
-        entry: Dict[str, Any] = {}
+        entry: dict[str, Any] = {}
 
         # Realized per-module mask rates, on a fixed seed.
         torch.manual_seed(777)
@@ -402,8 +423,9 @@ def make_g5(work: Path) -> Dict[str, Any]:
             # loss scale is unchanged by centre weighting.
             entry["recon_center_weight_mean"] = float(model._recon_center_weights.mean())
         entries[objective_id] = entry
-        log.info("G5 %-32s %s", objective_id,
-                 {k: v for k, v in entry.items() if not isinstance(v, dict)})
+        log.info(
+            "G5 %-32s %s", objective_id, {k: v for k, v in entry.items() if not isinstance(v, dict)}
+        )
 
     return {
         "description": (
@@ -423,7 +445,7 @@ def make_g5(work: Path) -> Dict[str, Any]:
 # ----------------------------------------------------------------------
 
 
-def make_real(experiments_dir: Path) -> Dict[str, Any]:
+def make_real(experiments_dir: Path) -> dict[str, Any]:
     """50-episode fixed-seed eval of the headline `simmim_token` Houston run.
 
     Reads ``$COFFE_EXPERIMENTS_DIR``. Machine-specific, so the output goes to
@@ -486,7 +508,7 @@ def make_real(experiments_dir: Path) -> Dict[str, Any]:
 GROUPS = ("g1", "g2", "g3", "g5")
 
 
-def _write(name: str, payload: Dict[str, Any]) -> None:
+def _write(name: str, payload: dict[str, Any]) -> None:
     GOLDEN_DIR.mkdir(parents=True, exist_ok=True)
     path = GOLDEN_DIR / f"{name}.json"
     with path.open("w") as fh:
@@ -495,14 +517,25 @@ def _write(name: str, payload: Dict[str, Any]) -> None:
     log.info("wrote %s (%.1f KB)", path.relative_to(REPO_ROOT), path.stat().st_size / 1e3)
 
 
-def main(argv: List[str] | None = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--only", choices=GROUPS, action="append", default=None,
-                        help="regenerate only these golden groups")
-    parser.add_argument("--real", action="store_true",
-                        help="also capture the optional local real-checkpoint fingerprint")
-    parser.add_argument("--rebaseline", action="store_true",
-                        help="waive the commit-range guard (torch upgrade; see docstring)")
+    parser.add_argument(
+        "--only",
+        choices=GROUPS,
+        action="append",
+        default=None,
+        help="regenerate only these golden groups",
+    )
+    parser.add_argument(
+        "--real",
+        action="store_true",
+        help="also capture the optional local real-checkpoint fingerprint",
+    )
+    parser.add_argument(
+        "--rebaseline",
+        action="store_true",
+        help="waive the commit-range guard (torch upgrade; see docstring)",
+    )
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
@@ -550,15 +583,15 @@ def main(argv: List[str] | None = None) -> int:
     # Provenance must survive a partial regeneration (`--only g5`), so
     # per-group records are merged rather than overwritten and the group list is
     # a union of everything ever generated into this golden/ directory.
-    existing: Dict[str, Any] = {}
+    existing: dict[str, Any] = {}
     meta_path = GOLDEN_DIR / "meta.json"
     if meta_path.exists():
         with meta_path.open() as fh:
             existing = json.load(fh)
 
-    per_group: Dict[str, Any] = dict(existing.get("groups", {}))
+    per_group: dict[str, Any] = dict(existing.get("groups", {}))
     stamp = {k: meta[k] for k in ("git_sha", "git_describe", "python", "torch", "numpy")}
-    stamp["generated_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    stamp["generated_at"] = datetime.now(UTC).isoformat(timespec="seconds")
     for group in groups:
         per_group[group] = dict(stamp)
 
@@ -570,7 +603,8 @@ def main(argv: List[str] | None = None) -> int:
         log.warning(
             "golden/ has records for %s but the harness defines %s — regenerate "
             "the missing groups before relying on this directory",
-            sorted(per_group), list(GROUPS),
+            sorted(per_group),
+            list(GROUPS),
         )
 
     with meta_path.open("w") as fh:

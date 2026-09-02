@@ -39,7 +39,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import yaml
 
@@ -47,7 +47,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from coffe.compat import normalize_model_name, normalize_objective  # noqa: E402
+from coffe.compat import normalize_model_name, normalize_objective
 
 AUDIT = REPO_ROOT / "docs" / "refactor" / "AUDIT.md"
 EXPERIMENTS = REPO_ROOT / "experiments"
@@ -94,31 +94,62 @@ CELL_NOTES = {
 }
 
 #: Keys copied verbatim from the frozen run, in the order they are emitted.
-MODEL_KEYS = ("name", "embed_dim", "num_heads", "num_layers", "mlp_dim",
-              "attention_type", "lambda_factor", "dropout", "use_aux",
-              "use_projection", "proj_hidden_dim", "proj_num_layers",
-              "proj_l2_normalize")
+MODEL_KEYS = (
+    "name",
+    "embed_dim",
+    "num_heads",
+    "num_layers",
+    "mlp_dim",
+    "attention_type",
+    "lambda_factor",
+    "dropout",
+    "use_aux",
+    "use_projection",
+    "proj_hidden_dim",
+    "proj_num_layers",
+    "proj_l2_normalize",
+)
 DATA_KEYS = ("patch_size", "num_workers")
-PRETRAIN_KEYS = ("datasets", "objective", "epochs", "batch_size", "val_split",
-                 "lr", "min_lr", "weight_decay", "warmup_epochs", "grad_clip",
-                 "decoder_hidden_dim", "band_mask_ratio", "spatial_mask_ratio",
-                 "mask_ratio", "decoder_dim", "decoder_depth", "decoder_heads",
-                 "norm_pix_loss", "recon_center_sigma", "pool_center_sigma",
-                 "save_interval", "val_interval", "log_interval", "use_amp")
+PRETRAIN_KEYS = (
+    "datasets",
+    "objective",
+    "epochs",
+    "batch_size",
+    "val_split",
+    "lr",
+    "min_lr",
+    "weight_decay",
+    "warmup_epochs",
+    "grad_clip",
+    "decoder_hidden_dim",
+    "band_mask_ratio",
+    "spatial_mask_ratio",
+    "mask_ratio",
+    "decoder_dim",
+    "decoder_depth",
+    "decoder_heads",
+    "norm_pix_loss",
+    "recon_center_sigma",
+    "pool_center_sigma",
+    "save_interval",
+    "val_interval",
+    "log_interval",
+    "use_amp",
+)
 HARDWARE_KEYS = ("device", "seed", "deterministic")
 
 #: The recipe keys that must never differ between a generated config and the run
 #: it reproduces. Compared on every run of this tool.
-RECIPE_KEYS = tuple(k for k in PRETRAIN_KEYS if k != "objective") + ("objective",)
+RECIPE_KEYS = (*(k for k in PRETRAIN_KEYS if k != "objective"), "objective")
 
 
 class Cell(dict):
     """One Table-2 cell: label, scene, OA, source run, evaluated epoch."""
 
 
-def parse_audit_cells() -> List[Cell]:
+def parse_audit_cells() -> list[Cell]:
     """Pull the Table-2 mapping out of AUDIT.md §3."""
-    cells: List[Cell] = []
+    cells: list[Cell] = []
     for line in AUDIT.read_text().splitlines():
         if not re.match(r"^\|\s*(\*\*)?(CoFFE|MFT) ", line):
             continue
@@ -129,23 +160,25 @@ def parse_audit_cells() -> List[Cell]:
         # "CoFFE SimMIM band HSI+LiDAR" -> regime label + modality
         for regime_label in sorted(REGIMES, key=len, reverse=True):
             if label.startswith(regime_label):
-                modality_word = label[len(regime_label):].strip()
+                modality_word = label[len(regime_label) :].strip()
                 break
         else:
             raise SystemExit(f"unmapped Table-2 row label: {label!r}")
         route, regime = REGIMES[regime_label]
         oa = re.match(r"[\d.]+", col[2])
-        cells.append(Cell(
-            label=label,
-            route=route,
-            regime=regime,
-            modality="hsi" if modality_word == "HSI" else "hsi_lidar",
-            scene=col[1].strip().lower(),
-            oa=oa.group(0) if oa else col[2],
-            run=col[3].strip("` "),
-            eval_epoch=col[5].strip("* "),
-            schedule=col[6].strip("* "),
-        ))
+        cells.append(
+            Cell(
+                label=label,
+                route=route,
+                regime=regime,
+                modality="hsi" if modality_word == "HSI" else "hsi_lidar",
+                scene=col[1].strip().lower(),
+                oa=oa.group(0) if oa else col[2],
+                run=col[3].strip("` "),
+                eval_epoch=col[5].strip("* "),
+                schedule=col[6].strip("* "),
+            )
+        )
     return cells
 
 
@@ -154,7 +187,7 @@ def config_path(cell: Cell) -> Path:
     return REPO_ROOT / "configs" / cell["route"] / f"{cell['scene']}_{cell['regime']}{suffix}.yaml"
 
 
-def frozen_config(cell: Cell) -> Optional[Dict[str, Any]]:
+def frozen_config(cell: Cell) -> dict[str, Any] | None:
     path = EXPERIMENTS / cell["run"] / "pretrain_config.yaml"
     if not path.exists():
         return None
@@ -165,15 +198,19 @@ def frozen_config(cell: Cell) -> Optional[Dict[str, Any]]:
 IGNORED_FROZEN_KEYS = {"data.hsi_channels", "data.aux_channels", "paths", "hardware.device"}
 
 
-def assert_no_dropped_keys(cell: Cell, frozen: Dict[str, Any]) -> None:
+def assert_no_dropped_keys(cell: Cell, frozen: dict[str, Any]) -> None:
     """Refuse to emit if the frozen run carries a key this tool would drop.
 
     The round-trip guard compares only keys the emitter knows about, so a key
     outside the emit lists would vanish silently. This closes that hole.
     """
-    known = ({f"model.{k}" for k in MODEL_KEYS} | {f"data.{k}" for k in DATA_KEYS}
-             | {f"pretrain.{k}" for k in PRETRAIN_KEYS}
-             | {f"hardware.{k}" for k in HARDWARE_KEYS} | IGNORED_FROZEN_KEYS)
+    known = (
+        {f"model.{k}" for k in MODEL_KEYS}
+        | {f"data.{k}" for k in DATA_KEYS}
+        | {f"pretrain.{k}" for k in PRETRAIN_KEYS}
+        | {f"hardware.{k}" for k in HARDWARE_KEYS}
+        | IGNORED_FROZEN_KEYS
+    )
     dropped = [
         f"{section}.{key}"
         for section in ("model", "data", "pretrain", "hardware")
@@ -187,7 +224,7 @@ def assert_no_dropped_keys(cell: Cell, frozen: Dict[str, Any]) -> None:
         )
 
 
-def _objective_of(pre: Dict[str, Any]) -> str:
+def _objective_of(pre: dict[str, Any]) -> str:
     """The objective a frozen `pretrain:` block selects.
 
     An explicit value always wins. Only when the key is absent does the default
@@ -197,8 +234,11 @@ def _objective_of(pre: Dict[str, Any]) -> str:
     """
     if "objective" in pre and pre["objective"] is not None:
         return pre["objective"]
-    if pre.get("mask_ratio") is not None and not pre.get("band_mask_ratio") \
-            and not pre.get("spatial_mask_ratio"):
+    if (
+        pre.get("mask_ratio") is not None
+        and not pre.get("band_mask_ratio")
+        and not pre.get("spatial_mask_ratio")
+    ):
         raise SystemExit(
             "frozen config omits `objective` but looks like MAE (mask_ratio set, "
             "band/spatial unset) — refusing to guess; state it in the run's config."
@@ -206,7 +246,7 @@ def _objective_of(pre: Dict[str, Any]) -> str:
     return "enhanced"
 
 
-def recipe(cfg: Dict[str, Any]) -> Dict[str, Any]:
+def recipe(cfg: dict[str, Any]) -> dict[str, Any]:
     """The values that define what a run computes (paths and comments excluded)."""
     pre = cfg.get("pretrain", {}) or {}
     mod = cfg.get("model", {}) or {}
@@ -241,7 +281,7 @@ def _scalar(v: Any) -> str:
     return str(v)
 
 
-def _yaml_block(mapping: Dict[str, Any], keys: Tuple[str, ...], indent: str = "  ") -> str:
+def _yaml_block(mapping: dict[str, Any], keys: tuple[str, ...], indent: str = "  ") -> str:
     lines = []
     for k in keys:
         if k not in mapping:
@@ -268,33 +308,41 @@ def provenance_header(cell: Cell, *, generated: bool) -> str:
     stem = f"{cell['scene']}_{cell['regime']}{suffix}"
     modality = "HSI-only" if cell["modality"] == "hsi" else "HSI+LiDAR"
     note = CELL_NOTES.get((cell["route"], cell["regime"], cell["scene"], cell["modality"]))
-    lines = [
-        f"# {cell['label'].replace(' HSI+LiDAR', '').replace(' HSI', '')}"
-        f" — {cell['scene'].capitalize()}, {modality}",
-        "#",
-        f"# Reproduces the paper's Table 2 cell **OA {cell['oa']}**.",
-        "#",
-        f"#   source run       experiments/{cell['run']}/",
-        f"#   evaluated at     epoch {cell['eval_epoch']} of a {cell['schedule']}-epoch schedule",
-        "#",
-        "# Every recipe value below matches that run's frozen pretrain_config.yaml,",
-        "# checked by tools/refactor/make_cell_configs.py.",
-        "#",
-    ] + ([
-        "# Output paths are fresh (./checkpoints/<route>/<cell>), not the source",
-        "# run's own output directory.",
-    ] if generated else [
-        "# NOTE this file keeps its original `paths:` (config paths are on the",
-        "# audit's DO-NOT-RENAME list). Those directories do not exist today — the",
-        "# paper's checkpoints are under experiments/<run>/checkpoints/ — but a",
-        "# plain `python scripts/pretrain.py --config ...` will create and write",
-        "# into them. Point `paths:` elsewhere if that matters to you.",
-    ]) + [
-        "#",
-        "# NOTE the checkpoint the paper evaluated is NOT the final one: train the",
-        f"# full {cell['schedule']} epochs, then evaluate epoch {cell['eval_epoch']}",
-        "# (PAPER_CANON §8 D17).",
-    ]
+    lines = (
+        [
+            f"# {cell['label'].replace(' HSI+LiDAR', '').replace(' HSI', '')}"
+            f" — {cell['scene'].capitalize()}, {modality}",
+            "#",
+            f"# Reproduces the paper's Table 2 cell **OA {cell['oa']}**.",
+            "#",
+            f"#   source run       experiments/{cell['run']}/",
+            f"#   evaluated at     epoch {cell['eval_epoch']} of a {cell['schedule']}-epoch schedule",
+            "#",
+            "# Every recipe value below matches that run's frozen pretrain_config.yaml,",
+            "# checked by tools/refactor/make_cell_configs.py.",
+            "#",
+        ]
+        + (
+            [
+                "# Output paths are fresh (./checkpoints/<route>/<cell>), not the source",
+                "# run's own output directory.",
+            ]
+            if generated
+            else [
+                "# NOTE this file keeps its original `paths:` (config paths are on the",
+                "# audit's DO-NOT-RENAME list). Those directories do not exist today — the",
+                "# paper's checkpoints are under experiments/<run>/checkpoints/ — but a",
+                "# plain `python scripts/pretrain.py --config ...` will create and write",
+                "# into them. Point `paths:` elsewhere if that matters to you.",
+            ]
+        )
+        + [
+            "#",
+            "# NOTE the checkpoint the paper evaluated is NOT the final one: train the",
+            f"# full {cell['schedule']} epochs, then evaluate epoch {cell['eval_epoch']}",
+            "# (PAPER_CANON §8 D17).",
+        ]
+    )
     if note:
         lines += ["#"] + ["# " + line for line in _wrap(note, 74)]
     lines += [
@@ -306,7 +354,7 @@ def provenance_header(cell: Cell, *, generated: bool) -> str:
     return "\n".join(lines)
 
 
-def render(cell: Cell, frozen: Dict[str, Any]) -> str:
+def render(cell: Cell, frozen: dict[str, Any]) -> str:
     model = dict(frozen.get("model", {}) or {})
     pre = dict(frozen.get("pretrain", {}) or {})
     data = dict(frozen.get("data", {}) or {})
@@ -319,9 +367,6 @@ def render(cell: Cell, frozen: Dict[str, Any]) -> str:
 
     suffix = "_hsi" if cell["modality"] == "hsi" else ""
     stem = f"{cell['scene']}_{cell['regime']}{suffix}"
-    modality = "HSI-only" if cell["modality"] == "hsi" else "HSI+LiDAR"
-    note = CELL_NOTES.get((cell["route"], cell["regime"], cell["scene"], cell["modality"]))
-
     header = provenance_header(cell, generated=True).rstrip("\n").split("\n")
 
     body = [
@@ -349,7 +394,7 @@ def render(cell: Cell, frozen: Dict[str, Any]) -> str:
     return "\n".join(header + body)
 
 
-def _wrap(text: str, width: int) -> List[str]:
+def _wrap(text: str, width: int) -> list[str]:
     words, lines, cur = text.split(), [], ""
     for w in words:
         if len(cur) + len(w) + 1 > width:
@@ -363,7 +408,9 @@ def _wrap(text: str, width: int) -> List[str]:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--apply", action="store_true", help="write the configs (default: check only)")
     args = ap.parse_args()
 
@@ -389,9 +436,13 @@ def main() -> int:
             # Same recipe already — give it the same provenance header as the
             # generated ones, without touching a single value.
             if args.apply and "Reproduces the paper's Table 2 cell" not in path.read_text():
-                stamped = provenance_header(cell, generated=False) + "\n" + path.read_text().lstrip("\n")
+                stamped = (
+                    provenance_header(cell, generated=False) + "\n" + path.read_text().lstrip("\n")
+                )
                 after = recipe(yaml.safe_load(stamped) or {})
-                drift = {k: (after.get(k), want.get(k)) for k in want if after.get(k) != want.get(k)}
+                drift = {
+                    k: (after.get(k), want.get(k)) for k in want if after.get(k) != want.get(k)
+                }
                 if drift:
                     raise SystemExit(f"header stamp changed values in {path}: {drift}")
                 path.write_text(stamped)
@@ -403,8 +454,9 @@ def main() -> int:
         # run's recipe. A formatting slip (an exponent YAML reads as a string, a
         # dropped key) would otherwise ship a config that trains something else.
         round_trip = recipe(yaml.safe_load(text) or {})
-        drift = {k: (round_trip.get(k), want.get(k))
-                 for k in want if round_trip.get(k) != want.get(k)}
+        drift = {
+            k: (round_trip.get(k), want.get(k)) for k in want if round_trip.get(k) != want.get(k)
+        }
         if drift:
             raise SystemExit(
                 f"render() does not round-trip for {path.relative_to(REPO_ROOT)}: {drift}"
@@ -416,8 +468,10 @@ def main() -> int:
     print(f"  new:       {len(written)}")
     for p in written:
         print(f"    + {p}")
-    print(f"  already matching their cell: {len(unchanged)}"
-          + (f" ({len(stamped_paths)} newly stamped with provenance)" if stamped_paths else ""))
+    print(
+        f"  already matching their cell: {len(unchanged)}"
+        + (f" ({len(stamped_paths)} newly stamped with provenance)" if stamped_paths else "")
+    )
     for p in unchanged:
         print(f"    {'s' if p in stamped_paths else '='} {p}")
     if conflicts:

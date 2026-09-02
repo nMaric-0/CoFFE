@@ -10,6 +10,18 @@
 # Run with:
 #   python scripts/adapt_hypersigma.py \
 #       --config configs/hypersigma/muufl_patchnative_joint_sem.yaml
+#
+# REPRODUCES  No published cell as written: this is the 3-band spatial front-end,
+#             while MUUFL's Table 3 cells (`11x11 / joint+SEM` OA 44.70,
+#             `11x11 / spatial` OA 50.25) were run at 100 bands — the joint+SEM
+#             run added spat_resample_to: 100 and its own epochs/lr/batch, which
+#             no committed config carries (experiments/
+#             hypersigma_adapt_muufl_pca100_joint_sem_run1 is the authority).
+#             This file is the config BASE of
+#             scripts/reproduce/run_hypersigma_spatial_pca100.py for the
+#             spatial cell, which supplies the 100-band paths in code.
+# RUNTIME     PAPER_CANON §3 times HyperSIGMA adaptation at ~36 h for 2000
+#             epochs on one RTX 4090. This config runs 3000 epochs.
 
 model:
   name: "hypersigma_dual"

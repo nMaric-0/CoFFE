@@ -1,6 +1,7 @@
 """Evaluation metrics."""
-import torch
+
 import numpy as np
+import torch
 from sklearn.metrics import confusion_matrix as sklearn_cm
 
 

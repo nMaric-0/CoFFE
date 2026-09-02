@@ -23,7 +23,6 @@ upstream ``pos_embed`` shape is ``(1, num_patches, embed_dim)`` with no
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Tuple
 
 import torch
 import torch.nn as nn
@@ -41,10 +40,14 @@ logger = logging.getLogger(__name__)
 # or unexpected is a real problem and we log it.
 _EXPECTED_DROPPED_KEYS = (
     "patch_embed.proj.",  # kernel changes from 16 -> 3
-    "pos_embed",          # token count changes from 14*14 to 4*4
-    "fpn1.", "fpn2.", "fpn3.", "fpn4.",  # k=3 fpn is Identity, no params
-    "cls",                # cls_token / cls Conv2d (downstream-only)
-    "classifier.", "classifier1.",       # downstream classifier heads
+    "pos_embed",  # token count changes from 14*14 to 4*4
+    "fpn1.",
+    "fpn2.",
+    "fpn3.",
+    "fpn4.",  # k=3 fpn is Identity, no params
+    "cls",  # cls_token / cls Conv2d (downstream-only)
+    "classifier.",
+    "classifier1.",  # downstream classifier heads
 )
 
 
@@ -55,32 +58,40 @@ _EXPECTED_DROPPED_KEYS = (
 # extras. At patch_size=8 the upstream FPN is all parameterless
 # (Identity + MaxPool), so dropping ``fpn*`` loses nothing.
 _NATIVE_DROPPED_KEYS = (
-    "fpn1.", "fpn2.", "fpn3.", "fpn4.",
+    "fpn1.",
+    "fpn2.",
+    "fpn3.",
+    "fpn4.",
     "cls",
-    "classifier.", "classifier1.",
+    "classifier.",
+    "classifier1.",
     # MAE pretraining decoder + mask token (absent from the downstream model)
-    "decoder_blocks.", "decoder_embed.", "decoder_norm.",
-    "decoder_pred.", "decoder_pos_embed", "mask_token",
+    "decoder_blocks.",
+    "decoder_embed.",
+    "decoder_norm.",
+    "decoder_pred.",
+    "decoder_pos_embed",
+    "mask_token",
 )
 
 
-def _looks_like_dropped_key(key: str, drop_keys: Tuple[str, ...] = _EXPECTED_DROPPED_KEYS) -> bool:
+def _looks_like_dropped_key(key: str, drop_keys: tuple[str, ...] = _EXPECTED_DROPPED_KEYS) -> bool:
     return any(key.startswith(p) or key == p for p in drop_keys)
 
 
-def _strip_state_dict_prefix(state_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+def _strip_state_dict_prefix(state_dict: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
     """Strip ``module.`` / ``encoder.`` prefixes if present."""
     if not state_dict:
         return state_dict
     first = next(iter(state_dict))
     if first.startswith("module."):
-        state_dict = {k[len("module."):]: v for k, v in state_dict.items()}
+        state_dict = {k[len("module.") :]: v for k, v in state_dict.items()}
     if all(k.startswith("encoder.") for k in state_dict):
-        state_dict = {k[len("encoder."):]: v for k, v in state_dict.items()}
+        state_dict = {k[len("encoder.") :]: v for k, v in state_dict.items()}
     return state_dict
 
 
-def _extract_state_dict(ckpt: dict) -> Dict[str, torch.Tensor]:
+def _extract_state_dict(ckpt: dict) -> dict[str, torch.Tensor]:
     if not isinstance(ckpt, dict):
         return ckpt
     for key in ("state_dict", "model", "encoder"):
@@ -101,7 +112,7 @@ class SpatViTBranch(nn.Module):
         embed_dim: int = 768,
         depth: int = 12,
         num_heads: int = 12,
-        out_indices: Tuple[int, ...] = (3, 5, 7, 11),
+        out_indices: tuple[int, ...] = (3, 5, 7, 11),
         freeze_body: bool = True,
         log_dropped_keys: bool = True,
         native_geometry: bool = False,
@@ -159,12 +170,14 @@ class SpatViTBranch(nn.Module):
             "SpatViT patch_embed num_patches mismatch"
         )
         assert self.model.pos_embed is not None and self.model.pos_embed.shape == (
-            1, self.model.patch_embed.num_patches, embed_dim,
+            1,
+            self.model.patch_embed.num_patches,
+            embed_dim,
         ), f"unexpected pos_embed shape {tuple(self.model.pos_embed.shape)}"
 
-        self._dropped_keys: List[str] = []
-        self._unexpected_keys: List[str] = []
-        self._missing_keys: List[str] = []
+        self._dropped_keys: list[str] = []
+        self._unexpected_keys: list[str] = []
+        self._missing_keys: list[str] = []
         self.pos_embed_source = "reinit"
         self.patch_embed_source = "reinit"
 
@@ -189,7 +202,7 @@ class SpatViTBranch(nn.Module):
         ckpt_pos_embed = state_dict.get("pos_embed")
 
         drop_keys = _NATIVE_DROPPED_KEYS if self.native_geometry else _EXPECTED_DROPPED_KEYS
-        kept: Dict[str, torch.Tensor] = {}
+        kept: dict[str, torch.Tensor] = {}
         for k, v in state_dict.items():
             if _looks_like_dropped_key(k, drop_keys):
                 self._dropped_keys.append(k)
@@ -205,8 +218,7 @@ class SpatViTBranch(nn.Module):
             # pos_embed are kept above and loaded by load_state_dict — do NOT
             # reinit them.
             pe_bad = any(
-                "patch_embed.proj" in k
-                for k in (self._missing_keys + self._unexpected_keys)
+                "patch_embed.proj" in k for k in (self._missing_keys + self._unexpected_keys)
             )
             self.patch_embed_source = "reinit" if pe_bad else "loaded"
             self._load_pos_embed(ckpt_pos_embed)
@@ -260,16 +272,20 @@ class SpatViTBranch(nn.Module):
             and ckpt_pos_embed.shape[2] == target.shape[2]
         ):
             orig_n = ckpt_pos_embed.shape[1]
-            orig_side = int(round(orig_n ** 0.5))
+            orig_side = int(round(orig_n**0.5))
             new_n = target.shape[1]
-            new_side = int(round(new_n ** 0.5))
+            new_side = int(round(new_n**0.5))
             if orig_side * orig_side == orig_n and new_side * new_side == new_n:
                 pos = ckpt_pos_embed.reshape(1, orig_side, orig_side, -1).permute(0, 3, 1, 2)
-                pos = F.interpolate(pos, size=(new_side, new_side), mode="bicubic", align_corners=False)
+                pos = F.interpolate(
+                    pos, size=(new_side, new_side), mode="bicubic", align_corners=False
+                )
                 pos = pos.permute(0, 2, 3, 1).reshape(1, new_n, -1)
                 with torch.no_grad():
                     target.copy_(pos)
-                self.pos_embed_source = f"interpolated_{orig_side}x{orig_side}->{new_side}x{new_side}"
+                self.pos_embed_source = (
+                    f"interpolated_{orig_side}x{orig_side}->{new_side}x{new_side}"
+                )
                 return
 
         nn.init.trunc_normal_(target, std=0.02)
@@ -277,8 +293,11 @@ class SpatViTBranch(nn.Module):
 
     def _log_load_summary(self) -> None:
         logger.info(
-            "[HyperSIGMA] SpatViT load summary: dropped=%d, missing=%d (post-reinit), unexpected=%d, pos_embed=%s",
-            len(self._dropped_keys), len(self._missing_keys), len(self._unexpected_keys),
+            "[HyperSIGMA] SpatViT load summary: dropped=%d, missing=%d (post-reinit), "
+            "unexpected=%d, pos_embed=%s",
+            len(self._dropped_keys),
+            len(self._missing_keys),
+            len(self._unexpected_keys),
             self.pos_embed_source,
         )
         if self._missing_keys:
@@ -305,10 +324,11 @@ class SpatViTBranch(nn.Module):
                 p.requires_grad_(False)
 
     @property
-    def trainable_parameter_names(self) -> List[str]:
+    def trainable_parameter_names(self) -> list[str]:
+        """Names of the SpatViT parameters left unfrozen by this wrapper."""
         return [n for n, p in self.model.named_parameters() if p.requires_grad]
 
-    def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         """Pad to ``pad_to`` and return the four FPN feature stages.
 
         Args:
@@ -322,8 +342,11 @@ class SpatViTBranch(nn.Module):
         if self.native_geometry:
             # Resize the small patch up to the native input size (64x64).
             x = fit_input(
-                x, self.native_img_size, self.input_fit,
-                interp_mode=self.interp_mode, pad_anchor=self.pad_anchor,
+                x,
+                self.native_img_size,
+                self.input_fit,
+                interp_mode=self.interp_mode,
+                pad_anchor=self.pad_anchor,
             )
         else:
             pad_right = self.pad_to - x.shape[-1]

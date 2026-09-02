@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 import yaml
 
@@ -32,17 +32,17 @@ from .experiments import (
     detach_file_logger,
 )
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-def _load_config(config: Union[str, Path, Dict[str, Any]]) -> Dict[str, Any]:
+
+def _load_config(config: str | Path | dict[str, Any]) -> dict[str, Any]:
     if isinstance(config, dict):
         return config
     with open(config) as f:
         return yaml.safe_load(f) or {}
 
 
-def _deep_merge(base: Dict[str, Any], overrides: Dict[str, Any]) -> Dict[str, Any]:
+def _deep_merge(base: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any]:
     out = dict(base)
     for k, v in overrides.items():
         if k in out and isinstance(out[k], dict) and isinstance(v, dict):
@@ -55,10 +55,10 @@ def _deep_merge(base: Dict[str, Any], overrides: Dict[str, Any]) -> Dict[str, An
 def run_adapt_hypersigma(
     name: str,
     description: str,
-    config: Union[str, Path, Dict[str, Any]],
+    config: str | Path | dict[str, Any],
     *,
-    overrides: Optional[Dict[str, Any]] = None,
-    experiments_root: Union[str, Path] = DEFAULT_EXPERIMENTS_ROOT,
+    overrides: dict[str, Any] | None = None,
+    experiments_root: str | Path = DEFAULT_EXPERIMENTS_ROOT,
     overwrite: bool = False,
 ) -> PretrainExperiment:
     """Run HyperSIGMA Level-2 MAE adaptation end-to-end under ``experiments/<name>/``.
@@ -119,7 +119,9 @@ def run_adapt_hypersigma(
             log.warning(
                 "HyperSIGMA adapt experiment '%s' interrupted after %d/%d epochs. "
                 "checkpoint_interrupted.pth saved.",
-                name, history.get("epochs_run", 0), history.get("epochs_requested", 0),
+                name,
+                history.get("epochs_run", 0),
+                history.get("epochs_requested", 0),
             )
         else:
             exp.finalize(history=history)

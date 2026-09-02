@@ -28,6 +28,7 @@ Useful flags:
     --overwrite                   # reuse/clobber existing experiment dirs
     --skip-eval                   # pretrain only
 """
+
 from __future__ import annotations
 
 import argparse
@@ -40,8 +41,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from coffe.runners.pretrain_runner import run_pretrain
 from coffe.runners.eval_runner import run_evaluation
+from coffe.runners.pretrain_runner import run_pretrain
 
 # Physical GPU is pinned by CUDA_VISIBLE_DEVICES=2 (see the .sh wrapper), which
 # remaps it to logical index 0. Keep this as cuda:0; do not hard-code cuda:2.
@@ -53,16 +54,16 @@ SPATIAL_RATIO = 0.75
 
 # regime key -> (band_mask_ratio, spatial_mask_ratio, human label)
 REGIMES = {
-    "spectral":         (SPECTRAL_RATIO, 0.0,           "spectral-only"),
-    "spatial":          (0.0,            SPATIAL_RATIO,  "spatial-only"),
+    "spectral": (SPECTRAL_RATIO, 0.0, "spectral-only"),
+    "spatial": (0.0, SPATIAL_RATIO, "spatial-only"),
     "spectral_spatial": (SPECTRAL_RATIO, SPATIAL_RATIO, "combined spectral+spatial"),
 }
 
 # dataset -> HSI-only pretrain config
 CONFIGS = {
     "houston": "configs/coffe/houston_simmim_hsi.yaml",
-    "trento":  "configs/coffe/trento_simmim_hsi.yaml",
-    "muufl":   "configs/coffe/muufl_simmim_hsi.yaml",
+    "trento": "configs/coffe/trento_simmim_hsi.yaml",
+    "muufl": "configs/coffe/muufl_simmim_hsi.yaml",
 }
 
 # Evaluation params matching the current HSI+LiDAR result runs. use_aux is NOT
@@ -76,7 +77,7 @@ EVAL_PARAMS = dict(
     temperature=10.0,
     prototype_mode="mean_features",
     pool_sigma=None,
-    use_projection=False,   # discard the projection head at eval time
+    use_projection=False,  # discard the projection head at eval time
     seed=42,
     num_example_episodes=1,
     max_tsne_samples=100,
@@ -85,24 +86,29 @@ EVAL_PARAMS = dict(
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--datasets", nargs="+", default=list(CONFIGS),
-                    choices=list(CONFIGS))
-    ap.add_argument("--regimes", nargs="+", default=list(REGIMES),
-                    choices=list(REGIMES))
-    ap.add_argument("--epochs", type=int, default=1500,
-                    help="Epoch count applied to every cell (matches current "
-                         "result runs). Use 0 to keep each config's own value.")
-    ap.add_argument("--overwrite", action="store_true",
-                    help="Reuse/overwrite an existing experiment directory.")
-    ap.add_argument("--skip-eval", action="store_true",
-                    help="Pretrain only; skip evaluation.")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument("--datasets", nargs="+", default=list(CONFIGS), choices=list(CONFIGS))
+    ap.add_argument("--regimes", nargs="+", default=list(REGIMES), choices=list(REGIMES))
+    ap.add_argument(
+        "--epochs",
+        type=int,
+        default=1500,
+        help="Epoch count applied to every cell (matches current "
+        "result runs). Use 0 to keep each config's own value.",
+    )
+    ap.add_argument(
+        "--overwrite", action="store_true", help="Reuse/overwrite an existing experiment directory."
+    )
+    ap.add_argument("--skip-eval", action="store_true", help="Pretrain only; skip evaluation.")
     args = ap.parse_args()
 
     cells = [(ds, rg) for ds in args.datasets for rg in args.regimes]
-    print(f"Planned {len(cells)} cells on {DEVICE} "
-          f"(CUDA_VISIBLE_DEVICES={__import__('os').environ.get('CUDA_VISIBLE_DEVICES', 'unset')}):")
+    print(
+        f"Planned {len(cells)} cells on {DEVICE} "
+        f"(CUDA_VISIBLE_DEVICES={__import__('os').environ.get('CUDA_VISIBLE_DEVICES', 'unset')}):"
+    )
     for ds, rg in cells:
         print(f"  - {ds}_enhanced_{rg}_no_lidar")
     print()
@@ -153,21 +159,22 @@ def main():
                 eval_done = True
 
             summary.append((exp_name, "OK", time.time() - t0))
-            print(f"--> {exp_name}: pretrain {pretrain_secs/60:.1f} min, "
-                  f"eval {'done' if eval_done else 'skipped'}.")
+            print(
+                f"--> {exp_name}: pretrain {pretrain_secs / 60:.1f} min, "
+                f"eval {'done' if eval_done else 'skipped'}."
+            )
         except Exception as e:  # keep the matrix going if one cell fails
             summary.append((exp_name, f"FAILED: {e}", time.time() - t0))
-            print(f"!!! {exp_name} FAILED after {(time.time()-t0)/60:.1f} min:")
+            print(f"!!! {exp_name} FAILED after {(time.time() - t0) / 60:.1f} min:")
             traceback.print_exc()
 
     print("\n" + "=" * 80)
     print("RUN SUMMARY")
     print("=" * 80)
     for name, status, secs in summary:
-        print(f"  {name:<45} {status:<12} ({secs/60:.1f} min)")
+        print(f"  {name:<45} {status:<12} ({secs / 60:.1f} min)")
     failures = [s for s in summary if not s[1].startswith("OK")]
-    print(f"\n{len(summary) - len(failures)}/{len(summary)} cells OK, "
-          f"{len(failures)} failed.")
+    print(f"\n{len(summary) - len(failures)}/{len(summary)} cells OK, {len(failures)} failed.")
     sys.exit(1 if failures else 0)
 
 

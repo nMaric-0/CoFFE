@@ -15,6 +15,16 @@
 #       --config configs/hypersigma/houston_patchnative_pca100_joint_sem.yaml
 #
 # This mirrors the notebook notebooks/evaluate_hypersigma_pca100.ipynb.
+#
+# REPRODUCES  Table 3 row `11x11 / joint+SEM / fused`, Houston: OA 67.48 ± 0.11 —
+#             but NOT key-for-key. The published run
+#             (experiments/hypersigma_adapt_houston_pca100_joint_sem_run1) was
+#             launched with overrides on top of this recipe: 2000 epochs,
+#             batch 128, lr 1e-5, min_lr 5e-7 (vs 3000 / 64 / 1.5e-4 / 1e-6
+#             below). Its pretrain_overrides.yaml is the authority; the
+#             discrepancy is AUDIT §3's recorded config-vs-run drift.
+# RUNTIME     PAPER_CANON §3 times HyperSIGMA adaptation at ~36 h for 2000
+#             epochs on one RTX 4090. This config runs 3000 epochs.
 
 model:
   name: "hypersigma_dual"

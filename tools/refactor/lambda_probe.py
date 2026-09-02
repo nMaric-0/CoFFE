@@ -17,6 +17,7 @@ Table 2 checkpoint, and compares lambda=0.5 (as it ran) against lambda=0.0
 Euclidean NCM is translation-invariant, so if cls_emb were constant across
 samples, lambda would provably contribute nothing.
 """
+
 import argparse
 import sys
 from pathlib import Path
@@ -25,8 +26,9 @@ from pathlib import Path
 _ap = argparse.ArgumentParser(
     description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
 )
-_ap.add_argument("episodes", nargs="?", type=int, default=40,
-                 help="number of episodes to probe (default: 40)")
+_ap.add_argument(
+    "episodes", nargs="?", type=int, default=40, help="number of episodes to probe (default: 40)"
+)
 N_EPISODES = _ap.parse_args().episodes
 
 import numpy as np
@@ -41,26 +43,43 @@ from coffe.utils.seed import set_seed
 
 REPO = Path(__file__).resolve().parents[2]
 # The run behind Table 2's headline Houston cell (75.30), at its evaluated epoch.
-CKPT = str(REPO / "experiments/houston_enhanced_spatial_mask_test_run1_seed52"
-                  "/checkpoints/checkpoint_epoch_950.pth")
+CKPT = str(
+    REPO / "experiments/houston_enhanced_spatial_mask_test_run1_seed52"
+    "/checkpoints/checkpoint_epoch_950.pth"
+)
 # Arch + eval params exactly as the run's eval_config.json records them.
-MODEL_CFG = dict(name="coffe", embed_dim=128, num_heads=2, num_layers=2,
-                 patch_size=11, lambda_factor=0.5, dropout=0.1,
-                 use_projection=False, proj_hidden_dim=512, proj_num_layers=1,
-                 proj_l2_normalize=True, use_aux=True,
-                 distance_metric="euclidean", temperature=10.0,
-                 prototype_mode="mean_features", pool_sigma=None)
+MODEL_CFG = dict(
+    name="coffe",
+    embed_dim=128,
+    num_heads=2,
+    num_layers=2,
+    patch_size=11,
+    lambda_factor=0.5,
+    dropout=0.1,
+    use_projection=False,
+    proj_hidden_dim=512,
+    proj_num_layers=1,
+    proj_l2_normalize=True,
+    use_aux=True,
+    distance_metric="euclidean",
+    temperature=10.0,
+    prototype_mode="mean_features",
+    pool_sigma=None,
+)
 
 device = "cpu"
 ds = HoustonPatchedDataset(data_root="./data/raw", split="all")
 model = load_model_with_checkpoint(CKPT, "houston", MODEL_CFG, device)
 model.eval()
-print(f"model cls_token_weight = {model.cls_token_weight}, pool_sigma = {model.pool_sigma}, "
-      f"projection = {type(model.projection).__name__}")
+print(
+    f"model cls_token_weight = {model.cls_token_weight}, pool_sigma = {model.pool_sigma}, "
+    f"projection = {type(model.projection).__name__}"
+)
 
 set_seed(42, deterministic=True)
-sampler = PatchedEpisodeSampler(dataset=ds, n_way=15, k_shot=5, k_query=100,
-                                num_episodes=N_EPISODES, seed=42)
+sampler = PatchedEpisodeSampler(
+    dataset=ds, n_way=15, k_shot=5, k_query=100, num_episodes=N_EPISODES, seed=42
+)
 
 agree = tot = 0
 oa_l, oa_0 = [], []
@@ -103,8 +122,10 @@ print(f"\nepisodes           : {len(oa_l)}")
 print(f"OA  lambda=0.5     : {np.mean(oa_l):.4f}   (per-episode std {np.std(oa_l):.3f})")
 print(f"OA  lambda=0.0     : {np.mean(oa_0):.4f}   (per-episode std {np.std(oa_0):.3f})")
 print(f"OA  difference     : {np.mean(oa_l) - np.mean(oa_0):+.4f} pp")
-print(f"prediction agreement: {agree}/{tot} = {100.0*agree/tot:.4f} %")
-print(f"episodes with identical OA: {sum(1 for a,b in zip(oa_l,oa_0) if abs(a-b)<1e-9)}/{len(oa_l)}")
+print(f"prediction agreement: {agree}/{tot} = {100.0 * agree / tot:.4f} %")
+print(
+    f"episodes with identical OA: {sum(1 for a, b in zip(oa_l, oa_0) if abs(a - b) < 1e-9)}/{len(oa_l)}"
+)
 print("\ncls_emb mechanism (episode 0):")
 print(f"  ||mean(cls_emb)||           = {cls_stats[0]:.4f}")
 print(f"  mean per-dim std of cls_emb = {cls_stats[1]:.6f}")

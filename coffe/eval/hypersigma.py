@@ -31,22 +31,22 @@ import os
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
 
-from coffe.data.datasets import DATASET_REGISTRY, get_spec  # noqa: E402
-from coffe.data.samplers.patched_episode_sampler import PatchedEpisodeSampler  # noqa: E402
-from coffe.models.hypersigma import HyperSIGMADual, HyperSIGMAFewShot  # noqa: E402
-from coffe.eval.episodic import (  # noqa: E402
+from coffe.data.datasets import DATASET_REGISTRY, get_spec
+from coffe.data.samplers.patched_episode_sampler import PatchedEpisodeSampler
+from coffe.eval.episodic import (
     CLASS_NAMES,
     compute_metrics_from_confusion_matrix,
     generate_plots,
 )
-from coffe.utils.seed import set_seed  # noqa: E402
+from coffe.models.hypersigma import HyperSIGMADual, HyperSIGMAFewShot
+from coffe.utils.seed import set_seed
 
 # Derived from the central registry (coffe/data/datasets/registry.py) so band
 # and class counts cannot drift from the adapt pipeline.
@@ -57,7 +57,9 @@ DATASET_SPECS = {
     for name, spec in DATASET_REGISTRY.items()
 }
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -69,9 +71,9 @@ logger = logging.getLogger(__name__)
 # Which dual-branch components each eval mode actually consumes. Building only
 # these avoids loading an unused ViT-B (~half the encoder) into GPU memory.
 _MODE_BRANCHES = {
-    "fused":     {"build_spat": True,  "build_spec": True,  "build_sem": True},
-    "spat_pool": {"build_spat": True,  "build_spec": False, "build_sem": False},
-    "spec_pool": {"build_spat": False, "build_spec": True,  "build_sem": False},
+    "fused": {"build_spat": True, "build_spec": True, "build_sem": True},
+    "spat_pool": {"build_spat": True, "build_spec": False, "build_sem": False},
+    "spec_pool": {"build_spat": False, "build_spec": True, "build_sem": False},
 }
 
 
@@ -85,14 +87,14 @@ def _build_dual(
     num_tokens: int = 100,
     dr_dim: int = 128,
     num_stages: int = 4,
-    pca_stats_path: Optional[str] = None,
+    pca_stats_path: str | None = None,
     mode: str = "fused",
-    spat_resample_to: Optional[int] = None,
+    spat_resample_to: int | None = None,
     native_geometry: bool = False,
     input_fit: str = "upscale",
     pad_anchor: str = "center",
     interp_mode: str = "bicubic",
-    native_pca_spat_path: Optional[str] = None,
+    native_pca_spat_path: str | None = None,
 ) -> HyperSIGMADual:
     specs = DATASET_SPECS[dataset_name]
     branches = _MODE_BRANCHES.get(mode, _MODE_BRANCHES["fused"])
@@ -139,16 +141,15 @@ def _load_adapted_checkpoint(model: HyperSIGMAFewShot, ckpt_path: str) -> None:
     dual_state = {}
     for k, v in state.items():
         if k.startswith("dual."):
-            dual_state[k[len("dual."):]] = v
+            dual_state[k[len("dual.") :]] = v
     if not dual_state:
-        raise RuntimeError(
-            f"No 'dual.*' keys found in adapted checkpoint at {ckpt_path}"
-        )
+        raise RuntimeError(f"No 'dual.*' keys found in adapted checkpoint at {ckpt_path}")
 
     missing, unexpected = model.dual.load_state_dict(dual_state, strict=False)
     logger.info(
         "[HyperSIGMA] Loaded adapted dual state: missing=%d, unexpected=%d",
-        len(missing), len(unexpected),
+        len(missing),
+        len(unexpected),
     )
     if missing:
         logger.warning("Missing keys (first 10): %s", missing[:10])
@@ -168,14 +169,23 @@ def load_model(
     prototype_mode: str,
     distance_metric: str,
     device: str,
-    pca_stats_path: Optional[str] = None,
-    spat_resample_to: Optional[int] = None,
+    pca_stats_path: str | None = None,
+    spat_resample_to: int | None = None,
     native_geometry: bool = False,
     input_fit: str = "upscale",
     pad_anchor: str = "center",
     interp_mode: str = "bicubic",
-    native_pca_spat_path: Optional[str] = None,
+    native_pca_spat_path: str | None = None,
 ) -> HyperSIGMAFewShot:
+    """Build the frozen HyperSIGMA evaluator for one Table 3 configuration.
+
+    ``mode`` selects the feature column — ``spat_pool`` (spatial 768-d),
+    ``spec_pool`` (spectral 768-d) or ``fused`` (SEM 512-d);
+    ``native_geometry`` + ``input_fit`` select the 64x64 backbone-native
+    regime (pad or upscale) over the 11x11 patch-native one; and
+    ``adapted_checkpoint``, when given, loads the label-free adaptation on
+    top. Returns the model in eval mode on ``device`` (PAPER_CANON §5).
+    """
     has_adapted = bool(
         adapted_checkpoint and adapted_checkpoint.lower() not in ("none", "null", "random")
     )
@@ -213,7 +223,8 @@ def load_model(
     elif native_geometry:
         logger.info(
             "[HyperSIGMA] Running NATIVE-GEOMETRY ablation (mode=%s, input_fit=%s, unadapted)",
-            mode, input_fit,
+            mode,
+            input_fit,
         )
     else:
         logger.info("[HyperSIGMA] Running UNADAPTED ablation (no Houston adaptation applied)")
@@ -283,7 +294,8 @@ def evaluate(
             "class_results": defaultdict(lambda: {"correct": 0, "total": 0}),
             "class_episode_accs": defaultdict(list),
             "global_conf_matrix": np.zeros(
-                (num_total_classes + 1, num_total_classes + 1), dtype=np.int64,
+                (num_total_classes + 1, num_total_classes + 1),
+                dtype=np.int64,
             ),
             "pairwise_confusion": defaultdict(lambda: defaultdict(int)),
             "pairwise_totals": defaultdict(lambda: defaultdict(int)),
@@ -329,23 +341,30 @@ def evaluate(
         query_labels = episode["query_labels"].to(device)
         original_classes = episode["original_classes"].tolist()
         if profile:
-            t_h2d = _stamp(); sec["h2d"] = t_h2d - t_top
+            t_h2d = _stamp()
+            sec["h2d"] = t_h2d - t_top
 
         s_patch, s_cls, _ = model.forward_features(support_hsi, support_aux)
         if profile:
-            t_fs = _stamp(); sec["fwd_support"] = t_fs - t_h2d
+            t_fs = _stamp()
+            sec["fwd_support"] = t_fs - t_h2d
         q_patch, q_cls, _ = model.forward_features(query_hsi, query_aux)
         if profile:
-            t_fq = _stamp(); sec["fwd_query"] = t_fq - t_fs
+            t_fq = _stamp()
+            sec["fwd_query"] = t_fq - t_fs
         s_feat = model.eval_patch_embeddings(s_patch, s_cls).mean(dim=1)
         q_feat = model.eval_patch_embeddings(q_patch, q_cls).mean(dim=1)
         if profile:
-            t_ad = _stamp(); sec["adapt"] = t_ad - t_fq
+            t_ad = _stamp()
+            sec["adapt"] = t_ad - t_fq
 
         for metric in ("cosine", "euclidean"):
             logits = _compute_logits(
-                s_feat, support_labels, q_feat,
-                metric=metric, temperature=temperature,
+                s_feat,
+                support_labels,
+                q_feat,
+                metric=metric,
+                temperature=temperature,
             )
             preds = logits.argmax(dim=1)
             query_cpu = query_labels.cpu().numpy()
@@ -377,21 +396,23 @@ def evaluate(
             # primary metric (these drive the plots).
             if metric == primary_metric:
                 if completed < num_example_episodes:
-                    s_norm = (
-                        F.normalize(s_feat, p=2, dim=-1) if metric == "cosine" else s_feat
-                    )
-                    q_norm = (
-                        F.normalize(q_feat, p=2, dim=-1) if metric == "cosine" else q_feat
-                    )
+                    s_norm = F.normalize(s_feat, p=2, dim=-1) if metric == "cosine" else s_feat
+                    q_norm = F.normalize(q_feat, p=2, dim=-1) if metric == "cosine" else q_feat
                     prototypes = torch.zeros(
-                        support_labels.max().item() + 1, s_norm.shape[-1], device=s_norm.device,
+                        support_labels.max().item() + 1,
+                        s_norm.shape[-1],
+                        device=s_norm.device,
                     )
                     counts = torch.zeros_like(prototypes[:, 0])
                     prototypes.scatter_add_(
-                        0, support_labels.unsqueeze(-1).expand_as(s_norm), s_norm,
+                        0,
+                        support_labels.unsqueeze(-1).expand_as(s_norm),
+                        s_norm,
                     )
                     counts.scatter_add_(
-                        0, support_labels, torch.ones_like(support_labels, dtype=s_norm.dtype),
+                        0,
+                        support_labels,
+                        torch.ones_like(support_labels, dtype=s_norm.dtype),
                     )
                     prototypes = prototypes / counts.unsqueeze(-1).clamp(min=1)
                     example_episodes_data.append(
@@ -406,8 +427,10 @@ def evaluate(
                         }
                     )
                 q_feats_np = (
-                    F.normalize(q_feat, p=2, dim=-1) if metric == "cosine" else q_feat
-                ).cpu().numpy()
+                    (F.normalize(q_feat, p=2, dim=-1) if metric == "cosine" else q_feat)
+                    .cpu()
+                    .numpy()
+                )
                 for way_idx, orig in enumerate(original_classes):
                     mask = query_cpu == way_idx
                     feats = q_feats_np[mask]
@@ -419,18 +442,21 @@ def evaluate(
                     aggregated_features[orig].append(feats)
 
         if profile:
-            t_post = _stamp(); sec["post"] = t_post - t_ad
+            t_post = _stamp()
+            sec["post"] = t_post - t_ad
             last_end = t_post
             if completed >= PROFILE_WARMUP:
                 for k, v in sec.items():
                     timings[k] += v
                 timed_episodes += 1
                 if timed_episodes:
-                    pbar.set_postfix({
-                        "fwd_s(ms)": f"{timings['fwd_support'] / timed_episodes * 1e3:.0f}",
-                        "fwd_q(ms)": f"{timings['fwd_query'] / timed_episodes * 1e3:.0f}",
-                        "data(ms)": f"{timings['data_wait'] / timed_episodes * 1e3:.0f}",
-                    })
+                    pbar.set_postfix(
+                        {
+                            "fwd_s(ms)": f"{timings['fwd_support'] / timed_episodes * 1e3:.0f}",
+                            "fwd_q(ms)": f"{timings['fwd_query'] / timed_episodes * 1e3:.0f}",
+                            "data(ms)": f"{timings['data_wait'] / timed_episodes * 1e3:.0f}",
+                        }
+                    )
         completed += 1
 
     if profile and timed_episodes:
@@ -439,14 +465,17 @@ def evaluate(
         total_ms = sum(means_ms.values())
         logger.info(
             "[HyperSIGMA][profile] mean ms/episode over %d episodes (warmup %d skipped):",
-            timed_episodes, PROFILE_WARMUP,
+            timed_episodes,
+            PROFILE_WARMUP,
         )
         for k in order:
             pct = (means_ms[k] / total_ms * 100) if total_ms else 0.0
             logger.info("    %-12s %8.1f ms  (%4.1f%%)", k, means_ms[k], pct)
         logger.info(
             "    %-12s %8.1f ms  -> %.2f it/s",
-            "TOTAL", total_ms, (1e3 / total_ms) if total_ms else 0.0,
+            "TOTAL",
+            total_ms,
+            (1e3 / total_ms) if total_ms else 0.0,
         )
 
     # Concatenate aggregated features
@@ -455,6 +484,7 @@ def evaluate(
 
     def _ci(values):
         from scipy.stats import t as t_dist
+
         arr = np.asarray(values, dtype=float)
         mean = float(arr.mean())
         std = float(arr.std())
@@ -635,9 +665,7 @@ def _resolve_dataset_paths(args, dataset_name: str) -> None:
     # 144->100); otherwise the dual spectrally resamples raw bands -> 100
     # (Trento 63, MUUFL 64). Leave None to trigger resampling.
     if getattr(args, "native_geometry", False) and not getattr(args, "native_pca_spat_path", None):
-        conv100 = spec.pca_spat_path().replace(
-            f"_{spec.spat_components}band.pkl", "_100band.pkl"
-        )
+        conv100 = spec.pca_spat_path().replace(f"_{spec.spat_components}band.pkl", "_100band.pkl")
         args.native_pca_spat_path = conv100 if Path(conv100).exists() else None
     if getattr(args, "adapted_checkpoint", None) and args.adapted_checkpoint.lower() == "auto":
         args.adapted_checkpoint = str(
@@ -659,13 +687,22 @@ def _resolve_device(args) -> str:
         if requested and str(requested).startswith("cuda"):
             logger.warning(
                 "Requested device %r but %s -> falling back to CPU.",
-                requested, "--cpu set" if args.cpu else "CUDA unavailable",
+                requested,
+                "--cpu set" if args.cpu else "CUDA unavailable",
             )
         return "cpu"
     return requested or "cuda"
 
 
-def main(args):
+def main(args: argparse.Namespace) -> dict | None:
+    """Evaluate a HyperSIGMA configuration under the same few-shot protocol.
+
+    The loop accumulates cosine *and* Euclidean confusion matrices in one
+    pass; ``--distance-metric`` only selects which block is recorded as the
+    run's primary metric. Paper Table 3 quotes the Euclidean block throughout;
+    PAPER_CANON §8 D18 records the one cell whose ``eval_config.json`` says
+    ``cosine`` even though its published value is the Euclidean sub-block.
+    """
     device = _resolve_device(args)
     logger.info("Using device: %s", device)
 
@@ -674,7 +711,9 @@ def main(args):
     _resolve_dataset_paths(args, dataset_name)
     logger.info(
         "Resolved paths: pca_spat=%s pca_stats=%s adapted=%s",
-        args.pca_spat_path, args.pca_stats_path, args.adapted_checkpoint,
+        args.pca_spat_path,
+        args.pca_stats_path,
+        args.adapted_checkpoint,
     )
     DatasetClass = DATASETS[dataset_name]
     dataset = DatasetClass(
@@ -722,7 +761,9 @@ def main(args):
         )
         args.n_way = sampler.n_way
         results = evaluate(
-            model, sampler, device,
+            model,
+            sampler,
+            device,
             num_episodes=args.num_episodes,
             n_way=args.n_way,
             num_total_classes=num_total,
@@ -742,17 +783,24 @@ def main(args):
         primary = results[args.distance_metric]
         logger.info(
             "[seed %d] %s OA=%.2f+-%.2f AA=%.2f+-%.2f Kappa=%.2f+-%.2f (%d eps)",
-            seed, args.distance_metric,
-            primary["OA"]["mean"], primary["OA"]["ci_95"],
-            primary["AA"]["mean"], primary["AA"]["ci_95"],
-            primary["Kappa"]["mean"], primary["Kappa"]["ci_95"],
+            seed,
+            args.distance_metric,
+            primary["OA"]["mean"],
+            primary["OA"]["ci_95"],
+            primary["AA"]["mean"],
+            primary["AA"]["ci_95"],
+            primary["Kappa"]["mean"],
+            primary["Kappa"]["ci_95"],
             primary["num_episodes"],
         )
 
     if args.output:
         _write_results_json(
-            Path(args.output), last_results,
-            dataset_name=dataset_name, args=args, seeds=seeds,
+            Path(args.output),
+            last_results,
+            dataset_name=dataset_name,
+            args=args,
+            seeds=seeds,
         )
 
     if not args.no_plots and args.output_dir is not None:
@@ -764,8 +812,14 @@ def main(args):
         shaped["example_episodes_data"] = last_results["example_episodes_data"]
         shaped["aggregated_features"] = last_results["aggregated_features"]
         generate_plots(
-            shaped, dataset_name, args.n_way, args.k_shot, plots_dir,
-            args.distance_metric, args.prototype_mode, args.max_tsne_samples,
+            shaped,
+            dataset_name,
+            args.n_way,
+            args.k_shot,
+            plots_dir,
+            args.distance_metric,
+            args.prototype_mode,
+            args.max_tsne_samples,
         )
 
     return last_results
@@ -811,7 +865,7 @@ _DEFAULT_ARGS = {
 }
 
 
-def run_evaluation(dataset: str, **overrides):
+def run_evaluation(dataset: str, **overrides: Any) -> dict | None:
     """Programmatic entry-point used by notebooks."""
     cfg = {**_DEFAULT_ARGS, "dataset": dataset, **overrides}
     args = argparse.Namespace(**cfg)

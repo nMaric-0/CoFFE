@@ -1,9 +1,9 @@
 """Tests for center-weighted spatial kernels and pooling."""
 
-import torch
 import pytest
+import torch
 
-from coffe.utils.spatial_weights import make_center_weights, center_weighted_pool
+from coffe.utils.spatial_weights import center_weighted_pool, make_center_weights
 
 
 class TestMakeCenterWeights:

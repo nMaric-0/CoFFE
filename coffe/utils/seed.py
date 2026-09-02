@@ -1,13 +1,15 @@
 """Unified seed utility for reproducibility."""
-import torch
-import numpy as np
-import random
+
 import logging
+import random
+
+import numpy as np
+import torch
 
 logger = logging.getLogger(__name__)
 
 
-def set_seed(seed: int, deterministic: bool = False):
+def set_seed(seed: int, deterministic: bool = False) -> None:
     """
     Set random seeds for reproducibility across all libraries.
 

@@ -1407,3 +1407,29 @@ end with an explicit `--out`, and a `--force` before any overwrite of a
    to phase 4 — see the incident above for why that sentence needed checking.
 5. Surprise 1 above (`create_pretrain_dataloaders`) — leave the now-working
    helper as it is, or delete it as dead code in phase 6?
+
+### Phase-5 gate — Nikola's decisions (2026-09-02)
+
+All four gate items answered: (1) the artifact-overwrite incident and its
+phase-6 recommendation — **ok**; (2) the notebook-bootstrap breakage — **ok**;
+(3) `create_pretrain_dataloaders` — **delete**; (4) the `run_eval.sh` output-dir
+default move — **ok**.
+
+**Applied for (3):** `create_pretrain_dataloaders` (72 lines, the tail of
+`coffe/pretrain/trainer.py`) is deleted, with its re-export removed from
+`coffe/pretrain/__init__.py`'s imports and `__all__`. It had no caller anywhere
+in the tree and its `from .masked_modeling import …` pointed at
+`trainers.masked_modeling`, which never existed — the surprise recorded at the
+gate. `DataLoader` stays imported in `trainer.py`: `PretrainTrainer.__init__`
+still annotates with it. This is the one deletion of phase 5 and it is
+gate-approved, not manifest-derived; `PAPER_CANON` §1/§9 are unaffected, and no
+paper run ever reached the function.
+
+The `requires-python = ">=3.9"` question (gate open question 2) was not
+answered and stays open for phase 6's dependency prune; the declaration is
+unchanged.
+
+**Verification for this addendum:** 120 tests pass, equivalence goldens
+unchanged, `import coffe.pretrain` exposes 11 public names instead of 12, and
+the stale grep finds no reference to the deleted symbol outside `CHANGES.md`
+(which documents the deletion) and this log.

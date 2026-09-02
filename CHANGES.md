@@ -161,8 +161,13 @@ is where those files live now.
 | `trainers/pretrain_trainer.py` | `coffe/pretrain/trainer.py` |
 | `coffe_compat.py` | `coffe/compat.py` |
 
-The `trainers` package is dissolved; its two public names (`PretrainTrainer`,
-`create_pretrain_dataloaders`) are re-exported from `coffe.pretrain`.
+The `trainers` package is dissolved. `PretrainTrainer` is re-exported from
+`coffe.pretrain`. Its only other public name, `create_pretrain_dataloaders`, was
+**deleted** at the phase-5 gate: it had no caller anywhere in the repo, and its
+`from .masked_modeling import …` resolved to `trainers.masked_modeling`, which
+never existed — so any call would have raised `ModuleNotFoundError`. The move
+into `coffe/pretrain/` would have silently repaired it; deleting it instead
+keeps the release free of code no paper run ever executed.
 
 ### Scripts became thin CLIs
 

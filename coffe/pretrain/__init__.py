@@ -33,17 +33,14 @@ from .decoders import (
 )
 
 # Moved here in phase 5 from the dissolved top-level ``trainers`` package
-# (``trainers/pretrain_trainer.py`` -> ``coffe/pretrain/trainer.py``); these two
-# names were that package's entire public API.
-from .trainer import (
-    PretrainTrainer,
-    create_pretrain_dataloaders,
-)
+# (``trainers/pretrain_trainer.py`` -> ``coffe/pretrain/trainer.py``). That
+# package also exported ``create_pretrain_dataloaders``, deleted at the phase-5
+# gate: it had no caller and a broken relative import (see CHANGES.md).
+from .trainer import PretrainTrainer
 
 __all__ = [
     "SimMIMPretrainModel",
     "PretrainTrainer",
-    "create_pretrain_dataloaders",
     "UnifiedBandMasking",
     "SpatialTokenMasking",
     "MLPDecoder",

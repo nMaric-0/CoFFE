@@ -4,7 +4,7 @@ Resolves the (group, dataset, variant) cell, clones the canonical seed-42
 ``pretrain`` overrides when the group needs per-variant mask ratios (enhanced /
 hsi_only) else uses the self-contained base config, then forces ``epochs`` /
 ``save_interval`` / ``seed`` / ``device`` and launches via
-lib.pretrain_runner.run_pretrain (same path the notebook uses).
+coffe.runners.pretrain_runner.run_pretrain (same path the notebook uses).
 
 Idempotent: exits 0 without retraining if the target experiment already has a
 checkpoint_epoch_<EPOCHS>.pth.

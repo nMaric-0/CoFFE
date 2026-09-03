@@ -1,5 +1,15 @@
 # CoFFE — Project Overview
 
+> **SUPERSEDED (phase 8), kept for provenance.** A presentation-time snapshot of
+> the project, written before the paper's naming and tables were final: it
+> describes work in progress ("the finetuning currently running") that is not
+> part of this release, and its numbers predate the published tables. The
+> release documentation is the [README](../../README.md),
+> [`docs/PRETRAINING.md`](../PRETRAINING.md),
+> [`docs/EVAL_PROTOCOL.md`](../EVAL_PROTOCOL.md) and
+> [`docs/HYPERSIGMA.md`](../HYPERSIGMA.md);
+> [`PAPER_CANON.md`](../../PAPER_CANON.md) is the source of truth.
+
 *Few-shot, multimodal hyperspectral land-cover classification.*
 
 This document captures the current state of the project for presentation: the

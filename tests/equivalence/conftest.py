@@ -10,8 +10,12 @@ Determinism rules applied to everything in this package:
 * No AMP (``use_amp: False``).
 * Fixed episode seed (``seed: 42``, matching the frozen paper eval configs).
 
-The torch determinism switch is global process state, so it is restored on
-teardown: the rest of ``tests/`` must not inherit it.
+The torch determinism switch is global process state, so ``_determinism`` is
+``scope="package"``: it is entered when the first test in this package runs and
+torn down when the last one finishes, so ``tests/unit`` and
+``tests/integration`` never inherit the flag from a full-suite run (a
+session-scoped fixture kept it on for the rest of the process - phase-7 gate
+decision 7).
 """
 
 from __future__ import annotations
@@ -31,7 +35,7 @@ RTOL = 1e-6
 ATOL = 1e-8
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="package", autouse=True)
 def _determinism():
     previous = torch.are_deterministic_algorithms_enabled()
     set_determinism()

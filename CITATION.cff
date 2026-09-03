@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "If you use this software or its results, please cite the paper below."
+title: "CoFFE — A Compact In-Domain Fusion Encoder versus a Hyperspectral Foundation Model for Few-Shot HSI-LiDAR Land-Cover Classification"
+abstract: >-
+  Public code release for the paper. Compares a 579K-parameter per-scene
+  self-supervised HSI+LiDAR fusion encoder (CoFFE) against the HyperSIGMA
+  hyperspectral foundation model and an MFT architectural control, all under one
+  frozen-encoder 5-shot N-way Euclidean nearest-class-mean protocol on Houston
+  2013, Trento and MUUFL Gulfport.
+type: software
+license: MIT
+version: 0.9.0
+authors:
+  - family-names: "Marić"
+    given-names: "Nikola"
+    email: "nikola.maric@ijs.si"
+    affiliation: "Jožef Stefan Institute / IPS Ljubljana"
+  - family-names: "Kocev"
+    given-names: "Dragi"
+    affiliation: "Jožef Stefan Institute / IPS Ljubljana"
+keywords:
+  - hyperspectral
+  - lidar
+  - few-shot learning
+  - self-supervised learning
+  - masked image modelling
+  - remote sensing
+  - foundation models
+preferred-citation:
+  type: conference-paper
+  title: "A Compact In-Domain Fusion Encoder versus a Hyperspectral Foundation Model for Few-Shot HSI-LiDAR Land-Cover Classification"
+  authors:
+    - family-names: "Marić"
+      given-names: "Nikola"
+    - family-names: "Kocev"
+      given-names: "Dragi"
+  year: 2026
+  # TODO(release): venue (collection-title), pages, DOI, url — fill in on acceptance.
+  collection-title: "TODO(release)"

@@ -2,7 +2,7 @@
 
 Resolves the (group, dataset, variant, seed) cell to its experiment dir and
 evaluates checkpoint_epoch_700.pth with the shared eval protocol.
-lib.eval_runner pulls the architecture (model name, attention_type, mlp_dim,
+coffe.runners.eval_runner pulls the architecture (model name, attention_type, mlp_dim,
 use_aux, use_projection) from the run's frozen pretrain_config.yaml, so the same
 call handles every family (coffe / mft_original, LiDAR / HSI-only).
 

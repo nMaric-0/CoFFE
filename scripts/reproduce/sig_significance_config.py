@@ -205,8 +205,11 @@ def eval_params(dataset: str) -> dict[str, Any]:
 
     ``n_way`` is omitted so the evaluator defaults to all classes for the
     dataset (Houston 15 / Trento 6 / MUUFL 11). Architecture (model name,
-    attention_type, mlp_dim, use_aux, use_projection) is pulled from the run's
-    frozen pretrain_config.yaml by lib.eval_runner, so this is family-agnostic.
+    attention_type, mlp_dim, use_aux) is pulled from the run's frozen
+    pretrain_config.yaml by coffe.runners.eval_runner, so this is
+    family-agnostic. ``use_projection`` is the exception: it is set here,
+    because the pretrain configs keep the head on (it is a pretraining part)
+    and every paper eval discarded it (PAPER_CANON §4).
     """
     return {
         "dataset": dataset,

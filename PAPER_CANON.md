@@ -22,7 +22,7 @@ vocabulary without changing what it computes.
 | `MFT-CPEA`, `MFTCPEA`, `mft_cpea`, "MFT-CPEA-Cosine" | **CoFFE** (Cross-modal Fusion Feature Encoder) | The paper's compact encoder. Python class `CoFFE`, module `coffe/models/coffe.py`, config `model.name: "coffe"`. |
 | `MFTCPEACosine` (class) | `CoFFE` | Class rename only. **state_dict attribute names are frozen** (see §7). |
 | `models/mft_cpea_cosine.py` | `coffe/models/coffe.py` | |
-| "Cosine" in file/class/script/doc names (`evaluate_cosine.py`, `run_cosine_eval.sh`, `hypersigma_cosine.py`, `docs/COSINE_VARIANT.md`, `HyperSIGMACosine`) | Drop. Protocol name is **"Euclidean nearest-class-mean (NCM)"** | The paper protocol is Euclidean NCM (`distance_metric="euclidean"` in every Table 2 run and every Table 3 cell but one — §8 D18). `cosine` may remain as a **non-default option value** of `distance_metric`, never in a name, title, or default. **Phase-4 gate 2026-09-01: the default is now `euclidean`** everywhere (CLI, `_DEFAULT_ARGS`, every model constructor, `coffe/runners/eval_runner`); cosine stays selectable. This is the one deliberate default change of the refactor. No paper run is affected because every paper run passes `distance_metric` **explicitly**, so no default is consulted — note that value is not always `euclidean`: the Table 3 Houston 11×11 spectral cell records `cosine` (§8 D18). |
+| "Cosine" in file/class/script/doc names (`evaluate_cosine.py`, `run_cosine_eval.sh`, `hypersigma_cosine.py`, `docs/COSINE_VARIANT.md`, `HyperSIGMACosine`) | Drop. Protocol name is **"Euclidean nearest-class-mean (NCM)"** | The paper protocol is Euclidean NCM (`distance_metric="euclidean"` in every Table 2 run and every Table 3 cell but one — §8 D18). `cosine` may remain as a **non-default option value** of `distance_metric`, never in a name, title, or default. **Phase-4 gate 2026-09-01: the default is now `euclidean`** everywhere (CLI, `_DEFAULT_ARGS`, every model constructor, `coffe/runners/eval_runner`); cosine stays selectable. This is the **first of two** deliberate default changes of the refactor; the second is the phase-7 gate's alignment of **seven** further `_DEFAULT_ARGS` values (2026-09-03) — the six that contradicted this canon (8→2 heads, 4→2 layers, λ 2.0→0.5, projection on→off, `k_query` 15→100, `split` "test"→"all") plus `num_episodes` 2000→1000, which is Table 2's count rather than a canon contradiction (§8 D18). `CHANGES.md` records both. No paper run is affected because every paper run passes `distance_metric` **explicitly**, so no default is consulted — note that value is not always `euclidean`: the Table 3 Houston 11×11 spectral cell records `cosine` (§8 D18). |
 | `MFTOriginalCosine` | `MFTOriginal` | The architectural control: original MFT (Roy et al.), external fusion token, pretrained under the same masked objectives. Config `model.name: "mft_original"` is already correct. |
 | objective `"enhanced"` | `"simmim"` | SimMIM-style in-place masked reconstruction (Xie et al.). |
 | variant `"spectral"` | **SimMIM band** → id `simmim_band` | Band masking of (pixel, band) entries, rates `(r_b, r_s) = (0.85, 0)`. |
@@ -85,6 +85,16 @@ Preprocessing: 11×11 patches centred on each labelled pixel, border-padded at
 edges; every HSI band and LiDAR raster min-max normalised to [0,1]
 independently. HyperSIGMA spatial branch input: PCA 144→100 on Houston; linear
 band resampling 63/64→100 on Trento/MUUFL; spectral branch receives raw bands.
+
+**Footnote (phase 7, S3): the padding is not this repository's.** Every paper run
+consumes the **pre-patched** MFT-format `.mat` files
+(`data/raw/<Scene>11x11/{HSI,LIDAR}_{Tr,Te}.mat` + `{Tr,Te}Label.mat`), so the
+11×11 extraction *and its border padding* happened upstream in the MFT data
+preparation, outside this repo. The repo's own raw-image path
+(`coffe/data/datasets/base.py`, `MultimodalEODataset`) **drops** border pixels
+instead of padding them, and is on no paper path — nothing under `scripts/` or
+`coffe/runners/` constructs those classes. Both behaviours are asserted as-is in
+`tests/integration/test_data_plumbing.py`.
 
 ## 6. Headline results (paper Tables 2–3) — for README + report-mapping only
 

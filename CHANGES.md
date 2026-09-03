@@ -561,6 +561,74 @@ wiring check: a 20-epoch encoder has no published value to match. Nothing was
 written into the repository. The commands become the README's "quick sanity run"
 in phase 8, with the same caveat.
 
+## Phase 8 — release documentation (2026-09-03)
+
+No code changed except one test fixture's scope; everything else in this phase
+is documentation. The equivalence harness stayed IDENTICAL.
+
+**README rewritten to release standard.** Paper title, authors, the three routes
+and the single evaluation instrument, Tables 2 and 3 as published
+(PAPER_CANON §6), installation, per-scene data acquisition and the on-disk
+layout the loaders actually require, the HyperSIGMA checkpoint script, a
+table-by-table reproduction map, a quick sanity run, the project tree, the test
+invocation, citation, license. Every command in it was executed during the
+phase, in a fresh clone with a fresh venv where that was possible and on this
+machine's GPU for the two data-dependent legs.
+
+**New and rewritten docs.**
+
+| File | State |
+|---|---|
+| `docs/HYPERSIGMA.md` | **new** — the foundation-model route: checkpoints, the two input regimes, the five adaptation modes and what each trains, the evaluator's non-paper defaults, and which command produced which Table 3 cell |
+| `docs/PRETRAINING.md` | phase-4 "reproduction lands in phase 8" note replaced by an actual "reproducing a published cell" section (per-cell configs, evaluated epoch, per-cell mask rates, why the ± is a different experiment) |
+| `docs/EVAL_PROTOCOL.md` | same; plus the three per-route entry points, the `use_projection` inheritance caveat, and corrected pointers (`fix_state_dict_keys` moved to `coffe/eval/episodic.py` in phase 5) |
+| `CITATION.cff` | **new** — authors, title, year 2026, venue `TODO(release)` |
+| `docs/presentation/RESULTS.md`, `PROJECT_OVERVIEW.md` | marked **SUPERSEDED** in a header banner (phase-6 gate decision), kept for provenance; `RESULTS.json` untouched, byte-for-byte as the compiler wrote it |
+| `docs/refactor/FINAL_REPORT.md` | **new** — phase-by-phase summary, before/after metrics, and the unresolved-items list |
+
+**Three carried-over obligations from the phase-7 gate, applied.**
+
+1. `tests/equivalence/conftest.py`'s `_determinism` fixture is now
+   `scope="package"` instead of `scope="session"`, so
+   `torch.use_deterministic_algorithms(True)` no longer leaks into
+   `tests/unit/` and `tests/integration/` for the rest of a full-suite run
+   (gate decision 7).
+2. PAPER_CANON §1's "the one deliberate default change of the refactor" now
+   says **two** and names the phase-7 set, matching this file.
+3. PAPER_CANON §5 gained a footnote saying where the paper's "border-padded at
+   edges" actually happens: upstream, in the MFT data preparation. The repo's
+   own raw-image path drops border pixels instead, and is on no paper path
+   (phase-7 S3).
+
+The fourth carried item, the reported date mismatch on the `distance_metric`
+gate, needed no edit: PAPER_CANON §1, this file, and commit `13793e7` all say
+**2026-09-01**.
+
+**Documentation-only corrections found while writing the above.**
+
+- Seven `scripts/reproduce/` docstrings still named `lib.pretrain_runner` /
+  `lib.eval_runner`, which phase 5 renamed to `coffe.runners.*`.
+- `sig_significance_config.eval_params`'s docstring claimed `use_projection` was
+  inherited from the frozen pretrain config. It is passed explicitly, three
+  lines below, and has to be — see the note in `docs/EVAL_PROTOCOL.md`.
+
+## Archaeology
+
+The pre-refactor state is tagged **`pre-refactor`**
+(`9541085`, "Final experiments", 2026-07-30) — the commit
+`docs/refactor/BASELINE.md` inventories. To see what a file looked like before
+the cleanup, or to diff the whole thing:
+
+```bash
+git show pre-refactor:models/mft_cpea_cosine.py     # the file now coffe/models/coffe.py
+git diff pre-refactor..HEAD --stat
+git log --oneline pre-refactor..HEAD                # the phase-by-phase history
+```
+
+Deleted and archived files (24 deletes, 18 moves to `archive/exploratory/`) are
+reachable there too; `docs/refactor/manifest.json` records the verdict and
+reason for every one of the 340 files the audit classified.
+
 ## Compatibility guarantees
 
 **1. Checkpoints load unchanged.** No `nn.Module` attribute name was renamed, so

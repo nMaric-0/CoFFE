@@ -7,9 +7,10 @@ Masking: spectral (band_mask_ratio) = 0.85, spatial (spatial_mask_ratio) = 0.75
 
 Each cell pretrains the CoFFE encoder with use_aux=false (the
 aux/LiDAR bands are never used) using the per-dataset *_simmim_hsi.yaml config,
-then runs few-shot cosine/euclidean evaluation on the same dataset. Both stages
-go through the standard experiment runners (lib.pretrain_runner /
-lib.eval_runner), so each lands in experiments/<name>/ and the evaluator
+then runs the paper's few-shot evaluation (Euclidean nearest-class-mean on the
+frozen encoder) on the same dataset. Both stages
+go through the standard experiment runners (coffe.runners.pretrain_runner /
+coffe.runners.eval_runner), so each lands in experiments/<name>/ and the evaluator
 auto-loads the architecture — including use_aux=false — from the saved
 pretrain_config.yaml.
 

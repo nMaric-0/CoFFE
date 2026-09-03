@@ -3,11 +3,11 @@
 Per-scene, label-free pretraining of the **CoFFE** encoder (and of the **MFT**
 architectural control), as used for the paper's Table 2.
 
-> **Status.** This file was rewritten in phase 4 of the repository cleanup to
-> carry the paper's vocabulary and to drop claims that no longer describe the
-> code. It documents *what the code does*; the full reproduction recipe
-> (per-cell mask rates, checkpoint epochs, schedules) lands in phase 8.
-> `PAPER_CANON.md` is the source of truth for names and protocol constants.
+> **Scope.** This file documents *what the code does*.
+> [`PAPER_CANON.md`](../PAPER_CANON.md) is the source of truth for names and
+> protocol constants; the per-cell recipes (mask rates, schedule, evaluated
+> epoch) live in the `configs/{coffe,mft}/` headers, and the
+> [README](../README.md#reproduce) maps each paper table to its command.
 
 ## The two objectives
 
@@ -52,9 +52,9 @@ Two caveats the audit established, both recorded in PAPER_CANON §8:
   | every other `configs/coffe/*_simmim*.yaml` (Houston HSI-only, both Trento, both MUUFL) | 0.9 | 0.0 | SimMIM band, at a rate **no Table 2 cell used** |
 
   The 5-seed significance experiment overrides the pair at runtime from the
-  canonical run dir (`scripts/reproduce/sig_significance_config.py`). **Set both rates
-  explicitly to reproduce a specific cell** — do not assume a config's name
-  implies its regime.
+  canonical run dir (`scripts/reproduce/sig_significance_config.py`). **Use the
+  per-cell config to reproduce a specific cell** (below) — do not assume a
+  config's name implies its regime.
 
 ## Other knobs that matter
 
@@ -71,11 +71,11 @@ Two caveats the audit established, both recorded in PAPER_CANON §8:
 ## Running it
 
 ```bash
-# CoFFE, Houston, SimMIM token regime
-python scripts/pretrain.py --config configs/coffe/houston_simmim.yaml
+# CoFFE, Houston, SimMIM token regime — the Table 2 cell recipe (OA 75.30)
+python scripts/pretrain.py --config configs/coffe/houston_simmim_token.yaml
 
 # resume
-python scripts/pretrain.py --config configs/coffe/houston_simmim.yaml \
+python scripts/pretrain.py --config configs/coffe/houston_simmim_token.yaml \
     --resume checkpoint_epoch_400.pth
 
 # the MFT control, same objective
@@ -84,10 +84,40 @@ python scripts/pretrain.py --config configs/mft/houston_simmim_token.yaml
 
 Configs live under `configs/coffe/` (CoFFE), `configs/mft/` (the control) and
 `configs/hypersigma/` (label-free foundation-model adaptation, a different
-script: `scripts/adapt_hypersigma.py`).
+script: `scripts/adapt_hypersigma.py` — see [`HYPERSIGMA.md`](HYPERSIGMA.md)).
 
 From a notebook, [`coffe/runners/pretrain_runner.py`](../coffe/runners/pretrain_runner.py) wraps the
 same entry point and writes everything under `experiments/<name>/`.
+
+## Reproducing a published cell
+
+Each of the 30 Table 2 cells has a config carrying **the exact recipe of the run
+that produced its published mean** — generated from that run's frozen
+`pretrain_config.yaml`, and stamped in its header with the cell it reproduces,
+that cell's paper OA, the source run, and the **checkpoint epoch that was
+evaluated**:
+
+```
+configs/coffe/<scene>_simmim_{band,token,band_token}[_hsi].yaml
+configs/coffe/<scene>_mae[_hsi].yaml
+configs/mft/<scene>_{simmim_token,mae}.yaml
+```
+
+Three things not to assume:
+
+1. **The evaluated checkpoint is not the final one.** Schedules are 1500 epochs
+   (Houston MAE, Houston MFT: 3000; one Houston SimMIM band run: 2000), but the
+   published numbers come from epoch 950 on Houston, 975 on Trento/MUUFL, and
+   800 for one cell — PAPER_CANON §8 D17. Train the full schedule, then evaluate
+   the epoch the config names.
+2. **Mask rates are per cell, not global** (D19, D20): read them off the config,
+   never off the regime's nominal `(r_b, r_s)`.
+3. **The ± column is a different experiment.** It is the across-seed std of
+   5-seed runs pretrained fresh to 700 epochs
+   (`scripts/reproduce/run_significance_experiment.py`), not a spread around the
+   published mean. The six `configs/coffe/<scene>_simmim[_hsi].yaml` files are
+   *that* runner's base configs — not cell recipes — and say so in their
+   headers.
 
 ## Loading a pretrained encoder
 
@@ -121,6 +151,8 @@ state_dict keys — did not (PAPER_CANON §7.2).
 ## See also
 
 - [`docs/EVAL_PROTOCOL.md`](EVAL_PROTOCOL.md) — the evaluation protocol.
+- [`docs/HYPERSIGMA.md`](HYPERSIGMA.md) — the foundation-model route, which
+  pretrains differently (HyperSIGMA's own 75 % token masking).
 - [`PAPER_CANON.md`](../PAPER_CANON.md) §3 (objectives), §8 (known
   discrepancies), §9 (config naming).
 - [`tests/equivalence/`](../tests/equivalence/) — the goldens that pin the

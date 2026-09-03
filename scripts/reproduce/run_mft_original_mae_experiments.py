@@ -11,7 +11,7 @@ encode the visible 25% + the LiDAR CLS, transformer decoder reconstructs the
 masked tokens' bands with norm_pix_loss — see coffe/pretrain/mft_mae.py) using the
 per-dataset config (configs/mft/<ds>_mae.yaml), then runs the same
 nearest-class-mean few-shot evaluation as the other routes. Both stages go
-through the standard runners (lib.pretrain_runner / lib.eval_runner), so each
+through the standard runners (coffe.runners.pretrain_runner / coffe.runners.eval_runner), so each
 lands in experiments/<name>/ and the evaluator auto-loads the architecture
 (model.name=mft_original, attention_type, use_projection=false) from the saved
 pretrain_config.yaml.

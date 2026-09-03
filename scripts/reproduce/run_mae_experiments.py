@@ -8,9 +8,9 @@ visible 25% (+ CLS) only, and a transformer decoder reconstructs the masked
 tokens. The MLP projection head is removed (use_projection=false). Each cell
 pretrains the CoFFE encoder with the per-dataset MAE config
 (lidar -> *_mae.yaml with use_aux=true, no_lidar -> *_mae_hsi.yaml with
-use_aux=false), then runs few-shot cosine/euclidean evaluation on the same
-dataset. Both stages go through the standard runners (lib.pretrain_runner /
-lib.eval_runner), so each lands in experiments/<name>/ and the evaluator
+use_aux=false), then runs the paper's few-shot evaluation (Euclidean
+nearest-class-mean on the frozen encoder) on the same dataset. Both stages go through the standard runners (coffe.runners.pretrain_runner /
+coffe.runners.eval_runner), so each lands in experiments/<name>/ and the evaluator
 auto-loads the architecture — including use_aux and use_projection=false — from
 the saved pretrain_config.yaml.
 

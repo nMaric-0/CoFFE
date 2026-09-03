@@ -11,8 +11,8 @@ entries — see coffe/pretrain/mft_spatial_mae.py) instead of standard MAE. The 
 schedule and evaluation are identical to the MAE variant, so the two ablations
 differ ONLY in the pretraining objective.
 
-Both stages go through the standard runners (lib.pretrain_runner /
-lib.eval_runner); each lands in experiments/<name>/ and the evaluator auto-loads
+Both stages go through the standard runners (coffe.runners.pretrain_runner /
+coffe.runners.eval_runner); each lands in experiments/<name>/ and the evaluator auto-loads
 the architecture (model.name=mft_original, attention_type, use_projection=false)
 from the saved pretrain_config.yaml.
 

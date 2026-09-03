@@ -1,0 +1,101 @@
+# MFT SimMIM token — Houston, HSI+LiDAR
+#
+# Reproduces the paper's Table 2 cell **OA 67.49**.
+#
+#   source run       experiments/mft_original_houston_spatial_faithful/
+#   evaluated at     epoch 950 of a 3000-epoch schedule
+#
+# Every recipe value below matches that run's frozen pretrain_config.yaml,
+# checked by tools/refactor/make_cell_configs.py.
+#
+# NOTE this file keeps its original `paths:` (config paths are on the
+# audit's DO-NOT-RENAME list). Those directories do not exist today — the
+# paper's checkpoints are under experiments/<run>/checkpoints/ — but a
+# plain `python scripts/pretrain.py --config ...` will create and write
+# into them. Point `paths:` elsewhere if that matters to you.
+#
+# NOTE the checkpoint the paper evaluated is NOT the final one: train the
+# full 3000 epochs, then evaluate epoch 950
+# (PAPER_CANON §8 D17).
+#
+# Run with:
+#   python scripts/pretrain.py --config configs/mft/houston_simmim_token.yaml
+
+# Houston — MFT control, SimMIM token pretraining (HSI+LiDAR)
+#
+# Same faithful original MFT encoder as houston_mae.yaml (Conv3D+
+# HetConv HSI front-end -> 121 spatial tokens, LiDAR-derived external CLS via
+# channel tokenization, mCrossPA fusion), but pretrained with the SimMIM token
+# regime instead of MAE: in-place
+# spatial token masking (75% of pixel tokens -> a learnable mask token), a 2-layer
+# MLP decoder reconstructing the full 145-band HSI+LiDAR per-pixel vector, and a
+# center-weighted MSE computed only on masked entries (recon_center_sigma=1.0).
+# See coffe/pretrain/mft_spatial_mae.py — the encoded CLS is injected into each patch
+# token before the decoder so the mCrossPA fusion receives a reconstruction
+# gradient. Same training schedule + eval as the MAE variant, so the two ablations
+# differ ONLY in the pretraining objective. Channel counts (144 HSI + 1 LiDAR) are
+# auto-detected from the dataset class.
+#
+# Run with:
+#   python scripts/pretrain.py --config configs/mft/houston_simmim_token.yaml
+#
+# RUNTIME     The MFT control trains through the same loop as CoFFE, which
+#             PAPER_CANON §3 times at 0.7-4.3 h/scene for 1500 epochs on one
+#             RTX 4090 (no separate figure is published for the control).
+#             This config runs 3000 epochs.
+
+model:
+  name: "mft_original"
+  embed_dim: 64          # faithful MFT: dim = FM*4 (FM=16)
+  num_heads: 8
+  num_layers: 2          # depth
+  mlp_dim: 512           # faithful MFT: fixed 512 (= dim*8 at dim=64)
+  dropout: 0.1
+  attention_type: "mcross"
+
+  use_projection: false
+  use_aux: true
+
+data:
+  patch_size: 11
+  num_workers: 4
+
+pretrain:
+  datasets:
+    - houston
+
+  # SimMIM token regime: in-place spatial-token masking only.
+  objective: "simmim"
+
+  # Training schedule (identical to houston_mae.yaml).
+  epochs: 3000
+  batch_size: 64
+  val_split: 0.0
+
+  lr: 1.5e-4
+  min_lr: 1.0e-6
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+
+  # --- Spatial masking + MLP decoder + center-weighted MSE ---
+  band_mask_ratio: 0.0            # no per-(pixel,band) masking (ignored for MFT)
+  spatial_mask_ratio: 0.75        # 75% of whole pixel tokens masked in place
+  decoder_hidden_dim: 256
+  recon_center_sigma: 1.0         # center-weighted reconstruction loss
+  pool_center_sigma: 1.0          # informational; eval uses pool_sigma=null (CLS feature)
+
+  save_interval: 50
+  val_interval: 50000             # validation disabled (val_split 0)
+  log_interval: 1
+  use_amp: false
+
+paths:
+  data_root: "./data/raw"
+  checkpoint_dir: "./checkpoints/pretrained/mft_original_houston_spatial"
+  log_dir: "./logs/pretrain/mft_original_houston_spatial"
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: true

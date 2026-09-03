@@ -26,8 +26,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from data.datasets import DATASET_REGISTRY, get_spec  # noqa: E402
-from models.hypersigma.preprocessing import (  # noqa: E402
+from coffe.data.datasets import DATASET_REGISTRY, get_spec
+from coffe.models.hypersigma.preprocessing import (
     fit_dataset_pca,
     fit_pca_output_stats,
 )
@@ -45,10 +45,12 @@ def main() -> None:
     parser.add_argument("--out-dir", type=str, default="checkpoints/hypersigma")
     parser.add_argument("--patch-size", type=int, default=11)
     parser.add_argument(
-        "--n-components", type=int, default=None,
+        "--n-components",
+        type=int,
+        default=None,
         help="Number of PCA components. Default: the dataset's spat_components "
-             "(3, headline adapt pipeline). Use 100 to fit the native-geometry "
-             "spatial PCA (pca_<ds>_100band.pkl). Must be <= the band count.",
+        "(3, headline adapt pipeline). Use 100 to fit the native-geometry "
+        "spatial PCA (pca_<ds>_100band.pkl). Must be <= the band count.",
     )
     args = parser.parse_args()
 

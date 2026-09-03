@@ -1,0 +1,111 @@
+# Trento SimMIM Pretraining Configuration (unified HSI+LiDAR tokens)
+#
+# LiDAR is concatenated as an extra band on each pixel (64 total bands for
+# Trento). Two masking regimes are supported and can be combined (set either
+# ratio to 0 to disable):
+#   - band_mask_ratio: per-(pixel, band) Bernoulli mask on the raw input.
+#   - spatial_mask_ratio: in-place masking of whole pixel tokens.
+# The decoder reconstructs the full per-pixel band vector; loss is MSE over
+# the masked entries (union of both masks when both are enabled).
+#
+# Run with:
+#   python scripts/pretrain.py --config configs/coffe/trento_simmim.yaml
+#
+# ROLE: this is the **5-seed significance experiment's base config** for this
+# scene (the `enhanced` group in scripts/reproduce/sig_significance_config.py). That runner
+# CLONES the per-variant mask rates from the canonical run dir at launch, so the
+# pair in this file (0.9 / 0.0) is only what it happens to carry — it is NOT
+# the recipe of any Table 2 cell.
+#
+# To reproduce a published cell, use that cell's own config, each generated from
+# its frozen run by tools/refactor/make_cell_configs.py:
+#   configs/coffe/trento_simmim_band.yaml
+#   configs/coffe/trento_simmim_token.yaml
+#   configs/coffe/trento_simmim_band_token.yaml
+
+# Model architecture
+# Aligned with the proven Houston recipe (2 heads / 2 layers, lambda 0.5,
+# 1-layer projection). Trento has only ~819 train patches / 6 classes, so the
+# previous 8-head / 4-layer / lambda 4.0 setup over-parameterized a tiny dataset
+# and (lambda) degraded few-shot eval. lambda_factor is unused during pretraining
+# but is auto-loaded into eval, so it is set to the correct value here.
+#
+# RUNTIME     PAPER_CANON §3 times CoFFE pretraining at 0.7-4.3 h/scene for
+#             1500 epochs on one RTX 4090. This config runs 1500 epochs.
+model:
+  name: "coffe"
+  embed_dim: 128
+  num_heads: 2
+  num_layers: 2
+  lambda_factor: 0.5
+  dropout: 0.1
+
+  # Projection head (trained for few-shot transfer)
+  use_projection: true
+  proj_hidden_dim: 512
+  proj_num_layers: 1
+  proj_l2_normalize: true
+
+# Data settings
+data:
+  patch_size: 11
+  num_workers: 4
+  # Trento-specific
+  hsi_channels: 63
+  aux_channels: 1
+
+# Pretraining settings
+pretrain:
+  # Single dataset
+  datasets:
+    - trento
+
+  # Objective: SimMIM-style in-place masked reconstruction. Frozen configs
+  # omit this key (it defaulted to "enhanced"); stated explicitly here.
+  objective: "simmim"
+
+  # Training schedule (1000-1500 epochs is ample for ~819 patches)
+  epochs: 1500
+  batch_size: 64
+  val_split: 0.0
+
+  # Optimizer (MAE settings)
+  lr: 1.5e-4
+  min_lr: 1.0e-6
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+
+  # Decoder
+  decoder_hidden_dim: 256
+
+  # Band-only masking (the Houston HSI+LiDAR config is token-only; these two
+  # regimes are not interchangeable - see the header note).
+  # Unified per-(pixel, band) Bernoulli mask on the combined tensor.
+  band_mask_ratio: 0.9
+  # MAE-style whole-token masking (0 to disable).
+  spatial_mask_ratio: 0.0
+
+  # Center-weighted reconstruction loss (Gaussian sigma); 1.0 matches Houston.
+  recon_center_sigma: 1.0
+
+  # Center-weighted prototype pooling (Gaussian sigma, used at evaluation).
+  pool_center_sigma: 1.0
+
+  # Checkpointing
+  save_interval: 25
+  val_interval: 3000
+  log_interval: 1
+  # Disable AMP (matches Houston): float16 can be unstable on this small dataset.
+  use_amp: false
+
+# Paths - unique for enhanced Trento pretraining
+paths:
+  data_root: "./data/raw"
+  checkpoint_dir: "./checkpoints/pretrained/trento_enhanced"
+  log_dir: "./logs/pretrain/trento_enhanced"
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: true

@@ -1,0 +1,103 @@
+# Houston Level-2 MAE adaptation config for HyperSIGMA.
+#
+# Adapts the small randomly-initialized HyperSIGMA components via
+# upstream-style token-level masked reconstruction on Houston's
+# normalized 11x11 patches. The SpatViT and SpecViT transformer bodies
+# stay frozen; only the branch-specific random-init pieces (patch_embed,
+# pos_embed, spat_map, l1, deformable sampling_offsets), the SEM (in
+# joint_sem mode), the learnable mask_tokens, and the per-token MLP
+# decoders see gradients.
+#
+# Selectable via `model.adapt_mode`:
+#   - spatial_only:  SpatViT branch only (no SEM, no SpecViT). One MAE
+#                    loss on 16 spatial tokens reconstructing 27 pixels
+#                    per token (3 PCA channels x 3x3 patch).
+#   - spectral_only: SpecViT branch only (no SEM, no SpatViT). One MAE
+#                    loss on 100 spectral tokens reconstructing 121
+#                    spatial values per token.
+#   - joint_sem:     Both branches + SEM + three decoders. Loss is
+#                    L_spat + L_spec + L_fused (uniform weights).
+#
+# Run with:
+#   python scripts/adapt_hypersigma.py \
+#       --config configs/hypersigma/houston_patchnative_joint_sem.yaml
+#
+# REPRODUCES  No published cell as written: this is the 3-band spatial front-end,
+#             while every Table 3 `11x11` cell was run at 100 bands
+#             (see houston_patchnative_pca100_joint_sem.yaml for Houston).
+#             It is still live as the config BASE of
+#             scripts/reproduce/run_hypersigma_spatial_pca100.py, which
+#             overrides adapt_mode=spatial_only and the 100-band PCA paths in
+#             code to produce the `11x11 / spatial` cell (Houston OA 66.37).
+# RUNTIME     PAPER_CANON §3 times HyperSIGMA adaptation at ~36 h for 2000
+#             epochs on one RTX 4090. This config runs 3000 epochs.
+
+model:
+  name: "hypersigma_dual"
+  # Adaptation mode (upstream-faithful MAE):
+  #   spatial_only  - train only SpatViT random-init pieces + spat_decoder
+  #   spectral_only - train only SpecViT random-init pieces + spec_decoder
+  #   joint_sem     - train both branches + SEM + 3 decoders (sum of 3 losses)
+  adapt_mode: "joint_sem"
+  hsi_channels: 144
+  spat_patch_k: 3
+  embed_dim: 768
+  num_tokens: 100
+  dr_dim: 128
+  num_stages: 4
+
+data:
+  dataset: "houston"
+  data_root: "./data/raw"
+  patch_size: 11
+  num_workers: 4
+
+paths:
+  pca_spat_path: "checkpoints/hypersigma/pca_houston_3band.pkl"
+  # Per-channel mean/std of the PCA output, used to standardize the
+  # SpatViT input to mean=0/std=1. Produced by
+  # `models.hypersigma.preprocessing.fit_pca_output_stats`. Set to null
+  # to disable standardization (fall back to raw PCA output).
+  pca_stats_path: "checkpoints/hypersigma/pca_houston_3band_stats.pkl"
+  spat_ckpt: "checkpoints/hypersigma/spat-vit-base.pth"
+  spec_ckpt: "checkpoints/hypersigma/spec-vit-base.pth"
+  checkpoint_dir: "checkpoints/hypersigma_adapted/houston_k3"
+  log_dir: "logs/hypersigma_adapted/houston_k3"
+
+pretrain:
+  epochs: 3000
+  batch_size: 64
+  val_split: 0.01
+
+  lr: 1.5e-4
+  min_lr: 1.0e-6
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+
+  # Upstream-faithful token-level masking. mask_ratio matches the
+  # HyperGlobal-450K MAE pretraining default. Each branch samples its own
+  # independent Bernoulli mask of this ratio at the token level (16
+  # spatial tokens for SpatViT, 100 spectral tokens for SpecViT).
+  mask_ratio: 0.75
+  # Per-token MLP decoder widths.
+  spat_decoder_hidden: 256
+  spec_decoder_hidden: 256
+  fused_decoder_hidden: 512
+  decoder_dropout: 0.0
+
+  # How often to write a regular checkpoint (in epochs). Files land as
+  # `checkpoint_epoch_<N>.pth` next to the best-val `checkpoint.pth`.
+  save_interval: 100
+  # Always-snapshot epochs, kept even if below `save_interval`. Useful
+  # for inspecting the early-training trajectory before the regular
+  # cadence kicks in.
+  checkpoint_milestones: [5, 10, 20, 50]
+  val_interval: 50
+  log_interval: 1
+  use_amp: False
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: False

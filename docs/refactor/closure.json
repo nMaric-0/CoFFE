@@ -1,0 +1,3772 @@
+{
+  "roots": {
+    "paper_significance": [
+      "scripts/run_significance_experiment.py",
+      "scripts/sig_pretrain_worker.py",
+      "scripts/sig_eval_worker.py",
+      "scripts/sig_significance_config.py",
+      "scripts/aggregate_significance.py"
+    ],
+    "paper_group_runners": [
+      "scripts/run_mae_experiments.py",
+      "scripts/run_hsi_only_experiments.py",
+      "scripts/run_mft_original_mae_experiments.py",
+      "scripts/run_mft_original_spatial_experiments.py"
+    ],
+    "paper_core_cli": [
+      "scripts/pretrain_enhanced.py",
+      "scripts/evaluate_cosine.py"
+    ],
+    "paper_hypersigma": [
+      "scripts/adapt_hypersigma.py",
+      "scripts/evaluate_hypersigma_cosine.py",
+      "scripts/fit_pca_hypersigma.py",
+      "scripts/run_hypersigma_spatial_pca100.py",
+      "scripts/gather_native_pca100_raw.py",
+      "scripts/build_native_pca100_report.py"
+    ],
+    "paper_compile": [
+      "scripts/compile_results.py",
+      "scripts/compile_mft_faithful_results.py",
+      "scripts/gather_requested_results.py",
+      "scripts/aggregate_experiment_results.py",
+      "scripts/build_experiment_metadata.py"
+    ],
+    "exploratory": [
+      "scripts/run_ablation.py",
+      "scripts/ablation_config.py",
+      "scripts/ablation_pretrain_worker.py",
+      "scripts/ablation_eval_worker.py",
+      "scripts/aggregate_ablation.py",
+      "scripts/run_combo.py",
+      "scripts/combo_config.py",
+      "scripts/combo_pretrain_worker.py",
+      "scripts/combo_eval_worker.py",
+      "scripts/aggregate_combo.py",
+      "scripts/run_bestcfg.py",
+      "scripts/bestcfg_config.py",
+      "scripts/bestcfg_pretrain_worker.py",
+      "scripts/bestcfg_eval_worker.py",
+      "scripts/aggregate_bestcfg.py"
+    ],
+    "duplicates": [
+      "scripts/adapt_hypersigma_houston.py"
+    ],
+    "notebooks_keep": [
+      "notebooks/pretrain.ipynb",
+      "notebooks/evaluate.ipynb",
+      "notebooks/compare.ipynb",
+      "notebooks/adapt_hypersigma_native_sem.ipynb"
+    ],
+    "notebooks_other": [
+      "notebooks/evaluate_hypersigma.ipynb",
+      "notebooks/evaluate_hypersigma_native.ipynb",
+      "notebooks/evaluate_hypersigma_pca100.ipynb",
+      "notebooks/pretrain_run2.ipynb",
+      "notebooks/evaluate_hypersigma copy.ipynb",
+      "notebooks/evaluate_hypersigma copy 2.ipynb",
+      "notebooks/evaluate_hypersigma copy 3.ipynb",
+      "notebooks/evaluate_hypersigma_pca100 copy.ipynb",
+      "notebooks/evaluate_hypersigma_pca100 copy 3.ipynb",
+      "notebooks/pretrain copy.ipynb",
+      "notebooks/pretrain copy 2.ipynb",
+      "notebooks/pretrain copy 3.ipynb"
+    ],
+    "tests": [
+      "tests/test_data.py",
+      "tests/test_models.py",
+      "tests/test_pretrain_enhanced.py",
+      "tests/test_spatial_weights.py",
+      "tests/test_mft_original_shapes.py",
+      "tests/test_hypersigma_shapes.py",
+      "tests/test_hypersigma_native_shapes.py"
+    ],
+    "tooling": [
+      "tools/refactor/inventory.py",
+      "tools/refactor/closure.py",
+      "tools/refactor/build_manifest.py"
+    ]
+  },
+  "paper_root_sets": [
+    "paper_significance",
+    "paper_group_runners",
+    "paper_core_cli",
+    "paper_hypersigma",
+    "paper_compile"
+  ],
+  "extra_edges": [],
+  "summary": {
+    "traceable_files": 126,
+    "paper_closure_size": 79,
+    "reached_by_something": 121,
+    "unreached": 5,
+    "per_root_set": {
+      "paper_significance": 63,
+      "paper_group_runners": 62,
+      "paper_core_cli": 44,
+      "paper_hypersigma": 57,
+      "paper_compile": 5,
+      "exploratory": 74,
+      "duplicates": 47,
+      "notebooks_keep": 65,
+      "notebooks_other": 73,
+      "tests": 52,
+      "tooling": 3
+    }
+  },
+  "paper_closure": [
+    "data/__init__.py",
+    "data/datasets/__init__.py",
+    "data/datasets/base.py",
+    "data/datasets/houston.py",
+    "data/datasets/muufl.py",
+    "data/datasets/patched.py",
+    "data/datasets/registry.py",
+    "data/datasets/trento.py",
+    "data/samplers/__init__.py",
+    "data/samplers/episode_sampler.py",
+    "data/samplers/patched_episode_sampler.py",
+    "lib/__init__.py",
+    "lib/adapt_runner.py",
+    "lib/eval_runner.py",
+    "lib/experiments.py",
+    "lib/pretrain_runner.py",
+    "models/__init__.py",
+    "models/backbones/__init__.py",
+    "models/backbones/base.py",
+    "models/backbones/hsi_baseline.py",
+    "models/backbones/mft_channel.py",
+    "models/backbones/mft_pixel.py",
+    "models/components/__init__.py",
+    "models/components/mft_blocks.py",
+    "models/components/projection.py",
+    "models/components/tokenizers.py",
+    "models/components/transformer.py",
+    "models/hypersigma/__init__.py",
+    "models/hypersigma/_input_fit.py",
+    "models/hypersigma/hypersigma_cosine.py",
+    "models/hypersigma/hypersigma_dual.py",
+    "models/hypersigma/preprocessing.py",
+    "models/hypersigma/sem.py",
+    "models/hypersigma/spat_vit_branch.py",
+    "models/hypersigma/spec_vit_branch.py",
+    "models/mft_cpea_cosine.py",
+    "models/mft_original.py",
+    "models/wrappers/__init__.py",
+    "models/wrappers/pretrain_wrapper.py",
+    "pretrain/__init__.py",
+    "pretrain/decoders.py",
+    "pretrain/hypersigma_mae.py",
+    "pretrain/mae_pretrain.py",
+    "pretrain/masked_modeling.py",
+    "pretrain/masked_modeling_enhanced.py",
+    "pretrain/mft_mae.py",
+    "pretrain/mft_spatial_mae.py",
+    "scripts/__init__.py",
+    "scripts/adapt_hypersigma.py",
+    "scripts/aggregate_experiment_results.py",
+    "scripts/aggregate_significance.py",
+    "scripts/build_experiment_metadata.py",
+    "scripts/build_native_pca100_report.py",
+    "scripts/compile_mft_faithful_results.py",
+    "scripts/compile_results.py",
+    "scripts/evaluate_cosine.py",
+    "scripts/evaluate_hypersigma_cosine.py",
+    "scripts/fit_pca_hypersigma.py",
+    "scripts/gather_native_pca100_raw.py",
+    "scripts/gather_requested_results.py",
+    "scripts/pretrain_enhanced.py",
+    "scripts/run_hsi_only_experiments.py",
+    "scripts/run_hypersigma_spatial_pca100.py",
+    "scripts/run_mae_experiments.py",
+    "scripts/run_mft_original_mae_experiments.py",
+    "scripts/run_mft_original_spatial_experiments.py",
+    "scripts/run_significance_experiment.py",
+    "scripts/sig_eval_worker.py",
+    "scripts/sig_pretrain_worker.py",
+    "scripts/sig_significance_config.py",
+    "trainers/__init__.py",
+    "trainers/pretrain_trainer.py",
+    "utils/__init__.py",
+    "utils/io.py",
+    "utils/logging.py",
+    "utils/metrics.py",
+    "utils/seed.py",
+    "utils/spatial_weights.py",
+    "utils/visualization.py"
+  ],
+  "unreached": [
+    "data/transforms/__init__.py",
+    "data/transforms/augmentations.py",
+    "setup.py",
+    "tests/__init__.py",
+    "utils/checkpoints.py"
+  ],
+  "reached_by": {
+    "data/__init__.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "data/datasets/__init__.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "data/datasets/base.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "data/datasets/houston.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "data/datasets/muufl.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "data/datasets/patched.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "data/datasets/registry.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "data/datasets/trento.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "data/samplers/__init__.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "data/samplers/episode_sampler.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "data/samplers/patched_episode_sampler.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "lib/__init__.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_hypersigma",
+      "exploratory",
+      "notebooks_keep",
+      "notebooks_other"
+    ],
+    "lib/adapt_runner.py": [
+      "paper_hypersigma",
+      "notebooks_keep",
+      "notebooks_other"
+    ],
+    "lib/eval_runner.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_hypersigma",
+      "exploratory",
+      "notebooks_keep",
+      "notebooks_other"
+    ],
+    "lib/experiments.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_hypersigma",
+      "exploratory",
+      "notebooks_keep",
+      "notebooks_other"
+    ],
+    "lib/pretrain_runner.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "exploratory",
+      "notebooks_keep",
+      "notebooks_other"
+    ],
+    "models/__init__.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/backbones/__init__.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/backbones/base.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/backbones/hsi_baseline.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/backbones/mft_channel.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/backbones/mft_pixel.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/components/__init__.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/components/mft_blocks.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/components/projection.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/components/tokenizers.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/components/transformer.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/hypersigma/__init__.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/hypersigma/_input_fit.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/hypersigma/hypersigma_cosine.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/hypersigma/hypersigma_dual.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/hypersigma/preprocessing.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/hypersigma/sem.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/hypersigma/spat_vit_branch.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/hypersigma/spec_vit_branch.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/mft_cpea_cosine.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/mft_original.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/wrappers/__init__.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "models/wrappers/pretrain_wrapper.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "notebooks/adapt_hypersigma_native_sem.ipynb": [
+      "notebooks_keep"
+    ],
+    "notebooks/compare.ipynb": [
+      "notebooks_keep"
+    ],
+    "notebooks/evaluate.ipynb": [
+      "notebooks_keep"
+    ],
+    "notebooks/evaluate_hypersigma copy 2.ipynb": [
+      "notebooks_other"
+    ],
+    "notebooks/evaluate_hypersigma copy 3.ipynb": [
+      "notebooks_other"
+    ],
+    "notebooks/evaluate_hypersigma copy.ipynb": [
+      "notebooks_other"
+    ],
+    "notebooks/evaluate_hypersigma.ipynb": [
+      "notebooks_other"
+    ],
+    "notebooks/evaluate_hypersigma_native.ipynb": [
+      "notebooks_other"
+    ],
+    "notebooks/evaluate_hypersigma_pca100 copy 3.ipynb": [
+      "notebooks_other"
+    ],
+    "notebooks/evaluate_hypersigma_pca100 copy.ipynb": [
+      "notebooks_other"
+    ],
+    "notebooks/evaluate_hypersigma_pca100.ipynb": [
+      "notebooks_other"
+    ],
+    "notebooks/pretrain copy 2.ipynb": [
+      "notebooks_other"
+    ],
+    "notebooks/pretrain copy 3.ipynb": [
+      "notebooks_other"
+    ],
+    "notebooks/pretrain copy.ipynb": [
+      "notebooks_other"
+    ],
+    "notebooks/pretrain.ipynb": [
+      "notebooks_keep"
+    ],
+    "notebooks/pretrain_run2.ipynb": [
+      "notebooks_other"
+    ],
+    "pretrain/__init__.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "pretrain/decoders.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "pretrain/hypersigma_mae.py": [
+      "paper_hypersigma",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "pretrain/mae_pretrain.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "exploratory",
+      "notebooks_keep",
+      "notebooks_other"
+    ],
+    "pretrain/masked_modeling.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "pretrain/masked_modeling_enhanced.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "pretrain/mft_mae.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "exploratory",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "pretrain/mft_spatial_mae.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "exploratory",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "scripts/__init__.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other"
+    ],
+    "scripts/ablation_config.py": [
+      "exploratory"
+    ],
+    "scripts/ablation_eval_worker.py": [
+      "exploratory"
+    ],
+    "scripts/ablation_pretrain_worker.py": [
+      "exploratory"
+    ],
+    "scripts/adapt_hypersigma.py": [
+      "paper_hypersigma",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other"
+    ],
+    "scripts/adapt_hypersigma_houston.py": [
+      "duplicates"
+    ],
+    "scripts/aggregate_ablation.py": [
+      "exploratory"
+    ],
+    "scripts/aggregate_bestcfg.py": [
+      "exploratory"
+    ],
+    "scripts/aggregate_combo.py": [
+      "exploratory"
+    ],
+    "scripts/aggregate_experiment_results.py": [
+      "paper_compile"
+    ],
+    "scripts/aggregate_significance.py": [
+      "paper_significance"
+    ],
+    "scripts/bestcfg_config.py": [
+      "exploratory"
+    ],
+    "scripts/bestcfg_eval_worker.py": [
+      "exploratory"
+    ],
+    "scripts/bestcfg_pretrain_worker.py": [
+      "exploratory"
+    ],
+    "scripts/build_experiment_metadata.py": [
+      "paper_compile"
+    ],
+    "scripts/build_native_pca100_report.py": [
+      "paper_hypersigma"
+    ],
+    "scripts/combo_config.py": [
+      "exploratory"
+    ],
+    "scripts/combo_eval_worker.py": [
+      "exploratory"
+    ],
+    "scripts/combo_pretrain_worker.py": [
+      "exploratory"
+    ],
+    "scripts/compile_mft_faithful_results.py": [
+      "paper_compile"
+    ],
+    "scripts/compile_results.py": [
+      "paper_compile"
+    ],
+    "scripts/evaluate_cosine.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "notebooks_keep",
+      "notebooks_other"
+    ],
+    "scripts/evaluate_hypersigma_cosine.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_hypersigma",
+      "exploratory",
+      "notebooks_keep",
+      "notebooks_other"
+    ],
+    "scripts/fit_pca_hypersigma.py": [
+      "paper_hypersigma"
+    ],
+    "scripts/gather_native_pca100_raw.py": [
+      "paper_hypersigma"
+    ],
+    "scripts/gather_requested_results.py": [
+      "paper_compile"
+    ],
+    "scripts/pretrain_enhanced.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "exploratory",
+      "notebooks_keep",
+      "notebooks_other"
+    ],
+    "scripts/run_ablation.py": [
+      "exploratory"
+    ],
+    "scripts/run_bestcfg.py": [
+      "exploratory"
+    ],
+    "scripts/run_combo.py": [
+      "exploratory"
+    ],
+    "scripts/run_hsi_only_experiments.py": [
+      "paper_group_runners"
+    ],
+    "scripts/run_hypersigma_spatial_pca100.py": [
+      "paper_hypersigma"
+    ],
+    "scripts/run_mae_experiments.py": [
+      "paper_group_runners"
+    ],
+    "scripts/run_mft_original_mae_experiments.py": [
+      "paper_group_runners"
+    ],
+    "scripts/run_mft_original_spatial_experiments.py": [
+      "paper_group_runners"
+    ],
+    "scripts/run_significance_experiment.py": [
+      "paper_significance"
+    ],
+    "scripts/sig_eval_worker.py": [
+      "paper_significance"
+    ],
+    "scripts/sig_pretrain_worker.py": [
+      "paper_significance"
+    ],
+    "scripts/sig_significance_config.py": [
+      "paper_significance",
+      "exploratory"
+    ],
+    "tests/test_data.py": [
+      "tests"
+    ],
+    "tests/test_hypersigma_native_shapes.py": [
+      "tests"
+    ],
+    "tests/test_hypersigma_shapes.py": [
+      "tests"
+    ],
+    "tests/test_mft_original_shapes.py": [
+      "tests"
+    ],
+    "tests/test_models.py": [
+      "tests"
+    ],
+    "tests/test_pretrain_enhanced.py": [
+      "tests"
+    ],
+    "tests/test_spatial_weights.py": [
+      "tests"
+    ],
+    "tools/refactor/build_manifest.py": [
+      "tooling"
+    ],
+    "tools/refactor/closure.py": [
+      "tooling"
+    ],
+    "tools/refactor/inventory.py": [
+      "tooling"
+    ],
+    "trainers/__init__.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "exploratory",
+      "notebooks_keep",
+      "notebooks_other"
+    ],
+    "trainers/pretrain_trainer.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "exploratory",
+      "notebooks_keep",
+      "notebooks_other"
+    ],
+    "utils/__init__.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "utils/io.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "utils/logging.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "exploratory",
+      "notebooks_keep",
+      "notebooks_other"
+    ],
+    "utils/metrics.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "utils/seed.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other"
+    ],
+    "utils/spatial_weights.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "duplicates",
+      "notebooks_keep",
+      "notebooks_other",
+      "tests"
+    ],
+    "utils/visualization.py": [
+      "paper_significance",
+      "paper_group_runners",
+      "paper_core_cli",
+      "paper_hypersigma",
+      "exploratory",
+      "notebooks_keep",
+      "notebooks_other"
+    ]
+  },
+  "closures": {
+    "paper_significance": {
+      "scripts/run_significance_experiment.py": "ROOT",
+      "scripts/sig_pretrain_worker.py": "ROOT",
+      "scripts/sig_eval_worker.py": "ROOT",
+      "scripts/sig_significance_config.py": "ROOT",
+      "scripts/aggregate_significance.py": "ROOT",
+      "scripts/__init__.py": "scripts/run_significance_experiment.py:37 -> scripts/__init__.py",
+      "lib/pretrain_runner.py": "scripts/sig_pretrain_worker.py:71 -> lib/pretrain_runner.py",
+      "lib/__init__.py": "scripts/sig_pretrain_worker.py:71 -> lib/__init__.py",
+      "lib/eval_runner.py": "scripts/sig_eval_worker.py:59 -> lib/eval_runner.py",
+      "lib/experiments.py": "lib/pretrain_runner.py:18 -> lib/experiments.py",
+      "scripts/pretrain_enhanced.py": "lib/pretrain_runner.py:64 -> scripts/pretrain_enhanced.py",
+      "scripts/evaluate_hypersigma_cosine.py": "lib/eval_runner.py:128 -> scripts/evaluate_hypersigma_cosine.py",
+      "scripts/evaluate_cosine.py": "lib/eval_runner.py:209 -> scripts/evaluate_cosine.py",
+      "utils/io.py": "scripts/pretrain_enhanced.py:33 -> utils/io.py",
+      "utils/__init__.py": "scripts/pretrain_enhanced.py:33 -> utils/__init__.py",
+      "utils/logging.py": "scripts/pretrain_enhanced.py:34 -> utils/logging.py",
+      "data/datasets/__init__.py": "scripts/pretrain_enhanced.py:35 -> data/datasets/__init__.py",
+      "data/__init__.py": "scripts/pretrain_enhanced.py:35 -> data/__init__.py",
+      "models/__init__.py": "scripts/pretrain_enhanced.py:40 -> models/__init__.py",
+      "pretrain/masked_modeling_enhanced.py": "scripts/pretrain_enhanced.py:41 -> pretrain/masked_modeling_enhanced.py",
+      "pretrain/__init__.py": "scripts/pretrain_enhanced.py:41 -> pretrain/__init__.py",
+      "pretrain/mae_pretrain.py": "scripts/pretrain_enhanced.py:42 -> pretrain/mae_pretrain.py",
+      "pretrain/mft_mae.py": "scripts/pretrain_enhanced.py:43 -> pretrain/mft_mae.py",
+      "pretrain/mft_spatial_mae.py": "scripts/pretrain_enhanced.py:44 -> pretrain/mft_spatial_mae.py",
+      "trainers/pretrain_trainer.py": "scripts/pretrain_enhanced.py:45 -> trainers/pretrain_trainer.py",
+      "trainers/__init__.py": "scripts/pretrain_enhanced.py:45 -> trainers/__init__.py",
+      "utils/seed.py": "scripts/pretrain_enhanced.py:174 -> utils/seed.py",
+      "data/samplers/patched_episode_sampler.py": "scripts/evaluate_hypersigma_cosine.py:48 -> data/samplers/patched_episode_sampler.py",
+      "data/samplers/__init__.py": "scripts/evaluate_hypersigma_cosine.py:48 -> data/samplers/__init__.py",
+      "models/hypersigma/__init__.py": "scripts/evaluate_hypersigma_cosine.py:49 -> models/hypersigma/__init__.py",
+      "utils/spatial_weights.py": "scripts/evaluate_cosine.py:44 -> utils/spatial_weights.py",
+      "utils/visualization.py": "scripts/evaluate_cosine.py:604 -> utils/visualization.py",
+      "utils/metrics.py": "utils/__init__.py:2 -> utils/metrics.py",
+      "data/datasets/base.py": "data/datasets/__init__.py:2 -> data/datasets/base.py",
+      "data/datasets/houston.py": "data/datasets/__init__.py:3 -> data/datasets/houston.py",
+      "data/datasets/trento.py": "data/datasets/__init__.py:4 -> data/datasets/trento.py",
+      "data/datasets/muufl.py": "data/datasets/__init__.py:5 -> data/datasets/muufl.py",
+      "data/datasets/patched.py": "data/datasets/__init__.py:6 -> data/datasets/patched.py",
+      "data/datasets/registry.py": "data/datasets/__init__.py:12 -> data/datasets/registry.py",
+      "models/mft_cpea_cosine.py": "models/__init__.py:2 -> models/mft_cpea_cosine.py",
+      "models/mft_original.py": "models/__init__.py:3 -> models/mft_original.py",
+      "models/backbones/__init__.py": "models/__init__.py:5 -> models/backbones/__init__.py",
+      "models/wrappers/__init__.py": "models/__init__.py:12 -> models/wrappers/__init__.py",
+      "pretrain/masked_modeling.py": "pretrain/masked_modeling_enhanced.py:26 -> pretrain/masked_modeling.py",
+      "pretrain/decoders.py": "pretrain/__init__.py:28 -> pretrain/decoders.py",
+      "data/samplers/episode_sampler.py": "data/samplers/__init__.py:2 -> data/samplers/episode_sampler.py",
+      "models/hypersigma/preprocessing.py": "models/hypersigma/__init__.py:13 -> models/hypersigma/preprocessing.py",
+      "models/hypersigma/sem.py": "models/hypersigma/__init__.py:19 -> models/hypersigma/sem.py",
+      "models/hypersigma/spat_vit_branch.py": "models/hypersigma/__init__.py:20 -> models/hypersigma/spat_vit_branch.py",
+      "models/hypersigma/spec_vit_branch.py": "models/hypersigma/__init__.py:21 -> models/hypersigma/spec_vit_branch.py",
+      "models/hypersigma/hypersigma_dual.py": "models/hypersigma/__init__.py:22 -> models/hypersigma/hypersigma_dual.py",
+      "models/hypersigma/hypersigma_cosine.py": "models/hypersigma/__init__.py:23 -> models/hypersigma/hypersigma_cosine.py",
+      "models/components/tokenizers.py": "models/mft_cpea_cosine.py:33 -> models/components/tokenizers.py",
+      "models/components/__init__.py": "models/mft_cpea_cosine.py:33 -> models/components/__init__.py",
+      "models/components/transformer.py": "models/mft_cpea_cosine.py:34 -> models/components/transformer.py",
+      "models/components/projection.py": "models/mft_cpea_cosine.py:35 -> models/components/projection.py",
+      "models/components/mft_blocks.py": "models/mft_original.py:44 -> models/components/mft_blocks.py",
+      "models/backbones/base.py": "models/backbones/__init__.py:13 -> models/backbones/base.py",
+      "models/backbones/mft_channel.py": "models/backbones/__init__.py:14 -> models/backbones/mft_channel.py",
+      "models/backbones/mft_pixel.py": "models/backbones/__init__.py:15 -> models/backbones/mft_pixel.py",
+      "models/backbones/hsi_baseline.py": "models/backbones/__init__.py:16 -> models/backbones/hsi_baseline.py",
+      "models/wrappers/pretrain_wrapper.py": "models/wrappers/__init__.py:5 -> models/wrappers/pretrain_wrapper.py",
+      "models/hypersigma/_input_fit.py": "models/hypersigma/spat_vit_branch.py:34 -> models/hypersigma/_input_fit.py"
+    },
+    "paper_group_runners": {
+      "scripts/run_mae_experiments.py": "ROOT",
+      "scripts/run_hsi_only_experiments.py": "ROOT",
+      "scripts/run_mft_original_mae_experiments.py": "ROOT",
+      "scripts/run_mft_original_spatial_experiments.py": "ROOT",
+      "lib/pretrain_runner.py": "scripts/run_mae_experiments.py:48 -> lib/pretrain_runner.py",
+      "lib/__init__.py": "scripts/run_mae_experiments.py:48 -> lib/__init__.py",
+      "lib/eval_runner.py": "scripts/run_mae_experiments.py:49 -> lib/eval_runner.py",
+      "lib/experiments.py": "lib/pretrain_runner.py:18 -> lib/experiments.py",
+      "scripts/pretrain_enhanced.py": "lib/pretrain_runner.py:64 -> scripts/pretrain_enhanced.py",
+      "scripts/__init__.py": "lib/pretrain_runner.py:64 -> scripts/__init__.py",
+      "scripts/evaluate_hypersigma_cosine.py": "lib/eval_runner.py:128 -> scripts/evaluate_hypersigma_cosine.py",
+      "scripts/evaluate_cosine.py": "lib/eval_runner.py:209 -> scripts/evaluate_cosine.py",
+      "utils/io.py": "scripts/pretrain_enhanced.py:33 -> utils/io.py",
+      "utils/__init__.py": "scripts/pretrain_enhanced.py:33 -> utils/__init__.py",
+      "utils/logging.py": "scripts/pretrain_enhanced.py:34 -> utils/logging.py",
+      "data/datasets/__init__.py": "scripts/pretrain_enhanced.py:35 -> data/datasets/__init__.py",
+      "data/__init__.py": "scripts/pretrain_enhanced.py:35 -> data/__init__.py",
+      "models/__init__.py": "scripts/pretrain_enhanced.py:40 -> models/__init__.py",
+      "pretrain/masked_modeling_enhanced.py": "scripts/pretrain_enhanced.py:41 -> pretrain/masked_modeling_enhanced.py",
+      "pretrain/__init__.py": "scripts/pretrain_enhanced.py:41 -> pretrain/__init__.py",
+      "pretrain/mae_pretrain.py": "scripts/pretrain_enhanced.py:42 -> pretrain/mae_pretrain.py",
+      "pretrain/mft_mae.py": "scripts/pretrain_enhanced.py:43 -> pretrain/mft_mae.py",
+      "pretrain/mft_spatial_mae.py": "scripts/pretrain_enhanced.py:44 -> pretrain/mft_spatial_mae.py",
+      "trainers/pretrain_trainer.py": "scripts/pretrain_enhanced.py:45 -> trainers/pretrain_trainer.py",
+      "trainers/__init__.py": "scripts/pretrain_enhanced.py:45 -> trainers/__init__.py",
+      "utils/seed.py": "scripts/pretrain_enhanced.py:174 -> utils/seed.py",
+      "data/samplers/patched_episode_sampler.py": "scripts/evaluate_hypersigma_cosine.py:48 -> data/samplers/patched_episode_sampler.py",
+      "data/samplers/__init__.py": "scripts/evaluate_hypersigma_cosine.py:48 -> data/samplers/__init__.py",
+      "models/hypersigma/__init__.py": "scripts/evaluate_hypersigma_cosine.py:49 -> models/hypersigma/__init__.py",
+      "utils/spatial_weights.py": "scripts/evaluate_cosine.py:44 -> utils/spatial_weights.py",
+      "utils/visualization.py": "scripts/evaluate_cosine.py:604 -> utils/visualization.py",
+      "utils/metrics.py": "utils/__init__.py:2 -> utils/metrics.py",
+      "data/datasets/base.py": "data/datasets/__init__.py:2 -> data/datasets/base.py",
+      "data/datasets/houston.py": "data/datasets/__init__.py:3 -> data/datasets/houston.py",
+      "data/datasets/trento.py": "data/datasets/__init__.py:4 -> data/datasets/trento.py",
+      "data/datasets/muufl.py": "data/datasets/__init__.py:5 -> data/datasets/muufl.py",
+      "data/datasets/patched.py": "data/datasets/__init__.py:6 -> data/datasets/patched.py",
+      "data/datasets/registry.py": "data/datasets/__init__.py:12 -> data/datasets/registry.py",
+      "models/mft_cpea_cosine.py": "models/__init__.py:2 -> models/mft_cpea_cosine.py",
+      "models/mft_original.py": "models/__init__.py:3 -> models/mft_original.py",
+      "models/backbones/__init__.py": "models/__init__.py:5 -> models/backbones/__init__.py",
+      "models/wrappers/__init__.py": "models/__init__.py:12 -> models/wrappers/__init__.py",
+      "pretrain/masked_modeling.py": "pretrain/masked_modeling_enhanced.py:26 -> pretrain/masked_modeling.py",
+      "pretrain/decoders.py": "pretrain/__init__.py:28 -> pretrain/decoders.py",
+      "data/samplers/episode_sampler.py": "data/samplers/__init__.py:2 -> data/samplers/episode_sampler.py",
+      "models/hypersigma/preprocessing.py": "models/hypersigma/__init__.py:13 -> models/hypersigma/preprocessing.py",
+      "models/hypersigma/sem.py": "models/hypersigma/__init__.py:19 -> models/hypersigma/sem.py",
+      "models/hypersigma/spat_vit_branch.py": "models/hypersigma/__init__.py:20 -> models/hypersigma/spat_vit_branch.py",
+      "models/hypersigma/spec_vit_branch.py": "models/hypersigma/__init__.py:21 -> models/hypersigma/spec_vit_branch.py",
+      "models/hypersigma/hypersigma_dual.py": "models/hypersigma/__init__.py:22 -> models/hypersigma/hypersigma_dual.py",
+      "models/hypersigma/hypersigma_cosine.py": "models/hypersigma/__init__.py:23 -> models/hypersigma/hypersigma_cosine.py",
+      "models/components/tokenizers.py": "models/mft_cpea_cosine.py:33 -> models/components/tokenizers.py",
+      "models/components/__init__.py": "models/mft_cpea_cosine.py:33 -> models/components/__init__.py",
+      "models/components/transformer.py": "models/mft_cpea_cosine.py:34 -> models/components/transformer.py",
+      "models/components/projection.py": "models/mft_cpea_cosine.py:35 -> models/components/projection.py",
+      "models/components/mft_blocks.py": "models/mft_original.py:44 -> models/components/mft_blocks.py",
+      "models/backbones/base.py": "models/backbones/__init__.py:13 -> models/backbones/base.py",
+      "models/backbones/mft_channel.py": "models/backbones/__init__.py:14 -> models/backbones/mft_channel.py",
+      "models/backbones/mft_pixel.py": "models/backbones/__init__.py:15 -> models/backbones/mft_pixel.py",
+      "models/backbones/hsi_baseline.py": "models/backbones/__init__.py:16 -> models/backbones/hsi_baseline.py",
+      "models/wrappers/pretrain_wrapper.py": "models/wrappers/__init__.py:5 -> models/wrappers/pretrain_wrapper.py",
+      "models/hypersigma/_input_fit.py": "models/hypersigma/spat_vit_branch.py:34 -> models/hypersigma/_input_fit.py"
+    },
+    "paper_core_cli": {
+      "scripts/pretrain_enhanced.py": "ROOT",
+      "scripts/evaluate_cosine.py": "ROOT",
+      "utils/io.py": "scripts/pretrain_enhanced.py:33 -> utils/io.py",
+      "utils/__init__.py": "scripts/pretrain_enhanced.py:33 -> utils/__init__.py",
+      "utils/logging.py": "scripts/pretrain_enhanced.py:34 -> utils/logging.py",
+      "data/datasets/__init__.py": "scripts/pretrain_enhanced.py:35 -> data/datasets/__init__.py",
+      "data/__init__.py": "scripts/pretrain_enhanced.py:35 -> data/__init__.py",
+      "models/__init__.py": "scripts/pretrain_enhanced.py:40 -> models/__init__.py",
+      "pretrain/masked_modeling_enhanced.py": "scripts/pretrain_enhanced.py:41 -> pretrain/masked_modeling_enhanced.py",
+      "pretrain/__init__.py": "scripts/pretrain_enhanced.py:41 -> pretrain/__init__.py",
+      "pretrain/mae_pretrain.py": "scripts/pretrain_enhanced.py:42 -> pretrain/mae_pretrain.py",
+      "pretrain/mft_mae.py": "scripts/pretrain_enhanced.py:43 -> pretrain/mft_mae.py",
+      "pretrain/mft_spatial_mae.py": "scripts/pretrain_enhanced.py:44 -> pretrain/mft_spatial_mae.py",
+      "trainers/pretrain_trainer.py": "scripts/pretrain_enhanced.py:45 -> trainers/pretrain_trainer.py",
+      "trainers/__init__.py": "scripts/pretrain_enhanced.py:45 -> trainers/__init__.py",
+      "utils/seed.py": "scripts/pretrain_enhanced.py:174 -> utils/seed.py",
+      "utils/spatial_weights.py": "scripts/evaluate_cosine.py:44 -> utils/spatial_weights.py",
+      "data/samplers/patched_episode_sampler.py": "scripts/evaluate_cosine.py:51 -> data/samplers/patched_episode_sampler.py",
+      "data/samplers/__init__.py": "scripts/evaluate_cosine.py:51 -> data/samplers/__init__.py",
+      "utils/visualization.py": "scripts/evaluate_cosine.py:604 -> utils/visualization.py",
+      "utils/metrics.py": "utils/__init__.py:2 -> utils/metrics.py",
+      "data/datasets/base.py": "data/datasets/__init__.py:2 -> data/datasets/base.py",
+      "data/datasets/houston.py": "data/datasets/__init__.py:3 -> data/datasets/houston.py",
+      "data/datasets/trento.py": "data/datasets/__init__.py:4 -> data/datasets/trento.py",
+      "data/datasets/muufl.py": "data/datasets/__init__.py:5 -> data/datasets/muufl.py",
+      "data/datasets/patched.py": "data/datasets/__init__.py:6 -> data/datasets/patched.py",
+      "data/datasets/registry.py": "data/datasets/__init__.py:12 -> data/datasets/registry.py",
+      "models/mft_cpea_cosine.py": "models/__init__.py:2 -> models/mft_cpea_cosine.py",
+      "models/mft_original.py": "models/__init__.py:3 -> models/mft_original.py",
+      "models/backbones/__init__.py": "models/__init__.py:5 -> models/backbones/__init__.py",
+      "models/wrappers/__init__.py": "models/__init__.py:12 -> models/wrappers/__init__.py",
+      "pretrain/masked_modeling.py": "pretrain/masked_modeling_enhanced.py:26 -> pretrain/masked_modeling.py",
+      "pretrain/decoders.py": "pretrain/__init__.py:28 -> pretrain/decoders.py",
+      "data/samplers/episode_sampler.py": "data/samplers/__init__.py:2 -> data/samplers/episode_sampler.py",
+      "models/components/tokenizers.py": "models/mft_cpea_cosine.py:33 -> models/components/tokenizers.py",
+      "models/components/__init__.py": "models/mft_cpea_cosine.py:33 -> models/components/__init__.py",
+      "models/components/transformer.py": "models/mft_cpea_cosine.py:34 -> models/components/transformer.py",
+      "models/components/projection.py": "models/mft_cpea_cosine.py:35 -> models/components/projection.py",
+      "models/components/mft_blocks.py": "models/mft_original.py:44 -> models/components/mft_blocks.py",
+      "models/backbones/base.py": "models/backbones/__init__.py:13 -> models/backbones/base.py",
+      "models/backbones/mft_channel.py": "models/backbones/__init__.py:14 -> models/backbones/mft_channel.py",
+      "models/backbones/mft_pixel.py": "models/backbones/__init__.py:15 -> models/backbones/mft_pixel.py",
+      "models/backbones/hsi_baseline.py": "models/backbones/__init__.py:16 -> models/backbones/hsi_baseline.py",
+      "models/wrappers/pretrain_wrapper.py": "models/wrappers/__init__.py:5 -> models/wrappers/pretrain_wrapper.py"
+    },
+    "paper_hypersigma": {
+      "scripts/adapt_hypersigma.py": "ROOT",
+      "scripts/evaluate_hypersigma_cosine.py": "ROOT",
+      "scripts/fit_pca_hypersigma.py": "ROOT",
+      "scripts/run_hypersigma_spatial_pca100.py": "ROOT",
+      "scripts/gather_native_pca100_raw.py": "ROOT",
+      "scripts/build_native_pca100_report.py": "ROOT",
+      "data/datasets/__init__.py": "scripts/adapt_hypersigma.py:44 -> data/datasets/__init__.py",
+      "data/__init__.py": "scripts/adapt_hypersigma.py:44 -> data/__init__.py",
+      "models/hypersigma/hypersigma_dual.py": "scripts/adapt_hypersigma.py:45 -> models/hypersigma/hypersigma_dual.py",
+      "models/__init__.py": "scripts/adapt_hypersigma.py:45 -> models/__init__.py",
+      "models/hypersigma/__init__.py": "scripts/adapt_hypersigma.py:45 -> models/hypersigma/__init__.py",
+      "pretrain/hypersigma_mae.py": "scripts/adapt_hypersigma.py:46 -> pretrain/hypersigma_mae.py",
+      "pretrain/__init__.py": "scripts/adapt_hypersigma.py:46 -> pretrain/__init__.py",
+      "utils/io.py": "scripts/adapt_hypersigma.py:47 -> utils/io.py",
+      "utils/__init__.py": "scripts/adapt_hypersigma.py:47 -> utils/__init__.py",
+      "utils/seed.py": "scripts/adapt_hypersigma.py:48 -> utils/seed.py",
+      "data/samplers/patched_episode_sampler.py": "scripts/evaluate_hypersigma_cosine.py:48 -> data/samplers/patched_episode_sampler.py",
+      "data/samplers/__init__.py": "scripts/evaluate_hypersigma_cosine.py:48 -> data/samplers/__init__.py",
+      "scripts/evaluate_cosine.py": "scripts/evaluate_hypersigma_cosine.py:50 -> scripts/evaluate_cosine.py",
+      "scripts/__init__.py": "scripts/evaluate_hypersigma_cosine.py:50 -> scripts/__init__.py",
+      "models/hypersigma/preprocessing.py": "scripts/fit_pca_hypersigma.py:30 -> models/hypersigma/preprocessing.py",
+      "lib/adapt_runner.py": "scripts/run_hypersigma_spatial_pca100.py:47 -> lib/adapt_runner.py",
+      "lib/__init__.py": "scripts/run_hypersigma_spatial_pca100.py:47 -> lib/__init__.py",
+      "lib/eval_runner.py": "scripts/run_hypersigma_spatial_pca100.py:48 -> lib/eval_runner.py",
+      "lib/experiments.py": "scripts/run_hypersigma_spatial_pca100.py:49 -> lib/experiments.py",
+      "data/datasets/base.py": "data/datasets/__init__.py:2 -> data/datasets/base.py",
+      "data/datasets/houston.py": "data/datasets/__init__.py:3 -> data/datasets/houston.py",
+      "data/datasets/trento.py": "data/datasets/__init__.py:4 -> data/datasets/trento.py",
+      "data/datasets/muufl.py": "data/datasets/__init__.py:5 -> data/datasets/muufl.py",
+      "data/datasets/patched.py": "data/datasets/__init__.py:6 -> data/datasets/patched.py",
+      "data/datasets/registry.py": "data/datasets/__init__.py:12 -> data/datasets/registry.py",
+      "models/hypersigma/sem.py": "models/hypersigma/hypersigma_dual.py:29 -> models/hypersigma/sem.py",
+      "models/hypersigma/spat_vit_branch.py": "models/hypersigma/hypersigma_dual.py:30 -> models/hypersigma/spat_vit_branch.py",
+      "models/hypersigma/spec_vit_branch.py": "models/hypersigma/hypersigma_dual.py:31 -> models/hypersigma/spec_vit_branch.py",
+      "models/mft_cpea_cosine.py": "models/__init__.py:2 -> models/mft_cpea_cosine.py",
+      "models/mft_original.py": "models/__init__.py:3 -> models/mft_original.py",
+      "models/backbones/__init__.py": "models/__init__.py:5 -> models/backbones/__init__.py",
+      "models/wrappers/__init__.py": "models/__init__.py:12 -> models/wrappers/__init__.py",
+      "models/hypersigma/hypersigma_cosine.py": "models/hypersigma/__init__.py:23 -> models/hypersigma/hypersigma_cosine.py",
+      "pretrain/masked_modeling.py": "pretrain/__init__.py:16 -> pretrain/masked_modeling.py",
+      "pretrain/masked_modeling_enhanced.py": "pretrain/__init__.py:24 -> pretrain/masked_modeling_enhanced.py",
+      "pretrain/decoders.py": "pretrain/__init__.py:28 -> pretrain/decoders.py",
+      "utils/metrics.py": "utils/__init__.py:2 -> utils/metrics.py",
+      "data/samplers/episode_sampler.py": "data/samplers/__init__.py:2 -> data/samplers/episode_sampler.py",
+      "utils/spatial_weights.py": "scripts/evaluate_cosine.py:44 -> utils/spatial_weights.py",
+      "utils/visualization.py": "scripts/evaluate_cosine.py:604 -> utils/visualization.py",
+      "models/hypersigma/_input_fit.py": "models/hypersigma/spat_vit_branch.py:34 -> models/hypersigma/_input_fit.py",
+      "models/components/tokenizers.py": "models/mft_cpea_cosine.py:33 -> models/components/tokenizers.py",
+      "models/components/__init__.py": "models/mft_cpea_cosine.py:33 -> models/components/__init__.py",
+      "models/components/transformer.py": "models/mft_cpea_cosine.py:34 -> models/components/transformer.py",
+      "models/components/projection.py": "models/mft_cpea_cosine.py:35 -> models/components/projection.py",
+      "models/components/mft_blocks.py": "models/mft_original.py:44 -> models/components/mft_blocks.py",
+      "models/backbones/base.py": "models/backbones/__init__.py:13 -> models/backbones/base.py",
+      "models/backbones/mft_channel.py": "models/backbones/__init__.py:14 -> models/backbones/mft_channel.py",
+      "models/backbones/mft_pixel.py": "models/backbones/__init__.py:15 -> models/backbones/mft_pixel.py",
+      "models/backbones/hsi_baseline.py": "models/backbones/__init__.py:16 -> models/backbones/hsi_baseline.py",
+      "models/wrappers/pretrain_wrapper.py": "models/wrappers/__init__.py:5 -> models/wrappers/pretrain_wrapper.py"
+    },
+    "paper_compile": {
+      "scripts/compile_results.py": "ROOT",
+      "scripts/compile_mft_faithful_results.py": "ROOT",
+      "scripts/gather_requested_results.py": "ROOT",
+      "scripts/aggregate_experiment_results.py": "ROOT",
+      "scripts/build_experiment_metadata.py": "ROOT"
+    },
+    "exploratory": {
+      "scripts/run_ablation.py": "ROOT",
+      "scripts/ablation_config.py": "ROOT",
+      "scripts/ablation_pretrain_worker.py": "ROOT",
+      "scripts/ablation_eval_worker.py": "ROOT",
+      "scripts/aggregate_ablation.py": "ROOT",
+      "scripts/run_combo.py": "ROOT",
+      "scripts/combo_config.py": "ROOT",
+      "scripts/combo_pretrain_worker.py": "ROOT",
+      "scripts/combo_eval_worker.py": "ROOT",
+      "scripts/aggregate_combo.py": "ROOT",
+      "scripts/run_bestcfg.py": "ROOT",
+      "scripts/bestcfg_config.py": "ROOT",
+      "scripts/bestcfg_pretrain_worker.py": "ROOT",
+      "scripts/bestcfg_eval_worker.py": "ROOT",
+      "scripts/aggregate_bestcfg.py": "ROOT",
+      "scripts/__init__.py": "scripts/run_ablation.py:30 -> scripts/__init__.py",
+      "lib/pretrain_runner.py": "scripts/ablation_pretrain_worker.py:51 -> lib/pretrain_runner.py",
+      "lib/__init__.py": "scripts/ablation_pretrain_worker.py:51 -> lib/__init__.py",
+      "lib/eval_runner.py": "scripts/ablation_eval_worker.py:48 -> lib/eval_runner.py",
+      "scripts/sig_significance_config.py": "scripts/bestcfg_config.py:29 -> scripts/sig_significance_config.py",
+      "lib/experiments.py": "lib/pretrain_runner.py:18 -> lib/experiments.py",
+      "scripts/pretrain_enhanced.py": "lib/pretrain_runner.py:64 -> scripts/pretrain_enhanced.py",
+      "scripts/evaluate_hypersigma_cosine.py": "lib/eval_runner.py:128 -> scripts/evaluate_hypersigma_cosine.py",
+      "scripts/evaluate_cosine.py": "lib/eval_runner.py:209 -> scripts/evaluate_cosine.py",
+      "utils/io.py": "scripts/pretrain_enhanced.py:33 -> utils/io.py",
+      "utils/__init__.py": "scripts/pretrain_enhanced.py:33 -> utils/__init__.py",
+      "utils/logging.py": "scripts/pretrain_enhanced.py:34 -> utils/logging.py",
+      "data/datasets/__init__.py": "scripts/pretrain_enhanced.py:35 -> data/datasets/__init__.py",
+      "data/__init__.py": "scripts/pretrain_enhanced.py:35 -> data/__init__.py",
+      "models/__init__.py": "scripts/pretrain_enhanced.py:40 -> models/__init__.py",
+      "pretrain/masked_modeling_enhanced.py": "scripts/pretrain_enhanced.py:41 -> pretrain/masked_modeling_enhanced.py",
+      "pretrain/__init__.py": "scripts/pretrain_enhanced.py:41 -> pretrain/__init__.py",
+      "pretrain/mae_pretrain.py": "scripts/pretrain_enhanced.py:42 -> pretrain/mae_pretrain.py",
+      "pretrain/mft_mae.py": "scripts/pretrain_enhanced.py:43 -> pretrain/mft_mae.py",
+      "pretrain/mft_spatial_mae.py": "scripts/pretrain_enhanced.py:44 -> pretrain/mft_spatial_mae.py",
+      "trainers/pretrain_trainer.py": "scripts/pretrain_enhanced.py:45 -> trainers/pretrain_trainer.py",
+      "trainers/__init__.py": "scripts/pretrain_enhanced.py:45 -> trainers/__init__.py",
+      "utils/seed.py": "scripts/pretrain_enhanced.py:174 -> utils/seed.py",
+      "data/samplers/patched_episode_sampler.py": "scripts/evaluate_hypersigma_cosine.py:48 -> data/samplers/patched_episode_sampler.py",
+      "data/samplers/__init__.py": "scripts/evaluate_hypersigma_cosine.py:48 -> data/samplers/__init__.py",
+      "models/hypersigma/__init__.py": "scripts/evaluate_hypersigma_cosine.py:49 -> models/hypersigma/__init__.py",
+      "utils/spatial_weights.py": "scripts/evaluate_cosine.py:44 -> utils/spatial_weights.py",
+      "utils/visualization.py": "scripts/evaluate_cosine.py:604 -> utils/visualization.py",
+      "utils/metrics.py": "utils/__init__.py:2 -> utils/metrics.py",
+      "data/datasets/base.py": "data/datasets/__init__.py:2 -> data/datasets/base.py",
+      "data/datasets/houston.py": "data/datasets/__init__.py:3 -> data/datasets/houston.py",
+      "data/datasets/trento.py": "data/datasets/__init__.py:4 -> data/datasets/trento.py",
+      "data/datasets/muufl.py": "data/datasets/__init__.py:5 -> data/datasets/muufl.py",
+      "data/datasets/patched.py": "data/datasets/__init__.py:6 -> data/datasets/patched.py",
+      "data/datasets/registry.py": "data/datasets/__init__.py:12 -> data/datasets/registry.py",
+      "models/mft_cpea_cosine.py": "models/__init__.py:2 -> models/mft_cpea_cosine.py",
+      "models/mft_original.py": "models/__init__.py:3 -> models/mft_original.py",
+      "models/backbones/__init__.py": "models/__init__.py:5 -> models/backbones/__init__.py",
+      "models/wrappers/__init__.py": "models/__init__.py:12 -> models/wrappers/__init__.py",
+      "pretrain/masked_modeling.py": "pretrain/masked_modeling_enhanced.py:26 -> pretrain/masked_modeling.py",
+      "pretrain/decoders.py": "pretrain/__init__.py:28 -> pretrain/decoders.py",
+      "data/samplers/episode_sampler.py": "data/samplers/__init__.py:2 -> data/samplers/episode_sampler.py",
+      "models/hypersigma/preprocessing.py": "models/hypersigma/__init__.py:13 -> models/hypersigma/preprocessing.py",
+      "models/hypersigma/sem.py": "models/hypersigma/__init__.py:19 -> models/hypersigma/sem.py",
+      "models/hypersigma/spat_vit_branch.py": "models/hypersigma/__init__.py:20 -> models/hypersigma/spat_vit_branch.py",
+      "models/hypersigma/spec_vit_branch.py": "models/hypersigma/__init__.py:21 -> models/hypersigma/spec_vit_branch.py",
+      "models/hypersigma/hypersigma_dual.py": "models/hypersigma/__init__.py:22 -> models/hypersigma/hypersigma_dual.py",
+      "models/hypersigma/hypersigma_cosine.py": "models/hypersigma/__init__.py:23 -> models/hypersigma/hypersigma_cosine.py",
+      "models/components/tokenizers.py": "models/mft_cpea_cosine.py:33 -> models/components/tokenizers.py",
+      "models/components/__init__.py": "models/mft_cpea_cosine.py:33 -> models/components/__init__.py",
+      "models/components/transformer.py": "models/mft_cpea_cosine.py:34 -> models/components/transformer.py",
+      "models/components/projection.py": "models/mft_cpea_cosine.py:35 -> models/components/projection.py",
+      "models/components/mft_blocks.py": "models/mft_original.py:44 -> models/components/mft_blocks.py",
+      "models/backbones/base.py": "models/backbones/__init__.py:13 -> models/backbones/base.py",
+      "models/backbones/mft_channel.py": "models/backbones/__init__.py:14 -> models/backbones/mft_channel.py",
+      "models/backbones/mft_pixel.py": "models/backbones/__init__.py:15 -> models/backbones/mft_pixel.py",
+      "models/backbones/hsi_baseline.py": "models/backbones/__init__.py:16 -> models/backbones/hsi_baseline.py",
+      "models/wrappers/pretrain_wrapper.py": "models/wrappers/__init__.py:5 -> models/wrappers/pretrain_wrapper.py",
+      "models/hypersigma/_input_fit.py": "models/hypersigma/spat_vit_branch.py:34 -> models/hypersigma/_input_fit.py"
+    },
+    "duplicates": {
+      "scripts/adapt_hypersigma_houston.py": "ROOT",
+      "scripts/adapt_hypersigma.py": "scripts/adapt_hypersigma_houston.py:11 -> scripts/adapt_hypersigma.py",
+      "scripts/__init__.py": "scripts/adapt_hypersigma_houston.py:11 -> scripts/__init__.py",
+      "data/datasets/__init__.py": "scripts/adapt_hypersigma.py:44 -> data/datasets/__init__.py",
+      "data/__init__.py": "scripts/adapt_hypersigma.py:44 -> data/__init__.py",
+      "models/hypersigma/hypersigma_dual.py": "scripts/adapt_hypersigma.py:45 -> models/hypersigma/hypersigma_dual.py",
+      "models/__init__.py": "scripts/adapt_hypersigma.py:45 -> models/__init__.py",
+      "models/hypersigma/__init__.py": "scripts/adapt_hypersigma.py:45 -> models/hypersigma/__init__.py",
+      "pretrain/hypersigma_mae.py": "scripts/adapt_hypersigma.py:46 -> pretrain/hypersigma_mae.py",
+      "pretrain/__init__.py": "scripts/adapt_hypersigma.py:46 -> pretrain/__init__.py",
+      "utils/io.py": "scripts/adapt_hypersigma.py:47 -> utils/io.py",
+      "utils/__init__.py": "scripts/adapt_hypersigma.py:47 -> utils/__init__.py",
+      "utils/seed.py": "scripts/adapt_hypersigma.py:48 -> utils/seed.py",
+      "data/datasets/base.py": "data/datasets/__init__.py:2 -> data/datasets/base.py",
+      "data/datasets/houston.py": "data/datasets/__init__.py:3 -> data/datasets/houston.py",
+      "data/datasets/trento.py": "data/datasets/__init__.py:4 -> data/datasets/trento.py",
+      "data/datasets/muufl.py": "data/datasets/__init__.py:5 -> data/datasets/muufl.py",
+      "data/datasets/patched.py": "data/datasets/__init__.py:6 -> data/datasets/patched.py",
+      "data/datasets/registry.py": "data/datasets/__init__.py:12 -> data/datasets/registry.py",
+      "data/samplers/__init__.py": "data/__init__.py:3 -> data/samplers/__init__.py",
+      "models/hypersigma/preprocessing.py": "models/hypersigma/hypersigma_dual.py:22 -> models/hypersigma/preprocessing.py",
+      "models/hypersigma/sem.py": "models/hypersigma/hypersigma_dual.py:29 -> models/hypersigma/sem.py",
+      "models/hypersigma/spat_vit_branch.py": "models/hypersigma/hypersigma_dual.py:30 -> models/hypersigma/spat_vit_branch.py",
+      "models/hypersigma/spec_vit_branch.py": "models/hypersigma/hypersigma_dual.py:31 -> models/hypersigma/spec_vit_branch.py",
+      "models/mft_cpea_cosine.py": "models/__init__.py:2 -> models/mft_cpea_cosine.py",
+      "models/mft_original.py": "models/__init__.py:3 -> models/mft_original.py",
+      "models/backbones/__init__.py": "models/__init__.py:5 -> models/backbones/__init__.py",
+      "models/wrappers/__init__.py": "models/__init__.py:12 -> models/wrappers/__init__.py",
+      "models/hypersigma/hypersigma_cosine.py": "models/hypersigma/__init__.py:23 -> models/hypersigma/hypersigma_cosine.py",
+      "pretrain/masked_modeling.py": "pretrain/__init__.py:16 -> pretrain/masked_modeling.py",
+      "pretrain/masked_modeling_enhanced.py": "pretrain/__init__.py:24 -> pretrain/masked_modeling_enhanced.py",
+      "pretrain/decoders.py": "pretrain/__init__.py:28 -> pretrain/decoders.py",
+      "utils/metrics.py": "utils/__init__.py:2 -> utils/metrics.py",
+      "data/samplers/episode_sampler.py": "data/samplers/__init__.py:2 -> data/samplers/episode_sampler.py",
+      "data/samplers/patched_episode_sampler.py": "data/samplers/__init__.py:3 -> data/samplers/patched_episode_sampler.py",
+      "models/hypersigma/_input_fit.py": "models/hypersigma/spat_vit_branch.py:34 -> models/hypersigma/_input_fit.py",
+      "models/components/tokenizers.py": "models/mft_cpea_cosine.py:33 -> models/components/tokenizers.py",
+      "models/components/__init__.py": "models/mft_cpea_cosine.py:33 -> models/components/__init__.py",
+      "models/components/transformer.py": "models/mft_cpea_cosine.py:34 -> models/components/transformer.py",
+      "models/components/projection.py": "models/mft_cpea_cosine.py:35 -> models/components/projection.py",
+      "utils/spatial_weights.py": "models/mft_cpea_cosine.py:36 -> utils/spatial_weights.py",
+      "models/components/mft_blocks.py": "models/mft_original.py:44 -> models/components/mft_blocks.py",
+      "models/backbones/base.py": "models/backbones/__init__.py:13 -> models/backbones/base.py",
+      "models/backbones/mft_channel.py": "models/backbones/__init__.py:14 -> models/backbones/mft_channel.py",
+      "models/backbones/mft_pixel.py": "models/backbones/__init__.py:15 -> models/backbones/mft_pixel.py",
+      "models/backbones/hsi_baseline.py": "models/backbones/__init__.py:16 -> models/backbones/hsi_baseline.py",
+      "models/wrappers/pretrain_wrapper.py": "models/wrappers/__init__.py:5 -> models/wrappers/pretrain_wrapper.py"
+    },
+    "notebooks_keep": {
+      "notebooks/pretrain.ipynb": "ROOT",
+      "notebooks/evaluate.ipynb": "ROOT",
+      "notebooks/compare.ipynb": "ROOT",
+      "notebooks/adapt_hypersigma_native_sem.ipynb": "ROOT",
+      "lib/pretrain_runner.py": "notebooks/pretrain.ipynb:75 -> lib/pretrain_runner.py",
+      "lib/__init__.py": "notebooks/pretrain.ipynb:75 -> lib/__init__.py",
+      "lib/eval_runner.py": "notebooks/evaluate.ipynb:82 -> lib/eval_runner.py",
+      "lib/experiments.py": "notebooks/compare.ipynb:14 -> lib/experiments.py",
+      "data/datasets/__init__.py": "notebooks/adapt_hypersigma_native_sem.ipynb:14 -> data/datasets/__init__.py",
+      "data/__init__.py": "notebooks/adapt_hypersigma_native_sem.ipynb:14 -> data/__init__.py",
+      "models/hypersigma/preprocessing.py": "notebooks/adapt_hypersigma_native_sem.ipynb:72 -> models/hypersigma/preprocessing.py",
+      "models/__init__.py": "notebooks/adapt_hypersigma_native_sem.ipynb:72 -> models/__init__.py",
+      "models/hypersigma/__init__.py": "notebooks/adapt_hypersigma_native_sem.ipynb:72 -> models/hypersigma/__init__.py",
+      "lib/adapt_runner.py": "notebooks/adapt_hypersigma_native_sem.ipynb:110 -> lib/adapt_runner.py",
+      "scripts/pretrain_enhanced.py": "lib/pretrain_runner.py:64 -> scripts/pretrain_enhanced.py",
+      "scripts/__init__.py": "lib/pretrain_runner.py:64 -> scripts/__init__.py",
+      "scripts/evaluate_hypersigma_cosine.py": "lib/eval_runner.py:128 -> scripts/evaluate_hypersigma_cosine.py",
+      "scripts/evaluate_cosine.py": "lib/eval_runner.py:209 -> scripts/evaluate_cosine.py",
+      "data/datasets/base.py": "data/datasets/__init__.py:2 -> data/datasets/base.py",
+      "data/datasets/houston.py": "data/datasets/__init__.py:3 -> data/datasets/houston.py",
+      "data/datasets/trento.py": "data/datasets/__init__.py:4 -> data/datasets/trento.py",
+      "data/datasets/muufl.py": "data/datasets/__init__.py:5 -> data/datasets/muufl.py",
+      "data/datasets/patched.py": "data/datasets/__init__.py:6 -> data/datasets/patched.py",
+      "data/datasets/registry.py": "data/datasets/__init__.py:12 -> data/datasets/registry.py",
+      "data/samplers/__init__.py": "data/__init__.py:3 -> data/samplers/__init__.py",
+      "models/mft_cpea_cosine.py": "models/__init__.py:2 -> models/mft_cpea_cosine.py",
+      "models/mft_original.py": "models/__init__.py:3 -> models/mft_original.py",
+      "models/backbones/__init__.py": "models/__init__.py:5 -> models/backbones/__init__.py",
+      "models/wrappers/__init__.py": "models/__init__.py:12 -> models/wrappers/__init__.py",
+      "models/hypersigma/sem.py": "models/hypersigma/__init__.py:19 -> models/hypersigma/sem.py",
+      "models/hypersigma/spat_vit_branch.py": "models/hypersigma/__init__.py:20 -> models/hypersigma/spat_vit_branch.py",
+      "models/hypersigma/spec_vit_branch.py": "models/hypersigma/__init__.py:21 -> models/hypersigma/spec_vit_branch.py",
+      "models/hypersigma/hypersigma_dual.py": "models/hypersigma/__init__.py:22 -> models/hypersigma/hypersigma_dual.py",
+      "models/hypersigma/hypersigma_cosine.py": "models/hypersigma/__init__.py:23 -> models/hypersigma/hypersigma_cosine.py",
+      "scripts/adapt_hypersigma.py": "lib/adapt_runner.py:86 -> scripts/adapt_hypersigma.py",
+      "utils/io.py": "scripts/pretrain_enhanced.py:33 -> utils/io.py",
+      "utils/__init__.py": "scripts/pretrain_enhanced.py:33 -> utils/__init__.py",
+      "utils/logging.py": "scripts/pretrain_enhanced.py:34 -> utils/logging.py",
+      "pretrain/masked_modeling_enhanced.py": "scripts/pretrain_enhanced.py:41 -> pretrain/masked_modeling_enhanced.py",
+      "pretrain/__init__.py": "scripts/pretrain_enhanced.py:41 -> pretrain/__init__.py",
+      "pretrain/mae_pretrain.py": "scripts/pretrain_enhanced.py:42 -> pretrain/mae_pretrain.py",
+      "pretrain/mft_mae.py": "scripts/pretrain_enhanced.py:43 -> pretrain/mft_mae.py",
+      "pretrain/mft_spatial_mae.py": "scripts/pretrain_enhanced.py:44 -> pretrain/mft_spatial_mae.py",
+      "trainers/pretrain_trainer.py": "scripts/pretrain_enhanced.py:45 -> trainers/pretrain_trainer.py",
+      "trainers/__init__.py": "scripts/pretrain_enhanced.py:45 -> trainers/__init__.py",
+      "utils/seed.py": "scripts/pretrain_enhanced.py:174 -> utils/seed.py",
+      "data/samplers/patched_episode_sampler.py": "scripts/evaluate_hypersigma_cosine.py:48 -> data/samplers/patched_episode_sampler.py",
+      "utils/spatial_weights.py": "scripts/evaluate_cosine.py:44 -> utils/spatial_weights.py",
+      "utils/visualization.py": "scripts/evaluate_cosine.py:604 -> utils/visualization.py",
+      "data/samplers/episode_sampler.py": "data/samplers/__init__.py:2 -> data/samplers/episode_sampler.py",
+      "models/components/tokenizers.py": "models/mft_cpea_cosine.py:33 -> models/components/tokenizers.py",
+      "models/components/__init__.py": "models/mft_cpea_cosine.py:33 -> models/components/__init__.py",
+      "models/components/transformer.py": "models/mft_cpea_cosine.py:34 -> models/components/transformer.py",
+      "models/components/projection.py": "models/mft_cpea_cosine.py:35 -> models/components/projection.py",
+      "models/components/mft_blocks.py": "models/mft_original.py:44 -> models/components/mft_blocks.py",
+      "models/backbones/base.py": "models/backbones/__init__.py:13 -> models/backbones/base.py",
+      "models/backbones/mft_channel.py": "models/backbones/__init__.py:14 -> models/backbones/mft_channel.py",
+      "models/backbones/mft_pixel.py": "models/backbones/__init__.py:15 -> models/backbones/mft_pixel.py",
+      "models/backbones/hsi_baseline.py": "models/backbones/__init__.py:16 -> models/backbones/hsi_baseline.py",
+      "models/wrappers/pretrain_wrapper.py": "models/wrappers/__init__.py:5 -> models/wrappers/pretrain_wrapper.py",
+      "models/hypersigma/_input_fit.py": "models/hypersigma/spat_vit_branch.py:34 -> models/hypersigma/_input_fit.py",
+      "pretrain/hypersigma_mae.py": "scripts/adapt_hypersigma.py:46 -> pretrain/hypersigma_mae.py",
+      "utils/metrics.py": "utils/__init__.py:2 -> utils/metrics.py",
+      "pretrain/masked_modeling.py": "pretrain/masked_modeling_enhanced.py:26 -> pretrain/masked_modeling.py",
+      "pretrain/decoders.py": "pretrain/__init__.py:28 -> pretrain/decoders.py"
+    },
+    "notebooks_other": {
+      "notebooks/evaluate_hypersigma.ipynb": "ROOT",
+      "notebooks/evaluate_hypersigma_native.ipynb": "ROOT",
+      "notebooks/evaluate_hypersigma_pca100.ipynb": "ROOT",
+      "notebooks/pretrain_run2.ipynb": "ROOT",
+      "notebooks/evaluate_hypersigma copy.ipynb": "ROOT",
+      "notebooks/evaluate_hypersigma copy 2.ipynb": "ROOT",
+      "notebooks/evaluate_hypersigma copy 3.ipynb": "ROOT",
+      "notebooks/evaluate_hypersigma_pca100 copy.ipynb": "ROOT",
+      "notebooks/evaluate_hypersigma_pca100 copy 3.ipynb": "ROOT",
+      "notebooks/pretrain copy.ipynb": "ROOT",
+      "notebooks/pretrain copy 2.ipynb": "ROOT",
+      "notebooks/pretrain copy 3.ipynb": "ROOT",
+      "data/datasets/__init__.py": "notebooks/evaluate_hypersigma.ipynb:18 -> data/datasets/__init__.py",
+      "data/__init__.py": "notebooks/evaluate_hypersigma.ipynb:18 -> data/__init__.py",
+      "models/hypersigma/preprocessing.py": "notebooks/evaluate_hypersigma.ipynb:272 -> models/hypersigma/preprocessing.py",
+      "models/__init__.py": "notebooks/evaluate_hypersigma.ipynb:272 -> models/__init__.py",
+      "models/hypersigma/__init__.py": "notebooks/evaluate_hypersigma.ipynb:272 -> models/hypersigma/__init__.py",
+      "models/hypersigma/hypersigma_dual.py": "notebooks/evaluate_hypersigma.ipynb:495 -> models/hypersigma/hypersigma_dual.py",
+      "pretrain/hypersigma_mae.py": "notebooks/evaluate_hypersigma.ipynb:496 -> pretrain/hypersigma_mae.py",
+      "pretrain/__init__.py": "notebooks/evaluate_hypersigma.ipynb:496 -> pretrain/__init__.py",
+      "lib/experiments.py": "notebooks/evaluate_hypersigma.ipynb:702 -> lib/experiments.py",
+      "lib/__init__.py": "notebooks/evaluate_hypersigma.ipynb:702 -> lib/__init__.py",
+      "lib/eval_runner.py": "notebooks/evaluate_hypersigma.ipynb:718 -> lib/eval_runner.py",
+      "lib/adapt_runner.py": "notebooks/evaluate_hypersigma.ipynb:619 -> lib/adapt_runner.py",
+      "lib/pretrain_runner.py": "notebooks/pretrain_run2.ipynb:72 -> lib/pretrain_runner.py",
+      "data/datasets/base.py": "data/datasets/__init__.py:2 -> data/datasets/base.py",
+      "data/datasets/houston.py": "data/datasets/__init__.py:3 -> data/datasets/houston.py",
+      "data/datasets/trento.py": "data/datasets/__init__.py:4 -> data/datasets/trento.py",
+      "data/datasets/muufl.py": "data/datasets/__init__.py:5 -> data/datasets/muufl.py",
+      "data/datasets/patched.py": "data/datasets/__init__.py:6 -> data/datasets/patched.py",
+      "data/datasets/registry.py": "data/datasets/__init__.py:12 -> data/datasets/registry.py",
+      "data/samplers/__init__.py": "data/__init__.py:3 -> data/samplers/__init__.py",
+      "models/mft_cpea_cosine.py": "models/__init__.py:2 -> models/mft_cpea_cosine.py",
+      "models/mft_original.py": "models/__init__.py:3 -> models/mft_original.py",
+      "models/backbones/__init__.py": "models/__init__.py:5 -> models/backbones/__init__.py",
+      "models/wrappers/__init__.py": "models/__init__.py:12 -> models/wrappers/__init__.py",
+      "models/hypersigma/sem.py": "models/hypersigma/__init__.py:19 -> models/hypersigma/sem.py",
+      "models/hypersigma/spat_vit_branch.py": "models/hypersigma/__init__.py:20 -> models/hypersigma/spat_vit_branch.py",
+      "models/hypersigma/spec_vit_branch.py": "models/hypersigma/__init__.py:21 -> models/hypersigma/spec_vit_branch.py",
+      "models/hypersigma/hypersigma_cosine.py": "models/hypersigma/__init__.py:23 -> models/hypersigma/hypersigma_cosine.py",
+      "pretrain/masked_modeling.py": "pretrain/__init__.py:16 -> pretrain/masked_modeling.py",
+      "pretrain/masked_modeling_enhanced.py": "pretrain/__init__.py:24 -> pretrain/masked_modeling_enhanced.py",
+      "pretrain/decoders.py": "pretrain/__init__.py:28 -> pretrain/decoders.py",
+      "scripts/evaluate_hypersigma_cosine.py": "lib/eval_runner.py:128 -> scripts/evaluate_hypersigma_cosine.py",
+      "scripts/__init__.py": "lib/eval_runner.py:128 -> scripts/__init__.py",
+      "scripts/evaluate_cosine.py": "lib/eval_runner.py:209 -> scripts/evaluate_cosine.py",
+      "scripts/adapt_hypersigma.py": "lib/adapt_runner.py:86 -> scripts/adapt_hypersigma.py",
+      "scripts/pretrain_enhanced.py": "lib/pretrain_runner.py:64 -> scripts/pretrain_enhanced.py",
+      "data/samplers/episode_sampler.py": "data/samplers/__init__.py:2 -> data/samplers/episode_sampler.py",
+      "data/samplers/patched_episode_sampler.py": "data/samplers/__init__.py:3 -> data/samplers/patched_episode_sampler.py",
+      "models/components/tokenizers.py": "models/mft_cpea_cosine.py:33 -> models/components/tokenizers.py",
+      "models/components/__init__.py": "models/mft_cpea_cosine.py:33 -> models/components/__init__.py",
+      "models/components/transformer.py": "models/mft_cpea_cosine.py:34 -> models/components/transformer.py",
+      "models/components/projection.py": "models/mft_cpea_cosine.py:35 -> models/components/projection.py",
+      "utils/spatial_weights.py": "models/mft_cpea_cosine.py:36 -> utils/spatial_weights.py",
+      "utils/__init__.py": "models/mft_cpea_cosine.py:36 -> utils/__init__.py",
+      "models/components/mft_blocks.py": "models/mft_original.py:44 -> models/components/mft_blocks.py",
+      "models/backbones/base.py": "models/backbones/__init__.py:13 -> models/backbones/base.py",
+      "models/backbones/mft_channel.py": "models/backbones/__init__.py:14 -> models/backbones/mft_channel.py",
+      "models/backbones/mft_pixel.py": "models/backbones/__init__.py:15 -> models/backbones/mft_pixel.py",
+      "models/backbones/hsi_baseline.py": "models/backbones/__init__.py:16 -> models/backbones/hsi_baseline.py",
+      "models/wrappers/pretrain_wrapper.py": "models/wrappers/__init__.py:5 -> models/wrappers/pretrain_wrapper.py",
+      "models/hypersigma/_input_fit.py": "models/hypersigma/spat_vit_branch.py:34 -> models/hypersigma/_input_fit.py",
+      "utils/seed.py": "scripts/evaluate_hypersigma_cosine.py:55 -> utils/seed.py",
+      "utils/visualization.py": "scripts/evaluate_cosine.py:604 -> utils/visualization.py",
+      "utils/io.py": "scripts/adapt_hypersigma.py:47 -> utils/io.py",
+      "utils/logging.py": "scripts/pretrain_enhanced.py:34 -> utils/logging.py",
+      "pretrain/mae_pretrain.py": "scripts/pretrain_enhanced.py:42 -> pretrain/mae_pretrain.py",
+      "pretrain/mft_mae.py": "scripts/pretrain_enhanced.py:43 -> pretrain/mft_mae.py",
+      "pretrain/mft_spatial_mae.py": "scripts/pretrain_enhanced.py:44 -> pretrain/mft_spatial_mae.py",
+      "trainers/pretrain_trainer.py": "scripts/pretrain_enhanced.py:45 -> trainers/pretrain_trainer.py",
+      "trainers/__init__.py": "scripts/pretrain_enhanced.py:45 -> trainers/__init__.py",
+      "utils/metrics.py": "utils/__init__.py:2 -> utils/metrics.py"
+    },
+    "tests": {
+      "tests/test_data.py": "ROOT",
+      "tests/test_models.py": "ROOT",
+      "tests/test_pretrain_enhanced.py": "ROOT",
+      "tests/test_spatial_weights.py": "ROOT",
+      "tests/test_mft_original_shapes.py": "ROOT",
+      "tests/test_hypersigma_shapes.py": "ROOT",
+      "tests/test_hypersigma_native_shapes.py": "ROOT",
+      "data/samplers/__init__.py": "tests/test_data.py:5 -> data/samplers/__init__.py",
+      "data/__init__.py": "tests/test_data.py:5 -> data/__init__.py",
+      "models/components/__init__.py": "tests/test_models.py:3 -> models/components/__init__.py",
+      "models/__init__.py": "tests/test_models.py:3 -> models/__init__.py",
+      "pretrain/masked_modeling.py": "tests/test_pretrain_enhanced.py:21 -> pretrain/masked_modeling.py",
+      "pretrain/__init__.py": "tests/test_pretrain_enhanced.py:21 -> pretrain/__init__.py",
+      "pretrain/masked_modeling_enhanced.py": "tests/test_pretrain_enhanced.py:22 -> pretrain/masked_modeling_enhanced.py",
+      "utils/spatial_weights.py": "tests/test_spatial_weights.py:6 -> utils/spatial_weights.py",
+      "utils/__init__.py": "tests/test_spatial_weights.py:6 -> utils/__init__.py",
+      "models/mft_original.py": "tests/test_mft_original_shapes.py:29 -> models/mft_original.py",
+      "pretrain/mft_mae.py": "tests/test_mft_original_shapes.py:30 -> pretrain/mft_mae.py",
+      "pretrain/mft_spatial_mae.py": "tests/test_mft_original_shapes.py:31 -> pretrain/mft_spatial_mae.py",
+      "models/hypersigma/__init__.py": "tests/test_hypersigma_shapes.py:25 -> models/hypersigma/__init__.py",
+      "models/hypersigma/_input_fit.py": "tests/test_hypersigma_native_shapes.py:31 -> models/hypersigma/_input_fit.py",
+      "models/hypersigma/preprocessing.py": "tests/test_hypersigma_native_shapes.py:32 -> models/hypersigma/preprocessing.py",
+      "pretrain/hypersigma_mae.py": "tests/test_hypersigma_native_shapes.py:205 -> pretrain/hypersigma_mae.py",
+      "data/samplers/episode_sampler.py": "data/samplers/__init__.py:2 -> data/samplers/episode_sampler.py",
+      "data/samplers/patched_episode_sampler.py": "data/samplers/__init__.py:3 -> data/samplers/patched_episode_sampler.py",
+      "data/datasets/__init__.py": "data/__init__.py:2 -> data/datasets/__init__.py",
+      "models/components/tokenizers.py": "models/components/__init__.py:2 -> models/components/tokenizers.py",
+      "models/components/transformer.py": "models/components/__init__.py:3 -> models/components/transformer.py",
+      "models/components/projection.py": "models/components/__init__.py:4 -> models/components/projection.py",
+      "models/components/mft_blocks.py": "models/components/__init__.py:5 -> models/components/mft_blocks.py",
+      "models/mft_cpea_cosine.py": "models/__init__.py:2 -> models/mft_cpea_cosine.py",
+      "models/backbones/__init__.py": "models/__init__.py:5 -> models/backbones/__init__.py",
+      "models/wrappers/__init__.py": "models/__init__.py:12 -> models/wrappers/__init__.py",
+      "pretrain/decoders.py": "pretrain/__init__.py:28 -> pretrain/decoders.py",
+      "utils/metrics.py": "utils/__init__.py:2 -> utils/metrics.py",
+      "utils/io.py": "utils/__init__.py:3 -> utils/io.py",
+      "models/hypersigma/sem.py": "models/hypersigma/__init__.py:19 -> models/hypersigma/sem.py",
+      "models/hypersigma/spat_vit_branch.py": "models/hypersigma/__init__.py:20 -> models/hypersigma/spat_vit_branch.py",
+      "models/hypersigma/spec_vit_branch.py": "models/hypersigma/__init__.py:21 -> models/hypersigma/spec_vit_branch.py",
+      "models/hypersigma/hypersigma_dual.py": "models/hypersigma/__init__.py:22 -> models/hypersigma/hypersigma_dual.py",
+      "models/hypersigma/hypersigma_cosine.py": "models/hypersigma/__init__.py:23 -> models/hypersigma/hypersigma_cosine.py",
+      "data/datasets/registry.py": "models/hypersigma/preprocessing.py:41 -> data/datasets/registry.py",
+      "data/datasets/base.py": "data/samplers/episode_sampler.py:5 -> data/datasets/base.py",
+      "data/datasets/houston.py": "data/datasets/__init__.py:3 -> data/datasets/houston.py",
+      "data/datasets/trento.py": "data/datasets/__init__.py:4 -> data/datasets/trento.py",
+      "data/datasets/muufl.py": "data/datasets/__init__.py:5 -> data/datasets/muufl.py",
+      "data/datasets/patched.py": "data/datasets/__init__.py:6 -> data/datasets/patched.py",
+      "models/backbones/base.py": "models/backbones/__init__.py:13 -> models/backbones/base.py",
+      "models/backbones/mft_channel.py": "models/backbones/__init__.py:14 -> models/backbones/mft_channel.py",
+      "models/backbones/mft_pixel.py": "models/backbones/__init__.py:15 -> models/backbones/mft_pixel.py",
+      "models/backbones/hsi_baseline.py": "models/backbones/__init__.py:16 -> models/backbones/hsi_baseline.py",
+      "models/wrappers/pretrain_wrapper.py": "models/wrappers/__init__.py:5 -> models/wrappers/pretrain_wrapper.py"
+    },
+    "tooling": {
+      "tools/refactor/inventory.py": "ROOT",
+      "tools/refactor/closure.py": "ROOT",
+      "tools/refactor/build_manifest.py": "ROOT"
+    }
+  },
+  "edges": {
+    "data/__init__.py": [
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "data.datasets",
+        "line": 2
+      },
+      {
+        "to": "data/samplers/__init__.py",
+        "module": "data.samplers",
+        "line": 3
+      }
+    ],
+    "data/datasets/__init__.py": [
+      {
+        "to": "data/datasets/base.py",
+        "module": "data.datasets.base",
+        "line": 2
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets.base>",
+        "line": 2
+      },
+      {
+        "to": "data/datasets/houston.py",
+        "module": "data.datasets.houston",
+        "line": 3
+      },
+      {
+        "to": "data/datasets/trento.py",
+        "module": "data.datasets.trento",
+        "line": 4
+      },
+      {
+        "to": "data/datasets/muufl.py",
+        "module": "data.datasets.muufl",
+        "line": 5
+      },
+      {
+        "to": "data/datasets/patched.py",
+        "module": "data.datasets.patched",
+        "line": 6
+      },
+      {
+        "to": "data/datasets/registry.py",
+        "module": "data.datasets.registry",
+        "line": 12
+      }
+    ],
+    "data/datasets/base.py": [],
+    "data/datasets/houston.py": [
+      {
+        "to": "data/datasets/base.py",
+        "module": "data.datasets.base",
+        "line": 5
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets.base>",
+        "line": 5
+      },
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "<pkg init for data.datasets.base>",
+        "line": 5
+      }
+    ],
+    "data/datasets/muufl.py": [
+      {
+        "to": "data/datasets/base.py",
+        "module": "data.datasets.base",
+        "line": 5
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets.base>",
+        "line": 5
+      },
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "<pkg init for data.datasets.base>",
+        "line": 5
+      }
+    ],
+    "data/datasets/patched.py": [],
+    "data/datasets/registry.py": [
+      {
+        "to": "data/datasets/patched.py",
+        "module": "data.datasets.patched",
+        "line": 19
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets.patched>",
+        "line": 19
+      },
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "<pkg init for data.datasets.patched>",
+        "line": 19
+      }
+    ],
+    "data/datasets/trento.py": [
+      {
+        "to": "data/datasets/base.py",
+        "module": "data.datasets.base",
+        "line": 5
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets.base>",
+        "line": 5
+      },
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "<pkg init for data.datasets.base>",
+        "line": 5
+      }
+    ],
+    "data/samplers/__init__.py": [
+      {
+        "to": "data/samplers/episode_sampler.py",
+        "module": "data.samplers.episode_sampler",
+        "line": 2
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.samplers.episode_sampler>",
+        "line": 2
+      },
+      {
+        "to": "data/samplers/patched_episode_sampler.py",
+        "module": "data.samplers.patched_episode_sampler",
+        "line": 3
+      }
+    ],
+    "data/samplers/episode_sampler.py": [
+      {
+        "to": "data/datasets/base.py",
+        "module": "data.datasets.base",
+        "line": 5
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets.base>",
+        "line": 5
+      },
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "<pkg init for data.datasets.base>",
+        "line": 5
+      }
+    ],
+    "data/samplers/patched_episode_sampler.py": [],
+    "data/transforms/__init__.py": [
+      {
+        "to": "data/transforms/augmentations.py",
+        "module": "data.transforms.augmentations",
+        "line": 2
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.transforms.augmentations>",
+        "line": 2
+      }
+    ],
+    "data/transforms/augmentations.py": [],
+    "lib/__init__.py": [
+      {
+        "to": "lib/experiments.py",
+        "module": "lib.experiments",
+        "line": 7
+      }
+    ],
+    "lib/adapt_runner.py": [
+      {
+        "to": "lib/experiments.py",
+        "module": "lib.experiments",
+        "line": 28
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.experiments>",
+        "line": 28
+      },
+      {
+        "to": "scripts/adapt_hypersigma.py",
+        "module": "scripts.adapt_hypersigma",
+        "line": 86
+      },
+      {
+        "to": "scripts/__init__.py",
+        "module": "<pkg init for scripts.adapt_hypersigma>",
+        "line": 86
+      }
+    ],
+    "lib/eval_runner.py": [
+      {
+        "to": "lib/experiments.py",
+        "module": "lib.experiments",
+        "line": 17
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.experiments>",
+        "line": 17
+      },
+      {
+        "to": "scripts/evaluate_hypersigma_cosine.py",
+        "module": "scripts.evaluate_hypersigma_cosine",
+        "line": 128
+      },
+      {
+        "to": "scripts/__init__.py",
+        "module": "<pkg init for scripts.evaluate_hypersigma_cosine>",
+        "line": 128
+      },
+      {
+        "to": "scripts/evaluate_cosine.py",
+        "module": "scripts.evaluate_cosine",
+        "line": 209
+      }
+    ],
+    "lib/experiments.py": [],
+    "lib/pretrain_runner.py": [
+      {
+        "to": "lib/experiments.py",
+        "module": "lib.experiments",
+        "line": 18
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.experiments>",
+        "line": 18
+      },
+      {
+        "to": "scripts/pretrain_enhanced.py",
+        "module": "scripts.pretrain_enhanced",
+        "line": 64
+      },
+      {
+        "to": "scripts/__init__.py",
+        "module": "<pkg init for scripts.pretrain_enhanced>",
+        "line": 64
+      }
+    ],
+    "models/__init__.py": [
+      {
+        "to": "models/mft_cpea_cosine.py",
+        "module": "models.mft_cpea_cosine",
+        "line": 2
+      },
+      {
+        "to": "models/mft_original.py",
+        "module": "models.mft_original",
+        "line": 3
+      },
+      {
+        "to": "models/backbones/__init__.py",
+        "module": "models.backbones",
+        "line": 5
+      },
+      {
+        "to": "models/wrappers/__init__.py",
+        "module": "models.wrappers",
+        "line": 12
+      }
+    ],
+    "models/backbones/__init__.py": [
+      {
+        "to": "models/backbones/base.py",
+        "module": "models.backbones.base",
+        "line": 13
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.backbones.base>",
+        "line": 13
+      },
+      {
+        "to": "models/backbones/mft_channel.py",
+        "module": "models.backbones.mft_channel",
+        "line": 14
+      },
+      {
+        "to": "models/backbones/mft_pixel.py",
+        "module": "models.backbones.mft_pixel",
+        "line": 15
+      },
+      {
+        "to": "models/backbones/hsi_baseline.py",
+        "module": "models.backbones.hsi_baseline",
+        "line": 16
+      }
+    ],
+    "models/backbones/base.py": [],
+    "models/backbones/hsi_baseline.py": [
+      {
+        "to": "models/backbones/base.py",
+        "module": "models.backbones.base",
+        "line": 22
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.backbones.base>",
+        "line": 22
+      },
+      {
+        "to": "models/backbones/__init__.py",
+        "module": "<pkg init for models.backbones.base>",
+        "line": 22
+      },
+      {
+        "to": "models/components/mft_blocks.py",
+        "module": "models.components.mft_blocks",
+        "line": 23
+      },
+      {
+        "to": "models/components/__init__.py",
+        "module": "<pkg init for models.components.mft_blocks>",
+        "line": 23
+      }
+    ],
+    "models/backbones/mft_channel.py": [
+      {
+        "to": "models/backbones/base.py",
+        "module": "models.backbones.base",
+        "line": 20
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.backbones.base>",
+        "line": 20
+      },
+      {
+        "to": "models/backbones/__init__.py",
+        "module": "<pkg init for models.backbones.base>",
+        "line": 20
+      },
+      {
+        "to": "models/components/mft_blocks.py",
+        "module": "models.components.mft_blocks",
+        "line": 21
+      },
+      {
+        "to": "models/components/__init__.py",
+        "module": "<pkg init for models.components.mft_blocks>",
+        "line": 21
+      }
+    ],
+    "models/backbones/mft_pixel.py": [
+      {
+        "to": "models/backbones/base.py",
+        "module": "models.backbones.base",
+        "line": 21
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.backbones.base>",
+        "line": 21
+      },
+      {
+        "to": "models/backbones/__init__.py",
+        "module": "<pkg init for models.backbones.base>",
+        "line": 21
+      },
+      {
+        "to": "models/components/mft_blocks.py",
+        "module": "models.components.mft_blocks",
+        "line": 22
+      },
+      {
+        "to": "models/components/__init__.py",
+        "module": "<pkg init for models.components.mft_blocks>",
+        "line": 22
+      }
+    ],
+    "models/components/__init__.py": [
+      {
+        "to": "models/components/tokenizers.py",
+        "module": "models.components.tokenizers",
+        "line": 2
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.components.tokenizers>",
+        "line": 2
+      },
+      {
+        "to": "models/components/transformer.py",
+        "module": "models.components.transformer",
+        "line": 3
+      },
+      {
+        "to": "models/components/projection.py",
+        "module": "models.components.projection",
+        "line": 4
+      },
+      {
+        "to": "models/components/mft_blocks.py",
+        "module": "models.components.mft_blocks",
+        "line": 5
+      }
+    ],
+    "models/components/mft_blocks.py": [],
+    "models/components/projection.py": [],
+    "models/components/tokenizers.py": [],
+    "models/components/transformer.py": [],
+    "models/hypersigma/__init__.py": [
+      {
+        "to": "models/hypersigma/preprocessing.py",
+        "module": "models.hypersigma.preprocessing",
+        "line": 13
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 13
+      },
+      {
+        "to": "models/hypersigma/sem.py",
+        "module": "models.hypersigma.sem",
+        "line": 19
+      },
+      {
+        "to": "models/hypersigma/spat_vit_branch.py",
+        "module": "models.hypersigma.spat_vit_branch",
+        "line": 20
+      },
+      {
+        "to": "models/hypersigma/spec_vit_branch.py",
+        "module": "models.hypersigma.spec_vit_branch",
+        "line": 21
+      },
+      {
+        "to": "models/hypersigma/hypersigma_dual.py",
+        "module": "models.hypersigma.hypersigma_dual",
+        "line": 22
+      },
+      {
+        "to": "models/hypersigma/hypersigma_cosine.py",
+        "module": "models.hypersigma.hypersigma_cosine",
+        "line": 23
+      }
+    ],
+    "models/hypersigma/_input_fit.py": [],
+    "models/hypersigma/hypersigma_cosine.py": [
+      {
+        "to": "models/hypersigma/hypersigma_dual.py",
+        "module": "models.hypersigma.hypersigma_dual",
+        "line": 31
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma.hypersigma_dual>",
+        "line": 31
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "<pkg init for models.hypersigma.hypersigma_dual>",
+        "line": 31
+      }
+    ],
+    "models/hypersigma/hypersigma_dual.py": [
+      {
+        "to": "models/hypersigma/preprocessing.py",
+        "module": "models.hypersigma.preprocessing",
+        "line": 22
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 22
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 22
+      },
+      {
+        "to": "models/hypersigma/sem.py",
+        "module": "models.hypersigma.sem",
+        "line": 29
+      },
+      {
+        "to": "models/hypersigma/spat_vit_branch.py",
+        "module": "models.hypersigma.spat_vit_branch",
+        "line": 30
+      },
+      {
+        "to": "models/hypersigma/spec_vit_branch.py",
+        "module": "models.hypersigma.spec_vit_branch",
+        "line": 31
+      }
+    ],
+    "models/hypersigma/preprocessing.py": [
+      {
+        "to": "data/datasets/registry.py",
+        "module": "data.datasets.registry",
+        "line": 41
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets.registry>",
+        "line": 41
+      },
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "<pkg init for data.datasets.registry>",
+        "line": 41
+      }
+    ],
+    "models/hypersigma/sem.py": [],
+    "models/hypersigma/spat_vit_branch.py": [
+      {
+        "to": "models/hypersigma/_input_fit.py",
+        "module": "models.hypersigma._input_fit",
+        "line": 34
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma._input_fit>",
+        "line": 34
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "<pkg init for models.hypersigma._input_fit>",
+        "line": 34
+      }
+    ],
+    "models/hypersigma/spec_vit_branch.py": [
+      {
+        "to": "models/hypersigma/_input_fit.py",
+        "module": "models.hypersigma._input_fit",
+        "line": 35
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma._input_fit>",
+        "line": 35
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "<pkg init for models.hypersigma._input_fit>",
+        "line": 35
+      }
+    ],
+    "models/mft_cpea_cosine.py": [
+      {
+        "to": "models/components/tokenizers.py",
+        "module": "models.components.tokenizers",
+        "line": 33
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.components.tokenizers>",
+        "line": 33
+      },
+      {
+        "to": "models/components/__init__.py",
+        "module": "<pkg init for models.components.tokenizers>",
+        "line": 33
+      },
+      {
+        "to": "models/components/transformer.py",
+        "module": "models.components.transformer",
+        "line": 34
+      },
+      {
+        "to": "models/components/projection.py",
+        "module": "models.components.projection",
+        "line": 35
+      },
+      {
+        "to": "utils/spatial_weights.py",
+        "module": "utils.spatial_weights",
+        "line": 36
+      },
+      {
+        "to": "utils/__init__.py",
+        "module": "<pkg init for utils.spatial_weights>",
+        "line": 36
+      }
+    ],
+    "models/mft_original.py": [
+      {
+        "to": "models/components/mft_blocks.py",
+        "module": "models.components.mft_blocks",
+        "line": 44
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.components.mft_blocks>",
+        "line": 44
+      },
+      {
+        "to": "models/components/__init__.py",
+        "module": "<pkg init for models.components.mft_blocks>",
+        "line": 44
+      }
+    ],
+    "models/wrappers/__init__.py": [
+      {
+        "to": "models/wrappers/pretrain_wrapper.py",
+        "module": "models.wrappers.pretrain_wrapper",
+        "line": 5
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.wrappers.pretrain_wrapper>",
+        "line": 5
+      }
+    ],
+    "models/wrappers/pretrain_wrapper.py": [
+      {
+        "to": "models/backbones/base.py",
+        "module": "models.backbones.base",
+        "line": 17
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.backbones.base>",
+        "line": 17
+      },
+      {
+        "to": "models/backbones/__init__.py",
+        "module": "<pkg init for models.backbones.base>",
+        "line": 17
+      }
+    ],
+    "notebooks/adapt_hypersigma_native_sem.ipynb": [
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "data.datasets",
+        "line": 14
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets>",
+        "line": 14
+      },
+      {
+        "to": "models/hypersigma/preprocessing.py",
+        "module": "models.hypersigma.preprocessing",
+        "line": 72
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 72
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 72
+      },
+      {
+        "to": "lib/experiments.py",
+        "module": "lib.experiments",
+        "line": 97
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.experiments>",
+        "line": 97
+      },
+      {
+        "to": "lib/adapt_runner.py",
+        "module": "lib.adapt_runner",
+        "line": 110
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 111
+      }
+    ],
+    "notebooks/compare.ipynb": [
+      {
+        "to": "lib/experiments.py",
+        "module": "lib.experiments",
+        "line": 14
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.experiments>",
+        "line": 14
+      }
+    ],
+    "notebooks/evaluate.ipynb": [
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 82
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.eval_runner>",
+        "line": 82
+      }
+    ],
+    "notebooks/evaluate_hypersigma copy 2.ipynb": [
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "data.datasets",
+        "line": 18
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets>",
+        "line": 18
+      },
+      {
+        "to": "models/hypersigma/preprocessing.py",
+        "module": "models.hypersigma.preprocessing",
+        "line": 266
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 266
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 266
+      },
+      {
+        "to": "models/hypersigma/hypersigma_dual.py",
+        "module": "models.hypersigma.hypersigma_dual",
+        "line": 489
+      },
+      {
+        "to": "pretrain/hypersigma_mae.py",
+        "module": "pretrain.hypersigma_mae",
+        "line": 490
+      },
+      {
+        "to": "pretrain/__init__.py",
+        "module": "<pkg init for pretrain.hypersigma_mae>",
+        "line": 490
+      },
+      {
+        "to": "lib/experiments.py",
+        "module": "lib.experiments",
+        "line": 696
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.experiments>",
+        "line": 696
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 712
+      },
+      {
+        "to": "lib/adapt_runner.py",
+        "module": "lib.adapt_runner",
+        "line": 613
+      }
+    ],
+    "notebooks/evaluate_hypersigma copy 3.ipynb": [
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "data.datasets",
+        "line": 18
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets>",
+        "line": 18
+      },
+      {
+        "to": "models/hypersigma/preprocessing.py",
+        "module": "models.hypersigma.preprocessing",
+        "line": 268
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 268
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 268
+      },
+      {
+        "to": "models/hypersigma/hypersigma_dual.py",
+        "module": "models.hypersigma.hypersigma_dual",
+        "line": 491
+      },
+      {
+        "to": "pretrain/hypersigma_mae.py",
+        "module": "pretrain.hypersigma_mae",
+        "line": 492
+      },
+      {
+        "to": "pretrain/__init__.py",
+        "module": "<pkg init for pretrain.hypersigma_mae>",
+        "line": 492
+      },
+      {
+        "to": "lib/experiments.py",
+        "module": "lib.experiments",
+        "line": 698
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.experiments>",
+        "line": 698
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 714
+      },
+      {
+        "to": "lib/adapt_runner.py",
+        "module": "lib.adapt_runner",
+        "line": 615
+      }
+    ],
+    "notebooks/evaluate_hypersigma copy.ipynb": [
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "data.datasets",
+        "line": 203
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets>",
+        "line": 203
+      },
+      {
+        "to": "models/hypersigma/preprocessing.py",
+        "module": "models.hypersigma.preprocessing",
+        "line": 208
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 208
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 208
+      },
+      {
+        "to": "models/hypersigma/hypersigma_dual.py",
+        "module": "models.hypersigma.hypersigma_dual",
+        "line": 431
+      },
+      {
+        "to": "pretrain/hypersigma_mae.py",
+        "module": "pretrain.hypersigma_mae",
+        "line": 432
+      },
+      {
+        "to": "pretrain/__init__.py",
+        "module": "<pkg init for pretrain.hypersigma_mae>",
+        "line": 432
+      },
+      {
+        "to": "lib/experiments.py",
+        "module": "lib.experiments",
+        "line": 635
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.experiments>",
+        "line": 635
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 651
+      },
+      {
+        "to": "lib/adapt_runner.py",
+        "module": "lib.adapt_runner",
+        "line": 552
+      }
+    ],
+    "notebooks/evaluate_hypersigma.ipynb": [
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "data.datasets",
+        "line": 18
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets>",
+        "line": 18
+      },
+      {
+        "to": "models/hypersigma/preprocessing.py",
+        "module": "models.hypersigma.preprocessing",
+        "line": 272
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 272
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 272
+      },
+      {
+        "to": "models/hypersigma/hypersigma_dual.py",
+        "module": "models.hypersigma.hypersigma_dual",
+        "line": 495
+      },
+      {
+        "to": "pretrain/hypersigma_mae.py",
+        "module": "pretrain.hypersigma_mae",
+        "line": 496
+      },
+      {
+        "to": "pretrain/__init__.py",
+        "module": "<pkg init for pretrain.hypersigma_mae>",
+        "line": 496
+      },
+      {
+        "to": "lib/experiments.py",
+        "module": "lib.experiments",
+        "line": 702
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.experiments>",
+        "line": 702
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 718
+      },
+      {
+        "to": "lib/adapt_runner.py",
+        "module": "lib.adapt_runner",
+        "line": 619
+      }
+    ],
+    "notebooks/evaluate_hypersigma_native.ipynb": [
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "data.datasets",
+        "line": 15
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets>",
+        "line": 15
+      },
+      {
+        "to": "models/hypersigma/preprocessing.py",
+        "module": "models.hypersigma.preprocessing",
+        "line": 121
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 121
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 121
+      },
+      {
+        "to": "lib/experiments.py",
+        "module": "lib.experiments",
+        "line": 143
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.experiments>",
+        "line": 143
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 161
+      }
+    ],
+    "notebooks/evaluate_hypersigma_pca100 copy 3.ipynb": [
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "data.datasets",
+        "line": 18
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets>",
+        "line": 18
+      },
+      {
+        "to": "models/hypersigma/preprocessing.py",
+        "module": "models.hypersigma.preprocessing",
+        "line": 295
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 295
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 295
+      },
+      {
+        "to": "models/hypersigma/hypersigma_dual.py",
+        "module": "models.hypersigma.hypersigma_dual",
+        "line": 526
+      },
+      {
+        "to": "pretrain/hypersigma_mae.py",
+        "module": "pretrain.hypersigma_mae",
+        "line": 527
+      },
+      {
+        "to": "pretrain/__init__.py",
+        "module": "<pkg init for pretrain.hypersigma_mae>",
+        "line": 527
+      },
+      {
+        "to": "lib/experiments.py",
+        "module": "lib.experiments",
+        "line": 734
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.experiments>",
+        "line": 734
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 750
+      },
+      {
+        "to": "lib/adapt_runner.py",
+        "module": "lib.adapt_runner",
+        "line": 651
+      }
+    ],
+    "notebooks/evaluate_hypersigma_pca100 copy.ipynb": [
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "data.datasets",
+        "line": 18
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets>",
+        "line": 18
+      },
+      {
+        "to": "models/hypersigma/preprocessing.py",
+        "module": "models.hypersigma.preprocessing",
+        "line": 295
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 295
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 295
+      },
+      {
+        "to": "models/hypersigma/hypersigma_dual.py",
+        "module": "models.hypersigma.hypersigma_dual",
+        "line": 526
+      },
+      {
+        "to": "pretrain/hypersigma_mae.py",
+        "module": "pretrain.hypersigma_mae",
+        "line": 527
+      },
+      {
+        "to": "pretrain/__init__.py",
+        "module": "<pkg init for pretrain.hypersigma_mae>",
+        "line": 527
+      },
+      {
+        "to": "lib/experiments.py",
+        "module": "lib.experiments",
+        "line": 734
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.experiments>",
+        "line": 734
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 750
+      },
+      {
+        "to": "lib/adapt_runner.py",
+        "module": "lib.adapt_runner",
+        "line": 651
+      }
+    ],
+    "notebooks/evaluate_hypersigma_pca100.ipynb": [
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "data.datasets",
+        "line": 18
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets>",
+        "line": 18
+      },
+      {
+        "to": "models/hypersigma/preprocessing.py",
+        "module": "models.hypersigma.preprocessing",
+        "line": 291
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 291
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 291
+      },
+      {
+        "to": "models/hypersigma/hypersigma_dual.py",
+        "module": "models.hypersigma.hypersigma_dual",
+        "line": 511
+      },
+      {
+        "to": "pretrain/hypersigma_mae.py",
+        "module": "pretrain.hypersigma_mae",
+        "line": 512
+      },
+      {
+        "to": "pretrain/__init__.py",
+        "module": "<pkg init for pretrain.hypersigma_mae>",
+        "line": 512
+      },
+      {
+        "to": "lib/experiments.py",
+        "module": "lib.experiments",
+        "line": 718
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.experiments>",
+        "line": 718
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 734
+      },
+      {
+        "to": "lib/adapt_runner.py",
+        "module": "lib.adapt_runner",
+        "line": 635
+      }
+    ],
+    "notebooks/pretrain copy 2.ipynb": [
+      {
+        "to": "lib/pretrain_runner.py",
+        "module": "lib.pretrain_runner",
+        "line": 75
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.pretrain_runner>",
+        "line": 75
+      }
+    ],
+    "notebooks/pretrain copy 3.ipynb": [
+      {
+        "to": "lib/pretrain_runner.py",
+        "module": "lib.pretrain_runner",
+        "line": 75
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.pretrain_runner>",
+        "line": 75
+      }
+    ],
+    "notebooks/pretrain copy.ipynb": [
+      {
+        "to": "lib/pretrain_runner.py",
+        "module": "lib.pretrain_runner",
+        "line": 75
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.pretrain_runner>",
+        "line": 75
+      }
+    ],
+    "notebooks/pretrain.ipynb": [
+      {
+        "to": "lib/pretrain_runner.py",
+        "module": "lib.pretrain_runner",
+        "line": 75
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.pretrain_runner>",
+        "line": 75
+      }
+    ],
+    "notebooks/pretrain_run2.ipynb": [
+      {
+        "to": "lib/pretrain_runner.py",
+        "module": "lib.pretrain_runner",
+        "line": 72
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.pretrain_runner>",
+        "line": 72
+      }
+    ],
+    "pretrain/__init__.py": [
+      {
+        "to": "pretrain/masked_modeling.py",
+        "module": "pretrain.masked_modeling",
+        "line": 16
+      },
+      {
+        "to": "pretrain/masked_modeling_enhanced.py",
+        "module": "pretrain.masked_modeling_enhanced",
+        "line": 24
+      },
+      {
+        "to": "pretrain/decoders.py",
+        "module": "pretrain.decoders",
+        "line": 28
+      }
+    ],
+    "pretrain/decoders.py": [],
+    "pretrain/hypersigma_mae.py": [
+      {
+        "to": "models/hypersigma/hypersigma_dual.py",
+        "module": "models.hypersigma.hypersigma_dual",
+        "line": 42
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma.hypersigma_dual>",
+        "line": 42
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "<pkg init for models.hypersigma.hypersigma_dual>",
+        "line": 42
+      }
+    ],
+    "pretrain/mae_pretrain.py": [
+      {
+        "to": "pretrain/decoders.py",
+        "module": "pretrain.decoders",
+        "line": 35
+      },
+      {
+        "to": "pretrain/__init__.py",
+        "module": "<pkg init for pretrain.decoders>",
+        "line": 35
+      },
+      {
+        "to": "utils/spatial_weights.py",
+        "module": "utils.spatial_weights",
+        "line": 36
+      },
+      {
+        "to": "utils/__init__.py",
+        "module": "<pkg init for utils.spatial_weights>",
+        "line": 36
+      }
+    ],
+    "pretrain/masked_modeling.py": [
+      {
+        "to": "utils/spatial_weights.py",
+        "module": "utils.spatial_weights",
+        "line": 25
+      },
+      {
+        "to": "utils/__init__.py",
+        "module": "<pkg init for utils.spatial_weights>",
+        "line": 25
+      }
+    ],
+    "pretrain/masked_modeling_enhanced.py": [
+      {
+        "to": "pretrain/masked_modeling.py",
+        "module": "pretrain.masked_modeling",
+        "line": 26
+      },
+      {
+        "to": "pretrain/__init__.py",
+        "module": "<pkg init for pretrain.masked_modeling>",
+        "line": 26
+      },
+      {
+        "to": "utils/spatial_weights.py",
+        "module": "utils.spatial_weights",
+        "line": 27
+      },
+      {
+        "to": "utils/__init__.py",
+        "module": "<pkg init for utils.spatial_weights>",
+        "line": 27
+      }
+    ],
+    "pretrain/mft_mae.py": [
+      {
+        "to": "pretrain/decoders.py",
+        "module": "pretrain.decoders",
+        "line": 36
+      },
+      {
+        "to": "pretrain/__init__.py",
+        "module": "<pkg init for pretrain.decoders>",
+        "line": 36
+      },
+      {
+        "to": "utils/spatial_weights.py",
+        "module": "utils.spatial_weights",
+        "line": 37
+      },
+      {
+        "to": "utils/__init__.py",
+        "module": "<pkg init for utils.spatial_weights>",
+        "line": 37
+      }
+    ],
+    "pretrain/mft_spatial_mae.py": [
+      {
+        "to": "pretrain/masked_modeling.py",
+        "module": "pretrain.masked_modeling",
+        "line": 49
+      },
+      {
+        "to": "pretrain/__init__.py",
+        "module": "<pkg init for pretrain.masked_modeling>",
+        "line": 49
+      },
+      {
+        "to": "utils/spatial_weights.py",
+        "module": "utils.spatial_weights",
+        "line": 50
+      },
+      {
+        "to": "utils/__init__.py",
+        "module": "<pkg init for utils.spatial_weights>",
+        "line": 50
+      }
+    ],
+    "scripts/__init__.py": [],
+    "scripts/ablation_config.py": [],
+    "scripts/ablation_eval_worker.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 24
+      },
+      {
+        "to": "scripts/ablation_config.py",
+        "module": "scripts.ablation_config",
+        "line": 24
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 48
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.eval_runner>",
+        "line": 48
+      }
+    ],
+    "scripts/ablation_pretrain_worker.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 23
+      },
+      {
+        "to": "scripts/ablation_config.py",
+        "module": "scripts.ablation_config",
+        "line": 23
+      },
+      {
+        "to": "lib/pretrain_runner.py",
+        "module": "lib.pretrain_runner",
+        "line": 51
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.pretrain_runner>",
+        "line": 51
+      }
+    ],
+    "scripts/adapt_hypersigma.py": [
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "data.datasets",
+        "line": 44
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets>",
+        "line": 44
+      },
+      {
+        "to": "models/hypersigma/hypersigma_dual.py",
+        "module": "models.hypersigma.hypersigma_dual",
+        "line": 45
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma.hypersigma_dual>",
+        "line": 45
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "<pkg init for models.hypersigma.hypersigma_dual>",
+        "line": 45
+      },
+      {
+        "to": "pretrain/hypersigma_mae.py",
+        "module": "pretrain.hypersigma_mae",
+        "line": 46
+      },
+      {
+        "to": "pretrain/__init__.py",
+        "module": "<pkg init for pretrain.hypersigma_mae>",
+        "line": 46
+      },
+      {
+        "to": "utils/io.py",
+        "module": "utils.io",
+        "line": 47
+      },
+      {
+        "to": "utils/__init__.py",
+        "module": "<pkg init for utils.io>",
+        "line": 47
+      },
+      {
+        "to": "utils/seed.py",
+        "module": "utils.seed",
+        "line": 48
+      }
+    ],
+    "scripts/adapt_hypersigma_houston.py": [
+      {
+        "to": "scripts/adapt_hypersigma.py",
+        "module": "scripts.adapt_hypersigma",
+        "line": 11
+      },
+      {
+        "to": "scripts/__init__.py",
+        "module": "<pkg init for scripts.adapt_hypersigma>",
+        "line": 11
+      }
+    ],
+    "scripts/aggregate_ablation.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 23
+      },
+      {
+        "to": "scripts/ablation_config.py",
+        "module": "scripts.ablation_config",
+        "line": 23
+      }
+    ],
+    "scripts/aggregate_bestcfg.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 22
+      },
+      {
+        "to": "scripts/bestcfg_config.py",
+        "module": "scripts.bestcfg_config",
+        "line": 22
+      }
+    ],
+    "scripts/aggregate_combo.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 27
+      },
+      {
+        "to": "scripts/combo_config.py",
+        "module": "scripts.combo_config",
+        "line": 27
+      }
+    ],
+    "scripts/aggregate_experiment_results.py": [],
+    "scripts/aggregate_significance.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 28
+      },
+      {
+        "to": "scripts/sig_significance_config.py",
+        "module": "scripts.sig_significance_config",
+        "line": 28
+      }
+    ],
+    "scripts/bestcfg_config.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 29
+      },
+      {
+        "to": "scripts/sig_significance_config.py",
+        "module": "scripts.sig_significance_config",
+        "line": 29
+      }
+    ],
+    "scripts/bestcfg_eval_worker.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 24
+      },
+      {
+        "to": "scripts/bestcfg_config.py",
+        "module": "scripts.bestcfg_config",
+        "line": 24
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 49
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.eval_runner>",
+        "line": 49
+      }
+    ],
+    "scripts/bestcfg_pretrain_worker.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 24
+      },
+      {
+        "to": "scripts/bestcfg_config.py",
+        "module": "scripts.bestcfg_config",
+        "line": 24
+      },
+      {
+        "to": "lib/pretrain_runner.py",
+        "module": "lib.pretrain_runner",
+        "line": 69
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.pretrain_runner>",
+        "line": 69
+      }
+    ],
+    "scripts/build_experiment_metadata.py": [],
+    "scripts/build_native_pca100_report.py": [],
+    "scripts/combo_config.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 36
+      },
+      {
+        "to": "scripts/ablation_config.py",
+        "module": "scripts.ablation_config",
+        "line": 36
+      }
+    ],
+    "scripts/combo_eval_worker.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 24
+      },
+      {
+        "to": "scripts/combo_config.py",
+        "module": "scripts.combo_config",
+        "line": 24
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 57
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.eval_runner>",
+        "line": 57
+      }
+    ],
+    "scripts/combo_pretrain_worker.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 24
+      },
+      {
+        "to": "scripts/combo_config.py",
+        "module": "scripts.combo_config",
+        "line": 24
+      },
+      {
+        "to": "lib/pretrain_runner.py",
+        "module": "lib.pretrain_runner",
+        "line": 61
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.pretrain_runner>",
+        "line": 61
+      }
+    ],
+    "scripts/compile_mft_faithful_results.py": [],
+    "scripts/compile_results.py": [],
+    "scripts/evaluate_cosine.py": [
+      {
+        "to": "utils/spatial_weights.py",
+        "module": "utils.spatial_weights",
+        "line": 44
+      },
+      {
+        "to": "utils/__init__.py",
+        "module": "<pkg init for utils.spatial_weights>",
+        "line": 44
+      },
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "data.datasets",
+        "line": 46
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets>",
+        "line": 46
+      },
+      {
+        "to": "data/samplers/patched_episode_sampler.py",
+        "module": "data.samplers.patched_episode_sampler",
+        "line": 51
+      },
+      {
+        "to": "data/samplers/__init__.py",
+        "module": "<pkg init for data.samplers.patched_episode_sampler>",
+        "line": 51
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "models",
+        "line": 52
+      },
+      {
+        "to": "utils/seed.py",
+        "module": "utils.seed",
+        "line": 576
+      },
+      {
+        "to": "utils/visualization.py",
+        "module": "utils.visualization",
+        "line": 604
+      }
+    ],
+    "scripts/evaluate_hypersigma_cosine.py": [
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "data.datasets",
+        "line": 47
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets>",
+        "line": 47
+      },
+      {
+        "to": "data/samplers/patched_episode_sampler.py",
+        "module": "data.samplers.patched_episode_sampler",
+        "line": 48
+      },
+      {
+        "to": "data/samplers/__init__.py",
+        "module": "<pkg init for data.samplers.patched_episode_sampler>",
+        "line": 48
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "models.hypersigma",
+        "line": 49
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma>",
+        "line": 49
+      },
+      {
+        "to": "scripts/evaluate_cosine.py",
+        "module": "scripts.evaluate_cosine",
+        "line": 50
+      },
+      {
+        "to": "scripts/__init__.py",
+        "module": "<pkg init for scripts.evaluate_cosine>",
+        "line": 50
+      },
+      {
+        "to": "utils/seed.py",
+        "module": "utils.seed",
+        "line": 55
+      },
+      {
+        "to": "utils/__init__.py",
+        "module": "<pkg init for utils.seed>",
+        "line": 55
+      }
+    ],
+    "scripts/fit_pca_hypersigma.py": [
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "data.datasets",
+        "line": 29
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets>",
+        "line": 29
+      },
+      {
+        "to": "models/hypersigma/preprocessing.py",
+        "module": "models.hypersigma.preprocessing",
+        "line": 30
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 30
+      },
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "<pkg init for models.hypersigma.preprocessing>",
+        "line": 30
+      }
+    ],
+    "scripts/gather_native_pca100_raw.py": [],
+    "scripts/gather_requested_results.py": [],
+    "scripts/pretrain_enhanced.py": [
+      {
+        "to": "utils/io.py",
+        "module": "utils.io",
+        "line": 33
+      },
+      {
+        "to": "utils/__init__.py",
+        "module": "<pkg init for utils.io>",
+        "line": 33
+      },
+      {
+        "to": "utils/logging.py",
+        "module": "utils.logging",
+        "line": 34
+      },
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "data.datasets",
+        "line": 35
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets>",
+        "line": 35
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "models",
+        "line": 40
+      },
+      {
+        "to": "pretrain/masked_modeling_enhanced.py",
+        "module": "pretrain.masked_modeling_enhanced",
+        "line": 41
+      },
+      {
+        "to": "pretrain/__init__.py",
+        "module": "<pkg init for pretrain.masked_modeling_enhanced>",
+        "line": 41
+      },
+      {
+        "to": "pretrain/mae_pretrain.py",
+        "module": "pretrain.mae_pretrain",
+        "line": 42
+      },
+      {
+        "to": "pretrain/mft_mae.py",
+        "module": "pretrain.mft_mae",
+        "line": 43
+      },
+      {
+        "to": "pretrain/mft_spatial_mae.py",
+        "module": "pretrain.mft_spatial_mae",
+        "line": 44
+      },
+      {
+        "to": "trainers/pretrain_trainer.py",
+        "module": "trainers.pretrain_trainer",
+        "line": 45
+      },
+      {
+        "to": "trainers/__init__.py",
+        "module": "<pkg init for trainers.pretrain_trainer>",
+        "line": 45
+      },
+      {
+        "to": "utils/seed.py",
+        "module": "utils.seed",
+        "line": 174
+      }
+    ],
+    "scripts/run_ablation.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 30
+      },
+      {
+        "to": "scripts/ablation_config.py",
+        "module": "scripts.ablation_config",
+        "line": 30
+      }
+    ],
+    "scripts/run_bestcfg.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 26
+      },
+      {
+        "to": "scripts/bestcfg_config.py",
+        "module": "scripts.bestcfg_config",
+        "line": 26
+      }
+    ],
+    "scripts/run_combo.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 30
+      },
+      {
+        "to": "scripts/combo_config.py",
+        "module": "scripts.combo_config",
+        "line": 30
+      }
+    ],
+    "scripts/run_hsi_only_experiments.py": [
+      {
+        "to": "lib/pretrain_runner.py",
+        "module": "lib.pretrain_runner",
+        "line": 43
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.pretrain_runner>",
+        "line": 43
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 44
+      }
+    ],
+    "scripts/run_hypersigma_spatial_pca100.py": [
+      {
+        "to": "data/datasets/__init__.py",
+        "module": "data.datasets",
+        "line": 46
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.datasets>",
+        "line": 46
+      },
+      {
+        "to": "lib/adapt_runner.py",
+        "module": "lib.adapt_runner",
+        "line": 47
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.adapt_runner>",
+        "line": 47
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 48
+      },
+      {
+        "to": "lib/experiments.py",
+        "module": "lib.experiments",
+        "line": 49
+      }
+    ],
+    "scripts/run_mae_experiments.py": [
+      {
+        "to": "lib/pretrain_runner.py",
+        "module": "lib.pretrain_runner",
+        "line": 48
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.pretrain_runner>",
+        "line": 48
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 49
+      }
+    ],
+    "scripts/run_mft_original_mae_experiments.py": [
+      {
+        "to": "lib/pretrain_runner.py",
+        "module": "lib.pretrain_runner",
+        "line": 50
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.pretrain_runner>",
+        "line": 50
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 51
+      }
+    ],
+    "scripts/run_mft_original_spatial_experiments.py": [
+      {
+        "to": "lib/pretrain_runner.py",
+        "module": "lib.pretrain_runner",
+        "line": 48
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.pretrain_runner>",
+        "line": 48
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 49
+      }
+    ],
+    "scripts/run_significance_experiment.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 37
+      },
+      {
+        "to": "scripts/sig_significance_config.py",
+        "module": "scripts.sig_significance_config",
+        "line": 37
+      }
+    ],
+    "scripts/sig_eval_worker.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 27
+      },
+      {
+        "to": "scripts/sig_significance_config.py",
+        "module": "scripts.sig_significance_config",
+        "line": 27
+      },
+      {
+        "to": "lib/eval_runner.py",
+        "module": "lib.eval_runner",
+        "line": 59
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.eval_runner>",
+        "line": 59
+      }
+    ],
+    "scripts/sig_pretrain_worker.py": [
+      {
+        "to": "scripts/__init__.py",
+        "module": "scripts",
+        "line": 27
+      },
+      {
+        "to": "scripts/sig_significance_config.py",
+        "module": "scripts.sig_significance_config",
+        "line": 27
+      },
+      {
+        "to": "lib/pretrain_runner.py",
+        "module": "lib.pretrain_runner",
+        "line": 71
+      },
+      {
+        "to": "lib/__init__.py",
+        "module": "<pkg init for lib.pretrain_runner>",
+        "line": 71
+      }
+    ],
+    "scripts/sig_significance_config.py": [],
+    "setup.py": [],
+    "tests/__init__.py": [],
+    "tests/test_data.py": [
+      {
+        "to": "data/samplers/__init__.py",
+        "module": "data.samplers",
+        "line": 5
+      },
+      {
+        "to": "data/__init__.py",
+        "module": "<pkg init for data.samplers>",
+        "line": 5
+      }
+    ],
+    "tests/test_hypersigma_native_shapes.py": [
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "models.hypersigma",
+        "line": 30
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma>",
+        "line": 30
+      },
+      {
+        "to": "models/hypersigma/_input_fit.py",
+        "module": "models.hypersigma._input_fit",
+        "line": 31
+      },
+      {
+        "to": "models/hypersigma/preprocessing.py",
+        "module": "models.hypersigma.preprocessing",
+        "line": 32
+      },
+      {
+        "to": "pretrain/hypersigma_mae.py",
+        "module": "pretrain.hypersigma_mae",
+        "line": 205
+      },
+      {
+        "to": "pretrain/__init__.py",
+        "module": "<pkg init for pretrain.hypersigma_mae>",
+        "line": 205
+      }
+    ],
+    "tests/test_hypersigma_shapes.py": [
+      {
+        "to": "models/hypersigma/__init__.py",
+        "module": "models.hypersigma",
+        "line": 25
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.hypersigma>",
+        "line": 25
+      }
+    ],
+    "tests/test_mft_original_shapes.py": [
+      {
+        "to": "models/mft_original.py",
+        "module": "models.mft_original",
+        "line": 29
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.mft_original>",
+        "line": 29
+      },
+      {
+        "to": "pretrain/mft_mae.py",
+        "module": "pretrain.mft_mae",
+        "line": 30
+      },
+      {
+        "to": "pretrain/__init__.py",
+        "module": "<pkg init for pretrain.mft_mae>",
+        "line": 30
+      },
+      {
+        "to": "pretrain/mft_spatial_mae.py",
+        "module": "pretrain.mft_spatial_mae",
+        "line": 31
+      }
+    ],
+    "tests/test_models.py": [
+      {
+        "to": "models/components/__init__.py",
+        "module": "models.components",
+        "line": 3
+      },
+      {
+        "to": "models/__init__.py",
+        "module": "<pkg init for models.components>",
+        "line": 3
+      }
+    ],
+    "tests/test_pretrain_enhanced.py": [
+      {
+        "to": "models/__init__.py",
+        "module": "models",
+        "line": 20
+      },
+      {
+        "to": "pretrain/masked_modeling.py",
+        "module": "pretrain.masked_modeling",
+        "line": 21
+      },
+      {
+        "to": "pretrain/__init__.py",
+        "module": "<pkg init for pretrain.masked_modeling>",
+        "line": 21
+      },
+      {
+        "to": "pretrain/masked_modeling_enhanced.py",
+        "module": "pretrain.masked_modeling_enhanced",
+        "line": 22
+      }
+    ],
+    "tests/test_spatial_weights.py": [
+      {
+        "to": "utils/spatial_weights.py",
+        "module": "utils.spatial_weights",
+        "line": 6
+      },
+      {
+        "to": "utils/__init__.py",
+        "module": "<pkg init for utils.spatial_weights>",
+        "line": 6
+      }
+    ],
+    "tools/refactor/build_manifest.py": [],
+    "tools/refactor/closure.py": [],
+    "tools/refactor/inventory.py": [],
+    "trainers/__init__.py": [
+      {
+        "to": "trainers/pretrain_trainer.py",
+        "module": "trainers.pretrain_trainer",
+        "line": 2
+      }
+    ],
+    "trainers/pretrain_trainer.py": [
+      {
+        "to": "trainers/__init__.py",
+        "module": "trainers.masked_modeling",
+        "line": 472
+      }
+    ],
+    "utils/__init__.py": [
+      {
+        "to": "utils/metrics.py",
+        "module": "utils.metrics",
+        "line": 2
+      },
+      {
+        "to": "utils/io.py",
+        "module": "utils.io",
+        "line": 3
+      }
+    ],
+    "utils/checkpoints.py": [],
+    "utils/io.py": [],
+    "utils/logging.py": [],
+    "utils/metrics.py": [],
+    "utils/seed.py": [],
+    "utils/spatial_weights.py": [],
+    "utils/visualization.py": []
+  }
+}

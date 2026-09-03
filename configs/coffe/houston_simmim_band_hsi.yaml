@@ -1,0 +1,73 @@
+# CoFFE SimMIM band — Houston, HSI-only
+#
+# Reproduces the paper's Table 2 cell **OA 58.91**.
+#
+#   source run       experiments/houston_enhanced_spectral_no_lidar/
+#   evaluated at     epoch 950 of a 1500-epoch schedule
+#
+# Every recipe value below matches that run's frozen pretrain_config.yaml,
+# checked by tools/refactor/make_cell_configs.py.
+#
+# Output paths are fresh (./checkpoints/<route>/<cell>), not the source
+# run's own output directory.
+#
+# NOTE the checkpoint the paper evaluated is NOT the final one: train the
+# full 1500 epochs, then evaluate epoch 950
+# (PAPER_CANON §8 D17).
+#
+# Run with:
+#   python scripts/pretrain.py --config configs/coffe/houston_simmim_band_hsi.yaml
+#
+# RUNTIME     PAPER_CANON §3 times CoFFE pretraining at 0.7-4.3 h/scene for
+#             1500 epochs on one RTX 4090. This config runs 1500 epochs.
+
+model:
+  name: "coffe"
+  embed_dim: 128
+  num_heads: 2
+  num_layers: 2
+  lambda_factor: 0.5
+  dropout: 0.1
+  use_aux: false
+  use_projection: true
+  proj_hidden_dim: 512
+  proj_num_layers: 1
+  proj_l2_normalize: true
+
+data:
+  patch_size: 11
+  num_workers: 4
+
+pretrain:
+  datasets:
+    - "houston"
+  objective: "simmim"
+  epochs: 1500
+  batch_size: 64
+  val_split: 0.0
+  lr: 0.00015
+  min_lr: 1.0e-06
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+  decoder_hidden_dim: 256
+  band_mask_ratio: 0.85
+  spatial_mask_ratio: 0.0
+  recon_center_sigma: 1.0
+  pool_center_sigma: 1.0
+  save_interval: 50
+  val_interval: 50000
+  log_interval: 1
+  use_amp: false
+
+# Fresh output paths: the source run's checkpoint_dir holds the paper's
+# checkpoints and must not be written into.
+paths:
+  data_root: "./data/raw"
+  checkpoint_dir: "./checkpoints/coffe/houston_simmim_band_hsi"
+  log_dir: "./logs/coffe/houston_simmim_band_hsi"
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: true

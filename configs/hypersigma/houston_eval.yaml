@@ -1,0 +1,47 @@
+# Default HyperSIGMA eval config (Houston, 15-way 5-shot)
+#
+# NOTE: `distance_metric` was `cosine` here until the phase-4 gate (2026-09-01),
+# which made euclidean the default everywhere. The evaluator computes BOTH
+# blocks regardless; this key only picks which one coffe/runners/eval_runner records as
+# the run's primary metric. Its episode constants (600 episodes, k_query 30)
+# are this file's own and match no Table 3 cell — the paper protocol is
+# k_query 100 / 1000 episodes for Table 2 and 2000 episodes for Table 3
+# (PAPER_CANON §4, §8 D18).
+# Consumed by ``coffe.eval.hypersigma.run_evaluation`` via
+# ``coffe.runners.eval_runner.run_hypersigma_evaluation``. Hand-running:
+#
+#   python scripts/evaluate_hypersigma.py \
+#       --dataset houston \
+#       --pca-spat-path checkpoints/hypersigma/pca_houston_3band.pkl \
+#       --adapted-checkpoint checkpoints/hypersigma_adapted/houston_k3/checkpoint.pth \
+#       --mode fused \
+#       --output experiments/hypersigma_houston_k3/evaluations/houston_15way_5shot/results.json
+#
+# (`results/` at the repo root holds the paper-provenance JSONs, not run
+# output; evaluation runs write under `experiments/`.)
+#
+# RUNTIME     Evaluation only; PAPER_CANON §3 times training, not evaluation.
+
+dataset: houston
+n_way: 15
+k_shot: 5
+k_query: 30
+num_episodes: 600
+split: test
+patch_size: 11
+seed: 42
+
+mode: fused
+spat_patch_k: 3
+pca_spat_path: checkpoints/hypersigma/pca_houston_3band.pkl
+spat_ckpt: checkpoints/hypersigma/spat-vit-base.pth
+spec_ckpt: checkpoints/hypersigma/spec-vit-base.pth
+adapted_checkpoint: checkpoints/hypersigma_adapted/houston_k3/checkpoint.pth
+
+distance_metric: euclidean
+temperature: 10.0
+prototype_mode: mean_features
+
+num_example_episodes: 3
+max_tsne_samples: 0
+no_plots: false

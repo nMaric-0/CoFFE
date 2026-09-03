@@ -5,7 +5,7 @@
     "description": "Curated headline few-shot results for the CoFFE project. Metrics are mean +/- 95% CI over episodes (OA == AA when query sets are class-balanced). Regime is the pretraining masking config (derived from the experiment dir).",
     "metric_keys": "OA = Overall Accuracy, AA = Average Accuracy, Kappa = Cohen's kappa (all %).",
     "eval_protocol": {
-      "MFT-CPEA": "5-shot, k_query=100, 1000 episodes, euclidean prototypes.",
+      "CoFFE": "5-shot, k_query=100, 1000 episodes, Euclidean nearest-class-mean.",
       "HyperSIGMA": "5-shot, k_query=30 (Houston) / 100 (Trento), 600-2000 episodes; cosine & euclidean reported."
     },
     "curation": "Dropped scratch/test runs (*_test_run*, *_spatial_mask_test*), the _example placeholder, and one mislabelled cross-dataset eval. Repeat runs of the same config are collapsed to a representative (natural n-way, most episodes, newest); alternates are kept under 'other_runs'.",
@@ -18,8 +18,8 @@
       "natural_n_way": 15,
       "entries": [
         {
-          "model": "MFT-CPEA",
-          "regime": "Enhanced: combined",
+          "model": "CoFFE",
+          "regime": "SimMIM band+token",
           "modality": "HSI-only",
           "eval_protocol": {
             "n_way": 15,
@@ -46,8 +46,8 @@
           "source": "experiments/houston_enhanced_spectral_spatial_no_lidar/evaluations/houston_enhanced_spectral_spatial_no_lidar_eval/results.json"
         },
         {
-          "model": "MFT-CPEA",
-          "regime": "Enhanced: spatial",
+          "model": "CoFFE",
+          "regime": "SimMIM token",
           "modality": "HSI-only",
           "eval_protocol": {
             "n_way": 15,
@@ -74,8 +74,8 @@
           "source": "experiments/houston_enhanced_spatial_no_lidar/evaluations/houston_enhanced_spatial_no_lidar_eval/results.json"
         },
         {
-          "model": "MFT-CPEA",
-          "regime": "Enhanced: spectral",
+          "model": "CoFFE",
+          "regime": "SimMIM band",
           "modality": "HSI-only",
           "eval_protocol": {
             "n_way": 15,
@@ -102,7 +102,7 @@
           "source": "experiments/houston_enhanced_spectral_no_lidar/evaluations/houston_enhanced_spectral_no_lidar_eval/results.json"
         },
         {
-          "model": "MFT-CPEA",
+          "model": "CoFFE",
           "regime": "MAE",
           "modality": "HSI+LiDAR",
           "eval_protocol": {
@@ -130,7 +130,7 @@
           "source": "experiments/houston_mae_lidar/evaluations/houston_mae_lidar_eval/results.json"
         },
         {
-          "model": "MFT-CPEA",
+          "model": "CoFFE",
           "regime": "MAE",
           "modality": "HSI-only",
           "eval_protocol": {
@@ -322,8 +322,8 @@
       "natural_n_way": 6,
       "entries": [
         {
-          "model": "MFT-CPEA",
-          "regime": "Enhanced: combined",
+          "model": "CoFFE",
+          "regime": "SimMIM band+token",
           "modality": "HSI+LiDAR",
           "eval_protocol": {
             "n_way": 6,
@@ -372,8 +372,8 @@
           ]
         },
         {
-          "model": "MFT-CPEA",
-          "regime": "Enhanced: combined",
+          "model": "CoFFE",
+          "regime": "SimMIM band+token",
           "modality": "HSI-only",
           "eval_protocol": {
             "n_way": 6,
@@ -400,8 +400,8 @@
           "source": "experiments/trento_enhanced_spectral_spatial_no_lidar/evaluations/trento_enhanced_spectral_spatial_no_lidar_eval/results.json"
         },
         {
-          "model": "MFT-CPEA",
-          "regime": "Enhanced: spatial",
+          "model": "CoFFE",
+          "regime": "SimMIM token",
           "modality": "HSI+LiDAR",
           "eval_protocol": {
             "n_way": 6,
@@ -450,8 +450,8 @@
           ]
         },
         {
-          "model": "MFT-CPEA",
-          "regime": "Enhanced: spatial",
+          "model": "CoFFE",
+          "regime": "SimMIM token",
           "modality": "HSI-only",
           "eval_protocol": {
             "n_way": 6,
@@ -478,8 +478,8 @@
           "source": "experiments/trento_enhanced_spatial_no_lidar/evaluations/trento_enhanced_spatial_no_lidar_eval/results.json"
         },
         {
-          "model": "MFT-CPEA",
-          "regime": "Enhanced: spectral",
+          "model": "CoFFE",
+          "regime": "SimMIM band",
           "modality": "HSI+LiDAR",
           "eval_protocol": {
             "n_way": 6,
@@ -518,8 +518,8 @@
           ]
         },
         {
-          "model": "MFT-CPEA",
-          "regime": "Enhanced: spectral",
+          "model": "CoFFE",
+          "regime": "SimMIM band",
           "modality": "HSI-only",
           "eval_protocol": {
             "n_way": 6,
@@ -546,7 +546,7 @@
           "source": "experiments/trento_enhanced_spectral_no_lidar/evaluations/trento_enhanced_spectral_no_lidar_eval/results.json"
         },
         {
-          "model": "MFT-CPEA",
+          "model": "CoFFE",
           "regime": "MAE",
           "modality": "HSI+LiDAR",
           "eval_protocol": {
@@ -574,7 +574,7 @@
           "source": "experiments/trento_mae_lidar/evaluations/trento_mae_lidar_eval/results.json"
         },
         {
-          "model": "MFT-CPEA",
+          "model": "CoFFE",
           "regime": "MAE",
           "modality": "HSI-only",
           "eval_protocol": {
@@ -734,8 +734,8 @@
       "natural_n_way": 11,
       "entries": [
         {
-          "model": "MFT-CPEA",
-          "regime": "Enhanced: combined",
+          "model": "CoFFE",
+          "regime": "SimMIM band+token",
           "modality": "HSI+LiDAR",
           "eval_protocol": {
             "n_way": 11,
@@ -762,8 +762,8 @@
           "source": "experiments/muufl_enhanced_spectral_spatial_run2/evaluations/muufl_enhanced_spectral_spatial_run2/results.json"
         },
         {
-          "model": "MFT-CPEA",
-          "regime": "Enhanced: combined",
+          "model": "CoFFE",
+          "regime": "SimMIM band+token",
           "modality": "HSI-only",
           "eval_protocol": {
             "n_way": 11,
@@ -790,8 +790,8 @@
           "source": "experiments/muufl_enhanced_spectral_spatial_no_lidar/evaluations/muufl_enhanced_spectral_spatial_no_lidar_eval/results.json"
         },
         {
-          "model": "MFT-CPEA",
-          "regime": "Enhanced: spatial",
+          "model": "CoFFE",
+          "regime": "SimMIM token",
           "modality": "HSI+LiDAR",
           "eval_protocol": {
             "n_way": 11,
@@ -818,8 +818,8 @@
           "source": "experiments/muufl_enhanced_spatial_run1/evaluations/muufl_enhanced_spatial_run1/results.json"
         },
         {
-          "model": "MFT-CPEA",
-          "regime": "Enhanced: spatial",
+          "model": "CoFFE",
+          "regime": "SimMIM token",
           "modality": "HSI-only",
           "eval_protocol": {
             "n_way": 11,
@@ -846,8 +846,8 @@
           "source": "experiments/muufl_enhanced_spatial_no_lidar/evaluations/muufl_enhanced_spatial_no_lidar_eval/results.json"
         },
         {
-          "model": "MFT-CPEA",
-          "regime": "Enhanced: spectral",
+          "model": "CoFFE",
+          "regime": "SimMIM band",
           "modality": "HSI+LiDAR",
           "eval_protocol": {
             "n_way": 11,
@@ -874,8 +874,8 @@
           "source": "experiments/muufl_enhanced_spectral_run1/evaluations/muufl_enhanced_spectral_run1/results.json"
         },
         {
-          "model": "MFT-CPEA",
-          "regime": "Enhanced: spectral",
+          "model": "CoFFE",
+          "regime": "SimMIM band",
           "modality": "HSI-only",
           "eval_protocol": {
             "n_way": 11,
@@ -902,7 +902,7 @@
           "source": "experiments/muufl_enhanced_spectral_no_lidar/evaluations/muufl_enhanced_spectral_no_lidar_eval/results.json"
         },
         {
-          "model": "MFT-CPEA",
+          "model": "CoFFE",
           "regime": "MAE",
           "modality": "HSI+LiDAR",
           "eval_protocol": {

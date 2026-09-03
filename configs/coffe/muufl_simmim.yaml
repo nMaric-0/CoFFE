@@ -1,0 +1,108 @@
+# MUUFL SimMIM Pretraining Configuration (unified HSI+LiDAR tokens)
+#
+# LiDAR (2 elevation/intensity bands) is concatenated as extra bands on each
+# pixel, so one token per pixel carries all 64 HSI bands + 2 LiDAR bands
+# (66 total). Two masking regimes are supported and can be combined (set either
+# ratio to 0 to disable):
+#   - band_mask_ratio: per-(pixel, band) Bernoulli mask on the raw input.
+#   - spatial_mask_ratio: in-place masking of whole pixel tokens.
+# The decoder reconstructs the full 66-value per-pixel vector; loss is MSE over
+# the masked entries (union of both masks when both are enabled).
+#
+# Mirrors the re-tuned Trento recipe: 2 heads / 2 layers, lambda 0.5,
+# band-only masking (0.9 / 0.0), AMP off, deterministic. The Houston config is
+# token-only, so the architecture is shared but the masking regime is not.
+#
+# Run with:
+#   python scripts/pretrain.py --config configs/coffe/muufl_simmim.yaml
+#
+# ROLE: this is the **5-seed significance experiment's base config** for this
+# scene (the `enhanced` group in scripts/reproduce/sig_significance_config.py). That runner
+# CLONES the per-variant mask rates from the canonical run dir at launch, so the
+# pair in this file (0.9 / 0.0) is only what it happens to carry — it is NOT
+# the recipe of any Table 2 cell.
+#
+# To reproduce a published cell, use that cell's own config, each generated from
+# its frozen run by tools/refactor/make_cell_configs.py:
+#   configs/coffe/muufl_simmim_band.yaml
+#   configs/coffe/muufl_simmim_token.yaml
+#   configs/coffe/muufl_simmim_band_token.yaml
+
+# Model architecture
+#
+# RUNTIME     PAPER_CANON §3 times CoFFE pretraining at 0.7-4.3 h/scene for
+#             1500 epochs on one RTX 4090. This config runs 1500 epochs.
+model:
+  name: "coffe"
+  embed_dim: 128
+  num_heads: 2
+  num_layers: 2
+  lambda_factor: 0.5
+  dropout: 0.1
+
+  # Projection head (trained for few-shot transfer)
+  use_projection: true
+  proj_hidden_dim: 512
+  proj_num_layers: 1
+  proj_l2_normalize: true
+
+# Data settings
+data:
+  patch_size: 11
+  num_workers: 4
+  # MUUFL-specific (2 LiDAR bands)
+  hsi_channels: 64
+  aux_channels: 2
+
+# Pretraining settings
+pretrain:
+  # Single dataset
+  datasets:
+    - muufl
+
+  # Objective: SimMIM-style in-place masked reconstruction. Frozen configs
+  # omit this key (it defaulted to "enhanced"); stated explicitly here.
+  objective: "simmim"
+
+  # Training schedule
+  epochs: 1500
+  batch_size: 64
+  val_split: 0.0
+
+  # Optimizer (MAE settings)
+  lr: 1.5e-4
+  min_lr: 1.0e-6
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+
+  # Decoder
+  decoder_hidden_dim: 256
+
+  # Band-only masking (the Houston HSI+LiDAR config is token-only; these two
+  # regimes are not interchangeable - see the header note).
+  band_mask_ratio: 0.9
+  spatial_mask_ratio: 0.0
+
+  # Center-weighted reconstruction loss (Gaussian sigma).
+  recon_center_sigma: 1.0
+
+  # Center-weighted prototype pooling (Gaussian sigma, used at evaluation).
+  pool_center_sigma: 1.0
+
+  # Checkpointing
+  save_interval: 25
+  val_interval: 3000
+  log_interval: 1
+  use_amp: false
+
+# Paths - unique for enhanced MUUFL pretraining
+paths:
+  data_root: "./data/raw"
+  checkpoint_dir: "./checkpoints/pretrained/muufl_enhanced"
+  log_dir: "./logs/pretrain/muufl_enhanced"
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: true

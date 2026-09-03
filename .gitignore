@@ -11,11 +11,6 @@ build/
 develop-eggs/
 dist/
 downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
 sdist/
 var/
 wheels/
@@ -42,6 +37,8 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
+.ruff_cache/
+.mypy_cache/
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -73,15 +70,12 @@ experiments/*/
 *.pth
 *.pt
 *.ckpt
+# ...except the tiny pre-refactor checkpoints the equivalence harness loads
+# (PAPER_CANON §7.2); they are a few hundred KB and must stay in git.
+!/tests/equivalence/fixtures/*.pth
+# Local-only golden produced by `make_golden.py --real`; never committed.
+/tests/equivalence/golden/real_local.json
 wandb/
-
-# The repo-root `lib/` is a source package and must not be matched by the
-# venv-related `lib/` / `lib64/` rules above.
-!/lib/
-!/lib/**
-# ...but keep __pycache__ ignored everywhere under lib/.
-/lib/**/__pycache__/
-/lib/__pycache__/
 
 # Large files
 *.mat
@@ -101,3 +95,19 @@ old_outputs/
 old_models/
 old*
 exploration_results/
+# Bulk artefacts archived to /ceph/home/nmaric/CoFFE (2026-08-28).
+# These paths are now symlinks, so the directory-only rules above no longer match them.
+/checkpoints
+/logs
+/data/raw
+/experiments/*
+!/experiments/_example/
+
+# Exploratory tree archived out of the release (phase 3, D9 decision):
+# present on disk, deliberately untracked.
+/archive/
+
+# Internal refactor-process documents: kept on disk, not shipped in the release
+# (phase-8 gate decision). CLAUDE.md still steers Claude Code sessions locally.
+/CLAUDE.md
+/WORKFLOW.md

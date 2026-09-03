@@ -1,5 +1,5 @@
 {
-  "_comment": "Placeholder file — illustrates schema. lib.experiments.load_all_evaluations skips entries with status='example'.",
+  "_comment": "Placeholder file — illustrates schema. coffe.runners.experiments.load_all_evaluations skips entries with status='example'.",
   "model_type": "MFTCPEACosine",
   "dataset": "houston",
   "n_way": 5,

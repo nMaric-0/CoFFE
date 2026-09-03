@@ -2,7 +2,7 @@
 #
 # Runs what can run without the things this repository deliberately does not
 # ship: no dataset under data/raw/, no HyperSIGMA ViT-Base checkpoints, no GPU,
-# no network access during the tests (CLAUDE.md hard rule 5).
+# no network access during the tests (PAPER_CANON §7.5).
 #
 # That is the `not gpu and not data and not slow` selection — about 500 tests,
 # roughly 2-4 minutes on a GitHub runner. The `slow` tests are excluded because

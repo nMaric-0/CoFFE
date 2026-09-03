@@ -21,6 +21,8 @@ decision 7).
 from __future__ import annotations
 
 import json
+import os
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -57,6 +59,13 @@ def _release(version: str) -> str:
     return version.split("+", 1)[0]
 
 
+#: Set ``COFFE_EQUIVALENCE_STRICT=1`` to turn the environment skip into a hard
+#: error. The verifier battery sets it: on the reference machine a *skip* is
+#: itself a failure, because CLAUDE-rule-1 ("equivalence passes before every
+#: commit") is vacuous if the package can quietly opt out of running.
+STRICT_ENV_VAR = "COFFE_EQUIVALENCE_STRICT"
+
+
 def environment_mismatch() -> str | None:
     """Why this environment cannot reproduce the goldens, or ``None``.
 
@@ -74,9 +83,20 @@ def environment_mismatch() -> str | None:
         reasons.append(f"torch {torch.__version__} != goldens' {meta['torch']}")
     if _release(meta.get("numpy", "")) != _release(np.__version__):
         reasons.append(f"numpy {np.__version__} != goldens' {meta['numpy']}")
+    # Python is compared at minor level: meta.json records the patch release,
+    # but the fingerprints are torch's arithmetic, not CPython's.
+    running_python = f"{sys.version_info.major}.{sys.version_info.minor}"
+    golden_python = ".".join(meta.get("python", "").split(".")[:2])
+    if golden_python and golden_python != running_python:
+        reasons.append(f"python {running_python} != goldens' {meta['python']}")
+    if meta.get("platform") and meta["platform"] != sys.platform:
+        reasons.append(f"platform {sys.platform} != goldens' {meta['platform']}")
     threads = torch.get_num_threads()
     if threads != REFERENCE_THREADS:
-        reasons.append(f"torch.get_num_threads() {threads} != reference {REFERENCE_THREADS}")
+        reasons.append(
+            f"torch.get_num_threads() {threads} != reference {REFERENCE_THREADS} "
+            f"(not recorded in meta.json - see REFERENCE_THREADS above)"
+        )
     if not reasons:
         return None
     return (
@@ -99,10 +119,21 @@ ATOL = 1e-8
 
 @pytest.fixture(scope="package", autouse=True)
 def _reference_environment():
-    """Skip the whole package when the environment cannot reproduce the goldens."""
+    """Skip the whole package when the environment cannot reproduce the goldens.
+
+    Unless ``COFFE_EQUIVALENCE_STRICT`` is set, in which case the mismatch is an
+    error: on the machine that is supposed to be the reference, silently
+    skipping the behaviour freeze is worse than failing loudly.
+    """
     reason = environment_mismatch()
-    if reason:
-        pytest.skip(reason)
+    if not reason:
+        return
+    if os.environ.get(STRICT_ENV_VAR):
+        raise RuntimeError(
+            f"{STRICT_ENV_VAR} is set, so this environment was expected to "
+            f"reproduce the goldens, and it cannot: {reason}"
+        )
+    pytest.skip(reason)
 
 
 @pytest.fixture(scope="package", autouse=True)

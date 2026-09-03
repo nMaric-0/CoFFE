@@ -49,7 +49,8 @@
       "target": null,
       "evidence": "repo instructions; 'Environment facts' are wrong (phase-0 E1)",
       "notes": "",
-      "approved": false
+      "approved": false,
+      "phase8_gate": "phase-8 gate 2026-09-03 (Nikola): UNTRACKED, not deleted - still on disk, now gitignored. It documents the cleanup process, not the release, like the deleted SPLIT.md (D11). Verdict stays `keep` because the file itself is kept."
     },
     {
       "path": "LICENSE",
@@ -95,7 +96,8 @@
       "target": null,
       "evidence": "developer workflow doc; audit for legacy vocabulary in phase 4",
       "notes": "",
-      "approved": false
+      "approved": false,
+      "phase8_gate": "phase-8 gate 2026-09-03 (Nikola): UNTRACKED, not deleted - same reason as CLAUDE.md."
     },
     {
       "path": "coffe/__init__.py",
@@ -1372,7 +1374,8 @@
       "target": null,
       "evidence": "renamed from docs/COSINE_VARIANT.md in phase 4 and rewritten: the old content compared against a DenseSimilarity variant absent from this release and quoted accuracies matching no run in experiments/",
       "notes": "full release rewrite in phase 8",
-      "approved": false
+      "approved": false,
+      "phase8_gate": "phase-8 gate 2026-09-03 (Nikola): renamed to docs/evaluation.md."
     },
     {
       "path": "docs/PRETRAINING.md",
@@ -1381,7 +1384,8 @@
       "target": null,
       "evidence": "renamed from docs/ENHANCED_PRETRAINING.md in phase 4 and rewritten: the old content documented weighted multi-task objectives, GaussianNoiseAugmentation and LiDARMasking, none of which exist in the tree",
       "notes": "full release rewrite in phase 8",
-      "approved": false
+      "approved": false,
+      "phase8_gate": "phase-8 gate 2026-09-03 (Nikola): renamed to docs/pretraining.md."
     },
     {
       "path": "docs/presentation/PROJECT_OVERVIEW.md",
@@ -3237,5 +3241,6 @@
       "approved": true,
       "executed_in_phase": 3
     }
-  ]
+  ],
+  "phase8_gate_note": "Four records carry a `phase8_gate` field: two files untracked (CLAUDE.md, WORKFLOW.md) and two renamed (docs/EVAL_PROTOCOL.md -> docs/evaluation.md, docs/PRETRAINING.md -> docs/pretraining.md), plus docs/hypersigma.md which is new in phase 8 and has no audit record. All four were authorised by Nikola at the phase-8 gate; the audit's own verdicts (all `keep`) predate that decision and are left as the phase-1..3 record."
 }

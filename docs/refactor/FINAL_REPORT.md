@@ -6,15 +6,18 @@ paper↔code trace; `manifest.json` is the file-by-file ledger. This file is the
 summary a reader should be able to stop at.
 
 - **Branch:** `refactor/cleanup`, 2026-08-31 → 2026-09-03: 19 commits through
-  phase 7, plus this phase's two.
+  phase 7, plus phase 8's three (two for the release documentation, one for the
+  gate decisions).
 - **Baseline:** `9541085` "Final experiments" (2026-07-30), tagged
   **`pre-refactor`**.
 - **The one hard rule:** no refactor commit may change a computed number. The
   arbiter is `tests/equivalence/`, and it stayed green on every commit that
   touched code — G2–G5 bit-exact at zero tolerance, G1's loss trajectories
   within the declared `rtol=1e-6` (residual ≤ 4.6e-09, BLAS reduction-order
-  noise from an unpinned thread count; see `LOG.md`'s phase-8 finding 0). Two evaluator *defaults* changed, both signed off at a
-  gate, both unreachable on the paper path (`CHANGES.md`, "What deliberately did
+  noise from an unpinned thread count; see `LOG.md`'s phase-8 finding 0). Evaluator *defaults* changed at three gates — phase
+  4's `distance_metric`, phase 7's seven `_DEFAULT_ARGS` values, and phase 8's
+  HyperSIGMA trio plus the `use_projection` de-inheritance — every one signed
+  off, none reachable on the paper path (`CHANGES.md`, "What deliberately did
   **not** change").
 
 ## Phase by phase
@@ -29,7 +32,7 @@ summary a reader should be able to stop at.
 | **5** — restructure | One installable package: `coffe/{models,pretrain,data,eval,runners,utils}`, `scripts/` reduced to thin CLIs, paper artifacts moved out of the runtime tree into `results/`. Closed **D5** — `.gitignore` no longer shadows first-party source. | equivalence IDENTICAL; `pip install -e .` in a clean venv |
 | **6** — quality | black+isort+flake8 → **ruff**; **mypy** adopted lenient; dependencies pruned to the measured import set (D6); public API declared; docstrings brought up to release standard. Gate addendum: `--out`/`--force` on the four report scripts that used to overwrite committed artifacts on any invocation. | ruff + ruff format + mypy clean; equivalence IDENTICAL |
 | **7** — tests | `tests/{unit,integration,equivalence}` with `gpu`/`data`/`slow` markers: **527 collected, 521 passed, 6 skipped** under `-m "not gpu and not data"`; coverage of `coffe/` 52 % → 69 %; CI added (ruff + mypy + tests on 3.11/3.12, CPU-only torch). Gate: eight questions answered, four applied — numeric checkpoint sort, one evaluation entry point per route (`scripts/evaluate_mft.py` is new), six stale evaluator defaults aligned, plus a real-data GPU smoke. | equivalence IDENTICAL 33/33 throughout |
-| **8** — release | README rewritten to release standard from `PAPER_CANON.md` §§2–6; `docs/hypersigma.md` and `CITATION.cff` new; `pretraining.md`/`evaluation.md` gained the reproduction sections they had promised; `docs/presentation/` marked superseded; `CHANGES.md` finalised with an archaeology section; the three carried-over phase-7 obligations applied. Every README command executed, most of them in a fresh clone with a fresh venv. | 8-check fresh-clone gate: 7 PASS, and one **FAIL that is an environment finding, not a behaviour change** — see open item 7 and `LOG.md`. Equivalence IDENTICAL 33/33 in the project environment. |
+| **8** — release | README rewritten to release standard from `PAPER_CANON.md` §§2–6; `docs/hypersigma.md` and `CITATION.cff` new; `pretraining.md`/`evaluation.md` gained the reproduction sections they had promised; `docs/presentation/` marked superseded; `CHANGES.md` finalised with an archaeology section; the three carried-over phase-7 obligations applied. Every README command executed, most of them in a fresh clone with a fresh venv. | 8-check fresh-clone gate: 7 PASS, plus one FAIL that was an **environment** finding rather than a behaviour change — resolved at the gate (item 7), after which a fresh clone skips the goldens with a reason instead of failing. Equivalence 33/33 on the reference environment throughout. |
 
 ## Metrics, before → after
 
@@ -115,7 +118,12 @@ the six questions the gate raised, and what each turned into:
    **skips the package with the difference in the message** instead of
    reporting float drift as a behaviour change; and `.github/workflows/ci.yml`
    installs through the constraints file and asserts that the package skipped
-   *for that reason*. The measurements behind it, all in fresh clones: today's
+   *for that reason*. Note the workflow itself has **still never run** — it
+   triggers on push and the branch has not been pushed — so its behaviour is
+   reasoned from the local measurements, not observed. Locally the inverse
+   guard applies: `COFFE_EQUIVALENCE_STRICT=1` turns the environment skip into
+   an error, and the `verifier` battery sets it — so a skip can never be
+   mistaken for a green freeze on the reference machine. The measurements behind it, all in fresh clones: today's
    resolved versions 19/33 fail; torch pinned alone, 2 fail on a torchvision
    build mismatch; the full pin, 33 pass; the same pin on **CPU-only** wheels,
    33 pass (so the `+cpu` / `+cu128` suffix is irrelevant, the release is not);

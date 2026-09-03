@@ -13,7 +13,7 @@ Two jobs:
    and MFT routes, each through its own entry point. It proves the pipeline is
    wired, not that any number is right — the equivalence harness owns the
    numbers. The HyperSIGMA route has no e2e here: it needs the released
-   ViT-Base checkpoints (CLAUDE.md hard rule 5), and its wrapper plumbing is
+   ViT-Base checkpoints (PAPER_CANON §7.5), and its wrapper plumbing is
    covered by ``tests/unit/test_hypersigma_contracts.py``.
 """
 

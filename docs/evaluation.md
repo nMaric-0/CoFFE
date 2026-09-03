@@ -33,11 +33,13 @@ HyperSIGMA evaluator reports both blocks. **The paper is Euclidean throughout**
 one, and even that cell's quoted value is its `euclidean` sub-block; only its
 `eval_config.json` records `cosine` (PAPER_CANON §8 D18). Since the phase-4 gate
 the CLI default is `euclidean` too, so an unflagged invocation is already the
-paper protocol. That default move is one of the refactor's two signed-off
-default changes (the other is the phase-7 gate's alignment of six further
-evaluator defaults, plus `num_episodes` 2000 → 1000, Table 2's count), and
-neither changes a paper number, because every paper run passes these values
-explicitly (CHANGES.md, "What deliberately did **not**
+paper protocol. That default move is the first of the refactor's
+three signed-off default changes — the phase-7 gate aligned six further
+evaluator defaults plus `num_episodes` 2000 → 1000 (Table 2's count), and the
+phase-8 gate aligned the HyperSIGMA evaluator's `k_query` / `num_episodes` /
+`split` to Table 3's protocol and stopped the runner inheriting
+`use_projection`. None of them changes a paper number, because every paper run
+passes these values explicitly (CHANGES.md, "What deliberately did **not**
 change").
 
 ## What the eval feature actually is
@@ -89,7 +91,11 @@ python scripts/evaluate_hypersigma.py --dataset houston --mode fused
 ```
 
 The evaluated checkpoint is **not** the final one: epoch 950 on Houston, 975 on
-Trento/MUUFL for CoFFE, 950 for all six MFT cells, with one cell at 800. Not a model-selection decision: those epochs are what a checkpoint sort that ordered filenames as strings returned (`"...950" > "...1500"`). The sort is numeric since the phase-7 gate, so the epoch has to be passed explicitly now — PAPER_CANON §8 D17. Each `configs/{coffe,mft}/` cell config names its own epoch in its
+Trento/MUUFL for CoFFE, 950 for all six MFT cells, with one cell at 800. Not a
+model-selection decision: those epochs are what a checkpoint sort that ordered
+filenames as **strings** returned (`"...950" > "...1500"`); the sort is numeric
+since the phase-7 gate, so the epoch must be passed explicitly now —
+PAPER_CANON §8 D17. (D17 also records what the artifacts cannot settle: explicit `checkpoint=` paths were sometimes used, so no single run can be attributed either way from disk.) Each `configs/{coffe,mft}/` cell config names its own epoch in its
 header.
 
 `--n-way` defaults to the scene's full class count, which is the paper setting.

@@ -15,7 +15,7 @@ property that makes the route "label-free adaptation from released
 checkpoints" rather than fine-tuning.
 
 The ViT bodies are randomly initialised — no released checkpoint is needed
-(CLAUDE.md hard rule 5), and no number produced here is comparable to a paper
+(PAPER_CANON §7.5), and no number produced here is comparable to a paper
 cell. ``tests/unit/test_hypersigma_shapes.py`` and
 ``test_hypersigma_native_shapes.py`` cover the forward shapes in more detail;
 this file does not repeat them.

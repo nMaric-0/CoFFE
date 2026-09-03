@@ -7,7 +7,7 @@ Table 3 cell came out of ``coffe.pretrain.hypersigma_adapt.run_adapt``, which
 had no coverage before phase 7.
 
 One epoch on a synthetic mini-scene with randomly initialised ViT bodies (no
-released checkpoint, CLAUDE.md hard rule 5). What is verified: the loop runs,
+released checkpoint, PAPER_CANON §7.5). What is verified: the loop runs,
 it writes the checkpoints the eval step expects, no label is ever consulted,
 and — the invariant that matters — the released bodies receive no gradient.
 """

@@ -109,5 +109,5 @@ exploration_results/
 
 # Internal refactor-process documents: kept on disk, not shipped in the release
 # (phase-8 gate decision). CLAUDE.md still steers Claude Code sessions locally.
-CLAUDE.md
-WORKFLOW.md
+/CLAUDE.md
+/WORKFLOW.md

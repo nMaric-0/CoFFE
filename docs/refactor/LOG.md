@@ -2527,6 +2527,47 @@ protocol keys and `use_projection` explicitly (`sig_significance_config`, the
 notebooks, every frozen `eval_config.json`), and an error message computes
 nothing.
 
+#### Follow-ups from the gate's own review round
+
+The `canon-reviewer` pass on the gate commit found six blocking documentation
+defects, all of them created by the gate's own changes, plus a real hole in the
+design. Fixed in the follow-up commit:
+
+- **Three counts were left stale by the third default change**: PAPER_CANON §1
+  ("first of two"), `docs/evaluation.md` ("two signed-off default changes") and
+  `FINAL_REPORT.md` ("two evaluator defaults", "this phase's two commits"). All
+  now say three.
+- **Two places still taught the removed behaviour**: `notebooks/evaluate.ipynb`'s
+  parameter cell said `use_projection = None` means "use whatever the pretrain
+  config saved (currently True everywhere)", and the README's smoke snippet said
+  eval "must switch it off explicitly". The notebook comment is corrected, and
+  the snippet no longer passes the key at all — which makes it a live
+  demonstration that the new default is the protocol. Re-run: **OA 71.15 ± 0.67,
+  unchanged**, and the written `eval_config.json` records
+  `"use_projection": false`.
+- **Seven shipped files cited "CLAUDE.md hard rule 5"** — a file this gate
+  removed from the release. They now cite PAPER_CANON §7.5, which ships.
+- **The audit ledger contradicted the tree**: `docs/refactor/manifest.json`
+  still recorded `keep` for `CLAUDE.md`, `WORKFLOW.md` and the two renamed docs.
+  Each now carries a `phase8_gate` note; the verdicts themselves are left as the
+  phase-1..3 record.
+
+**The hole, and how it is closed.** With the guard in place a skip could read as
+green: on this machine under a container, `taskset` or a stray
+`OMP_NUM_THREADS`, the verifier battery would report "33 skipped" and nothing
+would have been checked — making the rule "equivalence passes before every
+commit" vacuous. `COFFE_EQUIVALENCE_STRICT=1` now turns the skip into an error,
+and the `verifier` agent's instructions require it. CI keeps the inverse guard
+(it asserts the skip *did* happen, for the documented reason). So the harness
+fails loudly in both directions: on the reference machine if it does not run, on
+a runner if it does not skip.
+
+Two smaller items from the same review: the D17 provenance sentences now carry
+the canon's own caveat (explicit `checkpoint=` paths were sometimes used, so no
+single run can be attributed from disk), and the environment guard compares the
+Python minor version and platform too, so its message no longer claims more than
+it checks.
+
 #### What this gate did **not** do
 
 - **No golden was re-baselined.** Making G1 bit-exact rather than

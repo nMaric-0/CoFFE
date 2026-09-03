@@ -803,7 +803,8 @@ stale-vocabulary grep excludes:
 | `.claude/agents/*.md`, `.claude/skills/*` | the refactor tooling's own specification of the retirement (same category as `docs/refactor/`) |
 | `_LEGACY_ALIASES` in `coffe/models/__init__.py`, `coffe/models/hypersigma/__init__.py`, `coffe/pretrain/__init__.py` | the package-level import shims, which delegate to that table |
 | `tools/refactor/apply_renames.py`, `tools/refactor/build_manifest.py` | the rename table and the audit ledger — they exist to record old→new |
-| `CHANGES.md`, `PAPER_CANON.md`, `docs/refactor/*`, `CLAUDE.md`, `WORKFLOW.md` | documents about the retirement |
+| `CHANGES.md`, `PAPER_CANON.md`, `docs/refactor/*` | documents about the retirement |
+| `CLAUDE.md`, `WORKFLOW.md` | same category — and **untracked** since the phase-8 gate, so they are on disk but not in the release |
 | on-disk-name literals (`_ENHANCED_CANONICAL`, dir-name substring tests, `paths:` values, experiment names in notebook parameter cells) | they name files that exist |
 | stored notebook **outputs** | execution records of runs made before the rename |
 | `scripts/reports/aggregate_significance.py`'s emitted `group` / `variant` keys | they reproduce the significance experiment's own directory-name components and the frozen `significance_report.json` schema |

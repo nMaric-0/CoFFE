@@ -3,7 +3,7 @@
 ``coffe.eval.hypersigma`` had **no test coverage at all** before phase 7, even
 though PAPER_CANON §6 Table 3 is entirely its output. This runs it over a
 synthetic mini-scene with randomly initialised ViT bodies (no released
-checkpoint, CLAUDE.md hard rule 5), so what is verified is the protocol and the
+checkpoint, PAPER_CANON §7.5), so what is verified is the protocol and the
 written artifact, never an accuracy figure.
 
 The one behaviour worth knowing about, and pinned here: the loop accumulates

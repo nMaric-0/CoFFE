@@ -1,7 +1,7 @@
 """Fixtures shared by ``tests/unit`` and ``tests/integration``.
 
 Everything here is synthetic: no dataset under ``data/raw/`` and no HyperSIGMA
-checkpoint is ever needed (CLAUDE.md hard rule 5). The synthetic-scene builders
+checkpoint is ever needed (PAPER_CANON §7.5). The synthetic-scene builders
 are reused from the equivalence harness rather than re-implemented, so there is
 exactly one description of the on-disk scene layout in the test tree
 (``tests/equivalence/_harness.py``).

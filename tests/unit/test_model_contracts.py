@@ -7,7 +7,7 @@ HyperSIGMA input regimes and the label-free adaptations; §5 fixes the per-scene
 band counts the encoders have to accept.
 
 Everything runs on random weights and synthetic tensors: no dataset, no
-released HyperSIGMA checkpoint (CLAUDE.md hard rule 5). The HyperSIGMA ViT
+released HyperSIGMA checkpoint (PAPER_CANON §7.5). The HyperSIGMA ViT
 bodies are randomly initialised, so what is under test is the wrapper's
 plumbing and its ``requires_grad`` partition, never a pretrained number.
 """

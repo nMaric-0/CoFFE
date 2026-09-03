@@ -303,7 +303,9 @@ no checkpoints and no GPU:
 
 ```bash
 pytest -q -m "not gpu and not data"          # the suite
-pytest -q tests/equivalence                  # the behaviour goldens
+# The behaviour goldens. On any environment but the one they were generated on
+# these skip themselves, with the difference in the message — see Tests, below.
+pytest -q -rs tests/equivalence
 python scripts/evaluate.py --help
 python -c "
 from coffe.models import CoFFE
@@ -335,14 +337,10 @@ ev = run_evaluation(
     experiment_name="houston_simmim_token_smoke",
     eval_name="houston_15way_5shot_smoke",
     epoch=20,
-    eval_params={
-        "dataset": "houston",
-        "num_episodes": 50,
-        # The head is a pretraining-only part and the pretrain config keeps it
-        # on, so eval must switch it off explicitly (PAPER_CANON §4).
-        "use_projection": False,
-        "no_plots": True,
-    },
+    # The projection head needs no mention: it is a pretraining-only part, and
+    # since the phase-8 gate the runner no longer inherits it from the
+    # pretraining config, so eval discards it as PAPER_CANON §4 requires.
+    eval_params={"dataset": "houston", "num_episodes": 50, "no_plots": True},
     experiments_root=ROOT,
     overwrite=True,
 )

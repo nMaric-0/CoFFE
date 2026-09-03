@@ -260,6 +260,11 @@ def run_evaluation(
     pretrain_cfg = load_pretrain_config(experiment_name, experiments_root=experiments_root)
     arch_defaults = _arch_defaults_from_pretrain(pretrain_cfg)
     params: dict[str, Any] = {**arch_defaults, **user_params}
+    # The head is a pretraining part and is deliberately not inherited (see
+    # ``_ARCH_KEYS_FROM_MODEL``), but ``eval_config.json`` is supposed to be a
+    # complete description of the run - so record the effective value rather
+    # than leaving the key absent. A caller who passed one still wins.
+    params.setdefault("use_projection", False)
 
     arch_summary = ", ".join(f"{k}={params[k]}" for k in arch_defaults if k in params)
     logging.getLogger(__name__).info(

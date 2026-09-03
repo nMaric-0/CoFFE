@@ -43,15 +43,21 @@ pip install -e ".[dev]" -c constraints/verification.txt
 
 ### What happens when your environment differs
 
-`conftest.py` compares the running torch and numpy **releases** and the thread
-count against the above, and **skips the whole package with that comparison in
-the message** rather than failing. A bare failure here reads as "the code
+`conftest.py` compares the running torch and numpy **releases**, the Python
+minor version, the platform and the thread count against the above, and **skips
+the whole package with that comparison in the message** rather than failing. A bare failure here reads as "the code
 changed", and on a foreign environment that reading is wrong — which is exactly
 what the phase-8 release gate first saw in a fresh clone. So:
 
 - **On the reference environment** every fingerprint is asserted, exactly as
   before. This is where the freeze is enforced, and it is what the `verifier`
-  battery runs before every commit.
+  battery runs before every commit — with `COFFE_EQUIVALENCE_STRICT=1`, which
+  turns the skip into a hard error. On the machine that is *supposed* to be the
+  reference, quietly skipping the behaviour freeze is worse than failing:
+
+  ```bash
+  COFFE_EQUIVALENCE_STRICT=1 pytest -q tests/equivalence   # skip => error
+  ```
 - **Anywhere else** you get 33 skips and a message naming the difference. That
   is "not checked here", not "checked and fine" — the harness cannot tell you
   anything about the code from an environment it cannot reproduce.

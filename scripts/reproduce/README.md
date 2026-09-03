@@ -20,7 +20,11 @@ repo root themselves; `run_eval.sh` and `run_eval_trento.sh` are thin
 
 The **means** in Table 2 come from single canonical runs evaluated at a
 mid-schedule checkpoint (epoch 950 Houston / 975 Trento+MUUFL for CoFFE, with
-Houston SimMIM band HSI+LiDAR at 800; epoch 950 for all six MFT cells). Not a model-selection decision: those epochs are what a checkpoint sort that ordered filenames as strings returned (`"...950" > "...1500"`). The sort is numeric since the phase-7 gate, so the epoch has to be passed explicitly now — PAPER_CANON §8 D17. Each
+Houston SimMIM band HSI+LiDAR at 800; epoch 950 for all six MFT cells). Not a
+model-selection decision: those epochs are what a checkpoint sort that ordered
+filenames as **strings** returned (`"...950" > "...1500"`); the sort is numeric
+since the phase-7 gate, so the epoch must be passed explicitly now —
+PAPER_CANON §8 D17. (D17 also records what the artifacts cannot settle: explicit `checkpoint=` paths were sometimes used, so no single run can be attributed either way from disk.) Each
 cell's exact recipe, including its evaluated epoch, is in
 `configs/{coffe,mft}/<scene>_<regime>[_hsi].yaml`; `docs/refactor/AUDIT.md` §3
 D1 is the per-cell provenance table.

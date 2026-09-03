@@ -18,6 +18,7 @@ Output: results/gathered_results.json
 
 from __future__ import annotations
 
+import argparse
 import datetime as _dt
 import json
 import os
@@ -27,6 +28,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 EXP = ROOT / "experiments"
 RESULTS = ROOT / "results"
+DEFAULT_OUT = RESULTS / "gathered_results.json"
 
 
 def read_json(p: Path) -> Any | None:
@@ -245,11 +247,7 @@ G["mft_original_spatial"] = {
 }
 
 # ---------------------------------------------------------------------------
-out = RESULTS / "gathered_results.json"
-with out.open("w") as f:
-    json.dump(report, f, indent=2)
-
-# summary
+# summary counters, filled by ``walk`` below
 n_ok = n_missing = 0
 
 
@@ -265,6 +263,47 @@ def walk(o):
             walk(v)
 
 
-walk(G)
-print(f"Wrote {out}  ({out.stat().st_size / 1024:.1f} KB)")
-print(f"  OK results: {n_ok}   MISSING placeholders: {n_missing}")
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--out", type=Path, default=DEFAULT_OUT, help="output path (default: %(default)s)"
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="overwrite --out if it already exists (it is a committed artifact)",
+    )
+    return parser.parse_args(argv)
+
+
+def _guard_out(out: Path, force: bool) -> None:
+    """Refuse to clobber a committed artifact without an explicit ``--force``.
+
+    Checked before any work is done, so a mistaken invocation costs nothing.
+    Phase-6 gate decision: these report scripts used to take no arguments and
+    ignore ``argv``, so a bare ``--help`` during CLI smoke regenerated their
+    artifact — twice.
+    """
+    if out.exists() and not force:
+        raise SystemExit(
+            f"refusing to overwrite {out}\n"
+            "It is a committed artifact. Pass --force to regenerate it, or "
+            "--out PATH to write elsewhere."
+        )
+
+
+def main() -> None:
+    args = _parse_args()
+    _guard_out(args.out, args.force)
+
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    with args.out.open("w") as f:
+        json.dump(report, f, indent=2)
+
+    walk(G)
+    print(f"Wrote {args.out}  ({args.out.stat().st_size / 1024:.1f} KB)")
+    print(f"  OK results: {n_ok}   MISSING placeholders: {n_missing}")
+
+
+if __name__ == "__main__":
+    main()

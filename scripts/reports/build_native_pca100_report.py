@@ -12,6 +12,7 @@ Output: results/hypersigma_native_sem_pca100_report.json
 
 from __future__ import annotations
 
+import argparse
 import datetime as _dt
 import glob
 import json
@@ -21,6 +22,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 EXP = ROOT / "experiments"
 RESULTS = ROOT / "results"
+DEFAULT_OUT = RESULTS / "hypersigma_native_sem_pca100_report.json"
 
 # analysis experiment-name -> raw experiment-dir alias (agents occasionally keyed
 # the eval object by the eval subdir name rather than the experiment dir).
@@ -273,7 +275,39 @@ def normalize_acc(v: float | None) -> float | None:
     return round(v * 100, 3) if v <= 1.5 else round(v, 3)
 
 
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--out", type=Path, default=DEFAULT_OUT, help="output path (default: %(default)s)"
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="overwrite --out if it already exists (it is a committed artifact)",
+    )
+    return parser.parse_args(argv)
+
+
+def _guard_out(out: Path, force: bool) -> None:
+    """Refuse to clobber a committed artifact without an explicit ``--force``.
+
+    Checked before any work is done, so a mistaken invocation costs nothing.
+    Phase-6 gate decision: these report scripts used to take no arguments and
+    ignore ``argv``, so a bare ``--help`` during CLI smoke regenerated their
+    artifact — twice.
+    """
+    if out.exists() and not force:
+        raise SystemExit(
+            f"refusing to overwrite {out}\n"
+            "It is a committed artifact. Pass --force to regenerate it, or "
+            "--out PATH to write elsewhere."
+        )
+
+
 def main() -> None:
+    args = _parse_args()
+    _guard_out(args.out, args.force)
+
     raw = load_json(RESULTS / "_report_raw.json")
     analyses = {
         Path(p).stem: load_json(Path(p))
@@ -359,7 +393,8 @@ def main() -> None:
         "experiments": experiments,
     }
 
-    out = RESULTS / "hypersigma_native_sem_pca100_report.json"
+    out = args.out
+    out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w") as f:
         json.dump(report, f, indent=2, sort_keys=False)
     print(f"Wrote {out}  ({out.stat().st_size / 1024:.0f} KB)")

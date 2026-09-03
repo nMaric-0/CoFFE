@@ -14,6 +14,7 @@ Output: results/_report_raw.json
 
 from __future__ import annotations
 
+import argparse
 import contextlib
 import json
 from pathlib import Path
@@ -24,6 +25,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 EXP = ROOT / "experiments"
 RESULTS = ROOT / "results"
+DEFAULT_OUT = RESULTS / "_report_raw.json"
 
 # The 15 experiment dirs that make up the native-sem + PCA-100 families.
 EXPERIMENT_DIRS = [
@@ -125,7 +127,39 @@ def collect_experiment(exp_dir: Path) -> dict:
     return out
 
 
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--out", type=Path, default=DEFAULT_OUT, help="output path (default: %(default)s)"
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="overwrite --out if it already exists (it is a committed artifact)",
+    )
+    return parser.parse_args(argv)
+
+
+def _guard_out(out: Path, force: bool) -> None:
+    """Refuse to clobber a committed artifact without an explicit ``--force``.
+
+    Checked before any work is done, so a mistaken invocation costs nothing.
+    Phase-6 gate decision: these report scripts used to take no arguments and
+    ignore ``argv``, so a bare ``--help`` during CLI smoke regenerated their
+    artifact — twice.
+    """
+    if out.exists() and not force:
+        raise SystemExit(
+            f"refusing to overwrite {out}\n"
+            "It is a committed artifact. Pass --force to regenerate it, or "
+            "--out PATH to write elsewhere."
+        )
+
+
 def main() -> None:
+    args = _parse_args()
+    _guard_out(args.out, args.force)
+
     experiments = {name: collect_experiment(EXP / name) for name in EXPERIMENT_DIRS}
     base_configs = {c: read_yaml(ROOT / c) for c in BASE_CONFIGS}
 
@@ -136,7 +170,8 @@ def main() -> None:
         "base_configs": base_configs,
         "experiments": experiments,
     }
-    out_path = RESULTS / "_report_raw.json"
+    out_path = args.out
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w") as f:
         json.dump(blob, f, indent=2, sort_keys=False)
 

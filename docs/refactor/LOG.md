@@ -1770,3 +1770,63 @@ chose, but nothing verifies 3.11.
    to accept)?
 5. **`requires-python = ">=3.11"`** is untested; the dev venv is 3.12.3. Narrow
    to `>=3.12`, or keep 3.11 as the intended floor?
+
+### Phase-6 gate — Nikola's decisions (2026-09-03)
+
+All five open questions answered: (1) apply phase 5's `argparse`/`--force`
+recommendation — **yes**; (2) mark `docs/presentation/RESULTS.{md,json}`
+superseded in phase 8 — **ok**; (3) `compile_results.py`'s modality mislabel —
+**fix**; (4) mypy's 16 unenforced modules — **accept as debt**; (5)
+`requires-python = ">=3.11"` — **keep**.
+
+**Applied for (1).** `scripts/compile_results.py`,
+`scripts/reports/build_native_pca100_report.py`,
+`scripts/reports/gather_native_pca100_raw.py` and
+`scripts/reports/gather_requested_results.py` each gained a `_parse_args()`
+(`--out`, `--force`) and a `_guard_out()` that raises `SystemExit` when `--out`
+exists and `--force` was not passed. The guard runs *first*, before any
+scanning, so a mistaken invocation is free. `gather_requested_results.py` also
+gained the `main()` + `__main__` guard it never had: its write and summary used
+to execute at import time (its report-building reads stay at module level —
+they touch no output path). Consequence worth knowing: importing that module
+still does the full read-and-classify pass, which is why its `--help` is the
+slowest of the four. Nothing is written on import, which is the property that
+mattered here; making the payload lazy is a phase-7/8 nicety if anyone wants to
+import it as a library.
+
+This is a deliberate CLI-contract change: refreshing one of these artifacts now
+takes `--force`. Verified for all four — `--help` exits 0, a bare invocation
+exits 1 with "refusing to overwrite", and a `sha256` snapshot of
+`docs/presentation/` + `results/` is unchanged across all eight invocations.
+
+**Applied for (3).** `HSI_ONLY_MARKERS = ("no_lidar", "hsi_only")` replaces the
+single-substring test at what is now `scripts/compile_results.py:110`. Running
+the compiler to a scratch path yields 858 kept / 9 excluded (unchanged) with
+117 entries sourced from an HSI-only run dir and **0** mislabelled, against all
+`_hsi_only` ones being wrong before. No committed artifact was written (the run
+used `--out` into the scratch dir, and `git status` on `docs/presentation/` and
+`results/` stayed empty).
+
+`tests/test_compile_results.py` is new: 14 tests over both naming conventions,
+the fused-run control cases, the declared marker tuple, `--help` doing no work,
+an existing `--out` being refused and left byte-identical, and `DEFAULT_OUT`
+still pointing at the committed artifact. It runs in 0.09 s and needs no data.
+
+**Recorded for (2), (4), (5).**
+- Phase 8 should mark `docs/presentation/RESULTS.md` and `RESULTS.json`
+  **superseded**, pointing at `results/` and PAPER_CANON §6, rather than
+  regenerating them: a regenerated `RESULTS.json` does not reproduce Table 2
+  (it sources Houston CoFFE/MAE from a 700-epoch significance run, 75.24 vs the
+  paper's 72.15). D14's evidence in PAPER_CANON and CHANGES.md's
+  "numbers unchanged" guarantee both hold for the committed files only.
+- mypy's 16 `ignore_errors` modules stay as recorded debt (175 findings, all
+  typing friction; the counts are in `pyproject.toml` beside the list). The 45
+  annotations added inside those modules are therefore unchecked — noted so
+  phase 7 does not mistake the green `mypy` for full coverage.
+- `requires-python = ">=3.11"` stays, though the only interpreter this repo has
+  run on is 3.12.3, so 3.11 is an intent rather than a tested floor.
+
+**Verification for this addendum:** see the battery run below the gate
+checklist — 132 tests pass (118 + the 14 new), equivalence IDENTICAL, ruff /
+format / mypy clean, stale-vocabulary grep clean, and no file under
+`docs/presentation/`, `results/` or `experiments/` modified.

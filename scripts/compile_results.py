@@ -23,6 +23,7 @@ canonical regime label is what gets written out.
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from datetime import datetime
@@ -35,11 +36,21 @@ if str(REPO) not in sys.path:
 from coffe.compat import normalize_model_type
 
 EXPERIMENTS = REPO / "experiments"
-OUT = REPO / "docs" / "presentation" / "RESULTS.json"
+DEFAULT_OUT = REPO / "docs" / "presentation" / "RESULTS.json"
 
 DATASETS = ("houston", "trento", "muufl")
 NATURAL_N_WAY = {"houston": 15, "trento": 6, "muufl": 11}
 N_CLASSES = {"houston": 15, "trento": 6, "muufl": 11}
+
+#: The two frozen on-disk conventions that mean "no LiDAR": the canonical
+#: Table 2 runs use ``_no_lidar``, the 5-seed significance runs use
+#: ``_hsi_only`` (``sig_significance_config.py`` names them
+#: ``<scene>_hsi_only_<variant>_seed<s>`` and
+#: ``<scene>_enhanced_mae_hsi_only_seed<s>``). Both are DO-NOT-RENAME
+#: (PAPER_CANON §7.3), so this reader accepts both. Before the phase-6 gate only
+#: the first was matched, which labelled every significance HSI-only run
+#: "HSI+LiDAR".
+HSI_ONLY_MARKERS = ("no_lidar", "hsi_only")
 
 # Experiments that are scratch/test runs or otherwise not presentation-grade.
 _TEST_MARKERS = ("test_run", "spatial_mask_test", "_example")
@@ -97,7 +108,7 @@ def classify(exp: str, ev: str, data: dict):
     # CoFFE cell.
     model = "MFT (original)" if mt == "MFTOriginal" or "mft_original" in exp_l else "CoFFE"
 
-    modality = "HSI-only" if "no_lidar" in exp_l else "HSI+LiDAR"
+    modality = "HSI-only" if any(m in exp_l for m in HSI_ONLY_MARKERS) else "HSI+LiDAR"
     if "_mae_" in exp_l or exp_l.endswith("_mae"):
         regime = "MAE"
     else:
@@ -133,7 +144,39 @@ def metrics_of(data: dict) -> dict:
     return {dm: mb} if mb else {}
 
 
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--out", type=Path, default=DEFAULT_OUT, help="output path (default: %(default)s)"
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="overwrite --out if it already exists (it is a committed artifact)",
+    )
+    return parser.parse_args(argv)
+
+
+def _guard_out(out: Path, force: bool) -> None:
+    """Refuse to clobber a committed artifact without an explicit ``--force``.
+
+    Checked before any work is done, so a mistaken invocation costs nothing.
+    Phase-6 gate decision: these report scripts used to take no arguments and
+    ignore ``argv``, so a bare ``--help`` during CLI smoke regenerated their
+    artifact — twice.
+    """
+    if out.exists() and not force:
+        raise SystemExit(
+            f"refusing to overwrite {out}\n"
+            "It is a committed artifact. Pass --force to regenerate it, or "
+            "--out PATH to write elsewhere."
+        )
+
+
 def main() -> None:
+    args = _parse_args()
+    _guard_out(args.out, args.force)
+
     records: list[dict] = []
     excluded: list[dict] = []
 
@@ -256,9 +299,9 @@ def main() -> None:
         "excluded": sorted(excluded, key=lambda e: e["path"]),
     }
 
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(out, indent=2) + "\n")
-    print(f"Wrote {OUT.relative_to(REPO)}: {len(records)} kept, {len(excluded)} excluded.")
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(json.dumps(out, indent=2) + "\n")
+    print(f"Wrote {args.out}: {len(records)} kept, {len(excluded)} excluded.")
     for ds, blk in datasets_out.items():
         print(f"  {ds}: {len(blk['entries'])} headline entries")
 

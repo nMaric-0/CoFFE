@@ -339,6 +339,40 @@ configs also carry a `REPRODUCES` block naming the Table 3 cell — including th
 reproduce **no** published cell, which now say so and why. `base.yaml` needed
 no decision: PAPER_CANON D4 records it as deleted in phase 3.
 
+### Gate addendum: the report scripts got a CLI, and one reader was fixed
+
+Applied at the phase-6 gate (2026-09-03).
+
+**Four scripts that used to take no arguments now have an `argparse` front end**
+with `--out` and `--force`: `scripts/compile_results.py`,
+`scripts/reports/build_native_pca100_report.py`,
+`scripts/reports/gather_native_pca100_raw.py` and
+`scripts/reports/gather_requested_results.py` (the last also gained a `main()`
+and a `__main__` guard — its pipeline used to write at import time). Each
+refuses to overwrite an existing `--out` unless `--force` is passed, and the
+check runs before any work, so a mistaken invocation costs nothing. This closes
+the hazard that regenerated `docs/presentation/RESULTS.json` during routine CLI
+smoke in both phase 5 and phase 6.
+
+**Behaviour note:** refreshing one of these artifacts now requires
+`--force` (or `--out PATH` to write elsewhere). That is the point.
+
+**`scripts/compile_results.py` labelled HSI-only significance runs as
+HSI+LiDAR.** It classified modality by the substring `no_lidar` alone, but the
+5-seed significance runs are named `<scene>_hsi_only_<variant>_seed<s>` and
+`<scene>_enhanced_mae_hsi_only_seed<s>`. Both conventions are frozen on disk
+(PAPER_CANON §7.3), so `HSI_ONLY_MARKERS` now holds both and the reader accepts
+either. Re-running the compiler to a scratch path shows 117 entries sourced
+from an HSI-only run directory and **0** mislabelled (previously the
+`_hsi_only` ones were all wrong). No paper number is affected: Table 2's means
+come from the `*_no_lidar` dirs, which the old substring did match, and the ±
+column is aggregated by `scripts/reports/aggregate_significance.py`, which
+reads the declared group structure instead of sniffing directory names.
+
+`tests/test_compile_results.py` pins both: the two naming conventions, and that
+`--help` does no work while an existing `--out` is refused and left
+byte-identical.
+
 ### Two side effects of the tooling, recorded
 
 - **ruff formats Python code blocks inside Markdown**, so

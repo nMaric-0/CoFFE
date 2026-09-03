@@ -1,4 +1,4 @@
-"""Upstream-faithful MAE adaptation wrapper for HyperSIGMA (Level-2, Houston).
+"""Upstream-faithful MAE adaptation wrapper for HyperSIGMA.
 
 Replaces the prior CoFFE-style adapter. The masking now mirrors upstream
 HyperSIGMA's MAE recipe — token-level masking with a learnable ``mask_token``
@@ -12,7 +12,7 @@ mask_tokens before** the encoder rather than running a visible-only forward.
 The encoder still sees N=full tokens; the decoder reconstructs only the
 masked-token targets (loss is zero on visible tokens by construction).
 
-Three modes via ``adapt_mode``:
+Four modes via ``adapt_mode`` (``_SUPPORTED_MODES``):
 
 * ``spatial_only`` — train SpatViT random-init pieces (``patch_embed``,
   ``pos_embed``, deformable ``sampling_offsets``) + ``spat_mask_token`` +
@@ -22,6 +22,10 @@ Three modes via ``adapt_mode``:
   ``spec_decoder``. SpatViT and SEM are frozen.
 * ``joint_sem`` — everything above plus SEM + ``fused_decoder``. Loss is
   ``L_spat + L_spec + L_fused`` (uniform weights).
+* ``sem_only`` — the fusion path only: SEM + ``fused_decoder`` + the spectral
+  ``l1`` + mask tokens, on top of encoders left fully loaded at their native
+  geometry. Loss is ``L_fused``. This is the mode behind Table 3's three
+  ``64x64 pad / SEM-only`` cells.
 
 Hooks are attached on ``dual.spat.model.patch_embed`` and
 ``dual.spec.model.spat_map`` (the modules whose outputs carry the 768-d

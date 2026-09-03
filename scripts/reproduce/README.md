@@ -12,8 +12,8 @@ repo root themselves; `run_eval.sh` and `run_eval_trento.sh` are thin
 
 | Driver | Produces |
 |---|---|
-| `run_mae_experiments.{py,sh}` | the CoFFE MAE rows (HSI+LiDAR) |
-| `run_hsi_only_experiments.{py,sh}` | the HSI-only column of every CoFFE row |
+| `run_mae_experiments.{py,sh}` | all six CoFFE MAE cells — **both** modalities (`*_mae.yaml` for HSI+LiDAR, `*_mae_hsi.yaml` for HSI-only) |
+| `run_hsi_only_experiments.{py,sh}` | the nine CoFFE **SimMIM** HSI-only cells (3 scenes × 3 regimes); the MAE HSI-only cells come from the driver above |
 | `run_mft_original_spatial_experiments.{py,sh}` | MFT control, SimMIM token |
 | `run_mft_original_mae_experiments.{py,sh}` | MFT control, MAE |
 | `run_eval.sh`, `run_eval_trento.sh` | shell wrappers around `scripts/evaluate.py` for a single checkpoint |

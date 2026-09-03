@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Nikola Marić, Dragi Kocev — Jožef Stefan Institute / IPS Ljubljana.
-[paper](TODO) · code release for **TODO(release): venue**.
+Paper: `TODO(release)` · code release for **TODO(release): venue**.
 
 A 579K-parameter transformer encoder, pretrained per scene with no labels on the
 scene it will be tested on, is compared against a 180M-parameter hyperspectral
@@ -168,8 +168,10 @@ happened upstream, in the MFT data preparation.
 | Trento | 63 HSI | 1 LiDAR | 6 | University of Trento |
 | MUUFL Gulfport | 64 HSI | 2 LiDAR rasters | 11 | University of Florida MUUFL Gulfport dataset |
 
-`scripts/download_data.sh <scene>` prints the acquisition pointer for each
-scene and the directory to unpack it into:
+`scripts/download_data.sh <scene>` prints an acquisition pointer for each scene
+and the directory to unpack it into. Note those pointers are **third-party
+mirrors** of the pre-patched copies, not the owners' own distribution portals —
+if you need the scenes from the source, go to the providers named above:
 
 ```bash
 bash scripts/download_data.sh houston   # then trento, muufl
@@ -238,17 +240,30 @@ python scripts/evaluate.py \
     --dataset houston --data-root ./data/raw
 ```
 
-`scripts/evaluate.py`'s defaults **are** the paper protocol (N-way, K=5,
+`scripts/evaluate.py`'s *protocol* defaults **are** the paper's (N-way, K=5,
 `k_query` 100, 1000 episodes, `split all`, Euclidean NCM, projection head off),
-so nothing above needs spelling out on the command line. This is *not* true of
-`scripts/evaluate_hypersigma.py`, whose defaults (`k_query 30`, 600 episodes,
-`split test`) match no published cell — pass the protocol explicitly there, as
-the Table 3 rows below do.
+so the protocol needs nothing on the command line. Two exceptions to that
+convenience:
+
+- **HSI-only cells need `--no-aux`.** The `_hsi.yaml` configs pretrain with
+  `use_aux: false`, but the CLI defaults to `--use-aux` and does not read the
+  cell config, so evaluating an HSI-only checkpoint without `--no-aux` fails on
+  a band-count mismatch whose message blames `--dataset` instead:
+
+  ```bash
+  python scripts/evaluate.py --no-aux       --checkpoint ./checkpoints/coffe/houston_simmim_token_hsi/checkpoint_epoch_950.pth       --dataset houston --data-root ./data/raw
+  ```
+
+  The driver and notebook routes do not need it: they read `use_aux` back out
+  of the run's frozen `pretrain_config.yaml`.
+- **`scripts/evaluate_hypersigma.py`'s defaults match no published cell**
+  (`k_query 30`, 600 episodes, `split test`) — pass the protocol explicitly
+  there, as the Table 3 rows below do.
 
 | Paper table (cell group) | Command | Epochs | Wall time |
 |---|---|---|---|
 | **T2** CoFFE SimMIM ×3 regimes (the 18 means) | `scripts/pretrain.py --config configs/coffe/<scene>_simmim_{band,token,band_token}[_hsi].yaml`, then `scripts/evaluate.py` at the epoch that config names | 1500 (one cell 2000) | 0.7–4.3 h per scene |
-| **T2** CoFFE MAE rows | `python scripts/reproduce/run_mae_experiments.py` (pretrain + evaluate, 6 cells) | 1500; Houston 3000 | as above |
+| **T2** CoFFE MAE rows, both modalities | `python scripts/reproduce/run_mae_experiments.py` (pretrain + evaluate, all 6 MAE cells) | 1500; Houston 3000 | as above |
 | **T2** CoFFE SimMIM HSI-only cells, as one driver | `python scripts/reproduce/run_hsi_only_experiments.py` (the same nine cells as the `_hsi` configs above, run as a matrix) | 1500 | as above |
 | **T2** MFT control, SimMIM token | `python scripts/reproduce/run_mft_original_spatial_experiments.py` | 1500; Houston 3000 | as above |
 | **T2** MFT control, MAE | `python scripts/reproduce/run_mft_original_mae_experiments.py` | 1500; Houston 3000 | as above |
@@ -368,6 +383,11 @@ config, `configs/coffe/houston_simmim.yaml` at lr 1.5e-5 / batch 64, gives
 3 pp apart is itself the point: nothing about a truncated schedule is stable
 enough to read.
 
+The HyperSIGMA leg moved between phases as well — phase 7 recorded
+60.83 ± 1.79 where this run gives 61.03 ± 1.74 — so neither leg is reproducing
+bit-for-bit across sessions at these episode counts, which is another reason to
+read both as wiring checks.
+
 All numbers here were measured on one RTX 4090 while writing this section; the ±
 are 95 % CIs over the smoke's own episodes, not across seeds.
 
@@ -422,6 +442,16 @@ encoder forwards, masking and the full episodic evaluation against committed
 goldens, plus a pre-refactor checkpoint that must still load. It is what makes
 "this refactor changed no computed number" a checkable claim.
 
+**Those goldens are bit-exact on one environment** — Python 3.12.3, torch
+2.11.0+cu128, numpy 2.4.4 (`tests/equivalence/golden/meta.json`). This project
+declares dependency *floors*, so a fresh install resolves something newer and
+19 of the 33 equivalence tests then fail on floating-point drift; pinning
+`torch==2.11.0`, `torchvision==0.26.0` and `numpy==2.4.4` makes all 33 pass
+again. Everything outside that package is unaffected either way — measured in a
+fresh clone on the newer environment: 486 passed, 0 failed. See
+[`tests/equivalence/README.md`](tests/equivalence/README.md) before reading a
+failure there as a behaviour change.
+
 ## Citation
 
 ```bibtex
@@ -443,11 +473,12 @@ This repository is released under the [MIT License](LICENSE).
 
 [`third_party/HyperSIGMA/`](third_party/HyperSIGMA) is vendored upstream code
 (Apache-2.0), covered by **its own LICENSE and NOTICE** in that directory — not
-by this repository's MIT license. It is not quite pristine: its `NOTICE` records
-the local patches applied to it, all of them mechanical (an `mmengine`
-`get_dist_info` import shim, a `patch_size == 3` FPN branch mirroring upstream's
-`patch_size == 11` handling, and relative-import fixes so the tree loads
-in place). The MFT architecture and the
+by this repository's MIT license. It is not pristine: its `NOTICE` records the local
+patches applied to it — an `mmengine` `get_dist_info` import shim,
+relative-import fixes so the tree loads in place, and a `patch_size == 3` FPN
+branch that mirrors upstream's `patch_size == 11` handling. That last one is a
+live code path, not a cosmetic edit: every patch-native (11×11) Table 3 cell
+runs through it. The MFT architecture and the
 pre-patched dataset format come from Roy et al.'s MFT release; the Houston 2013,
 Trento and MUUFL Gulfport scenes remain the property of their respective
 providers.

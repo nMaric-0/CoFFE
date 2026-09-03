@@ -18,6 +18,38 @@ pytest tests/equivalence -q -m "not slow"    # skip the HyperSIGMA ViT builds
 No datasets and no HyperSIGMA checkpoints are required (PAPER_CANON §7.5):
 scenes are synthesised, and the HyperSIGMA ViT bodies are randomly initialised.
 
+### The goldens are bit-exact on **one** environment (read this first)
+
+`golden/meta.json` records it: **Python 3.12.3, torch 2.11.0+cu128,
+numpy 2.4.4**. `pyproject.toml` declares floors, not pins, so a fresh
+`pip install -e ".[dev]"` resolves something newer — and the goldens do not
+survive that. Measured in the phase-8 release gate, in a fresh clone:
+
+| Environment | Result |
+|---|---|
+| as `pip install -e ".[dev]"` resolved it (torch 2.14.0, numpy 2.5.2) | **19 of 33 failed** — G1/G2/G5 numeric drift (e.g. `G5[simmim_token].masked_loss` off by 2.6e-04 against the 1e-06 tolerance) plus the `meta.json` environment assertion |
+| `torch==2.11.0` (+ `torchvision==0.26.0`, which `timm` requires), `numpy==2.4.4` | **33 passed** |
+
+The rest of the suite does not care: on the newer environment the same fresh
+clone runs `-m "not gpu and not data" --ignore=tests/equivalence` at
+**486 passed, 0 failed**, and on the pinned one the whole selection is
+**519 passed, 8 skipped**.
+
+So a failure here means one of two things, and the first is far more likely:
+**your environment differs from the goldens'**, or the code's behaviour actually
+changed. Check `python -c "import torch, numpy; print(torch.__version__,
+numpy.__version__)"` against `golden/meta.json` before concluding anything.
+Note `timm` pulls `torchvision`, so pinning torch means pinning torchvision to
+its matching release too — a torch/torchvision mismatch fails these tests with
+`RuntimeError: operator torchvision::nms does not exist`, which is not numeric
+drift at all.
+
+Nothing about this is a defect in the code under test: bit-exactness on a fixed
+environment is exactly what the harness promises (`conftest.py`'s determinism
+contract). What the release does not yet ship is a way to *get* that
+environment — recorded as an open item in
+[`docs/refactor/FINAL_REPORT.md`](../../docs/refactor/FINAL_REPORT.md).
+
 ## What is pinned
 
 | Golden | File | What it fixes |

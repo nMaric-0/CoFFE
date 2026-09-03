@@ -59,11 +59,20 @@ The builders under `scripts/reports/` write these paths. They walk
 `experiments/<run>/…` on a machine that has the run trees, so they only work
 where those runs exist; on a fresh clone they have nothing to read.
 
-**Handle four of them carefully.** `scripts/compile_results.py`,
-`scripts/reports/build_native_pca100_report.py`,
+**Four of them used to be a hazard, and are not any more.**
+`scripts/compile_results.py`, `scripts/reports/build_native_pca100_report.py`,
 `scripts/reports/gather_native_pca100_raw.py` and
-`scripts/reports/gather_requested_results.py` take **no command-line arguments**
-— running them with *anything*, `--help` included, executes the full pipeline
-and overwrites their output file in place. There is no confirmation and no
-backup other than git. If you only want to know what one of them does, read it;
-do not run it.
+`scripts/reports/gather_requested_results.py` took **no command-line arguments**:
+running them with *anything*, `--help` included, executed the full pipeline and
+overwrote their committed output in place — which happened twice during the
+cleanup. Since the phase-6 gate all four take `--out PATH` and `--force`, and
+refuse to overwrite an existing output file without `--force`
+(`SystemExit: refusing to overwrite …`, checked before any work is done).
+`--help` is now just `--help`.
+
+Regenerating one still needs the run trees, so on a fresh clone it has nothing
+to read. Write somewhere else while you experiment:
+
+```bash
+python scripts/compile_results.py --out /tmp/RESULTS.json
+```

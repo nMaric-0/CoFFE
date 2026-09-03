@@ -2257,3 +2257,204 @@ clean, stale-vocabulary grep clean, 22 argparse entry points all answering
 7. Reconcile one date: PAPER_CANON §1 puts the `distance_metric` phase-4 gate at
    **2026-08-31**, while `CHANGES.md` and the commit itself (`13793e7`) say
    **2026-09-01**. Pre-existing, noticed during the phase-7 gate review.
+
+## Phase 8 — release documentation (2026-09-03)
+
+**Changed:** `README.md` (rewritten), new `docs/HYPERSIGMA.md`, `CITATION.cff`
+and `docs/refactor/FINAL_REPORT.md`; revised `docs/PRETRAINING.md`,
+`docs/EVAL_PROTOCOL.md`, `tests/equivalence/README.md`, `results/README.md`,
+`scripts/reproduce/README.md`, `CHANGES.md`; SUPERSEDED banners on
+`docs/presentation/{RESULTS,PROJECT_OVERVIEW}.md` (`RESULTS.json` untouched);
+two corrections to `PAPER_CANON.md`; docstring-only edits in seven
+`scripts/reproduce/*.py` and `coffe/pretrain/hypersigma_mae.py`. One code
+change: `tests/equivalence/conftest.py`'s `_determinism` fixture is now
+`scope="package"`. **No computed number moved** — the equivalence harness stayed
+green 33/33 in the project environment throughout, with G2-G5 bit-exact at
+`rtol=atol=0` and G1's loss trajectories inside the harness's declared
+tolerance (see the thread-pinning note below).
+
+### Carried-over phase-7 obligations
+
+| # | Item | Outcome |
+|---|---|---|
+| 1 | narrow `_determinism` to `scope="package"` | applied; verified both standalone (33 passed) and in a full-suite run where `tests/equivalence` collects first (521 passed) |
+| 2 | PAPER_CANON §1 "one deliberate default change" | corrected to two, naming the phase-7 set: the six canon-contradicting `_DEFAULT_ARGS` entries plus `num_episodes` 2000→1000 |
+| 3 | §5 footnote on border padding (S3) | added: the padding happened upstream in the MFT data preparation; the repo's own raw-image path drops border pixels and is on no paper path |
+| 4 | the reported `distance_metric` date mismatch | **no edit needed** — PAPER_CANON §1, `CHANGES.md` and commit `13793e7` all say 2026-09-01 |
+
+### GPU measurements made this phase (exact invocations, since phase 7's were not recorded)
+
+All three ran from the repo root on one RTX 4090 with `CUDA_VISIBLE_DEVICES`
+set, writing only into `/tmp/coffe-smoke`; `git status` on `experiments/`,
+`results/`, `docs/presentation/`, `checkpoints/` and `data/` stayed empty.
+
+1. **CoFFE 20-epoch smoke — OA 71.15 ± 0.67** (50 episodes). `run_pretrain(name="houston_simmim_token_smoke", config="configs/coffe/houston_simmim_token.yaml", overrides={"pretrain": {"epochs": 20, "save_interval": 20}}, experiments_root="/tmp/coffe-smoke", overwrite=True)` then `run_evaluation(experiment_name=…, eval_name="houston_15way_5shot_smoke", epoch=20, eval_params={"dataset": "houston", "num_episodes": 50, "use_projection": False, "no_plots": True}, experiments_root="/tmp/coffe-smoke", overwrite=True)`. Wall: 34.9 s pretrain + 6.8 s eval. This is the README's "quick sanity run" verbatim.
+2. **The same, from the base config — OA 56.65 ± 0.96** (head off; 55.41 ± 0.99 head on). Identical to (1) but `config="configs/coffe/houston_simmim.yaml"` (lr 1.5e-5 / batch 64 / warmup 100). Run to test whether the base config explains phase 7's 74.43: **it does not.**
+3. **HyperSIGMA frozen 64×64 upscale / spatial, Houston — OA 61.03 ± 1.74** (20 episodes, `k_query` 10) against the published 61.14 ± 0.11. `python scripts/evaluate_hypersigma.py --dataset houston --native-geometry --input-fit upscale --mode spat_pool --adapted-checkpoint none --split all --num-episodes 20 --k-query 10 --no-plots --output-dir /tmp/coffe-smoke/hypersigma_native_upscale`. Wall: ~7 s eval after model load. The flags were read off the frozen cell's own `eval_config.json` in `results/_report_raw.json`, whose OA (61.1366 ± 0.1082) confirms canon §6's 61.14 ± 0.11.
+
+An earlier attempt at (1) evaluated with the projection head **on** (69.63 ±
+0.85) because `run_evaluation` inherits `use_projection` from the pretrain
+config — see the findings below.
+
+**The CoFFE smoke does not reproduce phase 7's number.** Phase 7 recorded
+74.43 ± 0.66 under the same *stated* settings (20 epochs, 50 episodes,
+`k_query` 100); its exact invocation was not recorded, so the 3.3 pp difference
+is unattributed, and the base-config hypothesis is ruled out by (2). The
+HyperSIGMA leg also moved (60.83 → 61.03; phase 7 ran without `--split all`,
+which its own record does not mention either). Phase 7's flagged observation —
+that 20 of 1500 epochs reaches ~99 % of the headline OA — therefore still stands
+as flagged and uninvestigated, and the spread between two 20-epoch measurements
+is one more reason it needs a real run rather than a smoke.
+
+### Release gate — fresh clone of the local repo, fresh venv
+
+`git clone . /tmp/coffe-release-check2` at `558e1b9`, `python3 -m venv .venv`,
+then the README's own commands. The clone has **no** `data/raw` and **no**
+checkpoints (both are untracked symlinks here), which is the point: it proves
+hard rule 5.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | clone | PASS — 0 data entries, 0 checkpoints |
+| 2 | `pip install -e ".[dev]"` | **PASS** — clean, 1 m 10 s; resolves torch 2.14.0+cu130 / numpy 2.5.2; `import coffe` and `import third_party` both OK |
+| 3 | `pytest -q -m "not gpu and not data"` | **19 failed, 500 passed, 8 skipped** — every failure inside `tests/equivalence` (see below) |
+| 4 | the same selection, `--ignore=tests/equivalence` | **PASS — 486 passed, 8 skipped, 0 failed** |
+| 5 | `pytest -q tests/equivalence` | **FAIL — 19 failed, 14 passed** (G1 ×8, G2 ×5, G5 ×5, `test_golden_metadata_recorded`) |
+| 6 | `ruff check . && ruff format --check .` | PASS — clean, 136 files already formatted |
+| 7 | every non-GPU README command | PASS — `evaluate.py --help`; the parameter-count one-liner prints **579328**; `download_data.sh {houston,trento,muufl}`; 11 further `--help`s exit 0; the four artifact-writing report scripts byte-compile (not executed) |
+| 8 | clone tree still clean | PASS — `git status --porcelain` empty |
+| — | `canon-reviewer` on `pre-refactor..HEAD` | ran twice; both rounds' blocking items fixed (below) |
+
+**Check 5 is the finding of this phase, and it is not a behaviour change.** The
+goldens are bit-exact on the environment `golden/meta.json` records — Python
+3.12.3, torch 2.11.0+cu128, numpy 2.4.4 — and `pyproject.toml` declares floors,
+so a fresh install resolves something newer. The failures are floating-point
+drift (e.g. `G5[simmim_token].masked_loss` 0.3216553 vs golden 0.3213982,
++2.6e-04 against a 1e-06 tolerance) plus the `meta.json` environment assertion
+firing exactly as designed. Established by bisection **in the same clone**:
+
+| Environment | `pytest tests/equivalence` |
+|---|---|
+| as resolved: torch 2.14.0, numpy 2.5.2 | 19 failed / 14 passed |
+| `torch==2.11.0` only (numpy 2.5.2, torchvision still 0.29) | 2 failed / 31 passed — and those 2 fail with `RuntimeError: operator torchvision::nms does not exist`, a torch/torchvision mismatch, not drift |
+| `+ numpy==2.4.4` | 2 failed / 31 passed (unchanged — numpy is not the driver) |
+| `+ torchvision==0.26.0` (the release matching torch 2.11) | **33 passed**; whole selection 519 passed / 8 skipped |
+
+So: torch is the cause, pinning it is the remedy, and `timm` pulls
+`torchvision`, so the pin has to name torchvision too. **Two consequences for
+the release, both for Nikola:** the repo ships no way to obtain the goldens'
+environment, and `.github/workflows/ci.yml` — which installs unpinned torch and
+whose `not gpu and not data and not slow` selection includes these synthetic
+goldens — will fail on GitHub as written. CI has never actually run; the branch
+has never been pushed. Recommended (not applied): pin the verification
+environment in the `[dev]` extra or a constraints file, and leave the
+tolerances alone — loosening them would weaken the freeze the harness exists
+for. Documented meanwhile in `tests/equivalence/README.md` and the README's
+Tests section.
+
+### Findings reported, not fixed (rule 7)
+
+0. **G1 is WITHIN-TOL, not bit-identical, and the likely reason is an unpinned
+   thread count.** Re-running the harness at `rtol=atol=0` (via an out-of-tree
+   plugin, no repo file touched) fails the 8 G1 loss-trajectory tests with
+   deltas of at most **4.6e-09** on losses of order 0.28 — ~1.4e-08 relative,
+   two orders inside the declared `rtol=1e-6`. The residual is **stable across
+   repeats**, not random, and `torch.get_num_threads()` is **32** here while
+   nothing in `conftest.py` or `_harness.py` pins `OMP_NUM_THREADS` or calls
+   `torch.set_num_threads`, so BLAS reduction order depends on the machine's
+   thread count at golden-generation time. This is exactly the noise the
+   conftest comment says the tolerance exists to absorb, and `CHANGES.md`'s
+   preamble already records it (residual ≤ 5e-09 on goldens this work never
+   touched) — so it is pre-existing, not phase-8 drift. Making step 3 read a
+   literal IDENTICAL would need `torch.set_num_threads(1)` in the
+   package-scoped `_determinism` fixture **plus regenerated goldens**, which is
+   a re-baseline and needs sign-off. Worth doing precisely because a reader in
+   a fresh clone cannot otherwise tell this 4.6e-09 residual apart from the
+   2.6e-04 torch-2.14 drift above.
+
+1. **`scripts/evaluate_hypersigma.py`'s defaults match no published cell**:
+   `k_query 30`, `num_episodes 600`, `split "test"` (also
+   `coffe/eval/hypersigma.py:_DEFAULT_ARGS`). Phase 7 aligned
+   `coffe/eval/episodic.py` and left this route alone. Every published-cell
+   command must pass `--split all --k-query 100 --num-episodes 2000`, which the
+   README and `docs/HYPERSIGMA.md` now do. Aligning the defaults would be a
+   third signed-off default change.
+2. **`use_projection` is inherited from the pretrain config** by
+   `coffe/runners/eval_runner.py` (`_ARCH_KEYS_FROM_MODEL`), and the SimMIM
+   configs keep the head on, so a bare `run_evaluation(...)` evaluates *with*
+   it — not the protocol. Every paper path passes `False` explicitly
+   (`notebooks/evaluate.ipynb` surfaces it, `sig_significance_config.eval_params`
+   sets it, every frozen `eval_config.json` records it), so no published number
+   is affected. Cost me one wrong smoke measurement (69.63 vs 71.15) before I
+   noticed; now documented in `docs/EVAL_PROTOCOL.md`.
+3. **HSI-only cells cannot be evaluated by the generic recipe, and the error
+   misdiagnoses it.** The `_hsi.yaml` configs pretrain with `use_aux: false`;
+   `scripts/evaluate.py` defaults to `--use-aux` and never reads the cell
+   config, so the 12 HSI-only Table 2 cells need `--no-aux`. Without it,
+   `coffe/eval/episodic.py:239-247` raises a band-count mismatch that says "Set
+   `--dataset` to the dataset this checkpoint was pretrained on" — pointing at
+   the wrong flag. `--no-aux` appeared in no release doc before this phase; it
+   now appears in three. Improving the message is a code change and was not
+   made.
+4. **`configs/hypersigma/houston_eval.yaml`** and
+   `scripts/reproduce/run_eval{,_trento}.sh` carry non-paper defaults; each
+   already says so in its header (unchanged, recorded again here).
+
+### Documentation errors found and fixed
+
+- `results/README.md` still described the four report scripts as taking no
+  arguments and overwriting committed artifacts on any invocation — the
+  phase-6 gate gave all four `--out`/`--force` and a pre-flight guard. The
+  README links that file, so a stranger was being handed the pre-phase-6 hazard
+  model and told not to run scripts that are now safe.
+- `scripts/reproduce/README.md` mis-stated two drivers' coverage:
+  `run_mae_experiments` produces all six MAE cells (both modalities), and
+  `run_hsi_only_experiments` produces the nine **SimMIM** HSI-only cells.
+- The T3 `11×11 joint+SEM` reproduction path named the 3-band config, which
+  reproduces no published cell; corrected to Houston's
+  `houston_patchnative_pca100_joint_sem.yaml` with its run's schedule override,
+  and Trento/MUUFL's launch-time overrides named.
+- `docs/HYPERSIGMA.md` had Table 3's coverage inverted (it is 2 rows committed,
+  1 partial, 5 not).
+- `coffe/pretrain/hypersigma_mae.py` documented three `adapt_mode` values where
+  `_SUPPORTED_MODES` has four; the missing `sem_only` is the mode behind Table
+  3's three `64×64 pad / SEM-only` cells. Its title also said "(Level-2,
+  Houston)" for a module used on all three scenes.
+- Seven `scripts/reproduce/` docstrings named `lib.pretrain_runner` /
+  `lib.eval_runner` (phase 5 renamed them to `coffe.runners.*`), two described
+  this route's evaluation as "cosine/euclidean", and
+  `sig_significance_config.eval_params` claimed `use_projection` was inherited
+  when it is passed explicitly three lines below.
+- "vendored upstream, unmodified" was false in three places:
+  `third_party/HyperSIGMA/NOTICE` records local patches, one of which (the
+  `patch_size == 3` FPN branch) is the code path every patch-native Table 3
+  cell runs through.
+
+### Open questions for the gate
+
+1. **Equivalence goldens vs. a fresh install** — pin the verification
+   environment (recommended), or accept that the harness only runs on a
+   reconstructed environment? Whatever is chosen, CI needs the same answer
+   before the branch is pushed. If you re-baseline the goldens for a newer
+   torch, pin the thread count in the same commit (finding 0) and the harness
+   becomes bit-exact rather than tolerance-bounded.
+2. **The D17 addendum** proposed at the phase-7 gate is still unapplied;
+   `PAPER_CANON.md` §8 D17 is unedited. The release docs are worded neutrally
+   either way.
+3. **Release blanks**: paper/venue link, BibTeX + `CITATION.cff` venue,
+   checkpoint hosting link, funding acknowledgement. All tagged
+   `TODO(release)`.
+4. **`CLAUDE.md` and `WORKFLOW.md` ship at the repo root** (manifest verdict
+   `keep`) but are internal refactor-process documents, while `SPLIT.md` was
+   deleted for being internal (D11). Keep, move under `docs/refactor/`, or
+   delete at release?
+5. **Doc filenames** — the phase-8 plan named `docs/{pretraining,evaluation,
+   hypersigma}.md`; the files kept their phase-4 names (`PRETRAINING.md`,
+   `EVAL_PROTOCOL.md`, and the new `HYPERSIGMA.md` matching them), because
+   renames come only from the canon or the manifest and the manifest's verdict
+   on both is `keep`. Rename if preferred — it is a one-liner plus link fixes.
+6. **The three defaults/messages in "Findings reported, not fixed"** — align
+   them in a signed-off commit, or leave them documented?
+
+`docs/refactor/FINAL_REPORT.md` carries the phase-by-phase summary, the
+before→after metrics, and the full unresolved-items list.

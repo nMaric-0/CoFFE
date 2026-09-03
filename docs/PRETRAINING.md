@@ -30,7 +30,9 @@ Frozen configs on the authors' machines spell the SimMIM objective
 
 ## The three SimMIM regimes
 
-A regime is a **pair of mask rates**, not a separate code path:
+A regime is a **pair of mask rates**, not a separate code path (the table below
+is the nominal pair; the 24 per-cell configs carry their own — see
+"Reproducing a published cell"):
 
 | Regime | `band_mask_ratio` | `spatial_mask_ratio` | Legacy id |
 |---|---|---|---|
@@ -49,7 +51,7 @@ Two caveats the audit established, both recorded in PAPER_CANON §8:
   | Config | `band_mask_ratio` | `spatial_mask_ratio` | i.e. |
   |---|---|---|---|
   | `configs/coffe/houston_simmim.yaml` | 0.0 | 0.75 | SimMIM token |
-  | every other `configs/coffe/*_simmim*.yaml` (Houston HSI-only, both Trento, both MUUFL) | 0.9 | 0.0 | SimMIM band, at a rate **no Table 2 cell used** |
+  | the other five **base** configs — `houston_simmim_hsi.yaml`, `{trento,muufl}_simmim{,_hsi}.yaml` | 0.9 | 0.0 | SimMIM band, at a rate **no Table 2 cell used** |
 
   The 5-seed significance experiment overrides the pair at runtime from the
   canonical run dir (`scripts/reproduce/sig_significance_config.py`). **Use the

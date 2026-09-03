@@ -89,6 +89,21 @@ def find_checkpoint(
 
     If `epoch` is None, returns the highest-numbered checkpoint
     (or the file named `checkpoint_final.pth` if present).
+
+    .. warning::
+
+       Until the phase-7 gate (2026-09-03) the ``epoch=None`` branch sorted
+       these filenames as **strings**, so ``checkpoint_epoch_950.pth`` beat
+       ``checkpoint_epoch_1500.pth`` and a mid-training checkpoint was returned
+       as "the latest". The sort is numeric now. This matters for reading the
+       frozen experiment trees: **the paper's evaluated epochs are what that
+       string sort happened to return** — 950 for a 30-checkpoint Houston run,
+       975 for a 60-checkpoint Trento/MUUFL run, 800 for the 10-checkpoint
+       ``houston_enhanced_spectral_run2`` — and every canonical
+       ``eval_config.json`` records ``"epoch": null``. So a bare ``epoch=None``
+       evaluation of a frozen run **no longer reproduces the published cell**;
+       pass that cell's epoch explicitly, as the per-cell configs in
+       ``configs/{coffe,mft}/`` instruct (PAPER_CANON §8 D17).
     """
     logger_ = ExperimentLogger(experiments_root=experiments_root, repo_root=REPO_ROOT)
     exp_dir = logger_.get_experiment(experiment_name)
@@ -100,7 +115,10 @@ def find_checkpoint(
         final = ckpts / "checkpoint_final.pth"
         if final.exists():
             return str(final)
-        candidates = sorted(ckpts.glob("checkpoint_epoch_*.pth"))
+        candidates = sorted(
+            ckpts.glob("checkpoint_epoch_*.pth"),
+            key=lambda p: int(p.stem.rsplit("_", 1)[1]),
+        )
         if not candidates:
             raise FileNotFoundError(f"No checkpoint files found in {ckpts}")
         return str(candidates[-1])

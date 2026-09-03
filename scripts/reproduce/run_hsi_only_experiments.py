@@ -68,6 +68,19 @@ CONFIGS = {
 
 # Evaluation params matching the current HSI+LiDAR result runs. use_aux is NOT
 # set here: it auto-loads (as false) from the experiment's pretrain_config.yaml.
+# Evaluated checkpoint epoch, per dataset (PAPER_CANON §8 D17).
+#
+# Passed EXPLICITLY. Until the phase-7 gate this call omitted `epoch`, which
+# made `coffe.runners.eval_runner.find_checkpoint` fall through to a
+# lexicographic filename sort — and that sort is what actually selected the
+# paper's mid-schedule checkpoints ("950" > "1500" as strings). The sort is
+# numeric now, so omitting `epoch` would evaluate the FINAL checkpoint and no
+# longer reproduce the published cell.
+#
+# Houston saves every 50 epochs -> 950; Trento/MUUFL every 25 -> 975. Both are
+# reachable from the committed configs' `save_interval`.
+EVAL_EPOCH = {"houston": 950, "trento": 975, "muufl": 975}
+
 EVAL_PARAMS = dict(
     split="all",
     k_shot=5,
@@ -153,6 +166,7 @@ def main():
                 run_evaluation(
                     experiment_name=exp_name,
                     eval_name=eval_name,
+                    epoch=EVAL_EPOCH[ds],
                     eval_params={"dataset": ds, **EVAL_PARAMS},
                     overwrite=args.overwrite,
                 )

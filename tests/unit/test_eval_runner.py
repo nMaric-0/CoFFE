@@ -205,20 +205,14 @@ def test_an_unknown_experiment_is_an_error(tmp_path: Path) -> None:
         find_checkpoint("nope", experiments_root=tmp_path / "experiments")
 
 
-@pytest.mark.xfail(
-    reason=(
-        "KNOWN DEFECT (found in phase 7, reported at the gate): with epoch=None "
-        "and no checkpoint_final.pth, find_checkpoint takes sorted(glob(...))[-1], "
-        "which orders filenames lexicographically — 'checkpoint_epoch_1500.pth' < "
-        "'checkpoint_epoch_950.pth' — so it returns epoch 950 instead of 1500. "
-        "No published number is affected: every paper cell passes an explicit "
-        "epoch (PAPER_CANON §8 D17), and the significance runner passes 700. "
-        "Not fixed here because that changes behaviour; this test states the "
-        "intended contract and will XPASS once the sort is made numeric."
-    ),
-    strict=False,
-)
-def test_latest_checkpoint_should_be_the_highest_epoch(tmp_path: Path) -> None:
+def test_latest_checkpoint_is_the_highest_epoch(tmp_path: Path) -> None:
+    """``epoch=None`` returns the numerically last checkpoint.
+
+    Until the phase-7 gate this sorted filenames as strings, so it returned
+    950 out of {800, 950, 1500}. Fixed with a numeric key at the gate (S1);
+    see :func:`test_the_paper_epochs_are_what_the_string_sort_returned` for why
+    that mattered.
+    """
     root = tmp_path / "experiments"
     _experiment(root, "run", config=LEGACY_PRETRAIN_CONFIG, epochs=(800, 950, 1500))
 
@@ -227,22 +221,45 @@ def test_latest_checkpoint_should_be_the_highest_epoch(tmp_path: Path) -> None:
     assert Path(found).name == "checkpoint_epoch_1500.pth"
 
 
-def test_the_current_latest_checkpoint_behaviour_is_lexicographic(tmp_path: Path) -> None:
-    """The companion to the xfail above: what actually happens today.
+@pytest.mark.parametrize(
+    "save_interval,total,string_sort_pick",
+    [
+        (50, 1500, 950),  # Houston 30-checkpoint runs -> D17's 950
+        (25, 1500, 975),  # Trento / MUUFL 60-checkpoint runs -> D17's 975
+        (200, 2000, 800),  # houston_enhanced_spectral_run2 -> D17's 800
+    ],
+    ids=["houston", "trento_muufl", "houston_spectral_run2"],
+)
+def test_the_paper_epochs_are_what_the_string_sort_returned(
+    tmp_path: Path, save_interval: int, total: int, string_sort_pick: int
+) -> None:
+    """Why PAPER_CANON §8 D17's evaluated epochs are 950 / 975 / 800.
 
-    Pinned so the defect is visible in the suite rather than folklore, and so
-    the pair has to be updated together when it is fixed.
+    Every canonical ``eval_config.json`` records ``"epoch": null``, and for each
+    of the three save patterns in the frozen trees the **string** sort this
+    function used to do returns exactly the epoch D17 reports. Reproduced here
+    on synthetic filenames so the coincidence is documented rather than
+    folklore, and so nobody re-derives the old behaviour by accident.
+
+    The numeric sort now returns the true last epoch instead, which is why a
+    bare ``epoch=None`` evaluation of a frozen run no longer reproduces its
+    published cell — the per-cell configs name the epoch to pass.
     """
-    root = tmp_path / "experiments"
-    _experiment(root, "run", config=LEGACY_PRETRAIN_CONFIG, epochs=(800, 950, 1500))
+    epochs = tuple(range(save_interval, total + 1, save_interval))
+    names = [f"checkpoint_epoch_{e}.pth" for e in epochs]
 
+    assert max(names) == f"checkpoint_epoch_{string_sort_pick}.pth"
+
+    root = tmp_path / "experiments"
+    _experiment(root, "run", config=LEGACY_PRETRAIN_CONFIG, epochs=epochs)
     found = find_checkpoint("run", epoch=None, experiments_root=root)
 
-    assert Path(found).name == "checkpoint_epoch_950.pth"
+    assert Path(found).name == f"checkpoint_epoch_{total}.pth"
+    assert Path(found).name != f"checkpoint_epoch_{string_sort_pick}.pth"
 
 
-def test_a_single_epoch_is_unaffected_by_the_ordering_defect(tmp_path: Path) -> None:
-    """The common case — one checkpoint per run dir — is correct either way."""
+def test_a_single_epoch_resolves_the_same_either_way(tmp_path: Path) -> None:
+    """The common case — one checkpoint per run dir — was never affected."""
     root = tmp_path / "experiments"
     _experiment(root, "run", config=LEGACY_PRETRAIN_CONFIG, epochs=(700,))
 

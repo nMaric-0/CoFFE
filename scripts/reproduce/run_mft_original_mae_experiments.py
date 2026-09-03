@@ -64,6 +64,19 @@ CONFIGS = {
 
 # Evaluation params matching the other MAE baselines (run_mae_experiments.py).
 # name/attention_type/use_aux/use_projection auto-load from pretrain_config.yaml.
+# Evaluated checkpoint epoch (PAPER_CANON §8 D17): 950 for all six MFT cells.
+#
+# Passed EXPLICITLY. Until the phase-7 gate this call omitted `epoch`, which
+# made `coffe.runners.eval_runner.find_checkpoint` fall through to a
+# lexicographic filename sort — and that sort is what actually selected the
+# paper's mid-schedule checkpoints ("950" > "1500" as strings). The sort is
+# numeric now, so omitting `epoch` would evaluate the FINAL checkpoint and no
+# longer reproduce the published cell.
+#
+# Every configs/mft/*.yaml saves every 50 epochs, so 950 exists for all three
+# scenes.
+EVAL_EPOCH = 950
+
 EVAL_PARAMS = dict(
     split="all",
     k_shot=5,
@@ -148,6 +161,7 @@ def main():
                 run_evaluation(
                     experiment_name=exp_name,
                     eval_name=eval_name,
+                    epoch=EVAL_EPOCH,
                     eval_params={"dataset": ds, **EVAL_PARAMS},
                     overwrite=args.overwrite,
                 )

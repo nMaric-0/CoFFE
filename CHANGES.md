@@ -369,7 +369,7 @@ come from the `*_no_lidar` dirs, which the old substring did match, and the ±
 column is aggregated by `scripts/reports/aggregate_significance.py`, which
 reads the declared group structure instead of sniffing directory names.
 
-`tests/test_compile_results.py` pins both: the two naming conventions, and that
+`tests/integration/test_compile_results.py` pins both: the two naming conventions, and that
 `--help` does no work while an existing `--out` is refused and left
 byte-identical.
 
@@ -400,6 +400,103 @@ the three cells reproduce from `configs/hypersigma/<scene>_patchnative_joint_sem
 They do not: all three published runs used the **100-band** spatial front-end,
 and the committed Trento/MUUFL configs are 3-band. Corrected there, and each
 affected config's own header now states its true relationship to the cell.
+
+---
+
+## Phase 7 — test suite (2026-09-03)
+
+Nothing in `coffe/`, `scripts/` or `configs/` changed. This phase only added
+tests and moved existing ones, so **no computed number could move**; the
+equivalence harness confirms it.
+
+### Structure
+
+`tests/` is now three layers. `tests/equivalence/` keeps its contents; the
+only edit inside it is two comment-only path references in `_harness.py`:
+
+| Layer | Meaning |
+|---|---|
+| `tests/unit/` | one module under test, synthetic tensors, no disk, no training loop |
+| `tests/integration/` | several modules composed — dataset → sampler → model, the pretrain/adapt loops, the CLIs, the report scripts |
+| `tests/equivalence/` | the behaviour-equivalence harness (no behavioural change) |
+
+Nine surviving tests were `git mv`d into place with no change of substance:
+
+| Old | New |
+|---|---|
+| `tests/test_models.py` | `tests/unit/test_tokenizers.py` |
+| `tests/test_spatial_weights.py` | `tests/unit/test_spatial_weights.py` |
+| `tests/test_compat.py` | `tests/unit/test_compat.py` |
+| `tests/test_mft_original_shapes.py` | `tests/unit/test_mft_original_shapes.py` |
+| `tests/test_hypersigma_shapes.py` | `tests/unit/test_hypersigma_shapes.py` |
+| `tests/test_hypersigma_native_shapes.py` | `tests/unit/test_hypersigma_native_shapes.py` |
+| `tests/test_data.py` | `tests/integration/test_episode_sampler.py` |
+| `tests/test_pretrain_simmim.py` | `tests/integration/test_pretrain_simmim.py` |
+| `tests/test_compile_results.py` | `tests/integration/test_compile_results.py` |
+
+`test_pretrain_simmim.py` also lost its `sys.path` bootstrap, its `print()`
+reporting and its `main()`/`__main__` runner — pytest is the only runner now.
+Its assertions are byte-identical.
+
+`tests/conftest.py` is new and holds two things: the paper's §5 dataset table
+written out as a literal (the constant the code is checked *against*), and a
+session-scoped fixture that writes the three shape-faithful synthetic
+mini-scenes. The scene builders are **reused from
+`tests/equivalence/_harness.py`** rather than re-implemented, so the test tree
+has exactly one description of the on-disk scene layout.
+
+### What the new tests pin
+
+| File | Canon clause |
+|---|---|
+| `unit/test_masking_loss.py` | §3 Eq. 1 — exact token-mask counts, band-mask rates, the mask **union** (captured with forward hooks on both masking submodules), the masked-mean reduction, and the mean-one Gaussian centre weight |
+| `unit/test_ncm_protocol.py` | §4 — assignments equal `sklearn.neighbors.NearestCentroid`, prototype = mean of the K = 5 supports, Euclidean the default everywhere, cosine still selectable. Also splits `_DEFAULT_ARGS` into the defaults that are the protocol and the five that contradict it (`docs/refactor/LOG.md` S4) |
+| `unit/test_model_contracts.py` | §2 — forward shapes for all three dataset specs, 121 + 1 tokens, HSI-only sizing, pooled feature dim 128, Houston parameter count **579,328** (exactly) |
+| `unit/test_hypersigma_contracts.py` | §1/§6 — the two input regimes, the three Table 3 feature widths, and the `requires_grad` partition: no adaptation may unfreeze a released ViT-Base block |
+| `unit/test_config_parity.py` | §1/§2/§4/§9 — every committed config's arch and per-cell mask rates, including D19's Houston exception; the reproduce pipeline's K = 5 / 100 queries / 1000 episodes / euclidean; the seeds `[42, 123, 456, 789, 1011]` |
+| `unit/test_checkpoint_keys.py` | §7.2 — the live `fix_state_dict_keys` rules, and that a real pretrain state_dict leaves no eval parameter randomly initialised |
+| `unit/test_eval_runner.py` | §7.3 — a frozen `model.name: "mft_cpea"` config still seeds the right architecture, with one `DeprecationWarning`; checkpoint lookup by epoch |
+| `integration/test_eval_protocol.py` | §4/§5 — N-way = 15/6/11, five supports per class, class-balanced queries |
+| `integration/test_data_plumbing.py` | §5 — 11×11 patches, per-band min-max to [0, 1] asserted against the un-normalised tensors, PCA 144→100, linear resample 63/64→100. Also pins the one §5 clause the code does **not** implement: the paper's "border-padded at edges" happened upstream in the MFT data preparation, and this repo's (non-paper-path) raw-image loader drops border pixels instead — see `docs/refactor/LOG.md` S3 |
+| `integration/test_hypersigma_eval.py` | §6/§8 D18 — the Table 3 evaluator end to end, and that `distance_metric` selects a *label*: both blocks are computed either way |
+| `integration/test_hypersigma_adapt.py` | §1/§3 — one label-free adaptation epoch per mode, and no gradient reaching a released body after a real backward |
+| `integration/test_cli.py` | `--help` on all 21 argparse entry points (leaving `docs/presentation/`, `results/` and `experiments/` unchanged, proved by a path+size+mtime digest taken before and after the sweep), plus pretrain → checkpoint → evaluate → `results.json` for both routes |
+
+### Marker discipline
+
+`slow` marks the 21 new tests that build a 180 M-parameter ViT body, or that
+shell out to `scripts/pretrain.py` + `scripts/evaluate.py` (23 in the suite,
+counting the two pre-existing equivalence ones). The 22 `--help`-driving tests
+are *not* marked `slow`: the 21 per-script ones take under a second each, and
+the 22nd (which re-runs all 21 subprocesses to digest-check the frozen artifact
+trees) takes ~20 s.
+
+Nothing new needs `data` or `gpu`. Verified rather than asserted: run from a
+working directory where `data/raw/` and `checkpoints/` are unreachable, the
+suite is **516 passed, 8 skipped, 0 failed** — the two extra skips being
+exactly the pre-existing checkpoint-gated tests
+(`tests/unit/test_hypersigma_native_shapes.py`), which keep their `skipif`.
+Both the datasets and the HyperSIGMA checkpoints *are* present on the dev
+machine, so an ordinary run does not exercise this; the separate run above is
+what backs the claim.
+
+### Counts
+
+| | Before | After |
+|---|---|---|
+| tests collected (`-m "not gpu and not data"`) | 134 | 525 |
+| wall time, CPU | 4:23 | 3:21 - 4:08 |
+| line coverage of `coffe/` | 52 % | 69 % |
+
+The wall times are not a controlled comparison: five measurements of the new
+suite spread over 3:21-4:08 on the same machine (and the `not slow` selection
+over 2:06-4:12, depending on what else was running), while the 4:23 baseline
+was the first, cold run of its session. Read them as "same order, still a few
+minutes", not as a speed-up.
+
+Two paper-path modules went from **0 %** to covered: `coffe/eval/hypersigma.py`
+(74 %) — the module every Table 3 cell came through — and
+`coffe/pretrain/hypersigma_adapt.py` (81 %), the label-free adaptation loop.
 
 ## Compatibility guarantees
 
@@ -442,7 +539,7 @@ from coffe_compat import MFTCPEACosine  # same object
 ```
 
 The alias *is* the canonical class, so `isinstance` checks and checkpoint loads
-behave identically either way. `tests/test_compat.py` (25 tests) pins all three guarantees, and
+behave identically either way. `tests/unit/test_compat.py` (25 tests) pins all three guarantees, and
 `tests/equivalence/test_equivalence.py::test_g1_legacy_vocabulary_config_trains_identically`
 runs a frozen-vocabulary config end-to-end through `run_pretrain` and checks the
 loss trajectory against the golden.
@@ -492,7 +589,9 @@ stale-vocabulary grep excludes:
 
 | File | Why |
 |---|---|
-| `coffe/compat.py`, `tests/test_compat.py` | the alias table itself, and its tests |
+| `coffe/compat.py`, `tests/unit/test_compat.py` | the alias table itself, and its tests |
+| `tests/unit/test_eval_runner.py` | its fixture is a frozen-vocabulary `pretrain_config.yaml`, because that is what the runner must keep reading (PAPER_CANON §7.3) |
+| `tests/unit/test_config_parity.py` | asserts the retired names are **absent** from the committed configs — it names them to forbid them |
 | `tests/equivalence/test_equivalence.py`'s `test_g1_legacy_vocabulary_config_trains_identically` | drives a frozen-vocabulary config end to end on purpose |
 | `.claude/agents/*.md`, `.claude/skills/*` | the refactor tooling's own specification of the retirement (same category as `docs/refactor/`) |
 | `_LEGACY_ALIASES` in `coffe/models/__init__.py`, `coffe/models/hypersigma/__init__.py`, `coffe/pretrain/__init__.py` | the package-level import shims, which delegate to that table |

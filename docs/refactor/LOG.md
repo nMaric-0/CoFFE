@@ -1830,3 +1830,270 @@ still pointing at the committed artifact. It runs in 0.09 s and needs no data.
 checklist — 132 tests pass (118 + the 14 new), equivalence IDENTICAL, ruff /
 format / mypy clean, stale-vocabulary grep clean, and no file under
 `docs/presentation/`, `results/` or `experiments/` modified.
+
+---
+
+## Phase 7 — test suite (2026-09-03)
+
+**Nothing under `coffe/`, `scripts/` or `configs/` changed.** This phase added
+tests and moved existing ones. The only non-test edits are `CHANGES.md` (a new
+Phase 7 section, two moved-test paths corrected, **two** rows added to the
+retired-names exclusion list and one existing row's path fixed) and stale
+`pytest tests/test_*.py` invocation lines inside three moved test docstrings.
+`tests/equivalence/` is unchanged except for two comment-only path references
+in `_harness.py`. No computed number can have moved, and the equivalence
+harness confirms it (33/33, IDENTICAL at zero tolerance for G2-G5).
+
+### Step 1 — test inventory
+
+The baseline suite was **134 passed, 0 failed, 0 skipped** in 4:23 on CPU. So
+there was **no baseline failure to triage**: neither the test-rot branch nor
+the real-bug-needs-sign-off branch of the phase-7 protocol was entered.
+
+Worth recording why nothing skipped: this machine has both `data/raw/` (all
+three scenes) and the two ~1.4 GB HyperSIGMA ViT-Base checkpoints on disk, so
+`test_hypersigma_native_shapes.py`'s two `skipif`-gated tests actually ran. An
+ordinary run here therefore does **not** exercise CLAUDE.md hard rule 5. See
+step 3 for the separate run that does.
+
+All nine surviving legacy test files were kept — none had a pruned subject —
+and `git mv`d into the new layout (`tests/unit/` for single-module tests,
+`tests/integration/` for composed ones; nothing moved into or out of
+`tests/equivalence/`). The
+mapping is in `CHANGES.md` §Phase 7. Substance changes: none, except
+`test_pretrain_simmim.py`, which lost its `sys.path` bootstrap, its `print()`
+reporting and its `main()`/`__main__` runner (assertions byte-identical). One
+repo-root constant needed re-anchoring for the extra directory level:
+`tests/integration/test_compile_results.py`'s `REPO`, now `parents[2]`.
+(`test_pretrain_simmim.py`'s `project_root` was re-anchored too and then
+deleted with the bootstrap.)
+
+### Step 2 — new tests
+
+12 new files, 391 new tests. `tests/conftest.py` reuses the equivalence
+harness's synthetic-scene builders rather than re-implementing them, so the
+test tree keeps one description of the on-disk scene layout. Per-file coverage
+of the canon is tabulated in `CHANGES.md`; the entries worth calling out here
+are the ones that turned a paper sentence into an executable check:
+
+- **Eq. 1's union** is checked against the masks the model actually drew,
+  captured with forward hooks on `band_masking` and `spatial_masking` — not
+  against a second copy of `torch.maximum`. A guard assertion fails the test if
+  a degenerate batch would make the union claim vacuous.
+- **The NCM classifier** is compared to `sklearn.neighbors.NearestCentroid` at
+  each scene's real class count (15/6/11), which is an independent
+  implementation rather than a restatement of ours.
+- **Eq. 1's centre weight has mean one**, while the *pooling* weight sums to
+  one. Both normalisations are pinned, in the same repo, with a comment saying
+  why they differ — this is the kind of thing that reads as a bug later.
+- **`use_projection=False`** is asserted to make `projection` an `nn.Identity`
+  with no `l2_normalize` attribute, which is what makes the `renormalize`
+  branch inert (D3.3).
+
+### Step 3 — full runs
+
+| Check | Result |
+|---|---|
+| `pytest -q -m "not gpu and not data"` | **518 passed, 6 skipped, 1 xfailed** in **3:21-4:08** (five runs) |
+| `pytest -q -m "not gpu and not data and not slow"` | 495 passed, 6 skipped, 1 xfailed in **2:06-4:12** |
+| same, from a cwd where `data/raw/` and `checkpoints/` are unreachable | **516 passed, 8 skipped, 1 xfailed, 0 failed** in 3:36 - hard rule 5, verified not assumed |
+| `pytest -q tests/equivalence` | **33 passed — IDENTICAL** |
+| `ruff check .` / `ruff format --check .` | clean |
+| `mypy` | clean (55 source files) |
+| stale-vocabulary grep | CLEAN (verifier step 6, after the two new exclusions were added to `CHANGES.md`) |
+| Coverage of `coffe/` | **69 %**, up from 52 % |
+
+**Real-data smoke: NOT RUN.** Step 4 requires asking first because it uses the
+GPU, and this session did not ask. `data/raw/` and the HyperSIGMA checkpoints
+were never touched. Nikola's call at the gate.
+
+**CI workflow: NOT ADDED.** Step 5 makes it opt-in at the gate. If yes, the
+selection to use is `-m "not gpu and not data and not slow"` — 2:06-4:12 on this
+CPU, no dataset, no checkpoint, no network (the run above proves it needs
+neither).
+
+### Coverage: what is still uncovered, and why
+
+| Module | Cov. | Why |
+|---|---|---|
+| `coffe/utils/visualization.py` | 0 % | plots only. No paper number passes through it, and every significance eval ran with `no_plots: True`. Testing it means asserting on matplotlib output; deliberately skipped. |
+| `coffe/data/datasets/{houston,trento,muufl}.py` | 30–36 % | the **raw-image** loaders. Not on the paper path (see the surprise below) and they need real full-scene rasters. |
+| `coffe/runners/experiments.py` | 41 % | `ExperimentLogger`'s tree-writing, git-SHA capture and `list_experiments`. Partially exercised now; the rest writes experiment directories. |
+| `coffe/data/samplers/patched_episode_sampler.py` | 42 % | most of the gap is `CrossDatasetEpisodeSampler`, a second class no paper run uses. |
+| `coffe/runners/{eval,pretrain,adapt}_runner.py` | 23–45 % | the notebook-facing orchestration wrappers. Their arch-seeding and checkpoint lookup are now tested; the bodies just call the loops that `tests/integration/` drives directly. |
+
+Two modules that were at **0 %** and are squarely on the paper path are now
+covered: `coffe/eval/hypersigma.py` → 74 % (every Table 3 cell came through it)
+and `coffe/pretrain/hypersigma_adapt.py` → 81 % (the label-free adaptation
+loop). Both are exercised on synthetic mini-scenes with random-init ViT bodies,
+so no released checkpoint is needed.
+
+### Surprises — reported, not fixed (CLAUDE.md hard rule 7)
+
+**S1 — `find_checkpoint(epoch=None)` returns the wrong checkpoint when several
+epochs are present.** `coffe/runners/eval_runner.py:103-106` takes
+`sorted(ckpts.glob("checkpoint_epoch_*.pth"))[-1]`, which sorts filenames
+*lexicographically*: with 800, 950 and 1500 on disk it returns **950**, because
+`"checkpoint_epoch_1500.pth" < "checkpoint_epoch_950.pth"`. No published number
+is affected — every Table 2 cell is evaluated at an explicit epoch (D17) and the
+significance runner passes 700 — and a run directory holding one checkpoint is
+unaffected either way. Pinned as a pair in `tests/unit/test_eval_runner.py`: a
+non-strict `xfail` stating the intended contract (it will XPASS the moment the
+sort is made numeric) plus a test recording today's behaviour, so the two must
+be updated together. **Decision needed: fix (a one-line numeric sort key, in
+its own commit) or document.**
+
+**S2 — `scripts/evaluate.py` cannot select the MFT control.** Its docstring says
+"Few-shot evaluation for CoFFE **and the MFT architectural control**", and
+`coffe/eval/episodic.main` reads `args.name` and `args.mlp_dim` off the
+namespace — but the parser adds neither flag, so `--name mft_original` is
+rejected. The control is reachable only programmatically (`run_evaluation`, or
+`coffe/runners/eval_runner`, which reads `model.name` from the run's frozen
+`pretrain_config.yaml`). Every paper MFT eval went the runner route, so no
+published number is affected. `tests/integration/test_cli.py` pins the gap and
+routes the MFT e2e through the programmatic entry point.
+**Decision needed: add the two flags, or narrow the docstring.**
+
+**S3 — the paper's "border-padded at edges" is not this repo's behaviour.**
+PAPER_CANON §5 says patches are "11×11 patches centred on each labelled pixel,
+border-padded at edges". The paper path never patches anything here: it consumes
+the pre-patched MFT-format `.mat` files, so the extraction *and its padding*
+happened upstream in the MFT data preparation, outside this repository. The
+repo's own raw-image path, `coffe/data/datasets/base.py:69`
+(`MultimodalEODataset._build_class_indices`), **drops** border pixels rather
+than padding them — a 20×20 fully-labelled scene with `patch_size=11` keeps only
+the 10×10 interior. It is on no paper path: nothing under `scripts/` or
+`coffe/runners/` constructs those classes; they survive as public API
+re-exported from `coffe/data/__init__.py`. Both behaviours are asserted as they
+are in `tests/integration/test_data_plumbing.py`. **No action proposed** beyond
+a §5 footnote in phase 8 saying where the padding actually happens.
+
+**S4 — five of `coffe/eval/episodic.py`'s `_DEFAULT_ARGS` contradict the
+canon, and a sixth contradicts every paper run.** Not just `use_projection`;
+the whole table is stale in the same way PAPER_CANON §8 D4 describes for
+`configs/pretrain/base.yaml`. The first five rows below contradict the canon's
+text; the last (`split`) contradicts what every paper run passed, which the
+canon does not state:
+
+| Key | Default | Canon |
+|---|---|---|
+| `num_heads` | 8 | **2** (§2) |
+| `num_layers` | 4 | **2** (§2) |
+| `lambda_factor` | 2.0 | **0.5** — every paper CoFFE `eval_config.json` (§8 D3) |
+| `use_projection` | `True` | **`False`** — head off at eval (§4) |
+| `k_query` | 15 | **100** (Table 2); matches no table at all |
+| `split` | `"test"` | every paper eval passed **`"all"`** (`sig_significance_config.eval_params`, and the frozen `eval_config.json`s) — §4 states no split, so this is a divergence from the runs rather than from the text |
+
+(`num_episodes: 2000` is *not* in this list: 1000/2000 is a genuine per-table
+difference, §8 D18.) The CLI flags carry the same defaults.
+
+Harmless for every published number, and the reason is structural rather than
+lucky: on the paper path `coffe/runners/eval_runner._arch_defaults_from_pretrain`
+seeds every one of these keys from the run's frozen `pretrain_config.yaml`, and
+`scripts/reproduce/sig_significance_config.eval_params` passes the protocol
+keys explicitly — so no default is ever consulted. It bites only a caller who
+invokes `run_evaluation` with nothing but a checkpoint and a dataset, who would
+get a 4-layer/8-head encoder with lambda 2.0 and the projection head on.
+
+Pinned as-is in `tests/unit/test_ncm_protocol.py` (the five text-contradicting
+ones; `split` is noted here only), split into two tests so the
+canon-compliant subset cannot be misread as a clean bill of health:
+`test_the_evaluator_defaults_that_are_the_paper_protocol` and
+`test_the_evaluator_defaults_that_do_not_match_the_paper`. Not corrected here,
+because changing a default is a behaviour change phase 7 may not make.
+**Decision needed: align the five with the canon (a phase-4-style signed-off
+default change, in its own commit) or leave them and document.**
+
+**S5 — PAPER_CANON §6's "1.13M–8.45M" excludes a published cell.** §6 says the
+label-free adaptation "trains 1.13M–8.45M". Both endpoints land on a real
+config to the digit, so they are plainly the numbers the paper quotes:
+`spatial` = **1,133,188** ("1.13M") and `joint_sem` = **8,446,785** ("8.45M"),
+both in the 11×11 / 100-band spatial geometry. But the range is **not** the
+span of the published set: Table 3's `11x11 / spectral` cell (Houston OA 21.85)
+trains **333,689**, well below the stated floor. So §6's lower bound is the
+smallest of three, not of four, and a reader taking the range as the adaptation
+budget of the reported sweep would be wrong about one cell.
+
+Nothing is changed. The counts are what the architecture gives; the paper's
+range is simply narrower than its own sweep. `spectral` is now asserted at
+333,689 in `tests/unit/test_hypersigma_contracts.py` alongside the two quoted
+endpoints, so the gap is visible in the suite rather than only here.
+**Decision needed: is this a §6 wording fix in the canon, or is the range
+deliberately about a subset (e.g. the fused/spatial configs only)?** Only
+Nikola can say which the paper meant.
+
+Measured across all three regimes × four modes in phase 7. Full table,
+trainable parameters:
+
+| Regime | `spatial` | `spectral` | `sem_only` | `joint_sem` |
+|---|---|---|---|---|
+| 11×11, 3-band (reproduces no cell) | 238,363 | 333,689 | 1,058,667 | 1,530,879 |
+| **11×11, 100-band** (every published `11x11` cell) | **1,133,188** | 333,689 | 7,079,748 | **8,446,785** |
+| 64×64 pad/upscale | 6,807,552 | 3,386,489 | **7,079,748** | 17,173,949 |
+
+Table 3's four **adapted** cells are the three 100-band `11x11` ones
+(`spatial` 1,133,188 / `spectral` 333,689 / `joint_sem` 8,446,785) and
+`64x64 pad / SEM-only` at **7,079,748** (pinned by
+`test_backbone_native_sem_only_trainable_count`) — so the published span is
+[333,689 … 8,446,785], against §6's stated [1.13 M … 8.45 M]. The 17.2 M
+`backbone_native joint_sem` figure reproduces no cell. Note `spectral_only`
+trains the same 333,689 in both 11×11 rows: it touches only the spectral
+branch, so the spatial front-end width does not enter it.
+
+### Findings that were *not* surprises — measurements worth keeping
+
+**The Houston eval encoder is 579,328 parameters exactly** (Trento 568,960,
+MUUFL 569,216 — the canon's "marginally fewer"). Asserted exactly *and* within
+the canon's ±1 %.
+
+### Notes for the verifier's instructions
+
+`tests/integration/test_cli.py` **does** run `--help` on the four scripts the
+verifier is told never to execute (`compile_results.py` and the three report
+scripts). That prohibition dates from before the phase-6 gate added `--out`
+and `--force` to all four. The test takes a size+mtime digest over
+`docs/presentation/`, `results/` and `experiments/` before and after the sweep
+and asserts it is unchanged, which now passes — so the phase-6 guard holds.
+The verifier's instructions were **not** edited; relaxing them is Nikola's
+call.
+
+### Two couplings worth knowing about
+
+- `tests/conftest.py` and six new modules import the private
+  `tests/equivalence/_harness.py` (`SCENES`, `write_scene`, `build_all_scenes`,
+  `pretrain_config`, `load_scene_dataset`, `live_eval_feature`) rather than
+  re-implementing the synthetic scenes. That is deliberate — one description of
+  the on-disk layout — but it makes the behaviour-freeze arbiter a dependency of
+  the ordinary suite, so future pressure to change `_harness.py` can now come
+  from non-equivalence tests. The goldens are safe today: the equivalence
+  package still re-seeds in its own `set_determinism()` after imports, and the
+  new root `conftest.py` has no `autouse` fixtures.
+- `tests/equivalence/conftest.py`'s `_determinism` fixture is
+  `scope="session", autouse=True`, so `torch.use_deterministic_algorithms(True)`
+  stays on for `tests/unit/` and `tests/integration/` for the rest of the
+  session — which its own docstring says must not happen ("the rest of `tests/`
+  must not inherit it"). Pre-existing, but phase 7 multiplied the number of
+  tests running under the inherited flag, so a standalone file run and a
+  full-suite run are no longer strictly equivalent. Both pass either way (every
+  new file was also run standalone during development). Worth a narrowing to
+  `scope="package"` in phase 8; not touched here.
+
+### Open questions for the gate
+
+1. **S1** (lexicographic checkpoint sort) — fix or document?
+2. **S2** (`--name`/`--mlp-dim` missing from `scripts/evaluate.py`) — add the
+   flags or narrow the docstring?
+3. **S4** (six stale `_DEFAULT_ARGS`: 8 heads / 4 layers / lambda 2.0 /
+   projection on / `k_query` 15 / `split` "test") — align them with the canon
+   in their own commit, or leave and document?
+4. **Real-data smoke** — run it? It needs the GPU and ~20 min for the Houston
+   `simmim_token` short pretrain plus a 50-episode eval.
+5. **CI workflow** — add `.github/workflows/ci.yml` (ruff + `-m "not gpu and
+   not data and not slow"`, one Python version)?
+6. **`coffe/utils/visualization.py` at 0 %** — leave it (my recommendation:
+   yes; it produces figures, not numbers), or add smoke tests that each plot
+   function writes a non-empty file?
+7. **`tests/equivalence/conftest.py`'s session-wide determinism flag** (see
+   above) — narrow it to `scope="package"` in phase 8?
+8. **S5** — does PAPER_CANON §6's "1.13M–8.45M" need a wording fix, or was the
+   range meant to describe a subset of the sweep?

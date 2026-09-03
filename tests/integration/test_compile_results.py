@@ -26,7 +26,7 @@ import pytest
 
 from scripts import compile_results
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 SCRIPT = REPO / "scripts" / "compile_results.py"
 
 

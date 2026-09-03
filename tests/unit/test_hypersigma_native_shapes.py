@@ -12,7 +12,7 @@ patch up to it, instead of shrinking the encoder. These tests:
 
 Run with::
 
-    pytest tests/test_hypersigma_native_shapes.py -q
+    pytest tests/unit/test_hypersigma_native_shapes.py -q
 """
 
 from __future__ import annotations

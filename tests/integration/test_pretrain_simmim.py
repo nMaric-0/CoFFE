@@ -9,12 +9,6 @@ Verifies:
 - Backward pass populates gradients on all trainable parameters
 """
 
-import sys
-from pathlib import Path
-
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
-
 import torch
 
 from coffe.models import CoFFE
@@ -66,7 +60,6 @@ def _run_and_check(pretrain_model, batch_size: int = 4):
 
 def test_unified_band_masking():
     """UnifiedBandMasking should hide ~mask_ratio of (pixel, band) entries."""
-    print("Testing UnifiedBandMasking...")
 
     masking = UnifiedBandMasking(num_channels=145, mask_ratio=0.9)
 
@@ -77,7 +70,6 @@ def test_unified_band_masking():
     assert mask.shape == x.shape
 
     ratio = mask.mean().item()
-    print(f"  Mask ratio: {ratio:.3f} (target: 0.900)")
     assert 0.85 < ratio < 0.95, f"Unexpected mask ratio {ratio}"
 
     # Masked entries should equal the learnable fill value, visible entries
@@ -88,12 +80,9 @@ def test_unified_band_masking():
     assert diff_masked < 1e-6, f"Masked entries were not replaced ({diff_masked})"
     assert diff_visible < 1e-6, f"Visible entries were altered ({diff_visible})"
 
-    print("  ✓ UnifiedBandMasking passed")
-
 
 def test_simmim_model_band_only():
     """Band-only masking path (default configuration)."""
-    print("Testing band-only masking...")
 
     encoder = _make_encoder()
     pretrain_model = SimMIMPretrainModel(
@@ -107,20 +96,17 @@ def test_simmim_model_band_only():
         spatial_mask_ratio=0.0,
     )
 
-    loss, info = _run_and_check(pretrain_model)
+    _loss, info = _run_and_check(pretrain_model)
     # Encoder token count: 1 (CLS) + 121 (patches), not 1 + 2*121 as before.
     assert encoder.pos_embed.shape == (1, 1 + 121, 64)
     # Every (pixel, band) entry has an independent Bernoulli sample, so mask
     # coverage should be around 0.9.
     ratio = info["mask"].mean().item()
     assert 0.85 < ratio < 0.95, f"Unexpected mask ratio {ratio}"
-    print(f"  Loss: {loss.item():.4f}, mask ratio: {ratio:.3f}")
-    print("  ✓ Band-only masking passed")
 
 
 def test_simmim_model_spatial_only():
     """Spatial (MAE-style) masking only — no per-band masking."""
-    print("Testing spatial-only masking...")
 
     encoder = _make_encoder()
     pretrain_model = SimMIMPretrainModel(
@@ -134,7 +120,7 @@ def test_simmim_model_spatial_only():
         spatial_mask_ratio=0.75,
     )
 
-    loss, info = _run_and_check(pretrain_model)
+    _loss, info = _run_and_check(pretrain_model)
     # Spatial masking masks whole tokens — each row of info["mask"] is either
     # all-0 or all-1 across the 145 bands.
     row_sums = info["mask"].sum(dim=-1)
@@ -144,13 +130,10 @@ def test_simmim_model_spatial_only():
     # 0.75 * 121 = 90.75 → exactly 91 tokens per batch element are masked.
     per_batch_tokens_masked = (row_sums > 0).sum(dim=-1)
     assert (per_batch_tokens_masked == 91).all(), per_batch_tokens_masked
-    print(f"  Loss: {loss.item():.4f}, masked tokens/batch: 91/121")
-    print("  ✓ Spatial-only masking passed")
 
 
 def test_simmim_model_combined():
     """Both masks active — loss mask should be union of band and spatial."""
-    print("Testing combined masking...")
 
     encoder = _make_encoder()
     pretrain_model = SimMIMPretrainModel(
@@ -164,32 +147,7 @@ def test_simmim_model_combined():
         spatial_mask_ratio=0.5,
     )
 
-    loss, info = _run_and_check(pretrain_model)
+    _loss, info = _run_and_check(pretrain_model)
     # Combined coverage must exceed band-only (0.5) in expectation.
     ratio = info["mask"].mean().item()
     assert ratio > 0.55, f"Combined mask coverage too low: {ratio}"
-    print(f"  Loss: {loss.item():.4f}, combined mask ratio: {ratio:.3f}")
-    print("  ✓ Combined masking passed")
-
-
-def main():
-    print("=" * 60)
-    print("Testing unified masked pretraining")
-    print("=" * 60)
-
-    test_unified_band_masking()
-    print()
-    test_simmim_model_band_only()
-    print()
-    test_simmim_model_spatial_only()
-    print()
-    test_simmim_model_combined()
-    print()
-
-    print("=" * 60)
-    print("All tests passed")
-    print("=" * 60)
-
-
-if __name__ == "__main__":
-    main()

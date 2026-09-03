@@ -7,7 +7,7 @@ single dummy batch through ``HyperSIGMADual`` / ``HyperSIGMAFewShot``.
 
 Run with::
 
-    pytest tests/test_hypersigma_shapes.py -q
+    pytest tests/unit/test_hypersigma_shapes.py -q
 """
 
 from __future__ import annotations

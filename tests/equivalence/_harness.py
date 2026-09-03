@@ -249,7 +249,7 @@ MFT_ARCH: dict[str, Any] = {
 # renamed the config values to match the ids: objective "simmim" | "mae", with
 # the band/spatial mask-rate pair naming the regime). Frozen configs spell the
 # SimMIM objective "enhanced"; `coffe.compat` maps it, and
-# `tests/test_compat.py` pins that path.
+# `tests/unit/test_compat.py` pins that path.
 OBJECTIVES: dict[str, dict[str, Any]] = {
     "simmim_band": {
         "objective": "simmim",
@@ -604,7 +604,7 @@ HYPERSIGMA_REGIMES: dict[str, dict[str, Any]] = {
 def _write_dummy_pca(path: Path, in_bands: int, n_components: int) -> str:
     """Fit a small deterministic PCA so HyperSIGMADual can be constructed.
 
-    Mirrors the helper already used by tests/test_hypersigma_shapes.py.
+    Mirrors the helper already used by tests/unit/test_hypersigma_shapes.py.
     """
     import pickle
 

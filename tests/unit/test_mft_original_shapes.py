@@ -17,7 +17,7 @@ exercise:
 
 Run with::
 
-    pytest tests/test_mft_original_shapes.py -q
+    pytest tests/unit/test_mft_original_shapes.py -q
 """
 
 from __future__ import annotations

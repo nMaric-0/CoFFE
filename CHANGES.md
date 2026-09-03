@@ -460,20 +460,20 @@ has exactly one description of the on-disk scene layout.
 | `integration/test_data_plumbing.py` | §5 — 11×11 patches, per-band min-max to [0, 1] asserted against the un-normalised tensors, PCA 144→100, linear resample 63/64→100. Also pins the one §5 clause the code does **not** implement: the paper's "border-padded at edges" happened upstream in the MFT data preparation, and this repo's (non-paper-path) raw-image loader drops border pixels instead — see `docs/refactor/LOG.md` S3 |
 | `integration/test_hypersigma_eval.py` | §6/§8 D18 — the Table 3 evaluator end to end, and that `distance_metric` selects a *label*: both blocks are computed either way |
 | `integration/test_hypersigma_adapt.py` | §1/§3 — one label-free adaptation epoch per mode, and no gradient reaching a released body after a real backward |
-| `integration/test_cli.py` | `--help` on all 21 argparse entry points (leaving `docs/presentation/`, `results/` and `experiments/` unchanged, proved by a path+size+mtime digest taken before and after the sweep), plus pretrain → checkpoint → evaluate → `results.json` for both routes |
+| `integration/test_cli.py` | `--help` on all 22 argparse entry points (leaving `docs/presentation/`, `results/` and `experiments/` unchanged, proved by a path+size+mtime digest taken before and after the sweep), plus pretrain → checkpoint → evaluate → `results.json` for both routes |
 
 ### Marker discipline
 
 `slow` marks the 21 new tests that build a 180 M-parameter ViT body, or that
 shell out to `scripts/pretrain.py` + `scripts/evaluate.py` (23 in the suite,
-counting the two pre-existing equivalence ones). The 22 `--help`-driving tests
-are *not* marked `slow`: the 21 per-script ones take under a second each, and
-the 22nd (which re-runs all 21 subprocesses to digest-check the frozen artifact
-trees) takes ~20 s.
+counting the two pre-existing equivalence ones). The `--help`-driving tests
+are *not* marked `slow`: the 22 per-script ones take under a second each, and
+the sweep that re-runs all of them to digest-check the frozen artifact trees
+takes ~20 s.
 
 Nothing new needs `data` or `gpu`. Verified rather than asserted: run from a
 working directory where `data/raw/` and `checkpoints/` are unreachable, the
-suite is **516 passed, 8 skipped, 0 failed** — the two extra skips being
+suite is **519 passed, 8 skipped, 0 failed** — the two extra skips being
 exactly the pre-existing checkpoint-gated tests
 (`tests/unit/test_hypersigma_native_shapes.py`), which keep their `skipif`.
 Both the datasets and the HyperSIGMA checkpoints *are* present on the dev
@@ -484,7 +484,7 @@ what backs the claim.
 
 | | Before | After |
 |---|---|---|
-| tests collected (`-m "not gpu and not data"`) | 134 | 525 |
+| tests collected (`-m "not gpu and not data"`) | 134 | 527 |
 | wall time, CPU | 4:23 | 3:21 - 4:08 |
 | line coverage of `coffe/` | 52 % | 69 % |
 
@@ -497,6 +497,69 @@ minutes", not as a speed-up.
 Two paper-path modules went from **0 %** to covered: `coffe/eval/hypersigma.py`
 (74 %) — the module every Table 3 cell came through — and
 `coffe/pretrain/hypersigma_adapt.py` (81 %), the label-free adaptation loop.
+
+
+### Applied at the phase-7 gate (2026-09-03)
+
+Five paper<->code mismatches were reported at the gate; Nikola's decisions were
+applied in four commits, none of which changes a computed number (equivalence
+IDENTICAL throughout). `docs/refactor/LOG.md` carries the evidence and the
+per-question record.
+
+**One evaluation entry point per route.** There are now three, each defaulting
+to that route's published architecture:
+
+| Entry point | Route | Defaults |
+|---|---|---|
+| `scripts/evaluate.py` | CoFFE | 128 dim / 2 heads / 2 layers, lambda 0.5 |
+| `scripts/evaluate_mft.py` (**new**) | MFT architectural control | 64 / 8 / 2, mlp 512, mcross |
+| `scripts/evaluate_hypersigma.py` | HyperSIGMA | unchanged |
+
+Before this the control was unreachable from any CLI: `evaluate.py` exposed no
+`--name` or `--mlp-dim`, although `coffe.eval.episodic.main` reads both off the
+namespace, so `mft_original` could only be selected programmatically while the
+docstring claimed the script evaluated it. The new entry point sets the route
+itself instead of exposing a flag. The evaluator *body* stays shared, so the
+routes cannot drift apart on the protocol -- only on architecture, which is the
+paper's comparison. `evaluate.py`'s docstring is narrowed to CoFFE.
+
+**`find_checkpoint` sorts numerically.** It sorted checkpoint filenames as
+strings, so `checkpoint_epoch_950.pth` beat `checkpoint_epoch_1500.pth`. That
+sort is what selected the paper's evaluated epochs: each save interval in the
+frozen trees (50 / 25 / 200) yields exactly the epoch PAPER_CANON §8 D17
+reports (950 / 975 / 800), and every canonical `eval_config.json` records
+`"epoch": null`. Consequence of the fix: a bare `epoch=None` evaluation no
+longer reproduces a published cell, so the four reproduce runners that relied
+on it now pass the epoch explicitly (CoFFE Houston 950 / Trento 975 / MUUFL
+975; all six MFT cells 950).
+
+**The evaluator's defaults are the protocol.** Six entries of `_DEFAULT_ARGS`
+and the matching `scripts/evaluate.py` flags described a configuration no
+published run used: 8 heads -> 2, 4 layers -> 2, lambda 2.0 -> 0.5, projection
+on -> off, `k_query` 15 -> 100, `split` "test" -> "all" (and `num_episodes`
+2000 -> 1000, Table 2's count). No published number depends on them -- the paper
+path seeds the architecture from each run's frozen `pretrain_config.yaml` and
+passes the protocol keys explicitly -- but a bare
+`run_evaluation(checkpoint, dataset)` is now the paper's protocol rather than a
+configuration nothing ran.
+
+**CI.** `.github/workflows/ci.yml`: ruff + mypy + `pytest -m "not gpu and not
+data and not slow"` on a 3.11/3.12 matrix with CPU-only torch, plus a step that
+fails the build if a test wrote into `docs/presentation/`, `results/` or
+`experiments/`. 3.11 is pinned deliberately: phase 6 recorded that the declared
+`requires-python` floor had never been exercised.
+
+**Real-data smoke.** Run on this machine, and **not** under the paper's
+protocol -- a smoke that was would take hours. CoFFE Houston `simmim_token` at
+**20** epochs of 1500, evaluated over 50 episodes instead of 1000, gives OA
+74.43 +- 0.66 against the paper's 75.30; the HyperSIGMA
+`64x64 upscale / frozen / spatial` cell over 20 episodes at `k_query` 10 instead
+of 2000 at 100 (the GPUs were shared with another job) gives 60.83 +- 1.79
+against the published 61.14. The HyperSIGMA leg is a weak reproduction check --
+frozen encoder, published cell, agreement inside its own CI. The CoFFE leg is a
+wiring check: a 20-epoch encoder has no published value to match. Nothing was
+written into the repository. The commands become the README's "quick sanity run"
+in phase 8, with the same caveat.
 
 ## Compatibility guarantees
 
@@ -609,18 +672,33 @@ import, not a cosmetic issue.
 
 ## What deliberately did **not** change
 
-- Any default that affects a computed number — every hyperparameter, constant
-  and piece of maths, with **one deliberate, signed-off exception**:
-  `distance_metric` now defaults to `"euclidean"` instead of `"cosine"`
-  (phase-4 gate, 2026-09-01). It is the paper protocol, PAPER_CANON §1 forbids
-  cosine as a default, and no paper run is affected because **every paper run
-  passes `distance_metric` explicitly** — so no default is ever consulted. (Not
-  every paper run passes *euclidean*: one Table 3 cell records `cosine`, see
-  PAPER_CANON §8 D18.) That is why the equivalence goldens are unchanged.
-  Cosine remains fully selectable via `--distance-metric cosine`. Changed in
-  `scripts/evaluate.py` (CLI + `_DEFAULT_ARGS` + config fallbacks),
-  `scripts/evaluate_hypersigma.py`, `coffe/runners/eval_runner.py`, and the `CoFFE` /
-  `MFTOriginal` / `HyperSIGMAFewShot` constructors.
+- Any **computed number**: every hyperparameter, constant and piece of maths as
+  *used by a paper run*. The equivalence goldens are unchanged across all of it.
+- **Two signed-off exceptions, both to evaluator defaults, neither reachable on
+  the paper path.** They matter only to a caller who supplies nothing:
+
+  1. **`distance_metric` defaults to `"euclidean"`** instead of `"cosine"`
+     (phase-4 gate, 2026-09-01). It is the paper protocol and PAPER_CANON §1
+     forbids cosine as a default. Changed in `scripts/evaluate.py` (CLI +
+     `_DEFAULT_ARGS` + config fallbacks), `scripts/evaluate_hypersigma.py`,
+     `coffe/runners/eval_runner.py`, and the `CoFFE` / `MFTOriginal` /
+     `HyperSIGMAFewShot` constructors. Cosine remains fully selectable via
+     `--distance-metric cosine`.
+  2. **Six further `_DEFAULT_ARGS` entries** aligned with the canon (phase-7
+     gate, 2026-09-03): 8 → 2 heads, 4 → 2 layers, lambda 2.0 → 0.5, projection
+     on → off, `k_query` 15 → 100, `split` `"test"` → `"all"`, plus
+     `num_episodes` 2000 → 1000. Details in the phase-7 gate section above.
+
+  No paper run is affected by either, and for the same structural reason:
+  **every paper run passes these values explicitly** — `coffe.runners.eval_runner`
+  seeds the architecture from each run's frozen `pretrain_config.yaml`, and the
+  reproduce pipeline passes the protocol keys — so no default is ever consulted.
+  (Not every paper run passes *euclidean*: one Table 3 cell records `cosine`,
+  PAPER_CANON §8 D18.) That is why the goldens are unchanged.
+
+  Note PAPER_CANON §1 still calls the `distance_metric` change "the one
+  deliberate default change of the refactor". That sentence predates the
+  phase-7 gate and is now one of two; correcting it is a phase-8 item.
 - The only defaults that did move are four **output-path fallbacks** whose names
   carried retired vocabulary and which no shipped config or reader relies on
   (all 26 pretraining/adaptation configs set `paths.checkpoint_dir` /

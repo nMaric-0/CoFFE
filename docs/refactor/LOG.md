@@ -2097,3 +2097,163 @@ call.
    above) — narrow it to `scope="package"` in phase 8?
 8. **S5** — does PAPER_CANON §6's "1.13M–8.45M" need a wording fix, or was the
    range meant to describe a subset of the sweep?
+
+### Phase-7 gate — Nikola's decisions (2026-09-03)
+
+All eight questions answered. Applied in four commits after `dea4b1c`, each
+self-contained; the equivalence harness stayed IDENTICAL (33/33) throughout and
+**no computed number moved**.
+
+| # | Decision | Applied in |
+|---|---|---|
+| 1 | S1: fix the sort, state epochs explicitly in the reproduction path | `22b1a0a` |
+| 2 | S2: **two separate pipelines** — CoFFE its own, control/baselines their own | `21d9081` |
+| 3 | S4: align all six stale defaults with the canon | `5b10bf1` |
+| 4 | Real-data smoke: run it, GPUs 2-3, no approval needed | below |
+| 5 | CI workflow: yes | `21d9081` |
+| 6 | `visualization.py` at 0 %: leave it | recorded, below |
+| 7 | Equivalence determinism flag: narrow to `scope="package"` in phase 8 | phase-8 obligation |
+| 8 | S5 / canon §6's range: leave as is | recorded, no canon edit |
+
+**(1) applied.** `find_checkpoint` sorts numerically now. The consequence needed
+handling: the four reproduce runners
+(`run_mae_experiments.py`, `run_hsi_only_experiments.py`,
+`run_mft_original_spatial_experiments.py`, `run_mft_original_mae_experiments.py`)
+called `run_evaluation` with **no** `epoch`, so they were relying on the old
+string sort to land on the paper's checkpoint. They now pass it explicitly —
+CoFFE cells at Houston 950 / Trento 975 / MUUFL 975, all six MFT cells at 950 —
+and I verified all 15 frozen run dirs contain the pinned epoch and that every
+committed config's `save_interval` makes it reachable.
+
+**(2) applied as separate pipelines, not a route flag.** Three entry points,
+one per route the paper compares, each defaulting to that route's published
+architecture: `scripts/evaluate.py` (CoFFE, 128/2/2), the new
+`scripts/evaluate_mft.py` (control, 64/8/2 + mlp 512 + mcross) and
+`scripts/evaluate_hypersigma.py` (unchanged). The control's CLI sets
+`args.name = "mft_original"` itself rather than exposing a flag, and supplies
+the keys the shared evaluator body reads but which are inert on that route.
+The evaluator body stays shared, so the routes cannot drift apart on the
+protocol — only on architecture, which is the comparison.
+
+**(3) applied.** Six defaults aligned (8→2 heads, 4→2 layers, λ 2.0→0.5,
+projection on→off, `k_query` 15→100, `split` test→all), plus `num_episodes`
+2000→1000 (Table 2's count). The `load_model_with_checkpoint` CoFFE-branch
+fallbacks moved too, so the stale values do not survive in a second copy; the
+`MFTOriginal` branch keeps 8 heads because that is the control's own
+architecture.
+
+**(6) recorded.** `coffe/utils/visualization.py` stays at 0 %: 264 statements of
+plot generation, no paper number passes through it, and every significance eval
+ran with `no_plots: True`.
+
+**(8) recorded.** §6's "1.13M–8.45M" stands as published. S5 remains in this log
+as the explanation of why that range does not span Table 3's four adapted cells
+(the `11x11 / spectral` cell trains 333,689). No canon edit.
+
+#### Real-data smoke (decision 4) — both legs land close to the published numbers
+
+Datasets and both ViT-Base checkpoints are on this machine. Nothing was written
+into the repository: every output went to a scratch directory, and
+`git status` on `experiments/`, `results/`, `docs/presentation/`, `checkpoints/`
+and `data/` stayed empty.
+
+**Read the protocol column first — neither leg ran the paper's protocol.** A
+smoke that did would take hours, so both are cut down, and the deviations are
+large enough to matter when comparing the numbers:
+
+| Leg | Protocol used | Paper's protocol | Result | Paper | Δ |
+|---|---|---|---|---|---|
+| CoFFE Houston `simmim_token` | **20** epochs, 50 episodes, `k_query` 100 | 1500 epochs, 1000 episodes | OA **74.43 ± 0.66** | 75.30 ± 1.6 | −0.87 |
+| HyperSIGMA `64x64 upscale / frozen / spatial`, Houston | 20 episodes, `k_query` **10** | 2000 episodes, `k_query` 100 | OA **60.83 ± 1.79** | 61.14 ± 0.11 | −0.31 |
+
+What each leg does and does not establish:
+
+- **HyperSIGMA** targets a **published Table 3 cell** with a frozen encoder and
+  no training, so given enough episodes it should reproduce that cell — and
+  −0.31 is inside the smoke's own ±1.79. That makes it a weak reproduction
+  check, not merely a wiring check. Weak because 20 episodes at `k_query` 10 is
+  a ~100× smaller query budget than the published cell's.
+- **CoFFE** is a wiring check only: a 20-epoch encoder is not the published
+  1500-epoch one, so it has no published value to match. Note −0.87 is
+  *outside* the smoke's own ±0.66 episode CI, though well inside the paper
+  cell's ±1.6 across-seed spread. Nothing should be read into the sign.
+
+Wall times: CoFFE 69 s pretrain + 10 s eval; HyperSIGMA 12 s including model
+load. The commands are the basis for the README's "quick sanity run" section
+(phase 8), which must carry the same protocol caveat.
+
+**The CoFFE number is worth a second look.** 20 epochs out of 1500 already
+reaches 74.43 against the paper's 75.30 — ~99 % of the headline OA in 1.3 % of
+the schedule. One seed, 50 episodes, one scene: that is an observation, not a
+result, and the comparison is against a cell measured under a different
+protocol. But if it survives a proper run it says the long schedule buys very
+little, which is a claim the paper does not make. **Not investigated** — that
+would be new science rather than a refactor. Flagged for Nikola.
+
+Two operational notes:
+
+- The first HyperSIGMA attempt **OOMed**. GPUs 2 and 3 were free at launch, but
+  four foreign processes (~21.8 GB each, one per GPU) appeared mid-run and took
+  all four cards. The retry used `k_query` 10 instead of 100 and fitted in the
+  remaining headroom. Nothing of anyone else's was touched.
+- The `64x64` regime is memory-hungry in a way worth knowing: it upscales every
+  patch to 100x64x64, so a 15-way episode at `k_query` 100 is 1,575 such
+  tensors and the deformable-attention `grid_sample` alone asked for 2.2 GB.
+  Table 3's own runs used `k_query` 30 for at least one cell (§8 D18); on a
+  shared card, budget accordingly.
+
+#### Reported for the canon, not applied: D17's provenance
+
+Rule 7 says surprises go to the log and the gate, so this is a **proposal**, not
+an edit — `PAPER_CANON.md` is untouched.
+
+The evidence in S1 above says D17's "the evaluated epoch is not the schedule
+length" is an artifact of the string sort, not a model-selection decision. Three
+different save intervals in the frozen trees each produce a different
+lexicographic maximum, and all three match the epochs D17 reports (50 → 950,
+25 → 975, 200 → 800), with every canonical `eval_config.json` recording
+`"epoch": null`. What the artifacts cannot settle: an explicit
+`checkpoint=<path>` also leaves `"epoch": null`, and two evals of the Houston
+headline dir resolved to `checkpoint_epoch_1500.pth`, which the sort would never
+return — so explicit paths were sometimes used, and no single run can be
+attributed either way from disk.
+
+Proposed addition to D17, for approval:
+
+> **Phase 7 addendum.** The evaluated epochs (950 Houston / 975 Trento+MUUFL /
+> 800 for `houston_enhanced_spectral_run2`) are what
+> `eval_runner.find_checkpoint(epoch=None)` returned while it sorted checkpoint
+> filenames as strings: `"...950" > "...1500"`. Each of the three save intervals
+> in the frozen trees (50, 25, 200) yields exactly the reported epoch, and every
+> canonical `eval_config.json` records `"epoch": null`. The selection was
+> therefore the tool's, not a deliberate mid-training choice — the numbers are
+> sound, the provenance is not what §4/§8 implied. The sort was made numeric at
+> the phase-7 gate, so reproducing a cell now requires passing its epoch
+> explicitly, which the per-cell configs already instruct.
+
+If you accept it, phase 8 should also drop any "we selected a mid-training
+checkpoint" reading from the reproduction docs.
+
+#### Verification for this addendum
+
+Full battery re-run after each commit; final state: **527 collected, 521 passed,
+6 skipped, 0 failed** in 3:46 (`-m "not gpu and not data"`), 498 passed in 2:13
+without `slow`, equivalence **IDENTICAL 33/33**, `ruff` / `ruff format` / `mypy`
+clean, stale-vocabulary grep clean, 22 argparse entry points all answering
+`--help` with exit 0, and no tracked file modified under `docs/presentation/`,
+`results/` or `experiments/`.
+
+#### Carried to phase 8
+
+1. Narrow `tests/equivalence/conftest.py`'s `_determinism` to `scope="package"`
+   (decision 7).
+2. The README "quick sanity run" section, from the smoke commands above.
+3. A §5 footnote saying where the paper's border padding actually happens (S3).
+4. Decide on the proposed D17 addendum.
+5. Mark `docs/presentation/RESULTS.{md,json}` superseded (phase-6 gate decision).
+6. Correct PAPER_CANON §1's "This is the one deliberate default change of the
+   refactor" — the phase-7 gate made it two (the six `_DEFAULT_ARGS` entries).
+   `CHANGES.md` already records both.
+7. Reconcile one date: PAPER_CANON §1 puts the `distance_metric` phase-4 gate at
+   **2026-08-31**, while `CHANGES.md` and the commit itself (`13793e7`) say
+   **2026-09-01**. Pre-existing, noticed during the phase-7 gate review.

@@ -1,21 +1,34 @@
 #!/usr/bin/env python
 """
-Few-shot evaluation for CoFFE and the MFT architectural control.
+Few-shot evaluation for **CoFFE**, the paper's compact fusion encoder.
+
+One entry point per route, each carrying its own architecture defaults:
+
+* ``scripts/evaluate.py``            — CoFFE (this file)
+* ``scripts/evaluate_mft.py``        — the MFT architectural control
+* ``scripts/evaluate_hypersigma.py`` — the HyperSIGMA foundation-model route
+
+The evaluator body is shared (``coffe.eval.episodic``), so the routes cannot
+drift apart on the protocol — only on architecture, which is the point of the
+comparison. The flags below default to the published CoFFE configuration
+(PAPER_CANON §2: D = 128, 2 heads, 2 layers; §8 D3: lambda = 0.5), so the
+protocol needs nothing spelled out on the command line.
 
 The encoder is frozen and never finetuned: each episode's class prototype is
 the mean of its K support features, and queries are assigned by
-nearest-class-mean (PAPER_CANON §4). The paper protocol is Euclidean NCM
-(``--distance-metric euclidean``); cosine is kept as an option value only.
-
-There are no learnable similarity parameters — any DenseSimilarity weights in
-an old checkpoint are ignored on load.
+nearest-class-mean (PAPER_CANON §4). The paper protocol is Euclidean NCM;
+cosine is kept as an option value only. There are no learnable similarity
+parameters — any DenseSimilarity weights in an old checkpoint are ignored on
+load.
 
 Usage:
-    # Paper protocol: N-way (all classes), 5-shot, Euclidean NCM
+    # Paper protocol, all defaults: N-way (all classes), 5-shot, Euclidean NCM
     python scripts/evaluate.py \
         --checkpoint experiments/<run>/checkpoints/checkpoint_epoch_950.pth \
-        --dataset houston \
-        --k-shot 5 --distance-metric euclidean --no-projection
+        --dataset houston
+
+Note the evaluated checkpoint is not the final one — see that cell's config
+under ``configs/coffe/`` for the epoch to pass (PAPER_CANON §8 D17).
 """
 
 import argparse
@@ -34,7 +47,7 @@ from coffe.eval.episodic import main
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Few-shot evaluation for CoFFE / MFT (nearest-class-mean on frozen features)"
+        description="Few-shot evaluation for CoFFE (nearest-class-mean on frozen features)"
     )
 
     parser.add_argument(

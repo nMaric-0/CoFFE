@@ -10,11 +10,11 @@ Two jobs:
    quietly skip the check.
 2. **End-to-end smoke, pretrain -> checkpoint -> evaluate -> ``results.json``.**
    Two epochs and five episodes on a synthetic mini-scene, for both the CoFFE
-   and MFT routes. It proves the pipeline is wired, not that any number is
-   right — the equivalence harness owns the numbers. The HyperSIGMA route has
-   no e2e here: it needs the released ViT-Base checkpoints (CLAUDE.md hard
-   rule 5), and its wrapper plumbing is covered by
-   ``tests/unit/test_hypersigma_contracts.py``.
+   and MFT routes, each through its own entry point. It proves the pipeline is
+   wired, not that any number is right — the equivalence harness owns the
+   numbers. The HyperSIGMA route has no e2e here: it needs the released
+   ViT-Base checkpoints (CLAUDE.md hard rule 5), and its wrapper plumbing is
+   covered by ``tests/unit/test_hypersigma_contracts.py``.
 """
 
 from __future__ import annotations
@@ -79,7 +79,7 @@ def _tree_digest(*relative: str) -> str:
 
 def test_the_entry_point_list_is_not_empty() -> None:
     """Guard: a broken glob would make the parametrized test vacuous."""
-    assert len(ENTRY_POINTS) >= 20, ENTRY_POINTS
+    assert len(ENTRY_POINTS) >= 22, ENTRY_POINTS
     for expected in ("scripts/pretrain.py", "scripts/evaluate.py", "scripts/compile_results.py"):
         assert expected in ENTRY_POINTS
 
@@ -235,64 +235,72 @@ def test_coffe_pretrain_then_evaluate_end_to_end(tmp_path: Path, trento_mini_roo
 def test_mft_control_pretrain_then_evaluate_end_to_end(
     tmp_path: Path, trento_mini_root: Path
 ) -> None:
-    """The MFT control, pretrained by CLI and evaluated programmatically.
+    """The control route through its own pipeline, ``scripts/evaluate_mft.py``.
 
-    ``scripts/evaluate.py`` exposes **no ``--name`` and no ``--mlp-dim``
-    flag**, so the control is not selectable from that CLI even though the
-    script's docstring says it evaluates "CoFFE and the MFT architectural
-    control" — ``coffe.eval.episodic.main`` reads both keys off the namespace,
-    but the parser never adds them. Every paper MFT eval went through
-    ``coffe.runners.eval_runner``, which reads ``model.name`` from the run's
-    frozen ``pretrain_config.yaml``, so no published number is affected.
-
-    Reported at the phase-7 gate rather than fixed: adding a flag changes the
-    CLI surface. This test therefore drives the same programmatic entry point
-    the reproduce pipeline uses. If the flags are added, fold this back into
-    the CLI test above.
+    Until the phase-7 gate the control was not reachable from any CLI:
+    ``scripts/evaluate.py`` exposed no ``--name``, so ``mft_original`` could
+    only be selected programmatically. The gate's answer was one entry point
+    per route rather than a route flag, so the control now has its own CLI
+    carrying the faithful MFT defaults (embed 64 / 8 heads / 2 layers / mlp
+    512), and needs no architecture flags here to reproduce them.
     """
-    from coffe.eval.episodic import run_evaluation
-
     checkpoint = _pretrain(tmp_path, trento_mini_root, "mft_original")
     results_path = tmp_path / "results.json"
 
-    run_evaluation(
-        checkpoint=str(checkpoint),
-        dataset="trento",
-        name="mft_original",
-        data_root=str(trento_mini_root),
-        split="all",
-        embed_dim=64,
-        num_heads=8,
-        num_layers=2,
-        mlp_dim=512,
-        attention_type="mcross",
-        k_shot=E2E_K_SHOT,
-        k_query=E2E_K_QUERY,
-        num_episodes=E2E_EPISODES,
-        distance_metric="euclidean",
-        use_projection=False,
-        device="cpu",
-        no_plots=True,
-        output=str(results_path),
+    evaluate = _run(
+        "scripts/evaluate_mft.py",
+        "--checkpoint",
+        str(checkpoint),
+        "--dataset",
+        "trento",
+        "--data-root",
+        str(trento_mini_root),
+        "--split",
+        "all",
+        "--k-shot",
+        str(E2E_K_SHOT),
+        "--k-query",
+        str(E2E_K_QUERY),
+        "--num-episodes",
+        str(E2E_EPISODES),
+        "--device",
+        "cpu",
+        "--no-plots",
+        "--output",
+        str(results_path),
+        timeout=900,
     )
+    assert evaluate.returncode == 0, evaluate.stderr[-3000:]
 
     assert results_path.exists()
     _assert_results_json(json.loads(results_path.read_text()), "MFTOriginal")
 
 
-def test_evaluate_cli_cannot_select_the_mft_control() -> None:
-    """Pins the gap above, so it is visible rather than folklore.
+def test_each_route_has_its_own_entry_point() -> None:
+    """One CLI per route, each defaulting to that route's published arch.
 
-    Asserted on the parser's own help text: neither flag exists today. If
-    ``--name`` is added, this test should be deleted in the same change.
+    The three routes the paper compares must not share a single CLI whose
+    defaults can only be right for one of them (phase-7 gate decision). The
+    architecture defaults are read off each parser rather than off a literal,
+    so a drifted default fails here.
     """
-    proc = _run("scripts/evaluate.py", "--help")
+    routes = {
+        "scripts/evaluate.py": ("CoFFE", {"--embed-dim": "128", "--num-heads": "2"}),
+        "scripts/evaluate_mft.py": ("MFT", {"--embed-dim": "64", "--num-heads": "8"}),
+        "scripts/evaluate_hypersigma.py": ("HyperSIGMA", {}),
+    }
+    for script in routes:
+        assert (REPO / script).exists(), script
+        assert script in ENTRY_POINTS
 
-    assert proc.returncode == 0
-    assert "--name" not in proc.stdout
-    assert "--mlp-dim" not in proc.stdout
-    # The docstring that the missing flags contradict.
-    assert "MFT" in Path(REPO / "scripts" / "evaluate.py").read_text()
+    # The control's CLI selects the route itself instead of exposing a flag.
+    mft = (REPO / "scripts" / "evaluate_mft.py").read_text()
+    assert 'args.name = "mft_original"' in mft
+    assert "--name" not in _run("scripts/evaluate_mft.py", "--help").stdout
+
+    # And CoFFE's no longer claims to evaluate the control.
+    coffe_help = _run("scripts/evaluate.py", "--help").stdout
+    assert "MFT" not in coffe_help
 
 
 @pytest.mark.slow

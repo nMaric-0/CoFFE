@@ -1,0 +1,95 @@
+# CPU continuous integration for the CoFFE release.
+#
+# Runs what can run without the things this repository deliberately does not
+# ship: no dataset under data/raw/, no HyperSIGMA ViT-Base checkpoints, no GPU,
+# no network access during the tests (CLAUDE.md hard rule 5).
+#
+# That is the `not gpu and not data and not slow` selection — about 500 tests,
+# roughly 2-4 minutes on a GitHub runner. The `slow` tests are excluded because
+# they build 180M-parameter ViT bodies and shell out to the CLIs; they pass on
+# CPU but would dominate the runtime. Run them locally with
+# `pytest -m "not gpu and not data"`.
+#
+# What CI cannot check: the equivalence harness's real-data goldens (they need
+# data/raw/) and anything GPU. The synthetic-scene part of the equivalence
+# harness IS included in the selection above and is the guard that matters for
+# refactors - it is bit-exact.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A new push to the same branch supersedes an in-flight run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.11 is the floor pyproject.toml declares; 3.12 is what the release
+        # was actually developed and verified on (docs/refactor/ENV.md). Running
+        # both is what turns ">=3.11" from an intention into a tested claim —
+        # phase 6 recorded that it had never been exercised. A 3.11 failure is
+        # real information: it means the declared floor is wrong.
+        python-version: ["3.11", "3.12"]
+
+    name: test (py${{ matrix.python-version }})
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # third_party/HyperSIGMA is vendored in-tree, not a submodule, so no
+          # submodule fetch is needed.
+          submodules: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          # CPU-only torch: the default wheel pulls ~2.5GB of CUDA libraries
+          # that no CI test can use.
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -e ".[dev]"
+
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Types
+        run: mypy
+
+      - name: Tests
+        # Deselects `slow`; `gpu` and `data` have nothing to select on a runner
+        # anyway, but naming them documents the contract.
+        run: pytest -q -m "not gpu and not data and not slow" --no-cov
+
+      - name: Frozen artifacts untouched
+        # The report scripts write committed artifacts under docs/presentation/
+        # and results/ when run without --out. Nothing in the test suite should
+        # do that (tests/integration/test_cli.py asserts it), so a dirty tree
+        # here means something regressed past that guard.
+        run: |
+          if [ -n "$(git status --porcelain -- docs/presentation results experiments)" ]; then
+            echo "::error::a test wrote into a frozen artifact tree"
+            git status --porcelain -- docs/presentation results experiments
+            exit 1
+          fi

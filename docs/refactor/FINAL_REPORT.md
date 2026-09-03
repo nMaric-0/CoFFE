@@ -87,8 +87,14 @@ frozen; PAPER_CANON §8 carries the full record with evidence).
 
 **Release blanks Nikola has to fill (all tagged `TODO(release)`):**
 
-1. Paper link and venue in `README.md`; venue/pages/DOI in the BibTeX block and
-   in `CITATION.cff`'s `preferred-citation`.
+1. ~~Paper venue~~ **filled after the release push attempt**: the venue was
+   recorded in a commit that existed only on `origin/main`
+   (`9196879 "Fix README"`, 2026-07-30) and would have been discarded by the
+   force-push — MACLEAN workshop, ECML PKDD 2026, "to appear". `README.md` and
+   `CITATION.cff` now carry it, together with that commit's attributions
+   (HyperSIGMA: Wang et al., IEEE TPAMI 2025; the MFT control: Roy et al., IEEE
+   TGRS 2023; the scene providers). Still open there: pages, DOI and the
+   proceedings URL, once published.
 2. The **CoFFE / MFT checkpoint hosting link** — the paper promises public
    checkpoints and there is nowhere to point yet.
 3. The funding acknowledgement text.

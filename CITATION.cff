@@ -35,5 +35,6 @@ preferred-citation:
     - family-names: "Kocev"
       given-names: "Dragi"
   year: 2026
-  # TODO(release): venue (collection-title), pages, DOI, url — fill in on acceptance.
-  collection-title: "TODO(release)"
+  collection-title: "ECML PKDD 2026 Workshops (MACLEAN)"
+  notes: "To appear."
+  # TODO(release): pages, DOI and url once the proceedings are published.

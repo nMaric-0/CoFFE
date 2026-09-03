@@ -5,7 +5,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Nikola Marić, Dragi Kocev — Jožef Stefan Institute / IPS Ljubljana.
-Paper: `TODO(release)` · code release for **TODO(release): venue**.
+Code release for the paper, to appear at the **MACLEAN workshop, ECML PKDD
+2026**.
 
 A 579K-parameter transformer encoder, pretrained per scene with no labels on the
 scene it will be tested on, is compared against a 180M-parameter hyperspectral
@@ -164,9 +165,9 @@ happened upstream, in the MFT data preparation.
 
 | Scene | Bands | Aux | Classes | Source |
 |---|---|---|---|---|
-| Houston 2013 | 144 HSI | 1 LiDAR (elevation) | 15 | IEEE GRSS Data Fusion Contest 2013 |
-| Trento | 63 HSI | 1 LiDAR | 6 | University of Trento |
-| MUUFL Gulfport | 64 HSI | 2 LiDAR rasters | 11 | University of Florida MUUFL Gulfport dataset |
+| Houston 2013 | 144 HSI | 1 LiDAR (elevation) | 15 | 2013 IEEE GRSS Data Fusion Contest |
+| Trento | 63 HSI | 1 LiDAR | 6 | L. Bruzzone / University of Trento |
+| MUUFL Gulfport | 64 HSI | 2 LiDAR rasters | 11 | University of Florida GatorSense group |
 
 `scripts/download_data.sh <scene>` prints an acquisition pointer for each scene
 and the directory to unpack it into. Note those pointers are **third-party
@@ -463,11 +464,13 @@ measurements behind the pin, are in
 
 ```bibtex
 @inproceedings{maric2026coffe,
-  title     = {A Compact In-Domain Fusion Encoder versus a Hyperspectral
-               Foundation Model for Few-Shot HSI-LiDAR Land-Cover Classification},
   author    = {Mari{\'c}, Nikola and Kocev, Dragi},
+  title     = {A Compact In-Domain Fusion Encoder versus a Hyperspectral
+               Foundation Model for Few-Shot {HSI}-{LiDAR} Land-Cover
+               Classification},
+  booktitle = {ECML PKDD 2026 Workshops (MACLEAN)},
   year      = {2026},
-  note      = {TODO(release): venue, pages, DOI}
+  note      = {To appear}
 }
 ```
 
@@ -479,15 +482,18 @@ form.
 This repository is released under the [MIT License](LICENSE).
 
 [`third_party/HyperSIGMA/`](third_party/HyperSIGMA) is vendored upstream code
-(Apache-2.0), covered by **its own LICENSE and NOTICE** in that directory — not
-by this repository's MIT license. It is not pristine: its `NOTICE` records the local
-patches applied to it — an `mmengine` `get_dist_info` import shim,
-relative-import fixes so the tree loads in place, and a `patch_size == 3` FPN
-branch that mirrors upstream's `patch_size == 11` handling. That last one is a
-live code path, not a cosmetic edit: every patch-native (11×11) Table 3 cell
-runs through it. The MFT architecture and the
-pre-patched dataset format come from Roy et al.'s MFT release; the Houston 2013,
-Trento and MUUFL Gulfport scenes remain the property of their respective
-providers.
+by **Wang et al. (IEEE TPAMI 2025)**, Apache-2.0, covered by **its own LICENSE
+and NOTICE** in that directory — not by this repository's MIT license. It is not
+pristine: its `NOTICE` records the local patches applied to it — an `mmengine`
+`get_dist_info` import shim, relative-import fixes so the tree loads in place,
+and a `patch_size == 3` FPN branch that mirrors upstream's `patch_size == 11`
+handling. That last one is a live code path, not a cosmetic edit: every
+patch-native (11×11) Table 3 cell runs through it.
+
+The architectural control follows the multimodal fusion transformer of **Roy et
+al. (IEEE TGRS 2023)**, whose released pre-patched data format this repository
+also consumes. The scenes remain the property of their providers: the **2013 IEEE GRSS Data
+Fusion Contest** (Houston), **L. Bruzzone / University of Trento** (Trento), and
+the **University of Florida GatorSense group** (MUUFL Gulfport).
 
 Funding acknowledgement: `TODO(release)`.

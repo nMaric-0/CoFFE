@@ -21,34 +21,50 @@ scenes are synthesised, and the HyperSIGMA ViT bodies are randomly initialised.
 ### The goldens are bit-exact on **one** environment (read this first)
 
 `golden/meta.json` records it: **Python 3.12.3, torch 2.11.0+cu128,
-numpy 2.4.4**. `pyproject.toml` declares floors, not pins, so a fresh
-`pip install -e ".[dev]"` resolves something newer — and the goldens do not
-survive that. Measured in the phase-8 release gate, in a fresh clone:
+numpy 2.4.4** — plus one thing it does not record, the reference machine's
+**thread count** (64 cores, torch's default of 32), because BLAS reduction
+order follows it. `pyproject.toml` declares floors, not pins, so a fresh
+`pip install -e ".[dev]"` resolves something newer and these fingerprints drift.
+Measured at the phase-8 gate, in fresh clones:
 
 | Environment | Result |
 |---|---|
-| as `pip install -e ".[dev]"` resolved it (torch 2.14.0, numpy 2.5.2) | **19 of 33 failed** — G1/G2/G5 numeric drift (e.g. `G5[simmim_token].masked_loss` off by 2.6e-04 against the 1e-06 tolerance) plus the `meta.json` environment assertion |
-| `torch==2.11.0` (+ `torchvision==0.26.0`, which `timm` requires), `numpy==2.4.4` | **33 passed** |
+| as `pip install -e ".[dev]"` resolves it today (torch 2.14.0, numpy 2.5.2) | 19 of 33 fail — G1/G2/G5 drift (e.g. `G5[simmim_token].masked_loss` off by 2.6e-04 against the 1e-06 tolerance) |
+| `torch==2.11.0` alone (torchvision still built for 2.14) | 2 fail with `RuntimeError: operator torchvision::nms does not exist` — a build mismatch, not drift |
+| the full pin: `torch==2.11.0`, `torchvision==0.26.0`, `numpy==2.4.4` | **33 passed** |
+| the same pin on the **CPU-only** wheels (`+cpu` instead of `+cu128`) | **33 passed** — the build suffix does not matter, the release does |
+| the full pin, but `OMP_NUM_THREADS=4` / `2` / `1` | 31 / 31 / 26 passed — **the thread count matters as much as the version** |
 
-The rest of the suite does not care: on the newer environment the same fresh
-clone runs `-m "not gpu and not data" --ignore=tests/equivalence` at
-**486 passed, 0 failed**, and on the pinned one the whole selection is
-**519 passed, 8 skipped**.
+Reconstruct the environment with the constraints file:
 
-So a failure here means one of two things, and the first is far more likely:
-**your environment differs from the goldens'**, or the code's behaviour actually
-changed. Check `python -c "import torch, numpy; print(torch.__version__,
-numpy.__version__)"` against `golden/meta.json` before concluding anything.
-Note `timm` pulls `torchvision`, so pinning torch means pinning torchvision to
-its matching release too — a torch/torchvision mismatch fails these tests with
-`RuntimeError: operator torchvision::nms does not exist`, which is not numeric
-drift at all.
+```bash
+pip install -e ".[dev]" -c constraints/verification.txt
+```
+
+### What happens when your environment differs
+
+`conftest.py` compares the running torch and numpy **releases** and the thread
+count against the above, and **skips the whole package with that comparison in
+the message** rather than failing. A bare failure here reads as "the code
+changed", and on a foreign environment that reading is wrong — which is exactly
+what the phase-8 release gate first saw in a fresh clone. So:
+
+- **On the reference environment** every fingerprint is asserted, exactly as
+  before. This is where the freeze is enforced, and it is what the `verifier`
+  battery runs before every commit.
+- **Anywhere else** you get 33 skips and a message naming the difference. That
+  is "not checked here", not "checked and fine" — the harness cannot tell you
+  anything about the code from an environment it cannot reproduce.
+- **CI** is in the second category (2-4 cores) and has a step asserting that the
+  package skipped *for that reason*, so a genuine failure can never be mistaken
+  for the expected skip.
 
 Nothing about this is a defect in the code under test: bit-exactness on a fixed
 environment is exactly what the harness promises (`conftest.py`'s determinism
-contract). What the release does not yet ship is a way to *get* that
-environment — recorded as an open item in
-[`docs/refactor/FINAL_REPORT.md`](../../docs/refactor/FINAL_REPORT.md).
+contract). The rest of the suite does not care — on the newer environment a
+fresh clone runs `-m "not gpu and not data" --ignore=tests/equivalence` at
+**486 passed, 0 failed**, and on the pinned one the whole selection is
+**519 passed, 8 skipped**.
 
 ## What is pinned
 

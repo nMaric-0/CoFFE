@@ -83,16 +83,14 @@ python scripts/evaluate_mft.py \
     --checkpoint experiments/<run>/checkpoints/checkpoint_epoch_950.pth \
     --dataset houston
 
-# HyperSIGMA — same episodes, but its own defaults are NOT the paper's:
-# pass --split all --k-query 100 --num-episodes 2000 for a Table 3 cell
-python scripts/evaluate_hypersigma.py --dataset houston --mode fused \
-    --split all --k-query 100 --num-episodes 2000
+# HyperSIGMA — its defaults are Table 3's protocol since the phase-8 gate
+# (k_query 100, 2000 episodes, split all), so this is a published-cell run
+python scripts/evaluate_hypersigma.py --dataset houston --mode fused
 ```
 
 The evaluated checkpoint is **not** the final one: epoch 950 on Houston, 975 on
-Trento/MUUFL for CoFFE, 950 for all six MFT cells, with one cell at 800
-(PAPER_CANON §8 D17). Each `configs/{coffe,mft}/` cell config names its own
-epoch in its header.
+Trento/MUUFL for CoFFE, 950 for all six MFT cells, with one cell at 800. Not a model-selection decision: those epochs are what a checkpoint sort that ordered filenames as strings returned (`"...950" > "...1500"`). The sort is numeric since the phase-7 gate, so the epoch has to be passed explicitly now — PAPER_CANON §8 D17. Each `configs/{coffe,mft}/` cell config names its own epoch in its
+header.
 
 `--n-way` defaults to the scene's full class count, which is the paper setting.
 Passing `--name mft_original` to `scripts/evaluate.py` is no longer how the
@@ -106,14 +104,15 @@ episodes; the Trento one also defaults to 8 heads, 4 layers, λ 1.0, `k_query`
 reads the architecture back out of the pretraining run's
 `pretrain_config.yaml`, so eval cannot silently drift from the checkpoint.
 
-**One caveat on that inheritance: `use_projection` is inherited too.** The
-SimMIM pretrain configs keep the head on (it is a pretraining part), so a bare
-`run_evaluation(...)` that does not say otherwise evaluates *with* the head —
-not the paper protocol. `notebooks/evaluate.ipynb` surfaces `use_projection` as
-a top-level parameter set to `False`, `scripts/reproduce/sig_significance_config.py`
-passes `use_projection: False` in its shared `eval_params`, and every frozen
-paper `eval_config.json` records `false`; so no published number is affected,
-but a new caller of the runner has to pass it. The CLIs default to off.
+**`use_projection` is deliberately *not* inherited.** The SimMIM pretrain
+configs keep the head on — it is a pretraining part — so until the phase-8 gate
+a bare `run_evaluation(...)` evaluated *with* the head, which is not the
+protocol. It is off the inherited list now, so the evaluator's own default
+(off) applies unless a caller asks for the head with `use_projection=True`; the
+three `proj_*` keys are still inherited to shape it if they do. No published
+number moves: every paper run passed `use_projection: False` explicitly —
+`notebooks/evaluate.ipynb` surfaces it, `sig_significance_config.eval_params`
+sets it, and every frozen `eval_config.json` records `false`.
 
 ## Checkpoint compatibility
 
@@ -132,7 +131,7 @@ which maps them and warns once.
 
 ## See also
 
-- [`docs/PRETRAINING.md`](PRETRAINING.md) — the objectives that produce the
+- [`docs/pretraining.md`](pretraining.md) — the objectives that produce the
   encoders.
 - [`PAPER_CANON.md`](../PAPER_CANON.md) §4 (protocol), §8 D2/D3/D18 (protocol
   drift found in the audit).
@@ -140,5 +139,5 @@ which maps them and warns once.
   §6 — the published tables; [`results/README.md`](../results/README.md) — the
   JSONs behind them. (`docs/presentation/RESULTS.md` is an earlier compilation,
   superseded — see its header.)
-- [`docs/HYPERSIGMA.md`](HYPERSIGMA.md) — the foundation-model route's own
+- [`docs/hypersigma.md`](hypersigma.md) — the foundation-model route's own
   input regimes, adaptations and evaluator quirks.

@@ -125,6 +125,14 @@ def trento_mini_root(tmp_path_factory) -> Path:
     return root
 
 
+@pytest.fixture(scope="module")
+def houston_mini_root(tmp_path_factory) -> Path:
+    """The Houston-shaped mini-scene (15 classes, 144 bands + 1 aux)."""
+    root = tmp_path_factory.mktemp("e2e_houston") / "raw"
+    write_scene(SCENES["houston_mini"], root)
+    return root
+
+
 def _write_config(tmp_path: Path, data_root: Path, model_name: str) -> tuple[Path, Path]:
     """A 2-epoch pretrain config, built from the harness's paper-shaped recipe.
 
@@ -344,3 +352,65 @@ def test_evaluate_rejects_a_checkpoint_from_the_wrong_scene(
 
     assert proc.returncode != 0
     assert "Band-count mismatch" in (proc.stderr + proc.stdout)
+
+
+@pytest.mark.slow
+def test_an_hsi_only_checkpoint_is_told_which_flag_to_pass(
+    tmp_path: Path, houston_mini_root: Path
+) -> None:
+    """The HSI-only cells need ``--no-aux``, and the error has to say so.
+
+    Phase-8 gate: ``configs/coffe/*_hsi.yaml`` pretrain with ``use_aux: false``
+    while the CLI defaults to ``--use-aux``, so the generic recipe fails on the
+    12 HSI-only Table 2 cells with a band-count mismatch. The message used to
+    send the reader to ``--dataset``, which is usually already right.
+    """
+    config = pretrain_config(
+        SCENES["houston_mini"],
+        "simmim_token",
+        data_root=houston_mini_root,
+        model_name="coffe",
+        epochs=E2E_EPOCHS,
+        batch_size=16,
+    )
+    config["model"]["use_aux"] = False
+    config["pretrain"]["save_interval"] = 1
+    checkpoint_dir = tmp_path / "checkpoints"
+    config["paths"]["checkpoint_dir"] = str(checkpoint_dir)
+    config["paths"]["log_dir"] = str(tmp_path / "logs")
+    config_path = tmp_path / "coffe_hsi.yaml"
+    config_path.write_text(yaml.safe_dump(config))
+
+    assert _run("scripts/pretrain.py", "--config", str(config_path), timeout=900).returncode == 0
+    checkpoint = checkpoint_dir / f"checkpoint_epoch_{E2E_EPOCHS}.pth"
+
+    common = [
+        "--checkpoint",
+        str(checkpoint),
+        "--dataset",
+        "houston",
+        "--data-root",
+        str(houston_mini_root),
+        "--split",
+        "all",
+        "--k-shot",
+        "2",
+        "--k-query",
+        "2",
+        "--num-episodes",
+        "2",
+        "--device",
+        "cpu",
+        "--no-plots",
+    ]
+
+    # Default (--use-aux) builds a 145-band model for a 144-band checkpoint.
+    failed = _run("scripts/evaluate.py", *common, timeout=900)
+    output = failed.stderr + failed.stdout
+    assert failed.returncode != 0
+    assert "Band-count mismatch" in output
+    assert "--no-aux" in output, output[-2000:]
+
+    # And with the flag the message names, it evaluates.
+    ok = _run("scripts/evaluate.py", *common, "--no-aux", timeout=900)
+    assert ok.returncode == 0, ok.stderr[-3000:]

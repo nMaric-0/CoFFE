@@ -86,7 +86,7 @@ python scripts/pretrain.py --config configs/mft/houston_simmim_token.yaml
 
 Configs live under `configs/coffe/` (CoFFE), `configs/mft/` (the control) and
 `configs/hypersigma/` (label-free foundation-model adaptation, a different
-script: `scripts/adapt_hypersigma.py` — see [`HYPERSIGMA.md`](HYPERSIGMA.md)).
+script: `scripts/adapt_hypersigma.py` — see [`hypersigma.md`](hypersigma.md)).
 
 From a notebook, [`coffe/runners/pretrain_runner.py`](../coffe/runners/pretrain_runner.py) wraps the
 same entry point and writes everything under `experiments/<name>/`.
@@ -110,8 +110,10 @@ Three things not to assume:
 1. **The evaluated checkpoint is not the final one.** Schedules are 1500 epochs
    (Houston MAE, Houston MFT: 3000; one Houston SimMIM band run: 2000), but the
    published numbers come from epoch 950 on Houston, 975 on Trento/MUUFL, and
-   800 for one cell — PAPER_CANON §8 D17. Train the full schedule, then evaluate
-   the epoch the config names.
+   800 for one cell. That was the tool's choice, not the authors': a checkpoint
+   sort ordered filenames as strings, so `"...950"` beat `"...1500"`
+   (PAPER_CANON §8 D17; the sort is numeric now). Train the full schedule, then
+   evaluate the epoch the config names.
 2. **Mask rates are per cell, not global** (D19, D20): read them off the config,
    never off the regime's nominal `(r_b, r_s)`.
 3. **The ± column is a different experiment.** It is the across-seed std of
@@ -152,8 +154,8 @@ state_dict keys — did not (PAPER_CANON §7.2).
 
 ## See also
 
-- [`docs/EVAL_PROTOCOL.md`](EVAL_PROTOCOL.md) — the evaluation protocol.
-- [`docs/HYPERSIGMA.md`](HYPERSIGMA.md) — the foundation-model route, which
+- [`docs/evaluation.md`](evaluation.md) — the evaluation protocol.
+- [`docs/hypersigma.md`](hypersigma.md) — the foundation-model route, which
   pretrains differently (HyperSIGMA's own 75 % token masking).
 - [`PAPER_CANON.md`](../PAPER_CANON.md) §3 (objectives), §8 (known
   discrepancies), §9 (config naming).

@@ -49,10 +49,15 @@ if __name__ == "__main__":
         "available classes for the dataset (C-way).",
     )
     parser.add_argument("--k-shot", type=int, default=5)
-    parser.add_argument("--k-query", type=int, default=30)
-    parser.add_argument("--num-episodes", type=int, default=600)
+    # Table 3's protocol, aligned at the phase-8 gate: k_query 100 (one cell
+    # used 30 - PAPER_CANON §8 D18), 2000 episodes (Table 2's count is 1000;
+    # this entry point serves Table 3), split "all" as every paper eval passed.
+    # Before the gate these were 30 / 600 / "test", which matched no published
+    # cell. No paper number depends on them: every paper run passed them.
+    parser.add_argument("--k-query", type=int, default=100)
+    parser.add_argument("--num-episodes", type=int, default=2000)
     parser.add_argument("--data-root", type=str, default="./data/raw")
-    parser.add_argument("--split", type=str, default="test", choices=["train", "test", "all"])
+    parser.add_argument("--split", type=str, default="all", choices=["train", "test", "all"])
     parser.add_argument("--patch-size", type=int, default=11)
     parser.add_argument(
         "--mode", type=str, default="fused", choices=list(HyperSIGMAFewShot.SUPPORTED_MODES)

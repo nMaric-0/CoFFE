@@ -378,3 +378,39 @@ def test_mask_ratio_must_be_a_proper_fraction(patch_native: HyperSIGMADual) -> N
         HyperSIGMAMaskedAdaptation(
             dual=patch_native, adapt_mode="joint_sem", hsi_channels=144, mask_ratio=1.0
         )
+
+
+def test_the_hypersigma_evaluator_defaults_are_table_3s_protocol() -> None:
+    """A bare `scripts/evaluate_hypersigma.py` run must be a published protocol.
+
+    Phase-8 gate. These were `k_query` 30 / 600 episodes / `split` "test",
+    which reproduced no Table 3 cell — they mirrored
+    `configs/hypersigma/houston_eval.yaml`'s own constants. This entry point
+    serves **Table 3**, so the episode count is 2000, not Table 2's 1000
+    (PAPER_CANON §8 D18: read the protocol constants per table).
+
+    No published number depends on the defaults — every paper run passes these
+    explicitly — which is why the alignment moves nothing.
+    """
+    from coffe.eval.hypersigma import _DEFAULT_ARGS
+
+    assert _DEFAULT_ARGS["n_way"] is None  # N-way = every class in the scene
+    assert _DEFAULT_ARGS["k_shot"] == 5
+    assert _DEFAULT_ARGS["k_query"] == 100
+    assert _DEFAULT_ARGS["num_episodes"] == 2000
+    assert _DEFAULT_ARGS["split"] == "all"
+    assert _DEFAULT_ARGS["distance_metric"] == "euclidean"
+    assert _DEFAULT_ARGS["prototype_mode"] == "mean_features"
+
+
+def test_the_hypersigma_cli_and_the_module_agree_on_those_defaults() -> None:
+    """The CLI flags and `_DEFAULT_ARGS` are two copies of one protocol."""
+    import re
+
+    repo_root = Path(__file__).resolve().parents[2]
+    source = (repo_root / "scripts" / "evaluate_hypersigma.py").read_text()
+
+    for flag, value in (("--k-query", "100"), ("--num-episodes", "2000")):
+        pattern = rf'add_argument\(\s*"{flag}",\s*type=int,\s*default={value}\)'
+        assert re.search(pattern, source), f"{flag} should default to {value}"
+    assert re.search(r'"--split",\s*type=str,\s*default="all"', source)

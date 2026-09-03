@@ -90,9 +90,47 @@ def test_the_paper_architecture_is_read_off_the_frozen_config() -> None:
     assert arch["num_heads"] == 2
     assert arch["num_layers"] == 2
     assert arch["lambda_factor"] == 0.5
-    assert arch["use_projection"] is False
     assert arch["use_aux"] is True
     assert arch["patch_size"] == 11  # read from data:, not model:
+
+
+def test_use_projection_is_not_inherited_from_the_pretrain_config() -> None:
+    """The head is a pretraining part and must not travel to eval.
+
+    Phase-8 gate: inheriting ``use_projection`` made a bare
+    ``run_evaluation(...)`` on a SimMIM run evaluate *with* the projection head,
+    because those pretrain configs keep it on - contradicting PAPER_CANON §4,
+    which discards the head at eval. Every paper run passed
+    ``use_projection: False`` explicitly, so nothing published moves.
+    """
+    head_on = {
+        "model": {"name": "coffe", "embed_dim": 128, "use_projection": True},
+        "data": {"patch_size": 11},
+    }
+
+    arch = _arch_defaults_from_pretrain(head_on)
+
+    assert "use_projection" not in arch
+    # ...but the keys that *shape* the head still arrive, for a caller who asks
+    # for it with use_projection=True.
+    shaped = _arch_defaults_from_pretrain(
+        {
+            "model": {
+                "name": "coffe",
+                "proj_hidden_dim": 512,
+                "proj_num_layers": 1,
+                "proj_l2_normalize": True,
+            },
+            "data": {"patch_size": 11},
+        }
+    )
+    assert shaped["proj_hidden_dim"] == 512
+    assert shaped["proj_num_layers"] == 1
+    assert shaped["proj_l2_normalize"] is True
+    # And the evaluator's own default is off, so the bare call is the protocol.
+    from coffe.eval.episodic import _DEFAULT_ARGS
+
+    assert _DEFAULT_ARGS["use_projection"] is False
 
 
 def test_the_mft_control_arch_survives_the_trip() -> None:

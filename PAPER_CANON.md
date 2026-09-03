@@ -357,6 +357,24 @@ where the paper allows, renaming.
   except Houston MAE and Houston MFT (**3000**) and
   `houston_enhanced_spectral_run2` (**2000**). The epoch-1500 evals produced by
   `scripts/rerun_mft_faithful_eval_ep1500.sh` are **not** in Table 2.
+
+  **Phase-7 addendum, ACCEPTED at the phase-8 gate (2026-09-03).** The evaluated
+  epochs (950 Houston / 975 Trento+MUUFL / 800 for
+  `houston_enhanced_spectral_run2`) are what
+  `eval_runner.find_checkpoint(epoch=None)` returned while it sorted checkpoint
+  filenames as **strings**: `"...950" > "...1500"`. Each of the three save
+  intervals in the frozen trees (50, 25, 200) yields exactly the reported epoch,
+  and every canonical `eval_config.json` records `"epoch": null`. The selection
+  was therefore the tool's, not a deliberate mid-training choice — the numbers
+  are sound, the provenance is not what §4/§8 implied. What the artifacts cannot
+  settle: an explicit `checkpoint=<path>` also leaves `"epoch": null`, and two
+  evals of the Houston headline directory resolved to
+  `checkpoint_epoch_1500.pth`, which the sort would never return — so explicit
+  paths were sometimes used, and no single run can be attributed either way from
+  disk. The sort was made numeric at the phase-7 gate, so reproducing a cell now
+  requires passing its epoch explicitly, which the per-cell configs already
+  instruct. **Release documentation must not present this as mid-training model
+  selection.**
 - **D18 — episode counts differ between tables.** §4 states 1000 episodes as
   law, but Table 3 used **2000** and Table 2 used **1000**. Since Table 3
   reports ±95 % CI over episodes, this sets the CI width. Additionally one

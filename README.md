@@ -52,7 +52,7 @@ Read the episode counts per table: Table 2 ran **1000** episodes per evaluation,
 the Table 3 HyperSIGMA sweep ran **2000**, and one Table 3 cell (Houston 11×11
 spectral) used `k_query=30` instead of 100 (§8 D18). Because the query sets are
 class-balanced, OA = AA, which is why the paper reports OA only. Details:
-[`docs/EVAL_PROTOCOL.md`](docs/EVAL_PROTOCOL.md).
+[`docs/evaluation.md`](docs/evaluation.md).
 
 **The pretraining regimes** are a pair of mask rates over the same token space,
 not separate code paths — band masking of `(pixel, band)` entries at rate `r_b`,
@@ -65,7 +65,7 @@ spatial masking of whole pixel tokens at rate `r_s`:
 | SimMIM band+token | `(0.85, 0.75)` | as above — but Table 2's Houston cell used `(0.75, 0.75)`; see [`PAPER_CANON.md`](PAPER_CANON.md) §8 D19 |
 | MAE | 75 % of tokens **dropped** | He et al. token-drop recipe with a transformer decoder |
 
-Details: [`docs/PRETRAINING.md`](docs/PRETRAINING.md).
+Details: [`docs/pretraining.md`](docs/pretraining.md).
 
 ## Results
 
@@ -225,11 +225,14 @@ schedule.
 
 Each Table 2 cell has a config carrying **the exact recipe of the run that
 produced its published mean**, including that run's mask rates and the
-**checkpoint epoch that was evaluated** — which is *not* the final one
-([`PAPER_CANON.md`](PAPER_CANON.md) §8 D17: epoch 950 on Houston, 975 on
-Trento/MUUFL for CoFFE, 950 for all six MFT cells, with one cell at 800). So the
-generic recipe is: train the full schedule, then evaluate the epoch the config
-names.
+**checkpoint epoch that was evaluated** — which is *not* the final one: epoch
+950 on Houston, 975 on Trento/MUUFL for CoFFE, 950 for all six MFT cells, with
+one cell at 800. That was not a model-selection decision — those epochs are what
+a checkpoint sort that ordered filenames as strings happened to return
+(`"...950" > "...1500"`), which the phase-7 gate made numeric
+([`PAPER_CANON.md`](PAPER_CANON.md) §8 D17). The numbers are sound either way,
+and the generic recipe follows from it: train the full schedule, then evaluate
+the epoch the config names.
 
 ```bash
 # one Table 2 cell, end to end (Houston, CoFFE SimMIM token, HSI+LiDAR = 75.30)
@@ -248,7 +251,7 @@ convenience:
 - **HSI-only cells need `--no-aux`.** The `_hsi.yaml` configs pretrain with
   `use_aux: false`, but the CLI defaults to `--use-aux` and does not read the
   cell config, so evaluating an HSI-only checkpoint without `--no-aux` fails on
-  a band-count mismatch whose message blames `--dataset` instead:
+  a band-count mismatch — one that now names `--no-aux` in its message:
 
   ```bash
   python scripts/evaluate.py --no-aux       --checkpoint ./checkpoints/coffe/houston_simmim_token_hsi/checkpoint_epoch_950.pth       --dataset houston --data-root ./data/raw
@@ -256,9 +259,9 @@ convenience:
 
   The driver and notebook routes do not need it: they read `use_aux` back out
   of the run's frozen `pretrain_config.yaml`.
-- **`scripts/evaluate_hypersigma.py`'s defaults match no published cell**
-  (`k_query 30`, 600 episodes, `split test`) — pass the protocol explicitly
-  there, as the Table 3 rows below do.
+- **`scripts/evaluate_hypersigma.py` defaults to Table 3's protocol**
+  (`k_query` 100, 2000 episodes, `split all`) rather than Table 2's, because
+  that is the table it serves. The Table 3 rows below still spell the flags out.
 
 | Paper table (cell group) | Command | Epochs | Wall time |
 |---|---|---|---|
@@ -290,7 +293,7 @@ cells' adaptation settings were never reconstructed into a config. That gap is
 deliberate — inventing settings for a frozen paper run would be worse than
 naming the notebook that produced it.
 [`scripts/reproduce/README.md`](scripts/reproduce/README.md) is the row-by-row
-map, and [`docs/HYPERSIGMA.md`](docs/HYPERSIGMA.md) covers that route's
+map, and [`docs/hypersigma.md`](docs/hypersigma.md) covers that route's
 mechanics.
 
 ## Quick sanity run
@@ -407,6 +410,7 @@ CoFFE/
 │   ├── reproduce/            the experiment drivers behind Tables 2 and 3
 │   └── reports/              provenance and aggregation builders for results/
 ├── configs/                  per-cell recipes: coffe/, mft/, hypersigma/
+├── constraints/              the pinned environment the behaviour goldens need
 ├── results/                  the JSONs behind the paper's tables (frozen; see results/README.md)
 ├── experiments/              per-run output trees (gitignored except _example/)
 ├── notebooks/                pretrain, evaluate, compare, and the HyperSIGMA notebooks
@@ -442,15 +446,20 @@ encoder forwards, masking and the full episodic evaluation against committed
 goldens, plus a pre-refactor checkpoint that must still load. It is what makes
 "this refactor changed no computed number" a checkable claim.
 
-**Those goldens are bit-exact on one environment** — Python 3.12.3, torch
-2.11.0+cu128, numpy 2.4.4 (`tests/equivalence/golden/meta.json`). This project
-declares dependency *floors*, so a fresh install resolves something newer and
-19 of the 33 equivalence tests then fail on floating-point drift; pinning
-`torch==2.11.0`, `torchvision==0.26.0` and `numpy==2.4.4` makes all 33 pass
-again. Everything outside that package is unaffected either way — measured in a
-fresh clone on the newer environment: 486 passed, 0 failed. See
-[`tests/equivalence/README.md`](tests/equivalence/README.md) before reading a
-failure there as a behaviour change.
+**Those goldens are bit-exact on one environment** — the versions
+`tests/equivalence/golden/meta.json` records, *and* the reference machine's
+thread count, since BLAS reduction order follows it. Reconstruct it with:
+
+```bash
+pip install -e ".[dev]" -c constraints/verification.txt
+```
+
+Anywhere else the package **skips itself** and names the difference, because
+float drift from a newer torch is not evidence about this code. Everything
+outside `tests/equivalence/` is unaffected either way: measured in a fresh clone
+on today's resolved versions, 486 passed, 0 failed. Details, including the
+measurements behind the pin, are in
+[`tests/equivalence/README.md`](tests/equivalence/README.md).
 
 ## Citation
 

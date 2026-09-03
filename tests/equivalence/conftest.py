@@ -20,12 +20,74 @@ decision 7).
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
+import numpy as np
 import pytest
 import torch
 
 from ._harness import SCENES, build_all_scenes, set_determinism
+
+#: Thread count the goldens were generated at. Not recorded in ``meta.json``
+#: (phase 2 did not know it mattered) and not expressible as a pip pin, but
+#: load-bearing: BLAS reduction order follows it. Measured at the phase-8 gate
+#: on the reference machine (64 cores, torch's default of 32) — the same clone
+#: and the same torch gives 33 passed at 32 threads, 31 at 4, 31 at 2, 26 at 1.
+REFERENCE_THREADS = 32
+
+
+def _golden_env() -> dict:
+    """The environment ``golden/meta.json`` records, or ``{}`` if unreadable."""
+    meta_path = Path(__file__).parent / "golden" / "meta.json"
+    try:
+        return json.loads(meta_path.read_text())
+    except (OSError, ValueError):  # pragma: no cover - a broken checkout
+        return {}
+
+
+def _release(version: str) -> str:
+    """``2.11.0+cu128`` -> ``2.11.0``.
+
+    CPU and CUDA builds of the same torch release produce identical goldens —
+    measured at the phase-8 gate: a fresh clone on ``torch==2.11.0+cpu``
+    reproduces every numeric fingerprint. Only the build string differs, so the
+    comparison is release-level.
+    """
+    return version.split("+", 1)[0]
+
+
+def environment_mismatch() -> str | None:
+    """Why this environment cannot reproduce the goldens, or ``None``.
+
+    The goldens are bit-level fingerprints of float32 arithmetic, so they hold
+    on the environment they were generated on and drift on any other. Rather
+    than reporting that drift as a behaviour change — which is what a bare
+    failure looks like, and what the phase-8 release gate first saw in a fresh
+    clone — the package skips itself and says what differs.
+    """
+    meta = _golden_env()
+    if not meta:
+        return None  # nothing to compare against; let the tests speak
+    reasons = []
+    if _release(meta.get("torch", "")) != _release(torch.__version__):
+        reasons.append(f"torch {torch.__version__} != goldens' {meta['torch']}")
+    if _release(meta.get("numpy", "")) != _release(np.__version__):
+        reasons.append(f"numpy {np.__version__} != goldens' {meta['numpy']}")
+    threads = torch.get_num_threads()
+    if threads != REFERENCE_THREADS:
+        reasons.append(f"torch.get_num_threads() {threads} != reference {REFERENCE_THREADS}")
+    if not reasons:
+        return None
+    return (
+        "environment differs from the one golden/meta.json records, so these "
+        "fingerprints cannot be reproduced here: " + "; ".join(reasons) + ". "
+        'Reconstruct it with `pip install -e ".[dev]" -c constraints/verification.txt` '
+        "on a machine with the reference thread count, or read this as "
+        "'not checked here' — it is not evidence about the code. "
+        "See tests/equivalence/README.md."
+    )
+
 
 # Tolerances. CPU deterministic runs are bit-exact on a fixed environment; the
 # tolerance exists only to absorb BLAS reduction-order noise, not to paper over
@@ -33,6 +95,14 @@ from ._harness import SCENES, build_all_scenes, set_determinism
 # at the assertion site.
 RTOL = 1e-6
 ATOL = 1e-8
+
+
+@pytest.fixture(scope="package", autouse=True)
+def _reference_environment():
+    """Skip the whole package when the environment cannot reproduce the goldens."""
+    reason = environment_mismatch()
+    if reason:
+        pytest.skip(reason)
 
 
 @pytest.fixture(scope="package", autouse=True)

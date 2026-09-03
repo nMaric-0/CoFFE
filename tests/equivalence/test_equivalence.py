@@ -52,7 +52,7 @@ from ._harness import (
     state_dict_fingerprint,
     tensor_fingerprint,
 )
-from .conftest import ATOL, RTOL
+from .conftest import ATOL, RTOL, _release
 from .make_golden import FIXTURES, fixture_path
 
 pytestmark = pytest.mark.equivalence
@@ -525,7 +525,13 @@ def test_golden_metadata_recorded() -> None:
     for field in ("python", "torch", "numpy", "git_sha", "dirty"):
         assert field in meta, f"golden/meta.json is missing {field!r}"
 
-    if meta["torch"] != torch.__version__:
+    # Release-level, not build-level: a fresh clone on ``torch==2.11.0+cpu``
+    # reproduces every numeric fingerprint generated on ``2.11.0+cu128``
+    # (measured at the phase-8 gate), so the ``+cpu`` / ``+cu128`` suffix is not
+    # a re-baseline trigger. A different *release* is - and the package-level
+    # guard in conftest.py skips before reaching here in that case, so this
+    # failure only fires if the guard is bypassed.
+    if _release(meta["torch"]) != _release(torch.__version__):
         pytest.fail(
             f"goldens were generated with torch {meta['torch']}, this environment "
             f"has {torch.__version__}. A torch upgrade invalidates the "

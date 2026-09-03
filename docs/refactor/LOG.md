@@ -2458,3 +2458,82 @@ Tests section.
 
 `docs/refactor/FINAL_REPORT.md` carries the phase-by-phase summary, the
 before→after metrics, and the full unresolved-items list.
+
+### Phase-8 gate — Nikola's decisions (2026-09-03)
+
+Five answers, all applied in this session. Three touch behaviour — evaluator
+defaults and one error message, none of them on a paper path — and the
+equivalence harness stayed green throughout.
+
+| # | Question | Decision | Applied |
+|---|---|---|---|
+| 1 | equivalence goldens vs. a fresh install | "fix as you see fit" | `constraints/verification.txt` + a self-skipping environment guard + CI installs through the pin and asserts the skip |
+| 2 | the D17 addendum | "apply it and make it work" | `PAPER_CANON.md` §8 D17 + the provenance propagated to five docs |
+| 3 | the three documented-not-fixed findings | "align and fix this" | HyperSIGMA defaults, `use_projection` inheritance, band-count message — each with a new test |
+| 4 | `CLAUDE.md` / `WORKFLOW.md` at the repo root | "they should be gitignored" | untracked, still on disk, `.gitignore` entry explains why |
+| 5 | doc filenames | "fix this" | `docs/{pretraining,evaluation,hypersigma}.md` |
+
+#### (1) The environment, and what the experiments actually showed
+
+The goldens' portability turned out to have two axes, not one. Every run below
+is a fresh clone of this repo with a fresh venv:
+
+| Environment | `pytest tests/equivalence` |
+|---|---|
+| as `pip install -e ".[dev]"` resolves it (torch 2.14.0, numpy 2.5.2) | 19 failed / 14 passed |
+| `torch==2.11.0` only (torchvision still built for 2.14) | 2 failed — `RuntimeError: operator torchvision::nms does not exist`, a build mismatch rather than drift |
+| `+ numpy==2.4.4` | 2 failed (numpy is **not** a driver) |
+| `+ torchvision==0.26.0` | **33 passed** |
+| the full pin on **CPU-only** wheels (`+cpu`, not `+cu128`) | **33 passed** — only `test_golden_metadata_recorded` objected, to the build string |
+| the full pin at `OMP_NUM_THREADS` 4 / 2 / 1 | 31 / 31 / 26 passed |
+
+So the torch **release** is the driver, the build suffix is not, and the
+**thread count is a second, undeclared axis** — BLAS reduction order follows it,
+and the goldens were generated on a 64-core machine where torch defaults to 32
+threads. No 2-core CI runner can ever reproduce them, which rules out "pin the
+versions and run it in CI" as a complete answer.
+
+What was built instead:
+
+1. `constraints/verification.txt` — the three pins, with the thread-count caveat
+   written into the file, since it cannot be expressed as one.
+2. A package-level guard in `tests/equivalence/conftest.py`: it compares the
+   running torch/numpy **release** and `torch.get_num_threads()` against the
+   reference and **skips the package, quoting the difference**, instead of
+   failing. A bare failure reads as "the code changed"; on a foreign
+   environment that reading is false, and it is exactly what the release gate
+   first saw. On the reference machine nothing changes — all 33 still assert.
+3. `test_golden_metadata_recorded` compares torch at release level, since the
+   CPU-wheel run proved `+cpu` and `+cu128` are numerically interchangeable
+   here.
+4. CI installs through the constraints file and gains a step that asserts the
+   equivalence package skipped **for the documented reason** — so a genuine
+   failure can never be mistaken for the expected skip.
+
+Verified: 33 passed on the reference environment; 33 skipped (in 1 s) under
+`OMP_NUM_THREADS=2`, with the reason naming the thread count and the
+constraints file.
+
+#### (3) The three alignments
+
+| Where | Before | After | Pinned by |
+|---|---|---|---|
+| `scripts/evaluate_hypersigma.py`, `coffe/eval/hypersigma.py` | `k_query` 30, 600 episodes, `split "test"` | `k_query` 100, 2000 episodes, `split "all"` (Table 3's protocol — §8 D18 says read the constants per table) | `test_the_hypersigma_evaluator_defaults_are_table_3s_protocol`, plus a CLI/module agreement test |
+| `coffe/runners/eval_runner.py` | inherited `use_projection`, so a bare `run_evaluation(...)` on a SimMIM run evaluated **with** the head | not inherited; evaluator default (off) wins; `proj_*` shaping keys still inherited | `test_use_projection_is_not_inherited_from_the_pretrain_config` |
+| `coffe/eval/episodic.py` | band-count mismatch → "Set `--dataset` …" | when the gap is exactly the scene's aux channels: "…pretrained HSI-only…: re-run with `--no-aux`" (and the mirror case) | `test_an_hsi_only_checkpoint_is_told_which_flag_to_pass`, which also asserts the named flag works |
+
+No published number depends on any of them — every paper run passes the
+protocol keys and `use_projection` explicitly (`sig_significance_config`, the
+notebooks, every frozen `eval_config.json`), and an error message computes
+nothing.
+
+#### What this gate did **not** do
+
+- **No golden was re-baselined.** Making G1 bit-exact rather than
+  tolerance-bounded needs `torch.set_num_threads(1)` *and* regenerated goldens,
+  and the goldens' value is that they were captured from pre-refactor code.
+  Recorded as open item 14 in `FINAL_REPORT.md`.
+- **`configs/hypersigma/houston_eval.yaml` and `run_eval{,_trento}.sh` keep
+  their non-paper constants.** The CLIs are aligned; these are committed
+  config/driver files whose values would change what a config-driven run
+  computes, and each already documents itself in its header.

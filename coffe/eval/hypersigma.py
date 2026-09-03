@@ -826,12 +826,17 @@ def main(args: argparse.Namespace) -> dict | None:
 
 
 _DEFAULT_ARGS = {
-    "n_way": None,
-    "k_shot": 5,
-    "k_query": 30,
-    "num_episodes": 600,
+    "n_way": None,  # N-way: every class in the scene (PAPER_CANON §4)
+    "k_shot": 5,  # §4
+    # Table 3's protocol (phase-8 gate). This entry point serves Table 3, which
+    # used 2000 episodes at k_query 100 - one cell excepted, §8 D18 - and every
+    # paper eval passed split "all". These were 30 / 600 / "test" before the
+    # gate, matching no published cell; no paper number depends on them because
+    # every paper run passes them explicitly.
+    "k_query": 100,
+    "num_episodes": 2000,
     "data_root": "./data/raw",
-    "split": "test",
+    "split": "all",
     "patch_size": 11,
     "distance_metric": "euclidean",
     "temperature": 10.0,

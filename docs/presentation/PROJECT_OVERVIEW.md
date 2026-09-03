@@ -5,9 +5,9 @@
 > describes work in progress ("the finetuning currently running") that is not
 > part of this release, and its numbers predate the published tables. The
 > release documentation is the [README](../../README.md),
-> [`docs/PRETRAINING.md`](../PRETRAINING.md),
-> [`docs/EVAL_PROTOCOL.md`](../EVAL_PROTOCOL.md) and
-> [`docs/HYPERSIGMA.md`](../HYPERSIGMA.md);
+> [`docs/pretraining.md`](../pretraining.md),
+> [`docs/evaluation.md`](../evaluation.md) and
+> [`docs/hypersigma.md`](../hypersigma.md);
 > [`PAPER_CANON.md`](../../PAPER_CANON.md) is the source of truth.
 
 *Few-shot, multimodal hyperspectral land-cover classification.*
@@ -101,7 +101,7 @@ spectral-spatial transformer encoder built for few-shot transfer.
 
 Key knobs: `embed_dim`, `lambda_factor`, `temperature=10`, `distance_metric`,
 `pool_sigma`, `use_aux`, `use_projection`. See
-[docs/EVAL_PROTOCOL.md](../EVAL_PROTOCOL.md) for the protocol write-up.
+[docs/evaluation.md](../evaluation.md) for the protocol write-up.
 
 ## 5. Self-supervised pretraining & ablations
 
@@ -123,7 +123,7 @@ that reconstructs the full cube (MSE over masked entries, optional center-weight
   - **Regimes (the masking ablation):** SimMIM band (0.85 / 0.0), SimMIM token
     (0.0 / 0.75), SimMIM band+token (0.85 / 0.75) — legacy ids `spectral`,
     `spatial`, `both`. One Table 2 cell used 0.75 band (PAPER_CANON §8 D19).
-    See [docs/PRETRAINING.md](../PRETRAINING.md).
+    See [docs/pretraining.md](../pretraining.md).
 
 **B. MAE** ([coffe/pretrain/mae_pretrain.py](../../coffe/pretrain/mae_pretrain.py),
 `MAEPretrainModel`). Classic He-et-al. recipe in the unified token space: remove
@@ -233,5 +233,5 @@ configured metric. Compilation: [scripts/compile_results.py](../../scripts/compi
 | HyperSIGMA adaptation | [coffe/pretrain/hypersigma_mae.py](../../coffe/pretrain/hypersigma_mae.py), [scripts/adapt_hypersigma.py](../../scripts/adapt_hypersigma.py) |
 | Evaluation | [coffe/runners/eval_runner.py](../../coffe/runners/eval_runner.py), [scripts/evaluate.py](../../scripts/evaluate.py), [scripts/evaluate_hypersigma.py](../../scripts/evaluate_hypersigma.py) |
 | Ablation drivers | [scripts/reproduce/run_hsi_only_experiments.py](../../scripts/reproduce/run_hsi_only_experiments.py), [scripts/reproduce/run_mae_experiments.py](../../scripts/reproduce/run_mae_experiments.py) |
-| Existing docs | [docs/EVAL_PROTOCOL.md](../EVAL_PROTOCOL.md), [docs/PRETRAINING.md](../PRETRAINING.md) |
+| Existing docs | [docs/evaluation.md](../evaluation.md), [docs/pretraining.md](../pretraining.md) |
 | Compiled results | [RESULTS.md](RESULTS.md), [RESULTS.json](RESULTS.json) |

@@ -35,7 +35,14 @@ _ARCH_KEYS_FROM_MODEL = (
     "num_layers",
     "lambda_factor",
     "dropout",
-    "use_projection",
+    # NOT inherited: ``use_projection``. It is a *pretraining* part, and the
+    # SimMIM configs keep it on, so inheriting it made a bare
+    # ``run_evaluation(...)`` evaluate with the head attached - not the protocol
+    # (PAPER_CANON §4: the head is discarded at eval). The evaluator's own
+    # default is off, and every paper run passed ``use_projection: False``
+    # explicitly, so no published number moves (phase-8 gate). A caller who
+    # wants the head evaluates with ``use_projection=True``, and the three
+    # ``proj_*`` keys below still arrive to shape it.
     "use_aux",
     "proj_hidden_dim",
     "proj_num_layers",
@@ -64,6 +71,9 @@ def _arch_defaults_from_pretrain(pretrain_cfg: dict[str, Any]) -> dict[str, Any]
 
     ``model.name`` is normalised: frozen experiments record the pre-paper value
     and must keep evaluating (PAPER_CANON §7.3).
+
+    ``use_projection`` is deliberately **not** among the inherited keys - see
+    ``_ARCH_KEYS_FROM_MODEL``.
     """
     model_cfg = pretrain_cfg.get("model", {}) or {}
     data_cfg = pretrain_cfg.get("data", {}) or {}

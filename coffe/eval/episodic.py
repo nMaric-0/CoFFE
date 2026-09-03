@@ -237,14 +237,35 @@ def load_model_with_checkpoint(
     def _assert_band_count(key, expected, what):
         ckpt_w = fixed_state.get(key)
         model_w = model_state.get(key)
-        if ckpt_w is not None and model_w is not None and ckpt_w.shape[1] != model_w.shape[1]:
-            raise ValueError(
-                f"Band-count mismatch ({what}): checkpoint expects {ckpt_w.shape[1]} "
-                f"but dataset '{dataset_name}' provides {model_w.shape[1]} ({expected}). "
-                f"The input projection cannot load and would be left randomly "
-                f"initialized. This usually means the checkpoint and --dataset don't "
-                f"match. Set --dataset to the dataset this checkpoint was pretrained on."
+        if ckpt_w is None or model_w is None or ckpt_w.shape[1] == model_w.shape[1]:
+            return
+        ckpt_bands, model_bands = ckpt_w.shape[1], model_w.shape[1]
+        # The commonest cause is not a wrong --dataset but a modality mismatch:
+        # the HSI-only cells pretrain with use_aux=false, while the CLI defaults
+        # to --use-aux, so the model is built one aux-channel-count too wide.
+        # Naming the flag that actually fixes it (phase-8 gate) beats sending
+        # the reader to --dataset, which is usually already right.
+        aux = specs["aux_channels"]
+        use_aux = model_config.get("use_aux", True)
+        hint = "Set --dataset to the dataset this checkpoint was pretrained on."
+        if what == "HSI+aux" and use_aux and ckpt_bands == model_bands - aux:
+            hint = (
+                f"The difference is exactly this scene's {aux} aux channel(s), so the "
+                f"checkpoint was almost certainly pretrained HSI-only (use_aux=false, "
+                "the configs/coffe/*_hsi.yaml cells): re-run with --no-aux. If the "
+                "checkpoint really is HSI+LiDAR, check --dataset instead."
             )
+        elif what == "HSI+aux" and not use_aux and ckpt_bands == model_bands + aux:
+            hint = (
+                f"The difference is exactly this scene's {aux} aux channel(s), so the "
+                "checkpoint was pretrained with LiDAR fused in: drop --no-aux."
+            )
+        raise ValueError(
+            f"Band-count mismatch ({what}): checkpoint expects {ckpt_bands} "
+            f"but dataset '{dataset_name}' provides {model_bands} ({expected}). "
+            f"The input projection cannot load and would be left randomly "
+            f"initialized. {hint}"
+        )
 
     if model_name == "mft_original":
         _assert_band_count("hsi_hetconv.gwconv.weight", f"{specs['hsi_channels']} HSI", "HSI")

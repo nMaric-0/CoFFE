@@ -29,7 +29,7 @@ summary a reader should be able to stop at.
 | **5** — restructure | One installable package: `coffe/{models,pretrain,data,eval,runners,utils}`, `scripts/` reduced to thin CLIs, paper artifacts moved out of the runtime tree into `results/`. Closed **D5** — `.gitignore` no longer shadows first-party source. | equivalence IDENTICAL; `pip install -e .` in a clean venv |
 | **6** — quality | black+isort+flake8 → **ruff**; **mypy** adopted lenient; dependencies pruned to the measured import set (D6); public API declared; docstrings brought up to release standard. Gate addendum: `--out`/`--force` on the four report scripts that used to overwrite committed artifacts on any invocation. | ruff + ruff format + mypy clean; equivalence IDENTICAL |
 | **7** — tests | `tests/{unit,integration,equivalence}` with `gpu`/`data`/`slow` markers: **527 collected, 521 passed, 6 skipped** under `-m "not gpu and not data"`; coverage of `coffe/` 52 % → 69 %; CI added (ruff + mypy + tests on 3.11/3.12, CPU-only torch). Gate: eight questions answered, four applied — numeric checkpoint sort, one evaluation entry point per route (`scripts/evaluate_mft.py` is new), six stale evaluator defaults aligned, plus a real-data GPU smoke. | equivalence IDENTICAL 33/33 throughout |
-| **8** — release | README rewritten to release standard from `PAPER_CANON.md` §§2–6; `docs/HYPERSIGMA.md` and `CITATION.cff` new; `PRETRAINING.md`/`EVAL_PROTOCOL.md` gained the reproduction sections they had promised; `docs/presentation/` marked superseded; `CHANGES.md` finalised with an archaeology section; the three carried-over phase-7 obligations applied. Every README command executed, most of them in a fresh clone with a fresh venv. | 8-check fresh-clone gate: 7 PASS, and one **FAIL that is an environment finding, not a behaviour change** — see open item 7 and `LOG.md`. Equivalence IDENTICAL 33/33 in the project environment. |
+| **8** — release | README rewritten to release standard from `PAPER_CANON.md` §§2–6; `docs/hypersigma.md` and `CITATION.cff` new; `pretraining.md`/`evaluation.md` gained the reproduction sections they had promised; `docs/presentation/` marked superseded; `CHANGES.md` finalised with an archaeology section; the three carried-over phase-7 obligations applied. Every README command executed, most of them in a fresh clone with a fresh venv. | 8-check fresh-clone gate: 7 PASS, and one **FAIL that is an environment finding, not a behaviour change** — see open item 7 and `LOG.md`. Equivalence IDENTICAL 33/33 in the project environment. |
 
 ## Metrics, before → after
 
@@ -90,107 +90,102 @@ frozen; PAPER_CANON §8 carries the full record with evidence).
    checkpoints and there is nowhere to point yet.
 3. The funding acknowledgement text.
 
-**Decisions still open:**
+**Decided at the phase-8 gate (2026-09-03) and applied.** Nikola's answers to
+the six questions the gate raised, and what each turned into:
 
-4. **The D17 addendum** proposed at the phase-7 gate (the lexicographic-sort
-   provenance) is still a proposal: `PAPER_CANON.md` §8 D17 is unedited. The
-   release docs are worded neutrally — they state the epoch to pass and never
-   claim a deliberate mid-training selection — so accepting it needs no
-   rewriting, only the canon edit.
-5. **The HyperSIGMA evaluator's defaults match no published cell**
-   (`k_query 30`, `num_episodes 600`, `split "test"` in
-   `coffe/eval/hypersigma.py` and `scripts/evaluate_hypersigma.py`). Phase 7
-   aligned `coffe/eval/episodic.py`'s defaults with the canon and left this
-   route's alone. Documented in `docs/HYPERSIGMA.md`; aligning them would be a
-   third signed-off default change.
-6. **`use_projection` is inherited from the pretrain config** by
-   `coffe/runners/eval_runner.py`, and the SimMIM configs keep the head on, so a
-   bare `run_evaluation(...)` evaluates *with* the head — not the protocol. Every
-   paper path passes `False` explicitly (the notebook surfaces it, the
-   significance runner sets it, every frozen `eval_config.json` records it), so
-   no published number is affected. Documented in `docs/EVAL_PROTOCOL.md`;
-   making the runner default it off would be a fourth default change.
-7. **The equivalence goldens are pinned to one environment, and nothing
-   declares that pin.** `golden/meta.json` records the generation environment
-   (Python 3.12.3, torch 2.11.0+cu128, numpy 2.4.4) and the suite is bit-exact
-   there — but `pyproject.toml` declares floors (`torch>=2.11.0`), so a fresh
-   `pip install -e .[dev]` today resolves torch 2.14.0 / numpy 2.5.2, and the
-   phase-8 release gate measured **19 of 33 equivalence tests failing** in that
-   fresh clone (G1/G2/G5 numeric drift, e.g. `G5[simmim_token].masked_loss`
-   off by 2.6e-04 against a 1e-06 tolerance, plus the `meta.json` environment
-   assertion). Pinning `torch==2.11.0`, `torchvision==0.26.0` (which `timm`
-   pulls in, and which must match the torch release) and `numpy==2.4.4` in the
-   same clone restores **all 33**, which identifies the torch version as the
-   cause and the pin as the remedy.
-   Nothing is wrong with the code — the goldens do what they promise on the
-   environment they were made on — but the release ships no way to get that
-   environment. **This also means `.github/workflows/ci.yml` will fail on
-   GitHub as written**: it installs unpinned torch and its
-   `-m "not gpu and not data and not slow"` selection includes the synthetic
-   goldens. CI has never actually run (the branch has never been pushed).
-   Recommendation, for sign-off rather than applied here: pin the verification
-   environment (a constraints file, or pinned versions in the `[dev]` extra
-   that CI installs) and leave the tolerances alone — loosening them would
-   weaken the freeze that is the whole point of the harness.
+4. **The D17 addendum is accepted** — `PAPER_CANON.md` §8 D17 now records that
+   the evaluated epochs (950/975/800) are what a **string** sort of checkpoint
+   filenames returned, not a mid-training model-selection decision, and says
+   release documentation must not present it as one. `README.md`,
+   `docs/evaluation.md`, `docs/pretraining.md`, `results/README.md` and
+   `scripts/reproduce/README.md` carry that provenance.
+5. **The HyperSIGMA evaluator's defaults are aligned** with the table it serves:
+   `k_query` 100, 2000 episodes, `split "all"` (were 30 / 600 / `"test"`, which
+   reproduced no published cell). Pinned by
+   `tests/unit/test_hypersigma_contracts.py`. No published number moves — every
+   paper run passes these explicitly.
+6. **`use_projection` is no longer inherited** by `coffe/runners/eval_runner.py`,
+   so a bare `run_evaluation(...)` evaluates with the head **off**, which is the
+   protocol. The `proj_*` shaping keys are still inherited for a caller who asks
+   for the head. Pinned by `tests/unit/test_eval_runner.py`.
+7. **The environment the goldens need is now shippable and CI-safe.**
+   `constraints/verification.txt` pins `torch==2.11.0`, `torchvision==0.26.0`
+   and `numpy==2.4.4`; `tests/equivalence/conftest.py` compares the running
+   torch/numpy **release** and the thread count against that reference and
+   **skips the package with the difference in the message** instead of
+   reporting float drift as a behaviour change; and `.github/workflows/ci.yml`
+   installs through the constraints file and asserts that the package skipped
+   *for that reason*. The measurements behind it, all in fresh clones: today's
+   resolved versions 19/33 fail; torch pinned alone, 2 fail on a torchvision
+   build mismatch; the full pin, 33 pass; the same pin on **CPU-only** wheels,
+   33 pass (so the `+cpu` / `+cu128` suffix is irrelevant, the release is not);
+   and at `OMP_NUM_THREADS` 4 / 2 / 1, 31 / 31 / 26 pass — **the thread count
+   matters as much as the version**, which is why a 2-core CI runner can never
+   reproduce them and why the guard exists.
+8. **The HSI-only error now names the flag that fixes it.** A band-count
+   mismatch that is exactly the scene's aux channels says the checkpoint was
+   pretrained HSI-only and to re-run with `--no-aux` (or, in the mirror case, to
+   drop it), instead of sending the reader to `--dataset`. Pinned end-to-end by
+   `tests/integration/test_cli.py`, which also checks the flag it names works.
+   `--no-aux` is documented in the README, `docs/evaluation.md` and
+   `docs/pretraining.md`.
+9. **`CLAUDE.md` and `WORKFLOW.md` are untracked** (still on disk, gitignored):
+   they describe the cleanup process, not the release — the same reason
+   `SPLIT.md` was deleted in phase 3.
+10. **The route docs took their release names**: `docs/pretraining.md`,
+    `docs/evaluation.md`, `docs/hypersigma.md`.
 
-8. **HSI-only evaluation needs `--no-aux`, and the error message when it is
-   missing points somewhere else.** The `_hsi.yaml` cells pretrain with
-   `use_aux: false`; `scripts/evaluate.py` defaults to `--use-aux` and does not
-   read the cell config, so a stranger following the generic recipe on one of
-   the 12 HSI-only cells gets a band-count mismatch that says "Set --dataset to
-   the dataset this checkpoint was pretrained on"
-   (`coffe/eval/episodic.py:239-247`). Phase 8 documented the flag in the
-   README, `docs/EVAL_PROTOCOL.md` and `docs/PRETRAINING.md`; improving the
-   message, or having the CLI accept a config, is a code change and was not
-   made. The driver and notebook routes are unaffected — they read `use_aux`
-   from the frozen `pretrain_config.yaml`.
+**Still open:**
 
-9. **D14's compiler filter.** `scripts/compile_results.py` still excludes the
-   headline Houston run as a scratch run. Changing the filter needs sign-off.
-10. **Table 3 reproduction gaps.** The twelve 64×64 frozen cells and the three
-   11×11 spectral cells have no committed driver (the frozen ones are
-   reproducible from CLI flags alone — the README gives the command; the
-   spectral ones' adaptation settings were never reconstructed, deliberately).
-   Trento's and MUUFL's 11×11 joint+SEM configs lack their runs' launch-time
-   overrides, which live in those runs' `pretrain_overrides.yaml`. No
-   `backbone_native` adaptation was ever completed for Trento or MUUFL — a gap
-   in the paper's sweep, not a missing file.
-11. **The 20-epoch observation, and a discrepancy inside it.** Phase 7's smoke
-   reached OA **74.43 ± 0.66** on Houston at 20 of 1500 epochs — ~99 % of the
-   headline 75.30, in 1.3 % of the schedule — and flagged that as worth a second
-   look. Phase 8 re-ran a 20-epoch smoke to put executable commands in the
-   README and measured **71.15 ± 0.67** from `configs/coffe/houston_simmim_token.yaml`
-   with the head off. The two runs state the same settings (20 epochs, 50
-   episodes, `k_query` 100), phase 7's exact invocation was not recorded, and the
-   3.3 pp difference is **unattributed**. One candidate was tested and ruled out:
-   the 5-seed runner's base config (lr 1.5e-5 / batch 64) gives 56.65 ± 0.96 at
-   20 epochs. So phase 7's finding stands as flagged — a truncated schedule
-   reaching most of the headline OA would be a claim the paper does not make —
-   and the spread between two 20-epoch measurements is a further reason it needs
-   a proper run rather than a smoke. **Not investigated**: that is new science,
-   not cleanup.
-12. **Doc filenames.** The phase-8 plan named `docs/{pretraining,evaluation,
-    hypersigma}.md`; the files kept their phase-4 names
-    (`PRETRAINING.md`, `EVAL_PROTOCOL.md`, and the new `HYPERSIGMA.md` matching
-    them) because renames come only from the canon or the manifest, and the
-    manifest's verdict on both is `keep`. A rename is a one-liner if preferred.
+11. **D14's compiler filter.** `scripts/compile_results.py` still excludes the
+    headline Houston run as a scratch run. Changing the filter needs sign-off.
+12. **Table 3 reproduction gaps.** The twelve 64×64 frozen cells and the three
+    11×11 spectral cells have no committed driver (the frozen ones are
+    reproducible from CLI flags alone — the README gives the command; the
+    spectral ones' adaptation settings were never reconstructed, deliberately).
+    Trento's and MUUFL's 11×11 joint+SEM configs lack their runs' launch-time
+    overrides, which live in those runs' `pretrain_overrides.yaml`. No
+    `backbone_native` adaptation was ever completed for Trento or MUUFL — a gap
+    in the paper's sweep, not a missing file.
+13. **The 20-epoch observation, and a discrepancy inside it.** Phase 7's smoke
+    reached OA **74.43 ± 0.66** on Houston at 20 of 1500 epochs — ~99 % of the
+    headline 75.30, in 1.3 % of the schedule — and flagged that as worth a
+    second look. Phase 8 re-ran a 20-epoch smoke to put executable commands in
+    the README and measured **71.15 ± 0.67** from
+    `configs/coffe/houston_simmim_token.yaml` with the head off. The two runs
+    state the same settings, phase 7's exact invocation was not recorded, and
+    the 3.3 pp difference is **unattributed**; one candidate was tested and
+    ruled out (the 5-seed runner's base config gives 56.65 ± 0.96 at 20
+    epochs). Phase 7's finding therefore stands as flagged — a truncated
+    schedule reaching most of the headline OA would be a claim the paper does
+    not make — and needs a real run, not a smoke. **Not investigated**: that is
+    new science, not cleanup.
+14. **A literal-IDENTICAL harness would need a thread pin and a re-baseline.**
+    On the reference environment G2–G5 are bit-exact at zero tolerance while
+    G1's loss trajectories sit ≤ 4.6e-09 off the goldens — stable across
+    repeats, and traceable to the unpinned thread count. Making them bit-exact
+    means `torch.set_num_threads(1)` plus regenerating the goldens, i.e.
+    re-baselining the freeze, which must not be done casually: the goldens'
+    value is that they were captured from **pre-refactor** code.
 
 **Accepted, recorded, not open:**
 
-13. mypy `ignore_errors` on 16 modules (175 findings, all typing friction — the
+15. mypy `ignore_errors` on 16 modules (175 findings, all typing friction — the
     other 39 modules are clean and must stay so), and
     `coffe/utils/visualization.py` at 0 % coverage (it produces figures, not
     numbers; every significance eval ran with `no_plots: True`).
-14. `docs/presentation/` stays in the tree with SUPERSEDED banners — the
+16. `docs/presentation/` stays in the tree with SUPERSEDED banners — the
     manifest's verdict is `keep`, and `RESULTS.json` is left byte-for-byte as
     the compiler wrote it.
-15. Legacy vocabulary survives exactly where `CHANGES.md`'s "Where the retired
+17. Legacy vocabulary survives exactly where `CHANGES.md`'s "Where the retired
     names still appear" table says it does: the alias table, the rename ledger,
     on-disk-name literals, stored notebook outputs, and the documents about the
     retirement.
-16. `scripts/reproduce/run_eval{,_trento}.sh` and
-    `configs/hypersigma/houston_eval.yaml` carry non-paper defaults; each says
-    so in its own header.
+18. `scripts/reproduce/run_eval{,_trento}.sh` and
+    `configs/hypersigma/houston_eval.yaml` carry non-paper constants; each says
+    so in its own header. The *CLIs* are all aligned now — these are committed
+    config/driver files whose values are on the audit's DO-NOT-RENAME footing,
+    and changing them would change what a config-driven run computes.
 
 ## If you are picking this up cold
 

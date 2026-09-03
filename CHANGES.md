@@ -579,12 +579,25 @@ machine's GPU for the two data-dependent legs.
 
 | File | State |
 |---|---|
-| `docs/HYPERSIGMA.md` | **new** — the foundation-model route: checkpoints, the two input regimes, the five adaptation modes and what each trains, the evaluator's non-paper defaults, and which command produced which Table 3 cell |
-| `docs/PRETRAINING.md` | phase-4 "reproduction lands in phase 8" note replaced by an actual "reproducing a published cell" section (per-cell configs, evaluated epoch, per-cell mask rates, why the ± is a different experiment) |
-| `docs/EVAL_PROTOCOL.md` | same; plus the three per-route entry points, the `use_projection` inheritance caveat, and corrected pointers (`fix_state_dict_keys` moved to `coffe/eval/episodic.py` in phase 5) |
+| `docs/hypersigma.md` | **new** — the foundation-model route: checkpoints, the two input regimes, the five adaptation modes and what each trains, the evaluator's protocol defaults, and which command produced which Table 3 cell |
+| `docs/pretraining.md` | renamed from `docs/PRETRAINING.md`; the phase-4 "reproduction lands in phase 8" note replaced by an actual "reproducing a published cell" section (per-cell configs, evaluated epoch, per-cell mask rates, why the ± is a different experiment) |
+| `docs/evaluation.md` | renamed from `docs/EVAL_PROTOCOL.md`; same, plus the three per-route entry points, the `use_projection` note, `--no-aux` for the HSI-only cells, and corrected pointers (`fix_state_dict_keys` moved to `coffe/eval/episodic.py` in phase 5) |
 | `CITATION.cff` | **new** — authors, title, year 2026, venue `TODO(release)` |
 | `docs/presentation/RESULTS.md`, `PROJECT_OVERVIEW.md` | marked **SUPERSEDED** in a header banner (phase-6 gate decision), kept for provenance; `RESULTS.json` untouched, byte-for-byte as the compiler wrote it |
 | `docs/refactor/FINAL_REPORT.md` | **new** — phase-by-phase summary, before/after metrics, and the unresolved-items list |
+
+**Docs renamed at the phase-8 gate.** The three route documents now match the
+release naming used everywhere else in `docs/`:
+
+| Before | After |
+|---|---|
+| `docs/PRETRAINING.md` | `docs/pretraining.md` |
+| `docs/EVAL_PROTOCOL.md` | `docs/evaluation.md` |
+| `docs/HYPERSIGMA.md` (new this phase) | `docs/hypersigma.md` |
+
+`CLAUDE.md` and `WORKFLOW.md` were **untracked** at the same gate (still on
+disk, now gitignored): they document the cleanup process, not the release, and
+`SPLIT.md` was deleted in phase 3 for the same reason.
 
 **Three carried-over obligations from the phase-7 gate, applied.**
 
@@ -610,7 +623,69 @@ gate, needed no edit: PAPER_CANON §1, this file, and commit `13793e7` all say
   `lib.eval_runner`, which phase 5 renamed to `coffe.runners.*`.
 - `sig_significance_config.eval_params`'s docstring claimed `use_projection` was
   inherited from the frozen pretrain config. It is passed explicitly, three
-  lines below, and has to be — see the note in `docs/EVAL_PROTOCOL.md`.
+  lines below, and has to be — see the note in `docs/evaluation.md`.
+
+### Applied at the phase-8 gate (2026-09-03)
+
+Nikola's five answers, and what each changed. Three touch behaviour — all of
+them *defaults or messages*, none reachable on a paper path, and the
+equivalence harness stayed green through every one.
+
+**1. The verification environment is pinned, and the harness says so itself.**
+The behaviour goldens are bit-level float32 fingerprints; `pyproject.toml`
+declares floors, so a fresh install resolved torch 2.14 and 19 of 33 tests
+drifted. Now:
+
+- `constraints/verification.txt` pins `torch==2.11.0`, `torchvision==0.26.0`,
+  `numpy==2.4.4` (`pip install -e ".[dev]" -c constraints/verification.txt`).
+- `tests/equivalence/conftest.py` compares the running torch/numpy **release**
+  and `torch.get_num_threads()` against that reference and **skips the package
+  with the difference in the message** rather than failing, because float drift
+  on a foreign environment is not evidence about this code.
+- `.github/workflows/ci.yml` installs through the constraints file and adds a
+  step asserting the package skipped *for that reason* — so a real failure can
+  never hide behind the expected skip.
+- `test_golden_metadata_recorded` now compares torch at **release** level: a
+  fresh clone on `torch==2.11.0+cpu` reproduces every numeric fingerprint
+  generated on `+cu128`, so the build suffix is not a re-baseline trigger.
+
+The thread count turned out to matter as much as the version — 33 pass at the
+reference machine's 32 threads, 31 at 4, 31 at 2, 26 at 1 — which is why no
+2-core CI runner can reproduce the goldens and why the guard is the fix rather
+than a pin alone.
+
+**2. PAPER_CANON §8 D17 carries the phase-7 addendum.** The evaluated epochs
+(950 Houston / 975 Trento+MUUFL / 800) are what a **string** sort of checkpoint
+filenames returned — `"...950" > "...1500"` — not a mid-training model-selection
+decision. The canon now says so, and says release documentation must not
+present it as one; `README.md`, `docs/evaluation.md`, `docs/pretraining.md`,
+`results/README.md` and `scripts/reproduce/README.md` carry the provenance.
+
+**3. Three defaults/messages aligned.**
+
+| Where | Before | After |
+|---|---|---|
+| `scripts/evaluate_hypersigma.py` + `coffe/eval/hypersigma.py` `_DEFAULT_ARGS` | `k_query` 30, 600 episodes, `split "test"` — matching no published cell | `k_query` **100**, **2000** episodes, `split "all"` — Table 3's protocol, the table this entry point serves |
+| `coffe/runners/eval_runner.py` `_ARCH_KEYS_FROM_MODEL` | inherited `use_projection` from the pretrain config, so a bare `run_evaluation(...)` on a SimMIM run evaluated **with** the head | not inherited; the evaluator's own default (off) applies, and the `proj_*` shaping keys still arrive for a caller who passes `use_projection=True` |
+| `coffe/eval/episodic.py` band-count error | "Set `--dataset` to the dataset this checkpoint was pretrained on" | when the mismatch is exactly the scene's aux channels, it says the checkpoint is HSI-only and to re-run with `--no-aux` (and the mirror case, to drop it) |
+
+No published number depends on any of the three: every paper run passes the
+protocol keys and `use_projection` explicitly, and the error message is an
+error message. New tests pin all three
+(`tests/unit/test_hypersigma_contracts.py`, `tests/unit/test_eval_runner.py`,
+`tests/integration/test_cli.py`).
+
+**4. `CLAUDE.md` and `WORKFLOW.md` are untracked** — still on disk, now
+gitignored. They document the cleanup process, not the release, which is why
+`SPLIT.md` was deleted in phase 3.
+
+**5. The route docs took their release names.**
+
+| Before | After |
+|---|---|
+| `docs/PRETRAINING.md` | `docs/pretraining.md` |
+| `docs/EVAL_PROTOCOL.md` | `docs/evaluation.md` |
+| `docs/HYPERSIGMA.md` | `docs/hypersigma.md` |
 
 ## Archaeology
 
@@ -723,6 +798,7 @@ stale-vocabulary grep excludes:
 | `coffe/compat.py`, `tests/unit/test_compat.py` | the alias table itself, and its tests |
 | `tests/unit/test_eval_runner.py` | its fixture is a frozen-vocabulary `pretrain_config.yaml`, because that is what the runner must keep reading (PAPER_CANON §7.3) |
 | `tests/unit/test_config_parity.py` | asserts the retired names are **absent** from the committed configs — it names them to forbid them |
+| `README.md` and `tests/unit/test_ncm_protocol.py`, the phrase "not a prototypical network (Snell et al.)" | PAPER_CANON §1 reserves the term for the cited method; both name it only to **deny** that this evaluator is one |
 | `tests/equivalence/test_equivalence.py`'s `test_g1_legacy_vocabulary_config_trains_identically` | drives a frozen-vocabulary config end to end on purpose |
 | `.claude/agents/*.md`, `.claude/skills/*` | the refactor tooling's own specification of the retirement (same category as `docs/refactor/`) |
 | `_LEGACY_ALIASES` in `coffe/models/__init__.py`, `coffe/models/hypersigma/__init__.py`, `coffe/pretrain/__init__.py` | the package-level import shims, which delegate to that table |
@@ -732,7 +808,7 @@ stale-vocabulary grep excludes:
 | stored notebook **outputs** | execution records of runs made before the rename |
 | `scripts/reports/aggregate_significance.py`'s emitted `group` / `variant` keys | they reproduce the significance experiment's own directory-name components and the frozen `significance_report.json` schema |
 | `experiments/**` | frozen run artifacts |
-| `docs/EVAL_PROTOCOL.md`'s legacy-config paragraph, `results/README.md`'s on-disk-name list | they document what the readers accept and what the frozen artifacts contain |
+| `docs/evaluation.md`'s legacy-config paragraph, `results/README.md`'s on-disk-name list | they document what the readers accept and what the frozen artifacts contain |
 | the `normalize_model_name` call sites' comments (`coffe/pretrain/loop.py`) | they name the frozen value being normalised |
 
 Anything else is a bug: a stale *reference* to a renamed module is a broken
@@ -742,8 +818,9 @@ import, not a cosmetic issue.
 
 - Any **computed number**: every hyperparameter, constant and piece of maths as
   *used by a paper run*. The equivalence goldens are unchanged across all of it.
-- **Two signed-off exceptions, both to evaluator defaults, neither reachable on
-  the paper path.** They matter only to a caller who supplies nothing:
+- **Signed-off exceptions, all of them evaluator *defaults* (plus one error
+  message), none reachable on the paper path.** They matter only to a caller
+  who supplies nothing:
 
   1. **`distance_metric` defaults to `"euclidean"`** instead of `"cosine"`
      (phase-4 gate, 2026-09-01). It is the paper protocol and PAPER_CANON §1
@@ -757,16 +834,21 @@ import, not a cosmetic issue.
      on → off, `k_query` 15 → 100, `split` `"test"` → `"all"`, plus
      `num_episodes` 2000 → 1000. Details in the phase-7 gate section above.
 
-  No paper run is affected by either, and for the same structural reason:
+  3. **Three more at the phase-8 gate (2026-09-03)**, listed in that gate's
+     section above: the HyperSIGMA evaluator's `k_query` / `num_episodes` /
+     `split` aligned to Table 3's protocol; `use_projection` no longer inherited
+     from the pretrain config by `coffe/runners/eval_runner.py`; and the
+     band-count error message now naming `--no-aux` when the mismatch is
+     exactly the aux channels.
+
+  No paper run is affected by any of them, and for the same structural reason:
   **every paper run passes these values explicitly** — `coffe.runners.eval_runner`
   seeds the architecture from each run's frozen `pretrain_config.yaml`, and the
   reproduce pipeline passes the protocol keys — so no default is ever consulted.
   (Not every paper run passes *euclidean*: one Table 3 cell records `cosine`,
   PAPER_CANON §8 D18.) That is why the goldens are unchanged.
 
-  Note PAPER_CANON §1 still calls the `distance_metric` change "the one
-  deliberate default change of the refactor". That sentence predates the
-  phase-7 gate and is now one of two; correcting it is a phase-8 item.
+  (PAPER_CANON §1's "one deliberate default change" was corrected in phase 8.)
 - The only defaults that did move are four **output-path fallbacks** whose names
   carried retired vocabulary and which no shipped config or reader relies on
   (all 26 pretraining/adaptation configs set `paths.checkpoint_dir` /

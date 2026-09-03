@@ -106,3 +106,8 @@ exploration_results/
 # Exploratory tree archived out of the release (phase 3, D9 decision):
 # present on disk, deliberately untracked.
 /archive/
+
+# Internal refactor-process documents: kept on disk, not shipped in the release
+# (phase-8 gate decision). CLAUDE.md still steers Claude Code sessions locally.
+CLAUDE.md
+WORKFLOW.md

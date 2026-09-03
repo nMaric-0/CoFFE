@@ -9,7 +9,7 @@ This file documents the mechanics; [`PAPER_CANON.md`](../PAPER_CANON.md) §1 and
 Nothing here uses labels for adaptation, and nothing is finetuned on the
 few-shot task: adaptation is continued **masked reconstruction** on the target
 scene's unlabelled patches, and evaluation is the frozen-encoder
-[Euclidean NCM protocol](EVAL_PROTOCOL.md).
+[Euclidean NCM protocol](evaluation.md).
 
 ## Getting the checkpoints
 
@@ -92,7 +92,7 @@ the second category: it is the **3-band** spatial front-end, and every published
 python scripts/evaluate_hypersigma.py \
     --dataset houston --native-geometry --input-fit upscale \
     --mode spat_pool --adapted-checkpoint none \
-    --split all --k-query 100 --num-episodes 2000
+    --split all --k-query 100 --num-episodes 2000   # = the defaults, spelled out
 
 # fused SEM features from an adapted checkpoint. NOTE this example is the
 # 3-band front-end (pca_houston_3band + the houston_k3 adapt dir), which
@@ -112,12 +112,13 @@ python scripts/evaluate_hypersigma.py \
 Three things to know about this evaluator, all of them recorded in
 [`PAPER_CANON.md`](../PAPER_CANON.md) §8 D18:
 
-1. **Table 3 used 2000 episodes**, not Table 2's 1000 — and this route's own
-   defaults match neither: `--k-query 30 --num-episodes 600 --split test`, which
-   mirror `configs/hypersigma/houston_eval.yaml`'s constants and reproduce no
-   published cell. Phase 7 aligned `coffe/eval/episodic.py`'s defaults with the
-   canon but not this evaluator's, so **every published-cell command must pass
-   `--k-query 100 --num-episodes 2000 --split all` explicitly**.
+1. **Table 3 used 2000 episodes**, not Table 2's 1000, and this evaluator's
+   defaults are Table 3's since the phase-8 gate: `k_query` 100, 2000 episodes,
+   `split all`. (They were 30 / 600 / `test` before it — mirroring
+   `configs/hypersigma/houston_eval.yaml`'s own constants, which reproduce no
+   published cell; that config still carries them and says so in its header.)
+   No published number depends on the defaults: every paper run passed these
+   explicitly.
 2. **One cell used `k_query=30`** — Houston 11×11 spectral (21.85 ± 0.10). The
    rest used 100.
 3. The evaluator accumulates **both** a cosine and a Euclidean confusion matrix
@@ -159,7 +160,7 @@ a coverage gap in the paper's sweep, not a missing file here.
 
 ## See also
 
-- [`docs/EVAL_PROTOCOL.md`](EVAL_PROTOCOL.md) — the shared protocol.
+- [`docs/evaluation.md`](evaluation.md) — the shared protocol.
 - [`results/README.md`](../results/README.md) — the JSONs behind Table 3.
 - [`third_party/HyperSIGMA/`](../third_party/HyperSIGMA) — the vendored upstream
   sources under their own Apache-2.0 LICENSE, plus the `NOTICE` that lists the

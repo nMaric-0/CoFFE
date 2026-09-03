@@ -37,7 +37,7 @@ other. See `docs/refactor/AUDIT.md` §3 D8.
 The **mean** of a Table 2 cell comes from a single canonical run, evaluated at
 a mid-schedule checkpoint — epoch 950 on Houston and 975 on Trento/MUUFL for the
 CoFFE cells, with one exception (Houston SimMIM band HSI+LiDAR, epoch 800), and
-epoch 950 for all six MFT cells including Trento and MUUFL. `AUDIT.md` §3 D1
+epoch 950 for all six MFT cells including Trento and MUUFL. Not a model-selection decision: those epochs are what a checkpoint sort that ordered filenames as strings returned (`"...950" > "...1500"`). The sort is numeric since the phase-7 gate, so the epoch has to be passed explicitly now — PAPER_CANON §8 D17. `AUDIT.md` §3 D1
 lists the checkpoint of every cell. The **±** comes
 from a *separate* 5-seed experiment pretrained fresh to 700 epochs
 (`scripts/reproduce/sig_significance_config.py`, seeds `[42, 123, 456, 789, 1011]`)

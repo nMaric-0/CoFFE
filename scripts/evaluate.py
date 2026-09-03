@@ -57,31 +57,32 @@ if __name__ == "__main__":
         "N = 15 Houston / 6 Trento / 11 MUUFL.",
     )
     parser.add_argument("--k-shot", type=int, default=5)
-    parser.add_argument("--k-query", type=int, default=15)
-    parser.add_argument("--num-episodes", type=int, default=2000)
+    parser.add_argument("--k-query", type=int, default=100)
+    parser.add_argument("--num-episodes", type=int, default=1000)
 
     # Dataset
     parser.add_argument("--data-root", type=str, default="./data/raw")
-    parser.add_argument("--split", type=str, default="test", choices=["train", "test", "all"])
+    parser.add_argument("--split", type=str, default="all", choices=["train", "test", "all"])
     parser.add_argument("--patch-size", type=int, default=11)
 
     # Model config
     parser.add_argument("--embed-dim", type=int, default=128)
-    parser.add_argument("--num-heads", type=int, default=8)
-    parser.add_argument("--num-layers", type=int, default=4)
-    parser.add_argument("--lambda-factor", type=float, default=2.0)
+    parser.add_argument("--num-heads", type=int, default=2)
+    parser.add_argument("--num-layers", type=int, default=2)
+    parser.add_argument("--lambda-factor", type=float, default=0.5)
     parser.add_argument("--dropout", type=float, default=0.1)
     parser.add_argument(
         "--use-projection",
         action="store_true",
-        default=True,
-        help="Use projection head (default: True, matching pretraining)",
+        default=False,
+        help="Use the projection head. Off by default: it is a pretraining-only "
+        "part, discarded at eval in every paper run (PAPER_CANON §4).",
     )
     parser.add_argument(
         "--no-projection",
         dest="use_projection",
         action="store_false",
-        help="Disable projection head",
+        help="Disable the projection head (the default; kept for scripts that pass it)",
     )
     parser.add_argument(
         "--use-aux",

@@ -191,12 +191,12 @@ def load_model_with_checkpoint(
             aux_channels=specs["aux_channels"],
             use_aux=model_config.get("use_aux", True),
             embed_dim=model_config.get("embed_dim", 128),
-            num_heads=model_config.get("num_heads", 8),
-            num_layers=model_config.get("num_layers", 4),
+            num_heads=model_config.get("num_heads", 2),
+            num_layers=model_config.get("num_layers", 2),
             patch_size=model_config.get("patch_size", 11),
             # Config key stays `lambda_factor`: frozen pretrain_config.yaml /
             # eval_config.json record it under that name (PAPER_CANON §7.3).
-            cls_token_weight=model_config.get("lambda_factor", 2.0),
+            cls_token_weight=model_config.get("lambda_factor", 0.5),
             dropout=model_config.get("dropout", 0.1),
             use_projection=model_config.get("use_projection", False),
             proj_hidden_dim=model_config.get("proj_hidden_dim"),
@@ -973,24 +973,37 @@ def main(args: argparse.Namespace) -> dict | list[dict]:
     return all_results if len(seeds) > 1 else results
 
 
+# Defaults for the programmatic entry point. Aligned with the paper protocol at
+# the phase-7 gate (2026-09-03): before then this table carried 8 heads / 4
+# layers / lambda 2.0 / projection on / k_query 15 / split "test", none of which
+# any published run used. No paper number depends on it either way — on the
+# paper path `coffe.runners.eval_runner` seeds the architecture from the run's
+# frozen `pretrain_config.yaml` and the reproduce pipeline passes the protocol
+# keys explicitly, so no default here is ever consulted (which is why the
+# equivalence goldens are unchanged). The alignment is so that a bare
+# `run_evaluation(checkpoint, dataset)` is the paper's protocol rather than a
+# configuration nothing ran.
 _DEFAULT_ARGS = {
-    "n_way": None,
-    "k_shot": 5,
-    "k_query": 15,
-    "num_episodes": 2000,
+    "n_way": None,  # N-way: every class in the scene (PAPER_CANON §4)
+    "k_shot": 5,  # §4
+    "k_query": 100,  # §4 (Table 2; Table 3 varies - §8 D18)
+    # 1000 is Table 2's count; Table 3 used 2000 (§8 D18), so this is a choice
+    # rather than a constant. Table 2 is the CoFFE/MFT table this entry point
+    # serves.
+    "num_episodes": 1000,
     "data_root": "./data/raw",
-    "split": "test",
-    "patch_size": 11,
+    "split": "all",  # what every paper eval passed
+    "patch_size": 11,  # §2
     # Model selection: "coffe" (default) or "mft_original" (the MFT control).
     "name": "coffe",
     "attention_type": "mcross",
     "mlp_dim": 512,
-    "embed_dim": 128,
-    "num_heads": 8,
-    "num_layers": 4,
-    "lambda_factor": 2.0,
+    "embed_dim": 128,  # §2
+    "num_heads": 2,  # §2
+    "num_layers": 2,  # §2
+    "lambda_factor": 0.5,  # §8 D3: the value every paper CoFFE run records
     "dropout": 0.1,
-    "use_projection": True,
+    "use_projection": False,  # §4: the head is discarded at eval
     "use_aux": True,
     "proj_hidden_dim": None,
     "proj_num_layers": 2,

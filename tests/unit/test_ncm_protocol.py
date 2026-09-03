@@ -170,53 +170,79 @@ def test_hypersigma_few_shot_defaults_to_euclidean() -> None:
     assert default == "euclidean"
 
 
-def test_the_evaluator_defaults_that_are_the_paper_protocol() -> None:
-    """The subset of ``_DEFAULT_ARGS`` that does match PAPER_CANON §4.
+def test_the_evaluator_defaults_are_the_paper_protocol() -> None:
+    """``_DEFAULT_ARGS`` is PAPER_CANON §4's protocol, end to end.
 
-    ``n_way=None`` means "all classes in the scene" — the N-way protocol.
-    The defaults that *don't* match are pinned separately below, so this test
-    cannot be read as a clean bill of health for the whole table.
+    Until the phase-7 gate six of these contradicted the canon (8 heads, 4
+    layers, lambda 2.0, projection on, ``k_query`` 15, ``split`` "test") — the
+    same staleness §8 D4 describes for the deleted ``configs/pretrain/base.yaml``.
+    They were aligned at the gate, in a commit of their own.
+
+    No published number depends on this table: on the paper path
+    ``coffe.runners.eval_runner`` seeds the architecture from the run's frozen
+    ``pretrain_config.yaml`` and the reproduce pipeline passes the protocol keys
+    explicitly, so no default here is consulted. The point of aligning it is
+    that a bare ``run_evaluation(checkpoint, dataset)`` now *is* the protocol.
+
+    ``num_episodes`` is 1000, Table 2's count; Table 3 used 2000, so it is a
+    choice rather than a constant (§8 D18) and this entry point serves Table 2.
     """
-    assert _DEFAULT_ARGS["distance_metric"] == "euclidean"
+    assert _DEFAULT_ARGS["n_way"] is None  # N-way = every class in the scene
     assert _DEFAULT_ARGS["k_shot"] == K_SHOT
-    assert _DEFAULT_ARGS["n_way"] is None
+    assert _DEFAULT_ARGS["k_query"] == 100
+    assert _DEFAULT_ARGS["num_episodes"] == 1000
+    assert _DEFAULT_ARGS["split"] == "all"
+    assert _DEFAULT_ARGS["embed_dim"] == 128
+    assert _DEFAULT_ARGS["num_heads"] == 2
+    assert _DEFAULT_ARGS["num_layers"] == 2
+    assert _DEFAULT_ARGS["patch_size"] == 11
+    assert _DEFAULT_ARGS["lambda_factor"] == 0.5
+    assert _DEFAULT_ARGS["use_projection"] is False
+    assert _DEFAULT_ARGS["distance_metric"] == "euclidean"
+    assert _DEFAULT_ARGS["prototype_mode"] == "mean_features"
     assert _DEFAULT_ARGS["pool_sigma"] is None
     assert _DEFAULT_ARGS["temperature"] == 10.0
-    assert _DEFAULT_ARGS["prototype_mode"] == "mean_features"
 
 
-def test_the_evaluator_defaults_that_do_not_match_the_paper() -> None:
-    """The rest of ``_DEFAULT_ARGS``: stale values, pinned as the gap they are.
+def test_the_cli_defaults_match_the_programmatic_ones() -> None:
+    """``scripts/evaluate.py``'s flags carry the same protocol defaults.
 
-    Five of these defaults contradict the canon (reported as S4 at the phase-7
-    gate, and the same class of staleness as PAPER_CANON §8 D4):
-
-    * ``num_heads``/``num_layers`` are 8/4 where §2 says **2/2**;
-    * ``lambda_factor`` is 2.0 where every paper CoFFE run records **0.5**
-      (§8 D3);
-    * ``use_projection`` is ``True`` where §4 says the head is **off** at eval;
-    * ``k_query`` is 15, which matches no table (Table 2 used 100, Table 3
-      used 30-100) — so unlike ``num_episodes`` this is not a per-table
-      difference, just a default nothing published used.
-
-    Harmless for every published number, because the reproduce pipeline and
-    ``coffe.runners.eval_runner`` supply all of them explicitly — the frozen
-    ``eval_config.json``/``pretrain_config.yaml`` are the source of truth on
-    the paper path, and no default is ever consulted there. It bites only a
-    caller who invokes ``run_evaluation`` with nothing but a checkpoint.
-
-    Pinned rather than corrected: changing a default is a behaviour change,
-    which phase 7 may not make. If Nikola flips any of them at the gate,
-    update this test in that same commit.
+    Two copies of the same table is exactly how they drifted apart before, so
+    the CLI is compared against ``_DEFAULT_ARGS`` rather than against literals.
     """
-    assert _DEFAULT_ARGS["num_heads"] == 8  # canon §2: 2
-    assert _DEFAULT_ARGS["num_layers"] == 4  # canon §2: 2
-    assert _DEFAULT_ARGS["lambda_factor"] == 2.0  # canon §8 D3: 0.5
-    assert _DEFAULT_ARGS["use_projection"] is True  # canon §4: False
-    assert _DEFAULT_ARGS["k_query"] == 15  # canon §4: 100 (Table 2)
-    # num_episodes genuinely is per-table (1000 Table 2 / 2000 Table 3, §8 D18),
-    # so its default is a choice rather than a contradiction.
-    assert _DEFAULT_ARGS["num_episodes"] == 2000
+    import runpy
+    import sys
+    from unittest.mock import patch
+
+    argv = ["evaluate.py", "--checkpoint", "random", "--dataset", "houston"]
+    captured: dict = {}
+
+    def fake_main(args):
+        captured["args"] = args
+
+    script = Path(__file__).resolve().parents[2] / "scripts" / "evaluate.py"
+    with patch.object(sys, "argv", argv), patch("coffe.eval.episodic.main", fake_main):
+        runpy.run_path(str(script), run_name="__main__")
+
+    args = captured["args"]
+    for key in (
+        "n_way",
+        "k_shot",
+        "k_query",
+        "num_episodes",
+        "split",
+        "embed_dim",
+        "num_heads",
+        "num_layers",
+        "patch_size",
+        "lambda_factor",
+        "use_projection",
+        "distance_metric",
+        "prototype_mode",
+        "pool_sigma",
+        "temperature",
+    ):
+        assert getattr(args, key) == _DEFAULT_ARGS[key], key
 
 
 def test_cosine_is_still_selectable() -> None:
@@ -240,26 +266,3 @@ def test_cosine_is_still_selectable() -> None:
     prototypes = model.compute_prototypes(support_n, labels)
     expected = queries_n @ prototypes.T * model.temperature
     assert torch.allclose(logits, expected, atol=1e-5)
-
-
-def test_cli_default_distance_metric_is_euclidean() -> None:
-    """``scripts/evaluate.py --help`` must not offer cosine as the default."""
-    import runpy
-    import sys
-    from unittest.mock import patch
-
-    # The parser is built under ``__main__``; parse an argv that supplies only
-    # the two required flags and read the resulting namespace.
-    argv = ["evaluate.py", "--checkpoint", "random", "--dataset", "houston"]
-    captured: dict = {}
-
-    def fake_main(args):
-        captured["args"] = args
-
-    script = Path(__file__).resolve().parents[2] / "scripts" / "evaluate.py"
-    with patch.object(sys, "argv", argv), patch("coffe.eval.episodic.main", fake_main):
-        runpy.run_path(str(script), run_name="__main__")
-
-    assert captured["args"].distance_metric == "euclidean"
-    assert captured["args"].n_way is None
-    assert captured["args"].k_shot == K_SHOT

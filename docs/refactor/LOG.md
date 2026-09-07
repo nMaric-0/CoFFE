@@ -2578,3 +2578,45 @@ it checks.
   their non-paper constants.** The CLIs are aligned; these are committed
   config/driver files whose values would change what a config-driven run
   computes, and each already documents itself in its header.
+
+---
+
+## Post-refactor — feature-width ablation (2026-09-03)
+
+Not a refactor phase: a new measurement Nikola asked for, on branch
+`experiment/hypersigma-dim128`, documented in
+[`docs/feature_width_ablation.md`](../feature_width_ablation.md). Logged here
+only for the two things this log is the register of.
+
+### Findings reported, not fixed (rule 7)
+
+**Proposed D21 — Trento's labelled-pixel count.** PAPER_CANON §5 (paper Table 1)
+gives Trento 30,414 labelled pixels; the pre-patched MFT files hold 819
+(`TrLabel.mat`) + 29,395 (`TeLabel.mat`) = **30,214**, and every Trento eval log
+under `experiments/` records `Loaded trento (all): 30214 samples`, including the
+runs behind the published Table 3 Trento cells. Houston (2,832 + 12,197 =
+15,029) and MUUFL (2,683 + 51,004 = 53,687) match §5 exactly. The episodes were
+always drawn from the 30,214 that exist, so no evaluated number is affected —
+this is a Table 1 bookkeeping mismatch. Nothing was changed; the proposed §8
+wording sits at the end of `docs/feature_width_ablation.md`.
+
+### Behaviour, and what pins it
+
+One shared-code edit: `PatchedEpisodeSampler.sample_episode_indices()` was
+lifted out of `sample_episode()`, which now delegates to it. The RNG call order
+is unchanged (one `rng.choice` for the classes, then one per class), verified
+two ways — episode-stream fingerprints (SHA-256 over every stacked tensor, 25
+episodes, both `fixed_support` settings) identical before and after the edit,
+and `tests/integration/test_reduced_ncm_equivalence.py`, which requires the
+index draw and the patch draw to agree episode for episode at one seed. Golden
+G3 is the independent arbiter and stayed green.
+
+Everything else is additive and opt-in: three new `coffe/eval/` modules, an
+ablation driver under `scripts/experiments/`, a renderer under
+`scripts/reports/`, and one exclusion — results carrying a `feature_reduction`
+key — added to the three readers that walk the experiment tree
+(`compile_results.py`, `aggregate_experiment_results.py`,
+`build_experiment_metadata.py`), so an ablation run cannot represent a Table 3
+cell or move a committed roll-up. No published number is touched: each cell's
+control reproduces its frozen run's own full-precision mean to within
+0.03 pp.

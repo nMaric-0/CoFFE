@@ -76,16 +76,23 @@ def build_jobs(stage: str, groups: list[str] | None, seeds: list[int] | None) ->
     return jobs
 
 
-def run_global(jobs: list[Job], stage: str) -> list[tuple[str, int]]:
-    """Run jobs through a global queue with <= MAX_PARALLEL_PER_GPU per GPU."""
+def run_global(
+    jobs: list[Job],
+    stage: str,
+    gpus: list[str] | None = None,
+    max_per_gpu: int | None = None,
+) -> list[tuple[str, int]]:
+    """Run jobs through a global queue with <= max_per_gpu runs per GPU."""
+    gpus = gpus or cfg.GPUS
+    max_per_gpu = max_per_gpu or cfg.MAX_PARALLEL_PER_GPU
     results: list[tuple[str, int]] = []
-    load = {gpu: 0 for gpu in cfg.GPUS}
+    load = {gpu: 0 for gpu in gpus}
     running: list[tuple[Job, subprocess.Popen, object, str]] = []
     queue = list(jobs)
 
     def free_gpu() -> str | None:
         # pick the least-loaded GPU that still has a free slot
-        candidates = [g for g in cfg.GPUS if load[g] < cfg.MAX_PARALLEL_PER_GPU]
+        candidates = [g for g in gpus if load[g] < max_per_gpu]
         if not candidates:
             return None
         return min(candidates, key=lambda g: load[g])
@@ -108,7 +115,7 @@ def run_global(jobs: list[Job], stage: str) -> list[tuple[str, int]]:
             print(
                 f"  [{stage}|{gpu}] START {job.label} "
                 f"(log: {job.logfile.relative_to(REPO_ROOT)}) "
-                f"[load {sum(load.values())}/{len(cfg.GPUS) * cfg.MAX_PARALLEL_PER_GPU}, "
+                f"[load {sum(load.values())}/{len(gpus) * max_per_gpu}, "
                 f"queue {len(queue)}]",
                 flush=True,
             )
@@ -131,11 +138,15 @@ def run_global(jobs: list[Job], stage: str) -> list[tuple[str, int]]:
     return results
 
 
-def print_schedule(jobs: list[Job], stage: str):
-    n_slots = len(cfg.GPUS) * cfg.MAX_PARALLEL_PER_GPU
+def print_schedule(
+    jobs: list[Job], stage: str, gpus: list[str] | None = None, max_per_gpu: int | None = None
+):
+    gpus = gpus or cfg.GPUS
+    max_per_gpu = max_per_gpu or cfg.MAX_PARALLEL_PER_GPU
+    n_slots = len(gpus) * max_per_gpu
     print(
         f"\n=== {stage.upper()} schedule: {len(jobs)} jobs, global queue, "
-        f"{n_slots} slots ({cfg.MAX_PARALLEL_PER_GPU}/GPU on {cfg.GPUS}) ==="
+        f"{n_slots} slots ({max_per_gpu}/GPU on {gpus}) ==="
     )
     for i, job in enumerate(jobs):
         print(f"  [{i + 1:3d}] {job.label}")
@@ -166,6 +177,29 @@ def main() -> int:
         "--seeds", nargs="+", type=int, default=None, help="Seeds to run (default: all 5)."
     )
     p.add_argument(
+        "--gpus",
+        nargs="+",
+        default=None,
+        help="CUDA devices to schedule on, e.g. --gpus cuda:2 cuda:3 "
+        f"(default: {cfg.GPUS}). Use it when some cards are busy with other work.",
+    )
+    p.add_argument(
+        "--max-per-gpu",
+        type=int,
+        default=None,
+        help="Concurrent runs per GPU "
+        f"(default: {cfg.MAX_PARALLEL_PER_GPU}). Lower it when the cards are "
+        "shared with other work and only a slice of their memory is free.",
+    )
+    p.add_argument(
+        "--out",
+        type=str,
+        default=None,
+        help="Aggregate into this report path instead of the default "
+        "results/significance_report.json. Required when aggregating ablation "
+        "groups, so the paper-era report is not overwritten.",
+    )
+    p.add_argument(
         "--dry-run", action="store_true", help="Print the full queue without launching anything."
     )
     args = p.parse_args()
@@ -175,9 +209,9 @@ def main() -> int:
 
     if args.dry_run:
         if args.stage in ("train", "all"):
-            print_schedule(train_jobs, "train")
+            print_schedule(train_jobs, "train", args.gpus, args.max_per_gpu)
         if args.stage in ("eval", "all"):
-            print_schedule(eval_jobs, "eval")
+            print_schedule(eval_jobs, "eval", args.gpus, args.max_per_gpu)
         if args.stage in ("aggregate", "all"):
             print(
                 f"\n=== AGGREGATE ===\n  $ {sys.executable} "
@@ -188,14 +222,16 @@ def main() -> int:
 
     n_failed = 0
     if args.stage in ("train", "all"):
-        n_failed += summarize(run_global(train_jobs, "train"), "train")
+        n_failed += summarize(run_global(train_jobs, "train", args.gpus, args.max_per_gpu), "train")
     if args.stage in ("eval", "all"):
-        n_failed += summarize(run_global(eval_jobs, "eval"), "eval")
+        n_failed += summarize(run_global(eval_jobs, "eval", args.gpus, args.max_per_gpu), "eval")
     if args.stage in ("aggregate", "all"):
         print("\n=== AGGREGATE ===", flush=True)
         agg = [sys.executable, str(REPO_ROOT / "scripts" / "reports" / "aggregate_significance.py")]
         if args.groups:
             agg += ["--groups", *args.groups]
+        if args.out:
+            agg += ["--out", args.out]
         rc = subprocess.call(agg, cwd=str(REPO_ROOT))
         n_failed += int(rc != 0)
 

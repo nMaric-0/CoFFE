@@ -68,6 +68,15 @@ def main() -> int:
         default=None,
         help="Groups to report (default: all).",
     )
+    p.add_argument(
+        "--out",
+        type=str,
+        default=None,
+        help="Where to write the report (default: results/significance_report.json). "
+        "Pass an explicit path for ablation groups: this script rewrites the file "
+        "from the groups it was given, so aggregating a subset into the default "
+        "path would drop the paper's cells from it.",
+    )
     args = p.parse_args()
     groups = args.groups or cfg.GROUP_ORDER
 
@@ -119,7 +128,8 @@ def main() -> int:
         if missing:
             incomplete.append({"cell": key, "missing_seeds": missing})
 
-    out_path = REPO_ROOT / "results" / "significance_report.json"
+    out_path = Path(args.out) if args.out else REPO_ROOT / "results" / "significance_report.json"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w") as f:
         json.dump(report, f, indent=2)
 
@@ -151,7 +161,7 @@ def main() -> int:
     else:
         print("\nAll selected cells complete across all seeds.")
 
-    print(f"\nWrote {out_path.relative_to(REPO_ROOT)}")
+    print(f"\nWrote {out_path}")
     return 0
 
 

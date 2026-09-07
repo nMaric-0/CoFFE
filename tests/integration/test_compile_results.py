@@ -111,3 +111,53 @@ def test_existing_output_is_refused_without_force(tmp_path: Path) -> None:
 def test_default_output_is_the_committed_artifact() -> None:
     """The guard protects the real artifact, not some other path."""
     assert compile_results.DEFAULT_OUT == REPO / "docs" / "presentation" / "RESULTS.json"
+
+
+# --- feature-width ablations are not the cells they re-run -------------------
+#
+# `scripts/experiments/run_hypersigma_dim_sweep.py` re-runs a published Table 3 cell
+# with the frozen eval feature compressed to a smaller width. Those results carry the
+# published cell's `model_type`/`mode`/geometry, so without an explicit exclusion the
+# compiler would classify them as that cell and one could be selected to represent it
+# in `docs/presentation/RESULTS.json`.
+
+
+def test_feature_reduction_ablations_are_excluded() -> None:
+    data = {
+        "dataset": "houston",
+        "model_type": "HyperSIGMADual",
+        "mode": "fused",
+        "feature_reduction": {"kind": "pca", "dim": 128, "fit_corpus": "pool"},
+    }
+    model, reason, modality, _ = compile_results.classify(
+        "hypersigma_dimreduce_run1", "houston_patchnative_joint_sem_fused512", data
+    )
+    assert model is None
+    assert "feature-reduction ablation" in reason
+    assert "pca" in reason and "128" in reason
+
+
+def test_the_unreduced_control_of_an_ablation_is_also_excluded() -> None:
+    """The control is the published config, so only the marker keeps it out."""
+    data = {
+        "dataset": "trento",
+        "model_type": "HyperSIGMADual",
+        "mode": "spat_pool",
+        "feature_reduction": {"kind": "identity", "dim": 768},
+    }
+    model, reason, _, _ = compile_results.classify(
+        "hypersigma_dimreduce_run1", "trento_backbonenative_upscale_frozen_spat768", data
+    )
+    assert model is None
+    assert "identity" in reason
+
+
+def test_a_hypersigma_result_without_the_marker_still_classifies() -> None:
+    model, regime, modality, _ = compile_results.classify(
+        "hypersigma_native_ablation_run1",
+        "native_trento_spatial_upscale",
+        {"dataset": "trento", "model_type": "HyperSIGMADual", "mode": "spat_pool"},
+    )
+    assert model == "HyperSIGMA"
+    assert regime == "spatial_only (spat_pool)"
+    assert modality == "HSI-only"

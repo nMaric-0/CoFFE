@@ -24,10 +24,17 @@ from __future__ import annotations
 import argparse
 import datetime as _dt
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from coffe.eval.dim_reduction import describe_feature_reduction
 
 
 def _read_json(path: Path) -> Any | None:
@@ -53,6 +60,10 @@ def _is_example(meta: dict[str, Any] | None, name: str) -> bool:
 def collect(experiments_root: Path) -> dict[str, Any]:
     experiments: dict[str, Any] = {}
     skipped: list[str] = []
+    # Feature-width ablations re-run a published cell at a reduced feature width and
+    # would otherwise be rolled into this committed artifact as if they were that cell
+    # (see `describe_feature_reduction`). Dropped, and named here so they stay visible.
+    skipped_evaluations: dict[str, str] = {}
     total_evals = 0
 
     for exp_dir in sorted(experiments_root.iterdir()):
@@ -71,12 +82,23 @@ def collect(experiments_root: Path) -> dict[str, Any]:
             for eval_dir in sorted(evals_dir.iterdir()):
                 if not eval_dir.is_dir():
                     continue
+                results = _read_json(eval_dir / "results.json")
+                reduction = describe_feature_reduction(results or {})
+                if reduction is not None:
+                    skipped_evaluations[f"{exp_dir.name}/{eval_dir.name}"] = reduction
+                    continue
                 evaluations[eval_dir.name] = {
                     "config": _read_json(eval_dir / "eval_config.json"),
                     "metadata": _read_json(eval_dir / "eval_metadata.json"),
-                    "results": _read_json(eval_dir / "results.json"),
+                    "results": results,
                     "path": str(eval_dir),
                 }
+        # An experiment tree that is *only* ablation evals is an ablation tree.
+        if not evaluations and any(
+            key.startswith(f"{exp_dir.name}/") for key in skipped_evaluations
+        ):
+            skipped.append(exp_dir.name)
+            continue
         total_evals += len(evaluations)
 
         experiments[exp_dir.name] = {
@@ -94,6 +116,7 @@ def collect(experiments_root: Path) -> dict[str, Any]:
         "num_experiments": len(experiments),
         "num_evaluations": total_evals,
         "skipped": skipped,
+        "skipped_evaluations": skipped_evaluations,
         "experiments": experiments,
     }
 

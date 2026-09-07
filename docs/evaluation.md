@@ -147,3 +147,11 @@ which maps them and warns once.
   superseded — see its header.)
 - [`docs/hypersigma.md`](hypersigma.md) — the foundation-model route's own
   input regimes, adaptations and evaluator quirks.
+- [`docs/classification_maps.md`](classification_maps.md) — one decision per
+  labelled pixel instead of a distribution over episodes, and the coordinate
+  recovery that puts those decisions back on the scene next to the ground truth.
+- [`docs/feature_width_ablation.md`](feature_width_ablation.md) — the same
+  protocol run with HyperSIGMA's frozen features compressed to CoFFE's 128
+  dimensions, to check whether the margins between Table 2's CoFFE cells and
+  Table 3's best HyperSIGMA cells are a property of the encoders or of the
+  feature width.

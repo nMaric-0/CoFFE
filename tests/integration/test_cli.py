@@ -40,6 +40,7 @@ ENTRY_POINTS = sorted(
         *(REPO / "scripts").glob("*.py"),
         *(REPO / "scripts" / "reports").glob("*.py"),
         *(REPO / "scripts" / "reproduce").glob("*.py"),
+        *(REPO / "scripts" / "experiments").glob("*.py"),
     ]
     if "ArgumentParser" in path.read_text()
 )

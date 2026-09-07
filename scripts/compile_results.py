@@ -34,6 +34,7 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from coffe.compat import normalize_model_type
+from coffe.eval.dim_reduction import describe_feature_reduction
 
 EXPERIMENTS = REPO / "experiments"
 DEFAULT_OUT = REPO / "docs" / "presentation" / "RESULTS.json"
@@ -81,6 +82,16 @@ def classify(exp: str, ev: str, data: dict):
     # Old results.json files record the pre-paper class names
     # (PAPER_CANON §8 D16); normalise before any comparison.
     mt = normalize_model_type(data.get("model_type"), origin=f"{exp}/{ev}/results.json")
+
+    # Feature-width ablations (scripts/experiments/run_hypersigma_dim_sweep.py) re-run a
+    # published cell with its frozen eval feature linearly compressed before the
+    # prototypes are formed. They record the map under `feature_reduction`, share the
+    # published cell's `model_type`, `mode` and geometry, and would otherwise be
+    # classified as that cell and compete to represent it. They are a different
+    # measurement: excluded here, whatever the directory is named.
+    reduction = describe_feature_reduction(data)
+    if reduction is not None:
+        return None, f"feature-reduction ablation ({reduction})", None, None
 
     # Drop scratch/test runs and the placeholder experiment.
     if any(m in exp_l for m in _TEST_MARKERS):

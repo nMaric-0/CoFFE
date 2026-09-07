@@ -38,6 +38,8 @@ DISCARDED_PREFIXES = (
     "null_lidar",
     "noise_augmentation",
     "decoder",
+    "aux_masking",
+    "aux_decoder",
     "contrastive_head",
     "similarity",
 )

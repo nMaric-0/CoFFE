@@ -38,7 +38,7 @@ from coffe.data.datasets import (
     TrentoPatchedDataset,
 )
 from coffe.data.samplers.patched_episode_sampler import PatchedEpisodeSampler
-from coffe.models import CoFFE, MFTOriginal
+from coffe.models import CoFFE, CoFFEAuxToken, MFTOriginal
 from coffe.utils.seed import set_seed
 from coffe.utils.spatial_weights import center_weighted_pool
 
@@ -90,6 +90,17 @@ CLASS_NAMES = {
         "Yellow curb",
         "Cloth panels",
     ],
+}
+
+
+#: ``model.name`` -> the ``model_type`` string written into ``results.json``.
+#: Canonical writer values (PAPER_CANON §8 D16); readers accept the pre-paper
+#: class names via ``coffe.compat.LEGACY_MODEL_TYPES``. ``coffe_aux_token`` is
+#: a post-paper ablation route (docs/ablations/AUX_TOKEN_ABLATION.md).
+_MODEL_TYPES = {
+    "coffe": "CoFFE",
+    "mft_original": "MFTOriginal",
+    "coffe_aux_token": "CoFFEAuxToken",
 }
 
 
@@ -146,6 +157,8 @@ def fix_state_dict_keys(state_dict: dict, model_state: dict) -> dict:
             "null_lidar",
             "noise_augmentation",
             "decoder",
+            "aux_masking",  # aux-token ablation: stochastic aux-token mask
+            "aux_decoder",  # aux-token ablation: aux reconstruction head
             "contrastive_head",
             "similarity",  # Skip DenseSimilarity too
         )
@@ -184,6 +197,30 @@ def load_model_with_checkpoint(
             distance_metric=model_config.get("distance_metric", "euclidean"),
             temperature=model_config.get("temperature", 10.0),
             prototype_mode=model_config.get("prototype_mode", "mean_features"),
+        )
+    elif model_name == "coffe_aux_token":
+        # Fusion-mechanism ablation, not a paper route
+        # (docs/ablations/AUX_TOKEN_ABLATION.md): CoFFE's encoder with LiDAR as
+        # one separate token. Same eval feature, so the shared loop below is
+        # unchanged.
+        model = CoFFEAuxToken(
+            hsi_channels=specs["hsi_channels"],
+            aux_channels=specs["aux_channels"],
+            use_aux=model_config.get("use_aux", True),
+            embed_dim=model_config.get("embed_dim", 128),
+            num_heads=model_config.get("num_heads", 2),
+            num_layers=model_config.get("num_layers", 2),
+            patch_size=model_config.get("patch_size", 11),
+            cls_token_weight=model_config.get("lambda_factor", 0.5),
+            dropout=model_config.get("dropout", 0.1),
+            use_projection=model_config.get("use_projection", False),
+            proj_hidden_dim=model_config.get("proj_hidden_dim"),
+            proj_num_layers=model_config.get("proj_num_layers", 2),
+            proj_l2_normalize=model_config.get("proj_l2_normalize", True),
+            distance_metric=model_config.get("distance_metric", "euclidean"),
+            temperature=model_config.get("temperature", 10.0),
+            prototype_mode=model_config.get("prototype_mode", "mean_features"),
+            pool_sigma=model_config.get("pool_sigma"),
         )
     else:
         model = CoFFE(
@@ -269,6 +306,13 @@ def load_model_with_checkpoint(
 
     if model_name == "mft_original":
         _assert_band_count("hsi_hetconv.gwconv.weight", f"{specs['hsi_channels']} HSI", "HSI")
+        _assert_band_count("aux_conv.0.weight", f"{specs['aux_channels']} aux", "aux")
+    elif model_name == "coffe_aux_token":
+        # Two separate front-ends, like the MFT control: the channel tokenizer
+        # is sized to the HSI bands ALONE (that is the ablation), and the aux
+        # conv to the aux channels. Passing "HSI" rather than "HSI+aux" keeps
+        # the use_aux hint above from firing on a route where it cannot apply.
+        _assert_band_count("channel_tokenizer.conv.0.weight", f"{specs['hsi_channels']} HSI", "HSI")
         _assert_band_count("aux_conv.0.weight", f"{specs['aux_channels']} aux", "aux")
     else:
         _assert_band_count(
@@ -887,7 +931,11 @@ def main(args: argparse.Namespace) -> dict | list[dict]:
         "pool_sigma": args.pool_sigma,
     }
 
-    _model_label = "MFT (original)" if model_config["name"] == "mft_original" else "CoFFE"
+    _model_labels = {
+        "mft_original": "MFT (original)",
+        "coffe_aux_token": "CoFFE-AuxToken (ablation)",
+    }
+    _model_label = _model_labels.get(model_config["name"], "CoFFE")
     logger.info(
         f"Loading {_model_label} (distance={args.distance_metric}, "
         f"temp={args.temperature}, mode={args.prototype_mode})"
@@ -933,7 +981,7 @@ def main(args: argparse.Namespace) -> dict | list[dict]:
         output_data = {
             # Canonical writer values (PAPER_CANON §8 D16); readers accept the
             # pre-paper class names via coffe.compat.LEGACY_MODEL_TYPES.
-            "model_type": "MFTOriginal" if model_config["name"] == "mft_original" else "CoFFE",
+            "model_type": _MODEL_TYPES.get(model_config["name"], "CoFFE"),
             "distance_metric": args.distance_metric,
             "temperature": args.temperature,
             "prototype_mode": args.prototype_mode,

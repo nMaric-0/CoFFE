@@ -43,6 +43,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from coffe.compat import normalize_model_name, normalize_objective
+from coffe.eval.dim_reduction import describe_feature_reduction
 
 # --------------------------------------------------------------------------- #
 # small readers / sanitisers
@@ -94,6 +95,19 @@ def _is_example(meta: dict[str, Any] | None, name: str) -> bool:
     if name == "_example":
         return True
     return isinstance(meta, dict) and meta.get("status") == "example"
+
+
+def _only_feature_reduction_evals(exp_dir: Path) -> bool:
+    """True when every evaluation in this tree is a feature-width ablation."""
+    evals_dir = exp_dir / "evaluations"
+    if not evals_dir.is_dir():
+        return False
+    found = False
+    for ed in sorted(p for p in evals_dir.iterdir() if p.is_dir()):
+        if describe_feature_reduction(_read_json(ed / "results.json") or {}) is None:
+            return False
+        found = True
+    return found
 
 
 def _method_family(
@@ -297,6 +311,12 @@ def _distill_experiment(exp_dir: Path) -> dict[str, Any]:
     evals_dir = exp_dir / "evaluations"
     if evals_dir.is_dir():
         for ed in sorted(p for p in evals_dir.iterdir() if p.is_dir()):
+            # Feature-width ablations carry the published cell's model_type, mode and
+            # geometry and differ only in feature width, so every roll-up below —
+            # summary totals, GPU-hours, experiments_by_family, metrics_by_distance —
+            # would absorb them as that cell. See `describe_feature_reduction`.
+            if describe_feature_reduction(_read_json(ed / "results.json") or {}) is not None:
+                continue
             evaluations[ed.name] = _distill_eval(ed)
 
     started = _parse_iso(meta.get("started_at"))
@@ -374,7 +394,11 @@ def build(experiments_root: Path) -> dict[str, Any]:
         if _is_example(meta, exp_dir.name) or exp_dir.name.startswith("_") or not is_real:
             skipped.append(exp_dir.name)
             continue
-        experiments[exp_dir.name] = _distill_experiment(exp_dir)
+        distilled = _distill_experiment(exp_dir)
+        if not distilled.get("evaluations") and _only_feature_reduction_evals(exp_dir):
+            skipped.append(exp_dir.name)
+            continue
+        experiments[exp_dir.name] = distilled
 
     # ---- summary roll-up -------------------------------------------------- #
     total_wall = 0.0

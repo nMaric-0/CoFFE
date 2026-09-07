@@ -30,7 +30,9 @@ from coffe.data.datasets import (
     MUUFLPatchedDataset,
     TrentoPatchedDataset,
 )
-from coffe.models import CoFFE, MFTOriginal
+from coffe.models import CoFFE, CoFFEAuxToken, MFTOriginal
+from coffe.pretrain.aux_token_mae import AuxTokenMAEPretrainModel
+from coffe.pretrain.aux_token_simmim import AuxTokenSimMIMPretrainModel
 from coffe.pretrain.mae_pretrain import MAEPretrainModel
 from coffe.pretrain.mft_mae import MFTMAEPretrainModel
 from coffe.pretrain.mft_spatial_mae import MFTSpatialMaskPretrainModel
@@ -336,6 +338,47 @@ def run_pretrain(
             dropout=model_config.get("dropout", 0.1),
             attention_type=model_config.get("attention_type", "mcross"),
         )
+    elif model_name == "coffe_aux_token":
+        # Fusion-mechanism ablation (docs/ablations/AUX_TOKEN_ABLATION.md): the
+        # CoFFE encoder with LiDAR moved out of the pixel token into one
+        # separate token. Not a paper route. Two objectives are supported:
+        #   "simmim" -> spatial-token masking + MLP decoders (aux_token_simmim.py)
+        #   "mae"    -> token-drop MAE + transformer decoder (aux_token_mae.py)
+        # Band masking is undefined here (the aux bands are outside the pixel
+        # tokens), so it is rejected rather than silently ignored.
+        if objective not in ("mae", "simmim"):
+            raise ValueError(
+                f"model.name='coffe_aux_token' supports objective in {{'mae','simmim'}}, "
+                f"got objective={objective!r}"
+            )
+        if pretrain_config.get("band_mask_ratio", 0.0):
+            raise ValueError(
+                "model.name='coffe_aux_token' does not support band_mask_ratio > 0: "
+                "the auxiliary bands are not part of the pixel tokens, so a "
+                "per-(pixel, band) mask over the combined tensor is undefined. "
+                "Use spatial_mask_ratio (SimMIM token) or objective='mae'."
+            )
+        if not use_aux:
+            raise ValueError(
+                "model.name='coffe_aux_token' requires model.use_aux=true: the "
+                "ablation is the separate auxiliary token."
+            )
+        encoder = CoFFEAuxToken(
+            hsi_channels=hsi_channels,
+            aux_channels=aux_channels,
+            use_aux=use_aux,
+            embed_dim=embed_dim,
+            # PAPER_CANON §2 values as defaults (the configs state them anyway).
+            num_heads=model_config.get("num_heads", 2),
+            num_layers=model_config.get("num_layers", 2),
+            patch_size=data_config.get("patch_size", 11),
+            cls_token_weight=model_config.get("lambda_factor", 0.5),
+            dropout=model_config.get("dropout", 0.1),
+            use_projection=use_projection,
+            proj_hidden_dim=model_config.get("proj_hidden_dim", embed_dim * 4),
+            proj_num_layers=model_config.get("proj_num_layers", 2),
+            proj_l2_normalize=model_config.get("proj_l2_normalize", False),
+        )
     else:
         encoder = CoFFE(
             hsi_channels=hsi_channels,
@@ -412,6 +455,66 @@ def run_pretrain(
                 "band_mask_ratio is ignored for model.name='mft_original' "
                 "(only spatial masking is supported)."
             )
+    elif model_name == "coffe_aux_token":
+        aux_mask_prob = pretrain_config.get("aux_mask_prob", 0.5)
+        aux_loss_weight = pretrain_config.get("aux_loss_weight", 1.0)
+        if objective == "mae":
+            mask_ratio = pretrain_config.get("mask_ratio", 0.75)
+            pretrain_model = AuxTokenMAEPretrainModel(
+                encoder=encoder,
+                hsi_channels=hsi_channels,
+                aux_channels=aux_channels,
+                use_aux=use_aux,
+                patch_size=data_config.get("patch_size", 11),
+                embed_dim=embed_dim,
+                mask_ratio=mask_ratio,
+                aux_mask_prob=aux_mask_prob,
+                aux_loss_weight=aux_loss_weight,
+                decoder_dim=pretrain_config.get("decoder_dim", 64),
+                decoder_depth=pretrain_config.get("decoder_depth", 4),
+                decoder_heads=pretrain_config.get("decoder_heads", 4),
+                decoder_mlp_ratio=pretrain_config.get("decoder_mlp_ratio", 4.0),
+                aux_decoder_hidden_dim=pretrain_config.get("decoder_hidden_dim", 256),
+                norm_pix_loss=pretrain_config.get("norm_pix_loss", True),
+                recon_sigma=pretrain_config.get("recon_center_sigma", None),
+            )
+            objective_line = (
+                f"Objective: MAE (token drop {mask_ratio}, "
+                f"{pretrain_model.len_keep}/{pretrain_model.num_tokens} pixel tokens visible)"
+            )
+        else:
+            spatial_mask_ratio = pretrain_config.get("spatial_mask_ratio", 0.75)
+            pretrain_model = AuxTokenSimMIMPretrainModel(
+                encoder=encoder,
+                hsi_channels=hsi_channels,
+                aux_channels=aux_channels,
+                use_aux=use_aux,
+                patch_size=data_config.get("patch_size", 11),
+                embed_dim=embed_dim,
+                decoder_hidden_dim=pretrain_config.get("decoder_hidden_dim", 256),
+                spatial_mask_ratio=spatial_mask_ratio,
+                aux_mask_prob=aux_mask_prob,
+                aux_loss_weight=aux_loss_weight,
+                recon_sigma=pretrain_config.get("recon_center_sigma", None),
+            )
+            objective_line = (
+                f"Objective: SimMIM token (in-place spatial-token masking "
+                f"{spatial_mask_ratio} + MLP decoder)"
+            )
+
+        total_params = sum(p.numel() for p in pretrain_model.parameters())
+        encoder_params = sum(p.numel() for p in encoder.parameters())
+        logger.info(
+            "Model: CoFFE-AuxToken ablation (LiDAR as one separate token, "
+            "not fused into the pixel tokens)"
+        )
+        logger.info(objective_line)
+        logger.info(f"Total parameters: {total_params:,}")
+        logger.info(f"Encoder parameters: {encoder_params:,}")
+        logger.info(
+            f"Aux token mask probability: {aux_mask_prob} "
+            f"(masked samples reconstruct the aux raster; weight {aux_loss_weight})"
+        )
     elif objective == "mae":
         mask_ratio = pretrain_config.get("mask_ratio", 0.75)
         decoder_dim = pretrain_config.get("decoder_dim", 64)

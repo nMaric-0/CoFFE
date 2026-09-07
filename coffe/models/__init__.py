@@ -3,10 +3,12 @@
 from typing import Any
 
 from .coffe import CoFFE
+from .coffe_aux_token import CoFFEAuxToken
 from .mft_original import MFTOriginal
 
 __all__ = [
     "CoFFE",
+    "CoFFEAuxToken",
     "MFTOriginal",
 ]
 

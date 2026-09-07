@@ -1,0 +1,88 @@
+# CoFFE-AuxToken ablation — MAE, Houston, HSI+LiDAR
+#
+# NOT a paper cell. Fusion-mechanism ablation; see
+# docs/ablations/AUX_TOKEN_ABLATION.md and the header of
+# houston_aux_token_simmim_token.yaml for the architecture.
+#
+# The recipe below is the one that produced the control cell
+# `enhanced_mae/houston/lidar` of the 5-seed significance experiment
+# (OA 74.68 ± 0.65), cloned from
+# experiments/houston_enhanced_mae_lidar_seed42/pretrain_metadata.json (base
+# configs/coffe/houston_mae.yaml, epochs 700, save_interval 100).
+#
+# MAE specifics on this route: the 121 pixel tokens use MAE's token DROP
+# (mask_ratio), while the single auxiliary token is masked IN PLACE with a
+# learnable mask token at probability `aux_mask_prob` — dropping one token
+# would need the shared transformer decoder to carry an extra position. The
+# pixel decoder reconstructs the HSI bands; a separate head reconstructs the
+# LiDAR raster from the auxiliary token on masked samples. `norm_pix_loss`
+# applies to the HSI term only (per-token z-scoring is undefined for a single
+# LiDAR channel).
+#
+# Run with:
+#   python scripts/pretrain.py --config configs/ablation/houston_aux_token_mae.yaml
+#
+# RUNTIME  ~38 min for 700 epochs on one RTX 4090 (two runs sharing the card),
+#          measured from the control run's checkpoint timestamps.
+
+model:
+  name: "coffe_aux_token"
+  embed_dim: 128
+  num_heads: 2
+  num_layers: 2
+  lambda_factor: 0.5
+  dropout: 0.1
+  # MAE removes the projection head; the transformer decoder replaces it.
+  use_projection: false
+  proj_hidden_dim: 512
+  proj_num_layers: 1
+  proj_l2_normalize: true
+  use_aux: true
+
+data:
+  patch_size: 11
+  num_workers: 4
+
+pretrain:
+  datasets:
+    - "houston"
+  objective: "mae"
+  epochs: 700
+  batch_size: 64
+  val_split: 0.0
+  lr: 1.5e-4
+  min_lr: 1.0e-6
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+  # --- MAE masking & transformer decoder ---
+  mask_ratio: 0.75
+  decoder_dim: 64
+  decoder_depth: 4
+  decoder_heads: 4
+  norm_pix_loss: true
+  # Hidden width of the auxiliary reconstruction head.
+  decoder_hidden_dim: 256
+  # Auxiliary token: masked in place per sample, then reconstructed.
+  aux_mask_prob: 0.5
+  aux_loss_weight: 1.0
+  # Original MAE uses neither the in-place pixel-token path nor band masking.
+  band_mask_ratio: 0.0
+  spatial_mask_ratio: 0.0
+  # Plain MAE reconstruction loss (no centre weighting).
+  recon_center_sigma: null
+  pool_center_sigma: 1.0
+  save_interval: 100
+  val_interval: 50000
+  log_interval: 1
+  use_amp: false
+
+paths:
+  data_root: "./data/raw"
+  checkpoint_dir: "./checkpoints/ablation/houston_aux_token_mae"
+  log_dir: "./logs/ablation/houston_aux_token_mae"
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: true

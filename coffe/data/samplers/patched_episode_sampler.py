@@ -124,27 +124,25 @@ class PatchedEpisodeSampler:
 
         return class_indices
 
-    def sample_episode(self) -> dict[str, torch.Tensor]:
-        """
-        Sample a single N-way K-shot episode.
+    def sample_episode_indices(self) -> tuple[np.ndarray, list[list[int]]]:
+        """Draw one episode's *dataset indices*, touching no patch data.
 
-        Returns:
-            Dictionary containing:
-            - support_hsi: [N*K, C, H, W]
-            - support_aux: [N*K, C_aux, H, W]
-            - support_labels: [N*K] (relabeled 0 to N-1)
-            - query_hsi: [N*Q, C, H, W]
-            - query_aux: [N*Q, C_aux, H, W]
-            - query_labels: [N*Q] (relabeled 0 to N-1)
-            - original_classes: [N] original class labels
+        Returns ``(selected_classes, per_class_indices)``, where each entry of
+        ``per_class_indices`` holds one class's ``k_shot + k_query`` dataset
+        indices, support first. :meth:`sample_episode` is exactly this plus the
+        tensor gather, so the two consume the sampler's RNG in the same order:
+        at a given seed the episode stream is identical whichever is iterated.
+
+        Feature-cached evaluation (``coffe.eval.reduced_ncm``) needs only the
+        indices. With a frozen encoder every patch has exactly one feature
+        vector, so re-gathering 11x11 patches per episode would copy hundreds
+        of GB of pixels to no effect.
         """
         # Select N classes randomly
         selected_classes = self.rng.choice(self.available_classes, self.n_way, replace=False)
 
-        support_hsi, support_aux, support_labels = [], [], []
-        query_hsi, query_aux, query_labels = [], [], []
-
-        for new_label, original_class in enumerate(selected_classes):
+        per_class_indices: list[list[int]] = []
+        for original_class in selected_classes:
             indices = self.class_indices[original_class]
 
             if self.fixed_support:
@@ -162,7 +160,30 @@ class PatchedEpisodeSampler:
                 sampled_idx = self.rng.choice(
                     indices, self.k_shot + self.k_query, replace=False
                 ).tolist()
+            per_class_indices.append(sampled_idx)
 
+        return selected_classes, per_class_indices
+
+    def sample_episode(self) -> dict[str, torch.Tensor]:
+        """
+        Sample a single N-way K-shot episode.
+
+        Returns:
+            Dictionary containing:
+            - support_hsi: [N*K, C, H, W]
+            - support_aux: [N*K, C_aux, H, W]
+            - support_labels: [N*K] (relabeled 0 to N-1)
+            - query_hsi: [N*Q, C, H, W]
+            - query_aux: [N*Q, C_aux, H, W]
+            - query_labels: [N*Q] (relabeled 0 to N-1)
+            - original_classes: [N] original class labels
+        """
+        selected_classes, per_class_indices = self.sample_episode_indices()
+
+        support_hsi, support_aux, support_labels = [], [], []
+        query_hsi, query_aux, query_labels = [], [], []
+
+        for new_label, sampled_idx in enumerate(per_class_indices):
             for i, idx in enumerate(sampled_idx):
                 sample = self.dataset[idx]
                 hsi = sample["hsi"]

@@ -12,6 +12,10 @@ Groups (model families):
   mft_mae       faithful mft_original baseline, MAE objective
   mft_spatial   faithful mft_original baseline, spatial-masking objective
 
+Post-paper ablation groups (opt-in via --groups; not in GROUP_ORDER):
+  aux_token_simmim  CoFFE-AuxToken, SimMIM token, Houston only
+  aux_token_mae     CoFFE-AuxToken, MAE, Houston only
+
 For `enhanced` and `hsi_only` the per-variant mask ratios are CLONED at runtime
 from a canonical seed-42 run's pretrain overrides. The other groups use a
 self-contained base config, so no per-variant override is needed.
@@ -94,6 +98,7 @@ class Group:
         *,
         clone_mask: bool = False,
         canonical_dir: Callable[[str, str], str] | None = None,
+        datasets: list[str] | None = None,
     ):
         self.name = name
         self.variants = variants
@@ -101,6 +106,10 @@ class Group:
         self._experiment_name = experiment_name
         self.clone_mask = clone_mask
         self._canonical_dir = canonical_dir
+        #: Scenes this group covers. The five paper groups cover all three;
+        #: single-scene ablation groups narrow it (their configs exist for that
+        #: scene only, and `cells()` must not ask for the others).
+        self.datasets = list(datasets) if datasets is not None else list(DATASETS)
 
     def experiment_name(self, dataset: str, variant: str, seed: int) -> str:
         return self._experiment_name(dataset, variant, seed)
@@ -149,6 +158,26 @@ GROUPS: dict[str, Group] = {
         experiment_name=lambda ds, v, s: f"mft_original_{ds}_spatial_seed{s}",
         clone_mask=False,
     ),
+    # --- post-paper ablation: LiDAR as one separate encoder token ---
+    # docs/ablations/AUX_TOKEN_ABLATION.md. Houston only, and deliberately NOT
+    # in GROUP_ORDER: `--groups aux_token_*` opts in, so a bare run of the
+    # significance experiment still reproduces exactly the paper's five groups.
+    "aux_token_simmim": Group(
+        "aux_token_simmim",
+        ["simmim_token"],
+        base_config=lambda ds, v: f"configs/ablation/{ds}_aux_token_simmim_token.yaml",
+        experiment_name=lambda ds, v, s: f"{ds}_aux_token_simmim_token_seed{s}",
+        clone_mask=False,
+        datasets=["houston"],
+    ),
+    "aux_token_mae": Group(
+        "aux_token_mae",
+        ["mae"],
+        base_config=lambda ds, v: f"configs/ablation/{ds}_aux_token_mae.yaml",
+        experiment_name=lambda ds, v, s: f"{ds}_aux_token_mae_seed{s}",
+        clone_mask=False,
+        datasets=["houston"],
+    ),
 }
 
 #: Default order groups are processed / reported in.
@@ -159,7 +188,7 @@ def cells(groups: list[str] | None = None):
     """Yield (group, dataset, variant) for the selected groups (all by default)."""
     for gname in groups or GROUP_ORDER:
         g = GROUPS[gname]
-        for dataset in DATASETS:
+        for dataset in g.datasets:
             for variant in g.variants:
                 yield gname, dataset, variant
 

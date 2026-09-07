@@ -696,3 +696,105 @@ def plot_aggregated_feature_space(
         fig.savefig(save_path, dpi=200, bbox_inches="tight")
         plt.close(fig)
     return fig
+
+
+def plot_classification_map(
+    maps: dict,
+    class_names: list | None = None,
+    dataset_label: str | None = None,
+    title: str = "Classification map",
+    save_path: str | None = None,
+    panels: tuple = ("truth", "prediction", "agreement"),
+) -> Figure:
+    """Ground truth, predicted map and agreement, side by side.
+
+    Args:
+        maps: the canvases from ``MapPrediction.to_maps`` — ``[H, W]`` int
+            arrays with 0 for unlabelled pixels.
+        class_names: names for classes 1..C, in class order.
+        dataset_label: scene key; when it has a pinned palette
+            (``_FIXED_COLOR_IDX``) the classes keep the colours the published
+            legend uses.
+        title: figure title.
+        save_path: if given, save and close the figure.
+        panels: which of ``maps``' canvases to draw, in order.
+
+    Only labelled pixels carry a decision, so the background of every panel is
+    the scene's unlabelled majority — these are masked maps, not wall-to-wall
+    classifications (the packs hold one patch per labelled pixel only).
+    """
+    from matplotlib.colors import ListedColormap
+    from matplotlib.patches import Patch
+
+    drawn = [name for name in panels if name in maps]
+    if not drawn:
+        raise ValueError(f"none of {panels} is in maps ({sorted(maps)})")
+
+    # Class count from whatever canvases were handed over, so a caller may draw
+    # a subset of the panels (`panels=("prediction",)`) without a truth map.
+    class_panels = [maps[name] for name in drawn if name not in ("agreement", "support")]
+    n_classes = max((int(canvas.max()) for canvas in class_panels), default=1) or 1
+    names = class_names or [f"Class {i + 1}" for i in range(n_classes)]
+
+    fixed = _fixed_color_map(dataset_label)
+    if fixed is not None and all(name in fixed for name in names[:n_classes]):
+        class_colors = [fixed[name] for name in names[:n_classes]]
+    else:
+        class_colors = _get_class_colors(n_classes)
+
+    background = (0.94, 0.94, 0.94, 1.0)
+    class_cmap = ListedColormap([background, *class_colors])
+    # 0 unlabelled, 1 correct, 2 wrong, 3 support
+    agreement_cmap = ListedColormap(
+        [background, (0.20, 0.55, 0.25, 1.0), (0.80, 0.16, 0.16, 1.0), (0.10, 0.25, 0.75, 1.0)]
+    )
+
+    h, w = maps["truth"].shape
+    stacked = w > 2 * h  # Houston (349x1905) reads as a stack, MUUFL as a row
+    n = len(drawn)
+    if stacked:
+        fig, axes = plt.subplots(n, 1, figsize=(13, max(2.0, 13 * h / w) * n + 1.6))
+    else:
+        fig, axes = plt.subplots(1, n, figsize=(5.0 * n, max(4.0, 5.0 * h / w) + 1.6))
+    axes = np.atleast_1d(axes)
+
+    panel_titles = {
+        "truth": "Ground truth",
+        "prediction": "Prediction (5-shot NCM)",
+        "agreement": "Agreement",
+        "support": "Support pixels",
+    }
+    for ax, name in zip(axes, drawn):
+        canvas = maps[name]
+        if name == "agreement":
+            ax.imshow(canvas, cmap=agreement_cmap, vmin=0, vmax=3, interpolation="nearest")
+        else:
+            ax.imshow(canvas, cmap=class_cmap, vmin=0, vmax=n_classes, interpolation="nearest")
+        ax.set_title(panel_titles.get(name, name), fontsize=11)
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+    handles = [
+        Patch(facecolor=class_colors[i], label=names[i], edgecolor="none") for i in range(n_classes)
+    ]
+    if "agreement" in drawn:
+        handles += [
+            Patch(facecolor=(0.20, 0.55, 0.25), label="correct", edgecolor="none"),
+            Patch(facecolor=(0.80, 0.16, 0.16), label="wrong", edgecolor="none"),
+            Patch(facecolor=(0.10, 0.25, 0.75), label="support", edgecolor="none"),
+        ]
+    fig.legend(
+        handles=handles,
+        loc="lower center",
+        ncol=min(6, len(handles)),
+        fontsize=8,
+        frameon=False,
+        bbox_to_anchor=(0.5, -0.01),
+    )
+    fig.suptitle(title, fontsize=13)
+
+    plt.tight_layout(rect=(0, 0.04, 1, 0.97))
+    if save_path:
+        fig.savefig(save_path, dpi=200, bbox_inches="tight")
+        plt.close(fig)
+    return fig

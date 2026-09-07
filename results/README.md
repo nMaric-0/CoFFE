@@ -1,13 +1,15 @@
 # `results/` — the JSONs behind the paper's tables
 
-These eight files are **frozen artifacts**: they are the record of the runs that
+The eight files in the table below are **frozen artifacts**: they are the record of the runs that
 produced Tables 2 and 3, exactly as those runs wrote them. They are never
 regenerated to "fix" a number. `PAPER_CANON.md` §6 holds the published values;
 `docs/refactor/AUDIT.md` §3 (D1, D2) holds the cell-by-cell provenance trace
 this table summarises.
 
 Until phase 5 these lived in `experiments/`, mixed in with the runtime output
-tree. They moved here so the runtime tree can stay gitignored.
+tree. They moved here so the runtime tree can stay gitignored. A ninth file,
+`hypersigma_dim_sweep.json`, is **not** frozen and feeds no paper cell — see the
+end of this file.
 
 ## Which file feeds which paper cell
 
@@ -56,6 +58,28 @@ carry retired vocabulary (`mft_cpea`, `enhanced`, `spatial`, `spectral`, `both`,
 and run/dir names like `houston_enhanced_spatial_run1`). That is deliberate and
 frozen: readers translate through `coffe/compat.py`, writers emit canonical
 names only (PAPER_CANON §7.3).
+
+## Not a paper artifact: `hypersigma_dim_sweep.json`
+
+`hypersigma_dim_sweep.json` is the exception to everything above. It is **not**
+frozen and feeds **no** published cell: it is the output of the feature-width
+ablation (`scripts/experiments/run_hypersigma_dim_sweep.py`), which re-runs the
+best published HyperSIGMA cell per scene with the frozen eval feature linearly
+compressed to CoFFE's 128 dimensions and other widths before the prototypes are
+formed. See [`docs/feature_width_ablation.md`](../docs/feature_width_ablation.md)
+for the question it answers and the tables it renders; regenerate it freely from
+the run trees.
+
+Its per-cell detail (`sweep.json`, every variant, every metric block, the paired
+tests) stays in the git-ignored `experiments/hypersigma_dimreduce_run1/` tree.
+Each `results.json` there records a `feature_reduction` key, and all three
+readers that walk the experiment tree — `scripts/compile_results.py`,
+`scripts/reports/aggregate_experiment_results.py` and
+`scripts/reports/build_experiment_metadata.py` — exclude any result carrying one
+(via `coffe.eval.dim_reduction.describe_feature_reduction`) and record what they
+dropped. So an ablation run cannot be selected to represent a Table 3 cell, and
+cannot move the summary totals, GPU-hours or family counts in
+`aggregated_results.json` / `experiment_metadata.json` either.
 
 ## Regenerating (don't, unless you mean it)
 

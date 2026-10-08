@@ -1,0 +1,90 @@
+# MFT MAE — Muufl, HSI+LiDAR
+#
+# Reproduces the paper's Table 2 cell **OA 45.77**.
+#
+#   source run       experiments/mft_original_muufl_mae_faithful/
+#   evaluated at     epoch 950 of a 1500-epoch schedule
+#
+# Every recipe value below matches that run's frozen pretrain_config.yaml,
+# checked by tools/refactor/make_cell_configs.py.
+#
+# NOTE this file keeps its original `paths:` (config paths are on the
+# audit's DO-NOT-RENAME list). Those directories do not exist today — the
+# paper's checkpoints are under experiments/<run>/checkpoints/ — but a
+# plain `python scripts/pretrain.py --config ...` will create and write
+# into them. Point `paths:` elsewhere if that matters to you.
+#
+# NOTE the checkpoint the paper evaluated is NOT the final one: train the
+# full 1500 epochs, then evaluate epoch 950
+# (PAPER_CANON §8 D17).
+#
+# Run with:
+#   python scripts/pretrain.py --config configs/mft/muufl_mae.yaml
+
+# MUUFL — Original-MFT baseline, standard-MAE pretraining (HSI+LiDAR)
+#
+# See configs/mft/houston_mae.yaml for the full description.
+# Channel counts (64 HSI + 2 LiDAR returns) are auto-detected from the dataset
+# class.
+#
+# Run with:
+#   python scripts/pretrain.py --config configs/mft/muufl_mae.yaml
+#
+# RUNTIME     The MFT control trains through the same loop as CoFFE, which
+#             PAPER_CANON §3 times at 0.7-4.3 h/scene for 1500 epochs on one
+#             RTX 4090 (no separate figure is published for the control).
+#             This config runs 1500 epochs.
+
+model:
+  name: "mft_original"
+  embed_dim: 64          # faithful MFT: dim = FM*4 (FM=16)
+  num_heads: 8
+  num_layers: 2          # depth
+  mlp_dim: 512           # faithful MFT: fixed 512 (= dim*8 at dim=64)
+  dropout: 0.1
+  attention_type: "mcross"
+
+  use_projection: false
+  use_aux: true
+
+data:
+  patch_size: 11
+  num_workers: 4
+
+pretrain:
+  datasets:
+    - muufl
+
+  objective: "mae"
+
+  epochs: 1500
+  batch_size: 64
+  val_split: 0.0
+
+  lr: 1.5e-4
+  min_lr: 1.0e-6
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+
+  mask_ratio: 0.75
+  decoder_dim: 64
+  decoder_depth: 4
+  decoder_heads: 4
+  norm_pix_loss: true
+  recon_center_sigma: null
+
+  save_interval: 50
+  val_interval: 50000
+  log_interval: 1
+  use_amp: false
+
+paths:
+  data_root: "./data/raw"
+  checkpoint_dir: "./checkpoints/pretrained/mft_original_muufl_mae"
+  log_dir: "./logs/pretrain/mft_original_muufl_mae"
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: true

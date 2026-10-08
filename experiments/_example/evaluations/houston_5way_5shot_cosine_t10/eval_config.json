@@ -1,0 +1,22 @@
+{
+  "checkpoint": "experiments/_example/checkpoints/checkpoint_final.pth",
+  "epoch": null,
+  "dataset": "houston",
+  "n_way": 5,
+  "k_shot": 5,
+  "k_query": 15,
+  "num_episodes": 600,
+  "distance_metric": "cosine",
+  "temperature": 10.0,
+  "prototype_mode": "mean_features",
+  "pool_sigma": null,
+  "split": "test",
+  "seed": 42,
+  "embed_dim": 128,
+  "num_heads": 2,
+  "num_layers": 2,
+  "patch_size": 11,
+  "lambda_factor": 0.5,
+  "dropout": 0.1,
+  "use_projection": true
+}

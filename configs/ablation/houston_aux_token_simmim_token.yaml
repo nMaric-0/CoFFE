@@ -1,0 +1,81 @@
+# CoFFE-AuxToken ablation — SimMIM token, Houston, HSI+LiDAR
+#
+# NOT a paper cell. This is the fusion-mechanism ablation of
+# docs/ablations/AUX_TOKEN_ABLATION.md: CoFFE's encoder (PAPER_CANON §2:
+# D=128, 2 heads, 2 layers, 11x11, class-agnostic token) with the LiDAR bands
+# moved OUT of the pixel tokens into one separate token appended to the
+# sequence — tokens = [cls, pixel_1..pixel_121, aux].
+#
+# The recipe below is the one that produced the control cell
+# `enhanced/houston/spatial` of the 5-seed significance experiment
+# (OA 73.94 ± 1.57), cloned from
+# experiments/houston_enhanced_spatial_seed42/pretrain_metadata.json, so the
+# only differences from that control are the architecture and the auxiliary
+# masking below.
+#
+# Auxiliary masking (this route only): the aux token is replaced by a learnable
+# mask token with probability `aux_mask_prob` per sample, and masked samples
+# must reconstruct the LiDAR raster from that token. Both modalities are
+# therefore reconstruction targets, as in the fused route. `band_mask_ratio`
+# is rejected outright here (the aux bands are outside the pixel tokens, so a
+# per-(pixel, band) mask over the combined tensor is undefined).
+#
+# Run with:
+#   python scripts/pretrain.py --config configs/ablation/houston_aux_token_simmim_token.yaml
+#
+# RUNTIME  ~19 min for 700 epochs on one RTX 4090 (two runs sharing the card),
+#          measured from the control run's checkpoint timestamps.
+
+model:
+  name: "coffe_aux_token"
+  embed_dim: 128
+  num_heads: 2
+  num_layers: 2
+  lambda_factor: 0.5
+  dropout: 0.1
+  use_projection: true
+  proj_hidden_dim: 512
+  proj_num_layers: 1
+  proj_l2_normalize: true
+  # The ablation requires the auxiliary modality: it IS the separate token.
+  use_aux: true
+
+data:
+  patch_size: 11
+  num_workers: 4
+
+pretrain:
+  datasets:
+    - "houston"
+  objective: "simmim"
+  epochs: 700
+  batch_size: 128
+  val_split: 0.0
+  lr: 1.5e-5
+  min_lr: 1.0e-06
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+  decoder_hidden_dim: 256
+  # Band masking is undefined on this route and raises if > 0.
+  band_mask_ratio: 0.0
+  spatial_mask_ratio: 0.75
+  # Auxiliary token: masked per sample with this probability, then reconstructed.
+  aux_mask_prob: 0.5
+  aux_loss_weight: 1.0
+  recon_center_sigma: 1.0
+  pool_center_sigma: 1.0
+  save_interval: 100
+  val_interval: 50000
+  log_interval: 1
+  use_amp: false
+
+paths:
+  data_root: "./data/raw"
+  checkpoint_dir: "./checkpoints/ablation/houston_aux_token_simmim_token"
+  log_dir: "./logs/ablation/houston_aux_token_simmim_token"
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: true

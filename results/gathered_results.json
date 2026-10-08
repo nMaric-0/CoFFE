@@ -1,0 +1,3333 @@
+{
+  "generated_at": "2026-06-10T21:43:55",
+  "experiments_root": "experiments",
+  "description": "Focused gather of requested runs. HyperSIGMA 'adapt_*' dirs hold adaptation checkpoints; the few-shot eval results live in the sibling non-'adapt' dirs - those eval dirs are the ones loaded here. 'Most recent run' resolved per group; spatial/joint_sem restricted to the PCA-100 variants, spectral_only to non-PCA-100. Missing items are explicit placeholders.",
+  "groups": {
+    "mft_cpea_baselines": {
+      "houston_enhanced_spatial_no_lidar": {
+        "status": "OK",
+        "experiment": "houston_enhanced_spatial_no_lidar",
+        "eval_subdir": "houston_enhanced_spatial_no_lidar_eval",
+        "eval_path": "experiments/houston_enhanced_spatial_no_lidar/evaluations/houston_enhanced_spatial_no_lidar_eval",
+        "eval_finished_at": "2026-06-03T19:34:05",
+        "eval_started_at": "2026-06-03T19:32:16",
+        "results_mtime": "2026-06-03T19:33:59",
+        "OA_mean": 65.50406666666666,
+        "results": {
+          "model_type": "MFTCPEACosine",
+          "distance_metric": "euclidean",
+          "temperature": 10.0,
+          "prototype_mode": "mean_features",
+          "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/houston_enhanced_spatial_no_lidar/checkpoints/checkpoint_epoch_950.pth",
+          "dataset": "houston",
+          "split": "all",
+          "n_way": 15,
+          "k_shot": 5,
+          "k_query": 100,
+          "seeds": [
+            42
+          ],
+          "num_episodes": 1000,
+          "OA": {
+            "mean": 65.50406666666666,
+            "std": 3.064844588410824,
+            "ci_95": 0.19018796747433
+          },
+          "AA": {
+            "mean": 65.50406666666666,
+            "std": 3.0648445884108235,
+            "ci_95": 0.19018796747432998
+          },
+          "Kappa": {
+            "mean": 63.04007142857144,
+            "std": 3.283762059011597,
+            "ci_95": 0.203772822293925
+          },
+          "per_class": {
+            "1": {
+              "accuracy": 74.44,
+              "pooled_accuracy": 74.44,
+              "std": 25.01020591678525,
+              "ci_95": 1.5520004659989142,
+              "total_samples": 100000,
+              "correct_samples": 74440
+            },
+            "2": {
+              "accuracy": 65.748,
+              "pooled_accuracy": 65.74799999999999,
+              "std": 23.679833107519993,
+              "ci_95": 1.4694445995337668,
+              "total_samples": 100000,
+              "correct_samples": 65748
+            },
+            "3": {
+              "accuracy": 93.195,
+              "pooled_accuracy": 93.195,
+              "std": 4.374811424507347,
+              "ci_95": 0.2714775476892798,
+              "total_samples": 100000,
+              "correct_samples": 93195
+            },
+            "4": {
+              "accuracy": 75.93,
+              "pooled_accuracy": 75.92999999999999,
+              "std": 13.436111788757936,
+              "ci_95": 0.8337736932973718,
+              "total_samples": 100000,
+              "correct_samples": 75930
+            },
+            "5": {
+              "accuracy": 93.983,
+              "pooled_accuracy": 93.983,
+              "std": 6.869840682286599,
+              "ci_95": 0.42630580394747775,
+              "total_samples": 100000,
+              "correct_samples": 93983
+            },
+            "6": {
+              "accuracy": 62.372,
+              "pooled_accuracy": 62.37200000000001,
+              "std": 9.272950770925078,
+              "ci_95": 0.5754300450602038,
+              "total_samples": 100000,
+              "correct_samples": 62372
+            },
+            "7": {
+              "accuracy": 54.401,
+              "pooled_accuracy": 54.400999999999996,
+              "std": 8.551502733438141,
+              "ci_95": 0.5306608138871703,
+              "total_samples": 100000,
+              "correct_samples": 54401
+            },
+            "8": {
+              "accuracy": 25.299,
+              "pooled_accuracy": 25.299,
+              "std": 9.045197565559306,
+              "ci_95": 0.5612968914973538,
+              "total_samples": 100000,
+              "correct_samples": 25299
+            },
+            "9": {
+              "accuracy": 73.828,
+              "pooled_accuracy": 73.828,
+              "std": 11.15107241479491,
+              "ci_95": 0.6919762932673155,
+              "total_samples": 100000,
+              "correct_samples": 73828
+            },
+            "10": {
+              "accuracy": 18.061,
+              "pooled_accuracy": 18.061,
+              "std": 13.910617491685983,
+              "ci_95": 0.8632189955277396,
+              "total_samples": 100000,
+              "correct_samples": 18061
+            },
+            "11": {
+              "accuracy": 39.594,
+              "pooled_accuracy": 39.594,
+              "std": 15.988469720395383,
+              "ci_95": 0.9921594623900925,
+              "total_samples": 100000,
+              "correct_samples": 39594
+            },
+            "12": {
+              "accuracy": 29.065,
+              "pooled_accuracy": 29.065,
+              "std": 10.887183979340112,
+              "ci_95": 0.6756007793607024,
+              "total_samples": 100000,
+              "correct_samples": 29065
+            },
+            "13": {
+              "accuracy": 82.384,
+              "pooled_accuracy": 82.384,
+              "std": 14.805355247342092,
+              "ci_95": 0.9187416656866902,
+              "total_samples": 100000,
+              "correct_samples": 82384
+            },
+            "14": {
+              "accuracy": 97.671,
+              "pooled_accuracy": 97.67099999999999,
+              "std": 2.5184834722507112,
+              "ci_95": 0.15628370016419602,
+              "total_samples": 100000,
+              "correct_samples": 97671
+            },
+            "15": {
+              "accuracy": 96.59,
+              "pooled_accuracy": 96.59,
+              "std": 3.620759588815585,
+              "ci_95": 0.2246850980679223,
+              "total_samples": 100000,
+              "correct_samples": 96590
+            }
+          }
+        }
+      },
+      "muufl_mae_no_lidar": {
+        "status": "OK",
+        "experiment": "muufl_mae_no_lidar",
+        "eval_subdir": "muufl_mae_no_lidar_eval",
+        "eval_path": "experiments/muufl_mae_no_lidar/evaluations/muufl_mae_no_lidar_eval",
+        "eval_finished_at": "2026-06-04T14:06:01",
+        "eval_started_at": "2026-06-04T14:05:10",
+        "results_mtime": "2026-06-04T14:05:56",
+        "OA_mean": 58.64872727272727,
+        "results": {
+          "model_type": "MFTCPEACosine",
+          "distance_metric": "euclidean",
+          "temperature": 10.0,
+          "prototype_mode": "mean_features",
+          "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/muufl_mae_no_lidar/checkpoints/checkpoint_epoch_975.pth",
+          "dataset": "muufl",
+          "split": "all",
+          "n_way": 11,
+          "k_shot": 5,
+          "k_query": 100,
+          "seeds": [
+            42
+          ],
+          "num_episodes": 1000,
+          "OA": {
+            "mean": 58.64872727272727,
+            "std": 2.9994703444287354,
+            "ci_95": 0.1861311893149613
+          },
+          "AA": {
+            "mean": 58.64872727272727,
+            "std": 2.9994703444287354,
+            "ci_95": 0.1861311893149613
+          },
+          "Kappa": {
+            "mean": 54.51359999999999,
+            "std": 3.2994173788716097,
+            "ci_95": 0.2047443082464575
+          },
+          "per_class": {
+            "1": {
+              "accuracy": 64.428,
+              "pooled_accuracy": 64.428,
+              "std": 8.315215932253352,
+              "ci_95": 0.5159981107183784,
+              "total_samples": 100000,
+              "correct_samples": 64428
+            },
+            "2": {
+              "accuracy": 61.508,
+              "pooled_accuracy": 61.507999999999996,
+              "std": 13.26672288095293,
+              "ci_95": 0.8232623178723506,
+              "total_samples": 100000,
+              "correct_samples": 61508
+            },
+            "3": {
+              "accuracy": 40.894,
+              "pooled_accuracy": 40.894000000000005,
+              "std": 13.430962884320692,
+              "ci_95": 0.8334541796511198,
+              "total_samples": 100000,
+              "correct_samples": 40894
+            },
+            "4": {
+              "accuracy": 51.16,
+              "pooled_accuracy": 51.160000000000004,
+              "std": 15.12006613742149,
+              "ci_95": 0.9382709510385695,
+              "total_samples": 100000,
+              "correct_samples": 51160
+            },
+            "5": {
+              "accuracy": 58.687,
+              "pooled_accuracy": 58.687,
+              "std": 10.487756242399993,
+              "ci_95": 0.6508144167083297,
+              "total_samples": 100000,
+              "correct_samples": 58687
+            },
+            "6": {
+              "accuracy": 79.829,
+              "pooled_accuracy": 79.82900000000001,
+              "std": 12.84895945203346,
+              "ci_95": 0.7973381396181773,
+              "total_samples": 100000,
+              "correct_samples": 79829
+            },
+            "7": {
+              "accuracy": 73.022,
+              "pooled_accuracy": 73.02199999999999,
+              "std": 11.114473266871444,
+              "ci_95": 0.6897051446481728,
+              "total_samples": 100000,
+              "correct_samples": 73022
+            },
+            "8": {
+              "accuracy": 42.207,
+              "pooled_accuracy": 42.207,
+              "std": 9.403837036018862,
+              "ci_95": 0.5835521510954076,
+              "total_samples": 100000,
+              "correct_samples": 42207
+            },
+            "9": {
+              "accuracy": 27.94,
+              "pooled_accuracy": 27.939999999999998,
+              "std": 10.36042470171952,
+              "ci_95": 0.6429128979791366,
+              "total_samples": 100000,
+              "correct_samples": 27940
+            },
+            "10": {
+              "accuracy": 57.474,
+              "pooled_accuracy": 57.474000000000004,
+              "std": 12.999281672461752,
+              "ci_95": 0.8066663377518091,
+              "total_samples": 100000,
+              "correct_samples": 57474
+            },
+            "11": {
+              "accuracy": 87.987,
+              "pooled_accuracy": 87.98700000000001,
+              "std": 9.119475368682126,
+              "ci_95": 0.5659061772202924,
+              "total_samples": 100000,
+              "correct_samples": 87987
+            }
+          }
+        }
+      }
+    },
+    "hypersigma_pca100_spatial_only": {
+      "_note": "spatial branch, PCA-100 (Houston real PCA 144->100; MUUFL/Trento SpectralResample 64/63->100). Adapt dirs: hypersigma_adapt_<ds>_pca100_spatial_only_run1.",
+      "houston": {
+        "status": "OK",
+        "experiment": "hypersigma_houston_pca100_spatial_only_run1",
+        "eval_subdir": "hypersigma_houston_pca100_C15way_5shot_adapted_spatial_only_run1",
+        "eval_path": "experiments/hypersigma_houston_pca100_spatial_only_run1/evaluations/hypersigma_houston_pca100_C15way_5shot_adapted_spatial_only_run1",
+        "eval_finished_at": "2026-06-08T19:45:16",
+        "eval_started_at": "2026-06-08T19:36:58",
+        "results_mtime": "2026-06-08T19:45:04",
+        "OA_mean": 66.36713333333333,
+        "results": {
+          "model_type": "HyperSIGMADual",
+          "distance_metric": "euclidean",
+          "temperature": 10.0,
+          "prototype_mode": "mean_features",
+          "dataset": "houston",
+          "split": "all",
+          "n_way": 15,
+          "k_shot": 5,
+          "k_query": 100,
+          "seeds": [
+            42
+          ],
+          "num_episodes": 2000,
+          "OA": {
+            "mean": 66.36713333333333,
+            "std": 2.7075154260358745,
+            "ci_95": 0.11873180458585715
+          },
+          "AA": {
+            "mean": 66.36713333333333,
+            "std": 2.7075154260358745,
+            "ci_95": 0.11873180458585715
+          },
+          "Kappa": {
+            "mean": 63.96478571428571,
+            "std": 2.9009093850384366,
+            "ci_95": 0.12721264777056124
+          },
+          "per_class": {
+            "10": {
+              "accuracy": 54.4085,
+              "pooled_accuracy": 54.408500000000004,
+              "std": 14.198155786932329,
+              "ci_95": 0.6226271666498974,
+              "total_samples": 200000,
+              "correct_samples": 108817
+            },
+            "12": {
+              "accuracy": 41.7705,
+              "pooled_accuracy": 41.7705,
+              "std": 11.74039308328303,
+              "ci_95": 0.5148476880024394,
+              "total_samples": 200000,
+              "correct_samples": 83541
+            },
+            "1": {
+              "accuracy": 63.126,
+              "pooled_accuracy": 63.126000000000005,
+              "std": 12.146938873642199,
+              "ci_95": 0.5326758100038718,
+              "total_samples": 200000,
+              "correct_samples": 126252
+            },
+            "14": {
+              "accuracy": 99.411,
+              "pooled_accuracy": 99.411,
+              "std": 0.8883011876610319,
+              "ci_95": 0.038954386746070935,
+              "total_samples": 200000,
+              "correct_samples": 198822
+            },
+            "6": {
+              "accuracy": 84.7165,
+              "pooled_accuracy": 84.7165,
+              "std": 7.278676236102275,
+              "ci_95": 0.31918945177495245,
+              "total_samples": 200000,
+              "correct_samples": 169433
+            },
+            "9": {
+              "accuracy": 38.425,
+              "pooled_accuracy": 38.425,
+              "std": 14.226678284125216,
+              "ci_95": 0.6238779545606296,
+              "total_samples": 200000,
+              "correct_samples": 76850
+            },
+            "3": {
+              "accuracy": 98.842,
+              "pooled_accuracy": 98.842,
+              "std": 1.1657769941116527,
+              "ci_95": 0.0511224441879574,
+              "total_samples": 200000,
+              "correct_samples": 197684
+            },
+            "2": {
+              "accuracy": 55.441,
+              "pooled_accuracy": 55.440999999999995,
+              "std": 13.953405283299128,
+              "ci_95": 0.611894201404261,
+              "total_samples": 200000,
+              "correct_samples": 110882
+            },
+            "15": {
+              "accuracy": 99.6,
+              "pooled_accuracy": 99.6,
+              "std": 0.8390470785361211,
+              "ci_95": 0.036794462114272404,
+              "total_samples": 200000,
+              "correct_samples": 199200
+            },
+            "5": {
+              "accuracy": 84.405,
+              "pooled_accuracy": 84.405,
+              "std": 12.531878350829935,
+              "ci_95": 0.5495564372916554,
+              "total_samples": 200000,
+              "correct_samples": 168810
+            },
+            "8": {
+              "accuracy": 40.924,
+              "pooled_accuracy": 40.924,
+              "std": 9.852371491169016,
+              "ci_95": 0.4320528833733966,
+              "total_samples": 200000,
+              "correct_samples": 81848
+            },
+            "11": {
+              "accuracy": 54.6115,
+              "pooled_accuracy": 54.6115,
+              "std": 13.661902054618896,
+              "ci_95": 0.5991110039195907,
+              "total_samples": 200000,
+              "correct_samples": 109223
+            },
+            "13": {
+              "accuracy": 74.8625,
+              "pooled_accuracy": 74.8625,
+              "std": 8.41799226359825,
+              "ci_95": 0.36915151169061583,
+              "total_samples": 200000,
+              "correct_samples": 149725
+            },
+            "4": {
+              "accuracy": 57.5575,
+              "pooled_accuracy": 57.5575,
+              "std": 11.651853661542441,
+              "ci_95": 0.5109649971711484,
+              "total_samples": 200000,
+              "correct_samples": 115115
+            },
+            "7": {
+              "accuracy": 47.406,
+              "pooled_accuracy": 47.406,
+              "std": 14.399623745084455,
+              "ci_95": 0.6314620763267196,
+              "total_samples": 200000,
+              "correct_samples": 94812
+            }
+          }
+        }
+      },
+      "muufl": {
+        "status": "OK",
+        "experiment": "hypersigma_muufl_pca100_spatial_only_run1",
+        "eval_subdir": "hypersigma_muufl_pca100_C11way_5shot_adapted_spatial_only_run1",
+        "eval_path": "experiments/hypersigma_muufl_pca100_spatial_only_run1/evaluations/hypersigma_muufl_pca100_C11way_5shot_adapted_spatial_only_run1",
+        "eval_finished_at": "2026-06-09T13:06:53",
+        "eval_started_at": "2026-06-09T13:00:01",
+        "results_mtime": "2026-06-09T13:06:44",
+        "OA_mean": 50.25481818181817,
+        "results": {
+          "model_type": "HyperSIGMADual",
+          "distance_metric": "euclidean",
+          "temperature": 10.0,
+          "prototype_mode": "mean_features",
+          "dataset": "muufl",
+          "split": "all",
+          "n_way": 11,
+          "k_shot": 5,
+          "k_query": 100,
+          "seeds": [
+            42
+          ],
+          "num_episodes": 2000,
+          "OA": {
+            "mean": 50.25481818181817,
+            "std": 3.1240366329954457,
+            "ci_95": 0.13699737532832792
+          },
+          "AA": {
+            "mean": 50.25481818181817,
+            "std": 3.1240366329954457,
+            "ci_95": 0.13699737532832792
+          },
+          "Kappa": {
+            "mean": 45.280300000000004,
+            "std": 3.436440296294989,
+            "ci_95": 0.1506971128611607
+          },
+          "per_class": {
+            "6": {
+              "accuracy": 69.8245,
+              "pooled_accuracy": 69.8245,
+              "std": 14.23494642596171,
+              "ci_95": 0.6242405347296578,
+              "total_samples": 200000,
+              "correct_samples": 139649
+            },
+            "1": {
+              "accuracy": 68.204,
+              "pooled_accuracy": 68.204,
+              "std": 10.587888552492418,
+              "ci_95": 0.464307276886668,
+              "total_samples": 200000,
+              "correct_samples": 136408
+            },
+            "10": {
+              "accuracy": 42.496,
+              "pooled_accuracy": 42.496,
+              "std": 11.353853266622746,
+              "ci_95": 0.49789688154164036,
+              "total_samples": 200000,
+              "correct_samples": 84992
+            },
+            "11": {
+              "accuracy": 64.0005,
+              "pooled_accuracy": 64.0005,
+              "std": 13.26297477001295,
+              "ci_95": 0.5816169738046272,
+              "total_samples": 200000,
+              "correct_samples": 128001
+            },
+            "3": {
+              "accuracy": 35.0325,
+              "pooled_accuracy": 35.0325,
+              "std": 13.273335818474571,
+              "ci_95": 0.5820713335358481,
+              "total_samples": 200000,
+              "correct_samples": 70065
+            },
+            "2": {
+              "accuracy": 59.471,
+              "pooled_accuracy": 59.471,
+              "std": 13.740420626749387,
+              "ci_95": 0.6025542536506577,
+              "total_samples": 200000,
+              "correct_samples": 118942
+            },
+            "9": {
+              "accuracy": 24.537,
+              "pooled_accuracy": 24.537,
+              "std": 12.066591523707098,
+              "ci_95": 0.5291523634669657,
+              "total_samples": 200000,
+              "correct_samples": 49074
+            },
+            "5": {
+              "accuracy": 53.0315,
+              "pooled_accuracy": 53.0315,
+              "std": 11.021728891149518,
+              "ci_95": 0.4833323379502405,
+              "total_samples": 200000,
+              "correct_samples": 106063
+            },
+            "8": {
+              "accuracy": 38.4625,
+              "pooled_accuracy": 38.4625,
+              "std": 8.619141126005538,
+              "ci_95": 0.37797242816420235,
+              "total_samples": 200000,
+              "correct_samples": 76925
+            },
+            "4": {
+              "accuracy": 38.887,
+              "pooled_accuracy": 38.887,
+              "std": 13.37902204946236,
+              "ci_95": 0.5867059578871597,
+              "total_samples": 200000,
+              "correct_samples": 77774
+            },
+            "7": {
+              "accuracy": 58.8565,
+              "pooled_accuracy": 58.8565,
+              "std": 11.446174371815241,
+              "ci_95": 0.5019454093230369,
+              "total_samples": 200000,
+              "correct_samples": 117713
+            }
+          }
+        }
+      },
+      "trento": {
+        "status": "OK",
+        "experiment": "hypersigma_trento_pca100_spatial_only_run1",
+        "eval_subdir": "hypersigma_trento_pca100_C6way_5shot_adapted_spatial_only_run1",
+        "eval_path": "experiments/hypersigma_trento_pca100_spatial_only_run1/evaluations/hypersigma_trento_pca100_C6way_5shot_adapted_spatial_only_run1",
+        "eval_finished_at": "2026-06-09T02:01:42",
+        "eval_started_at": "2026-06-09T01:58:16",
+        "results_mtime": "2026-06-09T02:01:36",
+        "OA_mean": 86.021,
+        "results": {
+          "model_type": "HyperSIGMADual",
+          "distance_metric": "euclidean",
+          "temperature": 10.0,
+          "prototype_mode": "mean_features",
+          "dataset": "trento",
+          "split": "all",
+          "n_way": 6,
+          "k_shot": 5,
+          "k_query": 100,
+          "seeds": [
+            42
+          ],
+          "num_episodes": 2000,
+          "OA": {
+            "mean": 86.021,
+            "std": 2.6030490881955233,
+            "ci_95": 0.11415067581702837
+          },
+          "AA": {
+            "mean": 86.021,
+            "std": 2.603049088195525,
+            "ci_95": 0.11415067581702844
+          },
+          "Kappa": {
+            "mean": 83.2252,
+            "std": 3.12365890583463,
+            "ci_95": 0.1369808109804341
+          },
+          "per_class": {
+            "1": {
+              "accuracy": 88.7015,
+              "pooled_accuracy": 88.7015,
+              "std": 6.764051873692277,
+              "ci_95": 0.29662179485775947,
+              "total_samples": 200000,
+              "correct_samples": 177403
+            },
+            "2": {
+              "accuracy": 78.049,
+              "pooled_accuracy": 78.049,
+              "std": 11.587778000980169,
+              "ci_95": 0.5081551078034161,
+              "total_samples": 200000,
+              "correct_samples": 156098
+            },
+            "6": {
+              "accuracy": 72.339,
+              "pooled_accuracy": 72.339,
+              "std": 9.385791335843772,
+              "ci_95": 0.41159209364233856,
+              "total_samples": 200000,
+              "correct_samples": 144678
+            },
+            "3": {
+              "accuracy": 79.7395,
+              "pooled_accuracy": 79.73949999999999,
+              "std": 9.953172346041237,
+              "ci_95": 0.4364732708946225,
+              "total_samples": 200000,
+              "correct_samples": 159479
+            },
+            "5": {
+              "accuracy": 99.4325,
+              "pooled_accuracy": 99.4325,
+              "std": 1.3825497278579169,
+              "ci_95": 0.060628509274495694,
+              "total_samples": 200000,
+              "correct_samples": 198865
+            },
+            "4": {
+              "accuracy": 97.8645,
+              "pooled_accuracy": 97.86449999999999,
+              "std": 2.1991224954513107,
+              "ci_95": 0.0964374126475717,
+              "total_samples": 200000,
+              "correct_samples": 195729
+            }
+          }
+        }
+      }
+    },
+    "hypersigma_pca100_joint_sem": {
+      "_note": "joint_sem (SEM fusion, 512-d), PCA-100 variant only.",
+      "houston": {
+        "status": "OK",
+        "experiment": "hypersigma_houston_pca100_joint_sem_run1",
+        "eval_subdir": "hypersigma_houston_pca100_C15way_5shot_adapted_joint_sem_run1",
+        "eval_path": "experiments/hypersigma_houston_pca100_joint_sem_run1/evaluations/hypersigma_houston_pca100_C15way_5shot_adapted_joint_sem_run1",
+        "eval_finished_at": "2026-06-08T15:34:42",
+        "eval_started_at": "2026-06-08T14:48:07",
+        "results_mtime": "2026-06-08T15:34:31",
+        "OA_mean": 67.4789,
+        "results": {
+          "model_type": "HyperSIGMADual",
+          "distance_metric": "euclidean",
+          "temperature": 10.0,
+          "prototype_mode": "mean_features",
+          "dataset": "houston",
+          "split": "all",
+          "n_way": 15,
+          "k_shot": 5,
+          "k_query": 100,
+          "seeds": [
+            42
+          ],
+          "num_episodes": 2000,
+          "OA": {
+            "mean": 67.4789,
+            "std": 2.5119304906784343,
+            "ci_95": 0.11015488121859232
+          },
+          "AA": {
+            "mean": 67.4789,
+            "std": 2.5119304906784343,
+            "ci_95": 0.11015488121859232
+          },
+          "Kappa": {
+            "mean": 65.15596428571429,
+            "std": 2.6913540971554655,
+            "ci_95": 0.11802308701992036
+          },
+          "per_class": {
+            "10": {
+              "accuracy": 56.282,
+              "pooled_accuracy": 56.282,
+              "std": 13.146082154010754,
+              "ci_95": 0.5764909194496858,
+              "total_samples": 200000,
+              "correct_samples": 112564
+            },
+            "12": {
+              "accuracy": 42.783,
+              "pooled_accuracy": 42.783,
+              "std": 11.819513991700335,
+              "ci_95": 0.51831735179328,
+              "total_samples": 200000,
+              "correct_samples": 85566
+            },
+            "1": {
+              "accuracy": 62.5175,
+              "pooled_accuracy": 62.517500000000005,
+              "std": 12.649691448806172,
+              "ci_95": 0.5547228572470346,
+              "total_samples": 200000,
+              "correct_samples": 125035
+            },
+            "14": {
+              "accuracy": 99.925,
+              "pooled_accuracy": 99.925,
+              "std": 0.3215198283154555,
+              "ci_95": 0.014099505790045014,
+              "total_samples": 200000,
+              "correct_samples": 199850
+            },
+            "6": {
+              "accuracy": 82.7345,
+              "pooled_accuracy": 82.7345,
+              "std": 6.678773072204205,
+              "ci_95": 0.2928820909594062,
+              "total_samples": 200000,
+              "correct_samples": 165469
+            },
+            "9": {
+              "accuracy": 38.959,
+              "pooled_accuracy": 38.958999999999996,
+              "std": 10.721675195602597,
+              "ci_95": 0.47017417958764823,
+              "total_samples": 200000,
+              "correct_samples": 77918
+            },
+            "3": {
+              "accuracy": 97.141,
+              "pooled_accuracy": 97.141,
+              "std": 3.320710616720463,
+              "ci_95": 0.14562205638395914,
+              "total_samples": 200000,
+              "correct_samples": 194282
+            },
+            "2": {
+              "accuracy": 53.7355,
+              "pooled_accuracy": 53.7355,
+              "std": 11.706474266404893,
+              "ci_95": 0.5133602570173259,
+              "total_samples": 200000,
+              "correct_samples": 107471
+            },
+            "15": {
+              "accuracy": 97.216,
+              "pooled_accuracy": 97.21600000000001,
+              "std": 4.890229442469954,
+              "ci_95": 0.21444966147190272,
+              "total_samples": 200000,
+              "correct_samples": 194432
+            },
+            "5": {
+              "accuracy": 84.489,
+              "pooled_accuracy": 84.489,
+              "std": 11.597796299297551,
+              "ci_95": 0.5085944370226197,
+              "total_samples": 200000,
+              "correct_samples": 168978
+            },
+            "8": {
+              "accuracy": 38.7535,
+              "pooled_accuracy": 38.7535,
+              "std": 9.53287667758269,
+              "ci_95": 0.41804217990402914,
+              "total_samples": 200000,
+              "correct_samples": 77507
+            },
+            "11": {
+              "accuracy": 61.1965,
+              "pooled_accuracy": 61.1965,
+              "std": 13.078680657849246,
+              "ci_95": 0.5735351832813569,
+              "total_samples": 200000,
+              "correct_samples": 122393
+            },
+            "13": {
+              "accuracy": 78.207,
+              "pooled_accuracy": 78.20700000000001,
+              "std": 7.819088885541589,
+              "ci_95": 0.3428879941625384,
+              "total_samples": 200000,
+              "correct_samples": 156414
+            },
+            "4": {
+              "accuracy": 62.3435,
+              "pooled_accuracy": 62.3435,
+              "std": 10.883634859273807,
+              "ci_95": 0.477276544712842,
+              "total_samples": 200000,
+              "correct_samples": 124687
+            },
+            "7": {
+              "accuracy": 55.9005,
+              "pooled_accuracy": 55.900499999999994,
+              "std": 10.710396806374636,
+              "ci_95": 0.46967959200636233,
+              "total_samples": 200000,
+              "correct_samples": 111801
+            }
+          }
+        }
+      },
+      "muufl": {
+        "status": "MISSING",
+        "note": "PLACEHOLDER - MUUFL PCA-100 joint_sem was never evaluated: adapt run hypersigma_adapt_muufl_pca100_joint_sem_run1 reports complete but no eval dir (hypersigma_muufl_pca100_joint_sem_run1) exists.",
+        "adapt_dir": "hypersigma_adapt_muufl_pca100_joint_sem_run1"
+      },
+      "trento": {
+        "status": "OK",
+        "experiment": "hypersigma_trento_pca100_joint_sem_run1",
+        "eval_subdir": "hypersigma_trento_pca100_C6way_5shot_adapted_joint_sem_run1",
+        "eval_path": "experiments/hypersigma_trento_pca100_joint_sem_run1/evaluations/hypersigma_trento_pca100_C6way_5shot_adapted_joint_sem_run1",
+        "eval_finished_at": "2026-06-08T15:56:51",
+        "eval_started_at": "2026-06-08T15:38:16",
+        "results_mtime": "2026-06-08T15:56:46",
+        "OA_mean": 87.18608333333334,
+        "results": {
+          "model_type": "HyperSIGMADual",
+          "distance_metric": "euclidean",
+          "temperature": 10.0,
+          "prototype_mode": "mean_features",
+          "dataset": "trento",
+          "split": "all",
+          "n_way": 6,
+          "k_shot": 5,
+          "k_query": 100,
+          "seeds": [
+            42
+          ],
+          "num_episodes": 2000,
+          "OA": {
+            "mean": 87.18608333333334,
+            "std": 2.78815912859881,
+            "ci_95": 0.12226824697939187
+          },
+          "AA": {
+            "mean": 87.18608333333334,
+            "std": 2.7881591285988123,
+            "ci_95": 0.12226824697939197
+          },
+          "Kappa": {
+            "mean": 84.62329999999999,
+            "std": 3.345790954318574,
+            "ci_95": 0.14672189637527033
+          },
+          "per_class": {
+            "1": {
+              "accuracy": 94.0755,
+              "pooled_accuracy": 94.0755,
+              "std": 3.736415361011139,
+              "ci_95": 0.16385182305117968,
+              "total_samples": 200000,
+              "correct_samples": 188151
+            },
+            "2": {
+              "accuracy": 83.8855,
+              "pooled_accuracy": 83.88550000000001,
+              "std": 9.475462508500575,
+              "ci_95": 0.4155244147831494,
+              "total_samples": 200000,
+              "correct_samples": 167771
+            },
+            "6": {
+              "accuracy": 70.0585,
+              "pooled_accuracy": 70.0585,
+              "std": 10.660585244253713,
+              "ci_95": 0.4674952215673297,
+              "total_samples": 200000,
+              "correct_samples": 140117
+            },
+            "3": {
+              "accuracy": 84.0105,
+              "pooled_accuracy": 84.0105,
+              "std": 10.12365496004284,
+              "ci_95": 0.44394939022390767,
+              "total_samples": 200000,
+              "correct_samples": 168021
+            },
+            "5": {
+              "accuracy": 91.2965,
+              "pooled_accuracy": 91.29650000000001,
+              "std": 9.490183757441159,
+              "ci_95": 0.4161699809858994,
+              "total_samples": 200000,
+              "correct_samples": 182593
+            },
+            "4": {
+              "accuracy": 99.79,
+              "pooled_accuracy": 99.79,
+              "std": 0.6147357155721472,
+              "ci_95": 0.026957807941328474,
+              "total_samples": 200000,
+              "correct_samples": 199580
+            }
+          }
+        }
+      }
+    },
+    "hypersigma_spectral_only": {
+      "_note": "spectral branch only, NOT PCA-100. Adapt dirs: hypersigma_adapt_<ds>_spectral_only_run1 (checkpoints). Eval dirs: hypersigma_<ds>_spectral_only_run1.",
+      "houston": {
+        "status": "MISSING",
+        "note": "PLACEHOLDER - No adapted-houston spectral_only eval dir exists (hypersigma_houston_spectral_only_run1 absent). The adapt checkpoint exists (hypersigma_adapt_houston_spectral_only_run1, complete, 3000 epochs) but was never few-shot evaluated. Only an UN-adapted baseline exists: hypersigma_baseline_spectral_only_run1 (OA 15.13).",
+        "adapt_dir": "hypersigma_adapt_houston_spectral_only_run1"
+      },
+      "muufl": {
+        "status": "MISSING",
+        "note": "PLACEHOLDER - MUUFL spectral_only eval did not produce results.json (eval dir hypersigma_muufl_spectral_only_run1/.../adapted_spectral_only_run1 exists with a plots/ folder but no results.json; pretrain_metadata status='running').",
+        "eval_path": "hypersigma_muufl_spectral_only_run1/evaluations/hypersigma_muufl_C11way_5shot_adapted_spectral_only_run1"
+      },
+      "trento": {
+        "status": "OK",
+        "experiment": "hypersigma_trento_spectral_only_run1",
+        "eval_subdir": "hypersigma_trento_C6way_5shot_adapted_spectral_only_run1",
+        "eval_path": "experiments/hypersigma_trento_spectral_only_run1/evaluations/hypersigma_trento_C6way_5shot_adapted_spectral_only_run1",
+        "eval_finished_at": null,
+        "eval_started_at": "2026-06-03T14:40:11",
+        "results_mtime": "2026-06-03T14:55:49",
+        "OA_mean": 48.591833333333334,
+        "results": {
+          "model_type": "HyperSIGMADual",
+          "distance_metric": "euclidean",
+          "temperature": 10.0,
+          "prototype_mode": "mean_features",
+          "dataset": "trento",
+          "split": "all",
+          "n_way": 6,
+          "k_shot": 5,
+          "k_query": 100,
+          "seeds": [
+            42
+          ],
+          "num_episodes": 2000,
+          "OA": {
+            "mean": 48.591833333333334,
+            "std": 3.5721352119176872,
+            "ci_95": 0.15664769842387985
+          },
+          "AA": {
+            "mean": 48.591833333333334,
+            "std": 3.5721352119176872,
+            "ci_95": 0.15664769842387985
+          },
+          "Kappa": {
+            "mean": 38.310199999999995,
+            "std": 4.286562254301225,
+            "ci_95": 0.18797723810865588
+          },
+          "per_class": {
+            "1": {
+              "accuracy": 88.05,
+              "pooled_accuracy": 88.05,
+              "std": 5.971138919837655,
+              "ci_95": 0.2618504376993259,
+              "total_samples": 200000,
+              "correct_samples": 176100
+            },
+            "2": {
+              "accuracy": 26.9715,
+              "pooled_accuracy": 26.9715,
+              "std": 9.992631672887779,
+              "ci_95": 0.4382036680843045,
+              "total_samples": 200000,
+              "correct_samples": 53943
+            },
+            "6": {
+              "accuracy": 47.8635,
+              "pooled_accuracy": 47.863499999999995,
+              "std": 13.311230887863077,
+              "ci_95": 0.583733133845511,
+              "total_samples": 200000,
+              "correct_samples": 95727
+            },
+            "3": {
+              "accuracy": 67.272,
+              "pooled_accuracy": 67.27199999999999,
+              "std": 14.850690758345216,
+              "ci_95": 0.6512425732201447,
+              "total_samples": 200000,
+              "correct_samples": 134544
+            },
+            "5": {
+              "accuracy": 34.885,
+              "pooled_accuracy": 34.885,
+              "std": 10.679923922950012,
+              "ci_95": 0.4683432744344852,
+              "total_samples": 200000,
+              "correct_samples": 69770
+            },
+            "4": {
+              "accuracy": 26.509,
+              "pooled_accuracy": 26.509,
+              "std": 8.61149923067987,
+              "ci_95": 0.3776373105823235,
+              "total_samples": 200000,
+              "correct_samples": 53018
+            }
+          }
+        }
+      }
+    },
+    "hypersigma_native_ablation": {
+      "_note": "Off-the-shelf FROZEN HyperSIGMA single-branch feature extractor; 11x11 patch fit to native 64x64 by zero-PAD or bicubic UPSCALE. 3 datasets x {spatial,spectral} x {pad,upscale} = 12 evals.",
+      "experiment_metadata": {
+        "base_config_path": null,
+        "description": "HyperSIGMA native-geometry ablation: frozen SpatViT (64x64/patch-8/100ch) and SpecViT (64x64) evaluated separately, unadapted, with 11x11 inputs upscaled or zero-padded up to the native size.",
+        "git_sha": "08b592987d56d1d94aace857ba6a0d200215c7ae",
+        "name": "hypersigma_native_ablation_run1",
+        "overrides": {},
+        "started_at": "2026-06-06T22:56:17",
+        "status": "running"
+      },
+      "evaluations": {
+        "native_houston_spatial_pad": {
+          "status": "OK",
+          "experiment": "hypersigma_native_ablation_run1",
+          "eval_subdir": "native_houston_spatial_pad",
+          "eval_path": "experiments/hypersigma_native_ablation_run1/evaluations/native_houston_spatial_pad",
+          "eval_finished_at": "2026-06-06T23:57:56",
+          "eval_started_at": "2026-06-06T23:30:34",
+          "results_mtime": "2026-06-06T23:57:50",
+          "OA_mean": 59.32876666666666,
+          "results": {
+            "model_type": "HyperSIGMADual",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "dataset": "houston",
+            "split": "all",
+            "n_way": 15,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 2000,
+            "OA": {
+              "mean": 59.32876666666666,
+              "std": 2.334569965396911,
+              "ci_95": 0.10237714705446875
+            },
+            "AA": {
+              "mean": 59.32876666666666,
+              "std": 2.334569965396911,
+              "ci_95": 0.10237714705446875
+            },
+            "Kappa": {
+              "mean": 56.423678571428574,
+              "std": 2.5013249629252616,
+              "ci_95": 0.10968980041550223
+            },
+            "per_class": {
+              "10": {
+                "accuracy": 34.0045,
+                "pooled_accuracy": 34.0045,
+                "std": 9.895983010797867,
+                "ci_95": 0.43396536533987834,
+                "total_samples": 200000,
+                "correct_samples": 68009
+              },
+              "12": {
+                "accuracy": 30.626,
+                "pooled_accuracy": 30.625999999999998,
+                "std": 9.231041328040948,
+                "ci_95": 0.40480589124089705,
+                "total_samples": 200000,
+                "correct_samples": 61252
+              },
+              "1": {
+                "accuracy": 62.481,
+                "pooled_accuracy": 62.480999999999995,
+                "std": 13.812879460851022,
+                "ci_95": 0.6057317676357472,
+                "total_samples": 200000,
+                "correct_samples": 124962
+              },
+              "14": {
+                "accuracy": 98.519,
+                "pooled_accuracy": 98.519,
+                "std": 1.7506110361813672,
+                "ci_95": 0.07676898364270925,
+                "total_samples": 200000,
+                "correct_samples": 197038
+              },
+              "6": {
+                "accuracy": 76.372,
+                "pooled_accuracy": 76.372,
+                "std": 7.740711595195883,
+                "ci_95": 0.33945094001621345,
+                "total_samples": 200000,
+                "correct_samples": 152744
+              },
+              "9": {
+                "accuracy": 39.385,
+                "pooled_accuracy": 39.385,
+                "std": 10.620723845388317,
+                "ci_95": 0.46574719244251156,
+                "total_samples": 200000,
+                "correct_samples": 78770
+              },
+              "3": {
+                "accuracy": 98.395,
+                "pooled_accuracy": 98.395,
+                "std": 1.5633217838947937,
+                "ci_95": 0.06855584820138005,
+                "total_samples": 200000,
+                "correct_samples": 196790
+              },
+              "2": {
+                "accuracy": 44.4675,
+                "pooled_accuracy": 44.4675,
+                "std": 11.542700886274407,
+                "ci_95": 0.5061783555666338,
+                "total_samples": 200000,
+                "correct_samples": 88935
+              },
+              "15": {
+                "accuracy": 88.5405,
+                "pooled_accuracy": 88.5405,
+                "std": 7.7219401545207536,
+                "ci_95": 0.3386277620558582,
+                "total_samples": 200000,
+                "correct_samples": 177081
+              },
+              "5": {
+                "accuracy": 79.2645,
+                "pooled_accuracy": 79.2645,
+                "std": 9.961904423853904,
+                "ci_95": 0.4368561958990425,
+                "total_samples": 200000,
+                "correct_samples": 158529
+              },
+              "8": {
+                "accuracy": 23.597,
+                "pooled_accuracy": 23.597,
+                "std": 7.5829803507591915,
+                "ci_95": 0.33253400240195174,
+                "total_samples": 200000,
+                "correct_samples": 47194
+              },
+              "11": {
+                "accuracy": 47.098,
+                "pooled_accuracy": 47.098,
+                "std": 11.524209126877212,
+                "ci_95": 0.5053674423795533,
+                "total_samples": 200000,
+                "correct_samples": 94196
+              },
+              "13": {
+                "accuracy": 67.238,
+                "pooled_accuracy": 67.238,
+                "std": 12.337964013563989,
+                "ci_95": 0.5410527741260623,
+                "total_samples": 200000,
+                "correct_samples": 134476
+              },
+              "4": {
+                "accuracy": 47.0125,
+                "pooled_accuracy": 47.0125,
+                "std": 10.952321386354583,
+                "ci_95": 0.48028863292944596,
+                "total_samples": 200000,
+                "correct_samples": 94025
+              },
+              "7": {
+                "accuracy": 52.931,
+                "pooled_accuracy": 52.931,
+                "std": 11.169925648812528,
+                "ci_95": 0.48983116277757094,
+                "total_samples": 200000,
+                "correct_samples": 105862
+              }
+            }
+          }
+        },
+        "native_houston_spatial_upscale": {
+          "status": "OK",
+          "experiment": "hypersigma_native_ablation_run1",
+          "eval_subdir": "native_houston_spatial_upscale",
+          "eval_path": "experiments/hypersigma_native_ablation_run1/evaluations/native_houston_spatial_upscale",
+          "eval_finished_at": "2026-06-06T23:30:34",
+          "eval_started_at": "2026-06-06T23:00:38",
+          "results_mtime": "2026-06-06T23:30:28",
+          "OA_mean": 61.13660000000001,
+          "results": {
+            "model_type": "HyperSIGMADual",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "dataset": "houston",
+            "split": "all",
+            "n_way": 15,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 2000,
+            "OA": {
+              "mean": 61.13660000000001,
+              "std": 2.468476452299182,
+              "ci_95": 0.10824930522678139
+            },
+            "AA": {
+              "mean": 61.13660000000001,
+              "std": 2.468476452299182,
+              "ci_95": 0.10824930522678139
+            },
+            "Kappa": {
+              "mean": 58.36064285714286,
+              "std": 2.6447961988919806,
+              "ci_95": 0.11598139845726577
+            },
+            "per_class": {
+              "10": {
+                "accuracy": 32.3015,
+                "pooled_accuracy": 32.3015,
+                "std": 11.539653276853684,
+                "ci_95": 0.5060447097293044,
+                "total_samples": 200000,
+                "correct_samples": 64603
+              },
+              "12": {
+                "accuracy": 33.205,
+                "pooled_accuracy": 33.205,
+                "std": 9.83737642870293,
+                "ci_95": 0.43139530971403506,
+                "total_samples": 200000,
+                "correct_samples": 66410
+              },
+              "1": {
+                "accuracy": 63.0275,
+                "pooled_accuracy": 63.0275,
+                "std": 14.743634007597992,
+                "ci_95": 0.6465478479059008,
+                "total_samples": 200000,
+                "correct_samples": 126055
+              },
+              "14": {
+                "accuracy": 97.0745,
+                "pooled_accuracy": 97.0745,
+                "std": 2.5317878564366323,
+                "ci_95": 0.11102567990292123,
+                "total_samples": 200000,
+                "correct_samples": 194149
+              },
+              "6": {
+                "accuracy": 76.293,
+                "pooled_accuracy": 76.293,
+                "std": 7.651153573154835,
+                "ci_95": 0.3355235808330223,
+                "total_samples": 200000,
+                "correct_samples": 152586
+              },
+              "9": {
+                "accuracy": 47.0905,
+                "pooled_accuracy": 47.0905,
+                "std": 13.441068028620345,
+                "ci_95": 0.5894268402880072,
+                "total_samples": 200000,
+                "correct_samples": 94181
+              },
+              "3": {
+                "accuracy": 98.0225,
+                "pooled_accuracy": 98.02250000000001,
+                "std": 1.849322511083451,
+                "ci_95": 0.0810977462550116,
+                "total_samples": 200000,
+                "correct_samples": 196045
+              },
+              "2": {
+                "accuracy": 44.35,
+                "pooled_accuracy": 44.35,
+                "std": 12.81633723026981,
+                "ci_95": 0.5620307211910519,
+                "total_samples": 200000,
+                "correct_samples": 88700
+              },
+              "15": {
+                "accuracy": 90.8135,
+                "pooled_accuracy": 90.8135,
+                "std": 7.754013009403582,
+                "ci_95": 0.3400342426623359,
+                "total_samples": 200000,
+                "correct_samples": 181627
+              },
+              "5": {
+                "accuracy": 82.741,
+                "pooled_accuracy": 82.741,
+                "std": 10.734147334558065,
+                "ci_95": 0.47072111629241764,
+                "total_samples": 200000,
+                "correct_samples": 165482
+              },
+              "8": {
+                "accuracy": 20.683,
+                "pooled_accuracy": 20.683,
+                "std": 7.873087767832898,
+                "ci_95": 0.34525598980844074,
+                "total_samples": 200000,
+                "correct_samples": 41366
+              },
+              "11": {
+                "accuracy": 47.9485,
+                "pooled_accuracy": 47.9485,
+                "std": 13.58112100490972,
+                "ci_95": 0.5955685384857545,
+                "total_samples": 200000,
+                "correct_samples": 95897
+              },
+              "13": {
+                "accuracy": 75.047,
+                "pooled_accuracy": 75.047,
+                "std": 11.216942141243308,
+                "ci_95": 0.49189296192298787,
+                "total_samples": 200000,
+                "correct_samples": 150094
+              },
+              "4": {
+                "accuracy": 47.871,
+                "pooled_accuracy": 47.871,
+                "std": 12.358169726945814,
+                "ci_95": 0.5419388487868746,
+                "total_samples": 200000,
+                "correct_samples": 95742
+              },
+              "7": {
+                "accuracy": 60.5805,
+                "pooled_accuracy": 60.5805,
+                "std": 11.072873147923262,
+                "ci_95": 0.48557515061995077,
+                "total_samples": 200000,
+                "correct_samples": 121161
+              }
+            }
+          }
+        },
+        "native_houston_spectral_pad": {
+          "status": "OK",
+          "experiment": "hypersigma_native_ablation_run1",
+          "eval_subdir": "native_houston_spectral_pad",
+          "eval_path": "experiments/hypersigma_native_ablation_run1/evaluations/native_houston_spectral_pad",
+          "eval_finished_at": "2026-06-07T01:24:16",
+          "eval_started_at": "2026-06-07T00:43:04",
+          "results_mtime": "2026-06-07T01:24:09",
+          "OA_mean": 30.0906,
+          "results": {
+            "model_type": "HyperSIGMADual",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "dataset": "houston",
+            "split": "all",
+            "n_way": 15,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 2000,
+            "OA": {
+              "mean": 30.0906,
+              "std": 3.9136354903224073,
+              "ci_95": 0.17162340047590127
+            },
+            "AA": {
+              "mean": 30.0906,
+              "std": 3.9136354903224073,
+              "ci_95": 0.17162340047590127
+            },
+            "Kappa": {
+              "mean": 25.09707142857143,
+              "std": 4.193180882488294,
+              "ci_95": 0.18388221479560848
+            },
+            "per_class": {
+              "10": {
+                "accuracy": 5.759,
+                "pooled_accuracy": 5.759,
+                "std": 9.30322089386251,
+                "ci_95": 0.40797115856377436,
+                "total_samples": 200000,
+                "correct_samples": 11518
+              },
+              "12": {
+                "accuracy": 6.695,
+                "pooled_accuracy": 6.694999999999999,
+                "std": 7.159397670195448,
+                "ci_95": 0.31395876712497955,
+                "total_samples": 200000,
+                "correct_samples": 13390
+              },
+              "1": {
+                "accuracy": 37.9575,
+                "pooled_accuracy": 37.957499999999996,
+                "std": 36.84122275047341,
+                "ci_95": 1.6155863114389089,
+                "total_samples": 200000,
+                "correct_samples": 75915
+              },
+              "14": {
+                "accuracy": 35.542,
+                "pooled_accuracy": 35.542,
+                "std": 13.301324595693467,
+                "ci_95": 0.58329871639594,
+                "total_samples": 200000,
+                "correct_samples": 71084
+              },
+              "6": {
+                "accuracy": 19.682,
+                "pooled_accuracy": 19.682,
+                "std": 6.4163756124466405,
+                "ci_95": 0.28137525941334374,
+                "total_samples": 200000,
+                "correct_samples": 39364
+              },
+              "9": {
+                "accuracy": 36.95,
+                "pooled_accuracy": 36.95,
+                "std": 18.522837255669014,
+                "ci_95": 0.8122760344289864,
+                "total_samples": 200000,
+                "correct_samples": 73900
+              },
+              "3": {
+                "accuracy": 69.0265,
+                "pooled_accuracy": 69.0265,
+                "std": 18.033186012183208,
+                "ci_95": 0.7908035156770256,
+                "total_samples": 200000,
+                "correct_samples": 138053
+              },
+              "2": {
+                "accuracy": 23.982,
+                "pooled_accuracy": 23.982,
+                "std": 17.273235828876995,
+                "ci_95": 0.7574776643109975,
+                "total_samples": 200000,
+                "correct_samples": 47964
+              },
+              "15": {
+                "accuracy": 33.1015,
+                "pooled_accuracy": 33.1015,
+                "std": 12.095172497736442,
+                "ci_95": 0.5304057157436299,
+                "total_samples": 200000,
+                "correct_samples": 66203
+              },
+              "5": {
+                "accuracy": 70.623,
+                "pooled_accuracy": 70.623,
+                "std": 14.111976155025205,
+                "ci_95": 0.618847958924437,
+                "total_samples": 200000,
+                "correct_samples": 141246
+              },
+              "8": {
+                "accuracy": 5.9155,
+                "pooled_accuracy": 5.9155,
+                "std": 8.624404892512874,
+                "ci_95": 0.37820325842663594,
+                "total_samples": 200000,
+                "correct_samples": 11831
+              },
+              "11": {
+                "accuracy": 18.7875,
+                "pooled_accuracy": 18.787499999999998,
+                "std": 13.7650769612814,
+                "ci_95": 0.6036354999716602,
+                "total_samples": 200000,
+                "correct_samples": 37575
+              },
+              "13": {
+                "accuracy": 26.099,
+                "pooled_accuracy": 26.099,
+                "std": 13.683281733560849,
+                "ci_95": 0.6000485601151471,
+                "total_samples": 200000,
+                "correct_samples": 52198
+              },
+              "4": {
+                "accuracy": 40.7915,
+                "pooled_accuracy": 40.7915,
+                "std": 22.416289339451346,
+                "ci_95": 0.983014338458844,
+                "total_samples": 200000,
+                "correct_samples": 81583
+              },
+              "7": {
+                "accuracy": 20.447,
+                "pooled_accuracy": 20.447000000000003,
+                "std": 7.444473856492478,
+                "ci_95": 0.3264601215837637,
+                "total_samples": 200000,
+                "correct_samples": 40894
+              }
+            }
+          }
+        },
+        "native_houston_spectral_upscale": {
+          "status": "OK",
+          "experiment": "hypersigma_native_ablation_run1",
+          "eval_subdir": "native_houston_spectral_upscale",
+          "eval_path": "experiments/hypersigma_native_ablation_run1/evaluations/native_houston_spectral_upscale",
+          "eval_finished_at": "2026-06-07T00:43:04",
+          "eval_started_at": "2026-06-06T23:57:56",
+          "results_mtime": "2026-06-07T00:42:58",
+          "OA_mean": 30.713733333333334,
+          "results": {
+            "model_type": "HyperSIGMADual",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "dataset": "houston",
+            "split": "all",
+            "n_way": 15,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 2000,
+            "OA": {
+              "mean": 30.713733333333334,
+              "std": 2.450770911819834,
+              "ci_95": 0.10747286984544774
+            },
+            "AA": {
+              "mean": 30.71373333333333,
+              "std": 2.4507709118198346,
+              "ci_95": 0.10747286984544775
+            },
+            "Kappa": {
+              "mean": 25.764714285714287,
+              "std": 2.6258259769498222,
+              "ci_95": 0.11514950340583686
+            },
+            "per_class": {
+              "10": {
+                "accuracy": 19.7965,
+                "pooled_accuracy": 19.7965,
+                "std": 9.755669518285252,
+                "ci_95": 0.4278122428078459,
+                "total_samples": 200000,
+                "correct_samples": 39593
+              },
+              "12": {
+                "accuracy": 18.726,
+                "pooled_accuracy": 18.726000000000003,
+                "std": 9.594786292565354,
+                "ci_95": 0.42075708237048326,
+                "total_samples": 200000,
+                "correct_samples": 37452
+              },
+              "1": {
+                "accuracy": 41.1365,
+                "pooled_accuracy": 41.1365,
+                "std": 19.550955673572584,
+                "ci_95": 0.8573617812771117,
+                "total_samples": 200000,
+                "correct_samples": 82273
+              },
+              "14": {
+                "accuracy": 24.9555,
+                "pooled_accuracy": 24.9555,
+                "std": 8.098982636726666,
+                "ci_95": 0.35516208495845497,
+                "total_samples": 200000,
+                "correct_samples": 49911
+              },
+              "6": {
+                "accuracy": 47.492,
+                "pooled_accuracy": 47.492000000000004,
+                "std": 13.1287446467665,
+                "ci_95": 0.575730623311634,
+                "total_samples": 200000,
+                "correct_samples": 94984
+              },
+              "9": {
+                "accuracy": 53.3185,
+                "pooled_accuracy": 53.3185,
+                "std": 13.962129413166174,
+                "ci_95": 0.6122767778699738,
+                "total_samples": 200000,
+                "correct_samples": 106637
+              },
+              "3": {
+                "accuracy": 36.1955,
+                "pooled_accuracy": 36.1955,
+                "std": 14.653132079866065,
+                "ci_95": 0.6425790959295389,
+                "total_samples": 200000,
+                "correct_samples": 72391
+              },
+              "2": {
+                "accuracy": 16.706,
+                "pooled_accuracy": 16.706,
+                "std": 9.952666175452686,
+                "ci_95": 0.4364510739583359,
+                "total_samples": 200000,
+                "correct_samples": 33412
+              },
+              "15": {
+                "accuracy": 29.6675,
+                "pooled_accuracy": 29.667500000000004,
+                "std": 10.450786752680393,
+                "ci_95": 0.45829499568334947,
+                "total_samples": 200000,
+                "correct_samples": 59335
+              },
+              "5": {
+                "accuracy": 38.61,
+                "pooled_accuracy": 38.61,
+                "std": 13.119942835241318,
+                "ci_95": 0.5753446402971107,
+                "total_samples": 200000,
+                "correct_samples": 77220
+              },
+              "8": {
+                "accuracy": 9.7965,
+                "pooled_accuracy": 9.7965,
+                "std": 7.08760098693486,
+                "ci_95": 0.31081029022810375,
+                "total_samples": 200000,
+                "correct_samples": 19593
+              },
+              "11": {
+                "accuracy": 17.2835,
+                "pooled_accuracy": 17.2835,
+                "std": 6.539658075924153,
+                "ci_95": 0.28678152569781923,
+                "total_samples": 200000,
+                "correct_samples": 34567
+              },
+              "13": {
+                "accuracy": 46.5355,
+                "pooled_accuracy": 46.5355,
+                "std": 10.617426230023922,
+                "ci_95": 0.4656025831748118,
+                "total_samples": 200000,
+                "correct_samples": 93071
+              },
+              "4": {
+                "accuracy": 27.512,
+                "pooled_accuracy": 27.511999999999997,
+                "std": 9.593219271964964,
+                "ci_95": 0.42068836431926976,
+                "total_samples": 200000,
+                "correct_samples": 55024
+              },
+              "7": {
+                "accuracy": 32.9745,
+                "pooled_accuracy": 32.9745,
+                "std": 10.487223166787288,
+                "ci_95": 0.4598928300513269,
+                "total_samples": 200000,
+                "correct_samples": 65949
+              }
+            }
+          }
+        },
+        "native_muufl_spatial_pad": {
+          "status": "OK",
+          "experiment": "hypersigma_native_ablation_run1",
+          "eval_subdir": "native_muufl_spatial_pad",
+          "eval_path": "experiments/hypersigma_native_ablation_run1/evaluations/native_muufl_spatial_pad",
+          "eval_finished_at": "2026-06-07T03:05:20",
+          "eval_started_at": "2026-06-07T02:44:08",
+          "results_mtime": "2026-06-07T03:05:15",
+          "OA_mean": 54.79668181818182,
+          "results": {
+            "model_type": "HyperSIGMADual",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "dataset": "muufl",
+            "split": "all",
+            "n_way": 11,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 2000,
+            "OA": {
+              "mean": 54.79668181818182,
+              "std": 2.6895475175526373,
+              "ci_95": 0.11794386366469617
+            },
+            "AA": {
+              "mean": 54.79668181818182,
+              "std": 2.6895475175526373,
+              "ci_95": 0.11794386366469617
+            },
+            "Kappa": {
+              "mean": 50.276349999999994,
+              "std": 2.9585022693079006,
+              "ci_95": 0.12973825003116576
+            },
+            "per_class": {
+              "6": {
+                "accuracy": 58.884,
+                "pooled_accuracy": 58.884,
+                "std": 15.123741071573528,
+                "ci_95": 0.6632165609287936,
+                "total_samples": 200000,
+                "correct_samples": 117768
+              },
+              "1": {
+                "accuracy": 63.678,
+                "pooled_accuracy": 63.678000000000004,
+                "std": 8.84818150808402,
+                "ci_95": 0.3880164624938713,
+                "total_samples": 200000,
+                "correct_samples": 127356
+              },
+              "10": {
+                "accuracy": 53.281,
+                "pooled_accuracy": 53.281,
+                "std": 11.018803882454755,
+                "ci_95": 0.483204068483179,
+                "total_samples": 200000,
+                "correct_samples": 106562
+              },
+              "11": {
+                "accuracy": 92.356,
+                "pooled_accuracy": 92.35600000000001,
+                "std": 4.860891276299029,
+                "ci_95": 0.21316310429139063,
+                "total_samples": 200000,
+                "correct_samples": 184712
+              },
+              "3": {
+                "accuracy": 33.3365,
+                "pooled_accuracy": 33.3365,
+                "std": 12.632231305276198,
+                "ci_95": 0.5539571831793242,
+                "total_samples": 200000,
+                "correct_samples": 66673
+              },
+              "2": {
+                "accuracy": 65.056,
+                "pooled_accuracy": 65.056,
+                "std": 14.547572443538476,
+                "ci_95": 0.6379500230932108,
+                "total_samples": 200000,
+                "correct_samples": 130112
+              },
+              "9": {
+                "accuracy": 36.366,
+                "pooled_accuracy": 36.366,
+                "std": 14.005893188226162,
+                "ci_95": 0.6141959366449876,
+                "total_samples": 200000,
+                "correct_samples": 72732
+              },
+              "5": {
+                "accuracy": 58.2115,
+                "pooled_accuracy": 58.21150000000001,
+                "std": 14.146051312998974,
+                "ci_95": 0.6203422458854156,
+                "total_samples": 200000,
+                "correct_samples": 116423
+              },
+              "8": {
+                "accuracy": 35.2295,
+                "pooled_accuracy": 35.2295,
+                "std": 11.445297276611036,
+                "ci_95": 0.501906946348685,
+                "total_samples": 200000,
+                "correct_samples": 70459
+              },
+              "4": {
+                "accuracy": 57.596,
+                "pooled_accuracy": 57.596000000000004,
+                "std": 17.593259618387947,
+                "ci_95": 0.7715115647917316,
+                "total_samples": 200000,
+                "correct_samples": 115192
+              },
+              "7": {
+                "accuracy": 48.769,
+                "pooled_accuracy": 48.769,
+                "std": 10.51287967209746,
+                "ci_95": 0.4610179365403058,
+                "total_samples": 200000,
+                "correct_samples": 97538
+              }
+            }
+          }
+        },
+        "native_muufl_spatial_upscale": {
+          "status": "OK",
+          "experiment": "hypersigma_native_ablation_run1",
+          "eval_subdir": "native_muufl_spatial_upscale",
+          "eval_path": "experiments/hypersigma_native_ablation_run1/evaluations/native_muufl_spatial_upscale",
+          "eval_finished_at": "2026-06-07T02:44:08",
+          "eval_started_at": "2026-06-07T02:20:56",
+          "results_mtime": "2026-06-07T02:44:03",
+          "OA_mean": 53.16981818181819,
+          "results": {
+            "model_type": "HyperSIGMADual",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "dataset": "muufl",
+            "split": "all",
+            "n_way": 11,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 2000,
+            "OA": {
+              "mean": 53.16981818181819,
+              "std": 2.8824197479384894,
+              "ci_95": 0.12640182765190044
+            },
+            "AA": {
+              "mean": 53.16981818181819,
+              "std": 2.8824197479384894,
+              "ci_95": 0.12640182765190044
+            },
+            "Kappa": {
+              "mean": 48.4868,
+              "std": 3.170661722732338,
+              "ci_95": 0.13904201041709047
+            },
+            "per_class": {
+              "6": {
+                "accuracy": 85.183,
+                "pooled_accuracy": 85.18299999999999,
+                "std": 14.116391571502968,
+                "ci_95": 0.6190415867654316,
+                "total_samples": 200000,
+                "correct_samples": 170366
+              },
+              "1": {
+                "accuracy": 69.597,
+                "pooled_accuracy": 69.597,
+                "std": 7.197957418601474,
+                "ci_95": 0.3156497153901672,
+                "total_samples": 200000,
+                "correct_samples": 139194
+              },
+              "10": {
+                "accuracy": 41.4545,
+                "pooled_accuracy": 41.4545,
+                "std": 9.438799168856175,
+                "ci_95": 0.41391662912244226,
+                "total_samples": 200000,
+                "correct_samples": 82909
+              },
+              "11": {
+                "accuracy": 95.9325,
+                "pooled_accuracy": 95.9325,
+                "std": 3.2093525437383783,
+                "ci_95": 0.14073870656691867,
+                "total_samples": 200000,
+                "correct_samples": 191865
+              },
+              "3": {
+                "accuracy": 24.6255,
+                "pooled_accuracy": 24.6255,
+                "std": 11.00778132731569,
+                "ci_95": 0.48272069991204425,
+                "total_samples": 200000,
+                "correct_samples": 49251
+              },
+              "2": {
+                "accuracy": 34.7145,
+                "pooled_accuracy": 34.7145,
+                "std": 12.029588095608261,
+                "ci_95": 0.5275296640164697,
+                "total_samples": 200000,
+                "correct_samples": 69429
+              },
+              "9": {
+                "accuracy": 35.015,
+                "pooled_accuracy": 35.015,
+                "std": 10.860468452143305,
+                "ci_95": 0.4762606356997575,
+                "total_samples": 200000,
+                "correct_samples": 70030
+              },
+              "5": {
+                "accuracy": 44.1585,
+                "pooled_accuracy": 44.158500000000004,
+                "std": 11.135231373887118,
+                "ci_95": 0.4883097258797125,
+                "total_samples": 200000,
+                "correct_samples": 88317
+              },
+              "8": {
+                "accuracy": 38.8365,
+                "pooled_accuracy": 38.8365,
+                "std": 9.961815484639333,
+                "ci_95": 0.4368522956762247,
+                "total_samples": 200000,
+                "correct_samples": 77673
+              },
+              "4": {
+                "accuracy": 43.022,
+                "pooled_accuracy": 43.022,
+                "std": 12.670616243892797,
+                "ci_95": 0.555640465566948,
+                "total_samples": 200000,
+                "correct_samples": 86044
+              },
+              "7": {
+                "accuracy": 72.329,
+                "pooled_accuracy": 72.329,
+                "std": 11.748691799515383,
+                "ci_95": 0.5152116089406318,
+                "total_samples": 200000,
+                "correct_samples": 144658
+              }
+            }
+          }
+        },
+        "native_muufl_spectral_pad": {
+          "status": "OK",
+          "experiment": "hypersigma_native_ablation_run1",
+          "eval_subdir": "native_muufl_spectral_pad",
+          "eval_path": "experiments/hypersigma_native_ablation_run1/evaluations/native_muufl_spectral_pad",
+          "eval_finished_at": "2026-06-07T04:06:31",
+          "eval_started_at": "2026-06-07T03:36:39",
+          "results_mtime": "2026-06-07T04:06:26",
+          "OA_mean": 34.24886363636363,
+          "results": {
+            "model_type": "HyperSIGMADual",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "dataset": "muufl",
+            "split": "all",
+            "n_way": 11,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 2000,
+            "OA": {
+              "mean": 34.24886363636363,
+              "std": 2.639372254677299,
+              "ci_95": 0.11574354397326564
+            },
+            "AA": {
+              "mean": 34.24886363636363,
+              "std": 2.639372254677299,
+              "ci_95": 0.11574354397326564
+            },
+            "Kappa": {
+              "mean": 27.67375,
+              "std": 2.903309480145029,
+              "ci_95": 0.1273178983705922
+            },
+            "per_class": {
+              "6": {
+                "accuracy": 55.269,
+                "pooled_accuracy": 55.269,
+                "std": 13.180881571427612,
+                "ci_95": 0.5780169671274601,
+                "total_samples": 200000,
+                "correct_samples": 110538
+              },
+              "1": {
+                "accuracy": 54.007,
+                "pooled_accuracy": 54.007000000000005,
+                "std": 9.003274459884027,
+                "ci_95": 0.3948177039083009,
+                "total_samples": 200000,
+                "correct_samples": 108014
+              },
+              "10": {
+                "accuracy": 25.505,
+                "pooled_accuracy": 25.505,
+                "std": 8.604938988743616,
+                "ci_95": 0.3773496263992082,
+                "total_samples": 200000,
+                "correct_samples": 51010
+              },
+              "11": {
+                "accuracy": 39.7255,
+                "pooled_accuracy": 39.725500000000004,
+                "std": 9.504480509212485,
+                "ci_95": 0.4167969318505934,
+                "total_samples": 200000,
+                "correct_samples": 79451
+              },
+              "3": {
+                "accuracy": 16.007,
+                "pooled_accuracy": 16.006999999999998,
+                "std": 6.718255056188325,
+                "ci_95": 0.29461348172526713,
+                "total_samples": 200000,
+                "correct_samples": 32014
+              },
+              "2": {
+                "accuracy": 31.3525,
+                "pooled_accuracy": 31.3525,
+                "std": 13.028324671652914,
+                "ci_95": 0.5713269383881617,
+                "total_samples": 200000,
+                "correct_samples": 62705
+              },
+              "9": {
+                "accuracy": 30.347,
+                "pooled_accuracy": 30.347,
+                "std": 15.503696043202085,
+                "ci_95": 0.6798786042948316,
+                "total_samples": 200000,
+                "correct_samples": 60694
+              },
+              "5": {
+                "accuracy": 25.5745,
+                "pooled_accuracy": 25.5745,
+                "std": 9.379416279811874,
+                "ci_95": 0.4113125303572232,
+                "total_samples": 200000,
+                "correct_samples": 51149
+              },
+              "8": {
+                "accuracy": 17.639,
+                "pooled_accuracy": 17.639,
+                "std": 7.3879414588909675,
+                "ci_95": 0.32398102450448313,
+                "total_samples": 200000,
+                "correct_samples": 35278
+              },
+              "4": {
+                "accuracy": 53.943,
+                "pooled_accuracy": 53.943,
+                "std": 16.71250283470432,
+                "ci_95": 0.732888020370749,
+                "total_samples": 200000,
+                "correct_samples": 107886
+              },
+              "7": {
+                "accuracy": 27.368,
+                "pooled_accuracy": 27.368,
+                "std": 7.75303656640416,
+                "ci_95": 0.3399914230210213,
+                "total_samples": 200000,
+                "correct_samples": 54736
+              }
+            }
+          }
+        },
+        "native_muufl_spectral_upscale": {
+          "status": "OK",
+          "experiment": "hypersigma_native_ablation_run1",
+          "eval_subdir": "native_muufl_spectral_upscale",
+          "eval_path": "experiments/hypersigma_native_ablation_run1/evaluations/native_muufl_spectral_upscale",
+          "eval_finished_at": "2026-06-07T03:36:39",
+          "eval_started_at": "2026-06-07T03:05:20",
+          "results_mtime": "2026-06-07T03:36:34",
+          "OA_mean": 30.769318181818186,
+          "results": {
+            "model_type": "HyperSIGMADual",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "dataset": "muufl",
+            "split": "all",
+            "n_way": 11,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 2000,
+            "OA": {
+              "mean": 30.769318181818186,
+              "std": 2.3659107829004515,
+              "ci_95": 0.10375152586081211
+            },
+            "AA": {
+              "mean": 30.769318181818186,
+              "std": 2.3659107829004515,
+              "ci_95": 0.10375152586081211
+            },
+            "Kappa": {
+              "mean": 23.84625,
+              "std": 2.602501861190497,
+              "ci_95": 0.11412667844689331
+            },
+            "per_class": {
+              "6": {
+                "accuracy": 65.1335,
+                "pooled_accuracy": 65.1335,
+                "std": 13.069761962254708,
+                "ci_95": 0.573144074587272,
+                "total_samples": 200000,
+                "correct_samples": 130267
+              },
+              "1": {
+                "accuracy": 35.777,
+                "pooled_accuracy": 35.777,
+                "std": 9.855215421288365,
+                "ci_95": 0.4321775973277251,
+                "total_samples": 200000,
+                "correct_samples": 71554
+              },
+              "10": {
+                "accuracy": 32.0515,
+                "pooled_accuracy": 32.0515,
+                "std": 9.000602632601886,
+                "ci_95": 0.39470053712442965,
+                "total_samples": 200000,
+                "correct_samples": 64103
+              },
+              "11": {
+                "accuracy": 42.8865,
+                "pooled_accuracy": 42.8865,
+                "std": 10.961962312925547,
+                "ci_95": 0.4807114133866292,
+                "total_samples": 200000,
+                "correct_samples": 85773
+              },
+              "3": {
+                "accuracy": 17.001,
+                "pooled_accuracy": 17.000999999999998,
+                "std": 6.807055090125244,
+                "ci_95": 0.2985076010995204,
+                "total_samples": 200000,
+                "correct_samples": 34002
+              },
+              "2": {
+                "accuracy": 23.3075,
+                "pooled_accuracy": 23.3075,
+                "std": 9.580654661869406,
+                "ci_95": 0.4201373725072869,
+                "total_samples": 200000,
+                "correct_samples": 46615
+              },
+              "9": {
+                "accuracy": 23.914,
+                "pooled_accuracy": 23.913999999999998,
+                "std": 8.352939841756314,
+                "ci_95": 0.36629878872412763,
+                "total_samples": 200000,
+                "correct_samples": 47828
+              },
+              "5": {
+                "accuracy": 21.9425,
+                "pooled_accuracy": 21.942500000000003,
+                "std": 8.131678409160067,
+                "ci_95": 0.356595882168257,
+                "total_samples": 200000,
+                "correct_samples": 43885
+              },
+              "8": {
+                "accuracy": 15.1145,
+                "pooled_accuracy": 15.1145,
+                "std": 5.5534124419135305,
+                "ci_95": 0.24353201259626306,
+                "total_samples": 200000,
+                "correct_samples": 30229
+              },
+              "4": {
+                "accuracy": 25.4325,
+                "pooled_accuracy": 25.4325,
+                "std": 7.973734617480067,
+                "ci_95": 0.3496696237879841,
+                "total_samples": 200000,
+                "correct_samples": 50865
+              },
+              "7": {
+                "accuracy": 35.902,
+                "pooled_accuracy": 35.902,
+                "std": 9.74383887387307,
+                "ci_95": 0.42729343735729725,
+                "total_samples": 200000,
+                "correct_samples": 71804
+              }
+            }
+          }
+        },
+        "native_trento_spatial_pad": {
+          "status": "OK",
+          "experiment": "hypersigma_native_ablation_run1",
+          "eval_subdir": "native_trento_spatial_pad",
+          "eval_path": "experiments/hypersigma_native_ablation_run1/evaluations/native_trento_spatial_pad",
+          "eval_finished_at": "2026-06-07T01:47:54",
+          "eval_started_at": "2026-06-07T01:36:35",
+          "results_mtime": "2026-06-07T01:47:51",
+          "OA_mean": 85.03233333333334,
+          "results": {
+            "model_type": "HyperSIGMADual",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "dataset": "trento",
+            "split": "all",
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 2000,
+            "OA": {
+              "mean": 85.03233333333334,
+              "std": 2.6671528931719592,
+              "ci_95": 0.11696179939271772
+            },
+            "AA": {
+              "mean": 85.03233333333333,
+              "std": 2.6671528931719597,
+              "ci_95": 0.11696179939271774
+            },
+            "Kappa": {
+              "mean": 82.03880000000001,
+              "std": 3.2005834718063513,
+              "ci_95": 0.14035415927126127
+            },
+            "per_class": {
+              "1": {
+                "accuracy": 88.6875,
+                "pooled_accuracy": 88.6875,
+                "std": 6.093098042047248,
+                "ci_95": 0.26719867192410857,
+                "total_samples": 200000,
+                "correct_samples": 177375
+              },
+              "2": {
+                "accuracy": 78.884,
+                "pooled_accuracy": 78.884,
+                "std": 9.62712542766531,
+                "ci_95": 0.4221752400778192,
+                "total_samples": 200000,
+                "correct_samples": 157768
+              },
+              "6": {
+                "accuracy": 70.418,
+                "pooled_accuracy": 70.418,
+                "std": 12.675538489547497,
+                "ci_95": 0.5558563192250944,
+                "total_samples": 200000,
+                "correct_samples": 140836
+              },
+              "3": {
+                "accuracy": 89.899,
+                "pooled_accuracy": 89.899,
+                "std": 6.218665371283456,
+                "ci_95": 0.2727051356930223,
+                "total_samples": 200000,
+                "correct_samples": 179798
+              },
+              "5": {
+                "accuracy": 96.3615,
+                "pooled_accuracy": 96.3615,
+                "std": 4.586700093749318,
+                "ci_95": 0.20113908640672726,
+                "total_samples": 200000,
+                "correct_samples": 192723
+              },
+              "4": {
+                "accuracy": 85.944,
+                "pooled_accuracy": 85.944,
+                "std": 8.34067527242249,
+                "ci_95": 0.36576095450332496,
+                "total_samples": 200000,
+                "correct_samples": 171888
+              }
+            }
+          }
+        },
+        "native_trento_spatial_upscale": {
+          "status": "OK",
+          "experiment": "hypersigma_native_ablation_run1",
+          "eval_subdir": "native_trento_spatial_upscale",
+          "eval_path": "experiments/hypersigma_native_ablation_run1/evaluations/native_trento_spatial_upscale",
+          "eval_finished_at": "2026-06-07T01:36:35",
+          "eval_started_at": "2026-06-07T01:24:16",
+          "results_mtime": "2026-06-07T01:36:31",
+          "OA_mean": 91.07233333333333,
+          "results": {
+            "model_type": "HyperSIGMADual",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "dataset": "trento",
+            "split": "all",
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 2000,
+            "OA": {
+              "mean": 91.07233333333333,
+              "std": 1.9535554765606216,
+              "ci_95": 0.08566864102053447
+            },
+            "AA": {
+              "mean": 91.07233333333335,
+              "std": 1.9535554765606222,
+              "ci_95": 0.0856686410205345
+            },
+            "Kappa": {
+              "mean": 89.28679999999999,
+              "std": 2.3442665718727462,
+              "ci_95": 0.10280236922464138
+            },
+            "per_class": {
+              "1": {
+                "accuracy": 95.869,
+                "pooled_accuracy": 95.869,
+                "std": 2.765472653996058,
+                "ci_95": 0.12127338429333889,
+                "total_samples": 200000,
+                "correct_samples": 191738
+              },
+              "2": {
+                "accuracy": 82.121,
+                "pooled_accuracy": 82.121,
+                "std": 10.771413974033306,
+                "ci_95": 0.4723553582668851,
+                "total_samples": 200000,
+                "correct_samples": 164242
+              },
+              "6": {
+                "accuracy": 77.588,
+                "pooled_accuracy": 77.58800000000001,
+                "std": 9.618745032487345,
+                "ci_95": 0.4218077372990522,
+                "total_samples": 200000,
+                "correct_samples": 155176
+              },
+              "3": {
+                "accuracy": 97.304,
+                "pooled_accuracy": 97.304,
+                "std": 2.001145671858998,
+                "ci_95": 0.08775559857358618,
+                "total_samples": 200000,
+                "correct_samples": 194608
+              },
+              "5": {
+                "accuracy": 97.0175,
+                "pooled_accuracy": 97.0175,
+                "std": 4.302347469696049,
+                "ci_95": 0.1886694620906806,
+                "total_samples": 200000,
+                "correct_samples": 194035
+              },
+              "4": {
+                "accuracy": 96.5345,
+                "pooled_accuracy": 96.5345,
+                "std": 2.9102937566506926,
+                "ci_95": 0.12762417760552094,
+                "total_samples": 200000,
+                "correct_samples": 193069
+              }
+            }
+          }
+        },
+        "native_trento_spectral_pad": {
+          "status": "OK",
+          "experiment": "hypersigma_native_ablation_run1",
+          "eval_subdir": "native_trento_spectral_pad",
+          "eval_path": "experiments/hypersigma_native_ablation_run1/evaluations/native_trento_spectral_pad",
+          "eval_finished_at": "2026-06-07T02:20:56",
+          "eval_started_at": "2026-06-07T02:04:49",
+          "results_mtime": "2026-06-07T02:20:53",
+          "OA_mean": 81.11991666666667,
+          "results": {
+            "model_type": "HyperSIGMADual",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "dataset": "trento",
+            "split": "all",
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 2000,
+            "OA": {
+              "mean": 81.11991666666667,
+              "std": 4.337929676924749,
+              "ci_95": 0.19022983719871717
+            },
+            "AA": {
+              "mean": 81.11991666666667,
+              "std": 4.337929676924747,
+              "ci_95": 0.19022983719871708
+            },
+            "Kappa": {
+              "mean": 77.34389999999999,
+              "std": 5.205515612309696,
+              "ci_95": 0.2282758046384605
+            },
+            "per_class": {
+              "1": {
+                "accuracy": 85.1105,
+                "pooled_accuracy": 85.1105,
+                "std": 10.392992338590458,
+                "ci_95": 0.4557605558002397,
+                "total_samples": 200000,
+                "correct_samples": 170221
+              },
+              "2": {
+                "accuracy": 56.895,
+                "pooled_accuracy": 56.894999999999996,
+                "std": 12.616496145919434,
+                "ci_95": 0.5532671542886634,
+                "total_samples": 200000,
+                "correct_samples": 113790
+              },
+              "6": {
+                "accuracy": 75.1045,
+                "pooled_accuracy": 75.1045,
+                "std": 9.39103720309956,
+                "ci_95": 0.4118221389746415,
+                "total_samples": 200000,
+                "correct_samples": 150209
+              },
+              "3": {
+                "accuracy": 82.6195,
+                "pooled_accuracy": 82.6195,
+                "std": 11.045031450837973,
+                "ci_95": 0.4843542176177299,
+                "total_samples": 200000,
+                "correct_samples": 165239
+              },
+              "5": {
+                "accuracy": 88.3805,
+                "pooled_accuracy": 88.3805,
+                "std": 12.923340115852403,
+                "ci_95": 0.5667230843735275,
+                "total_samples": 200000,
+                "correct_samples": 176761
+              },
+              "4": {
+                "accuracy": 98.6095,
+                "pooled_accuracy": 98.60950000000001,
+                "std": 1.4866101540081045,
+                "ci_95": 0.06519183772831533,
+                "total_samples": 200000,
+                "correct_samples": 197219
+              }
+            }
+          }
+        },
+        "native_trento_spectral_upscale": {
+          "status": "OK",
+          "experiment": "hypersigma_native_ablation_run1",
+          "eval_subdir": "native_trento_spectral_upscale",
+          "eval_path": "experiments/hypersigma_native_ablation_run1/evaluations/native_trento_spectral_upscale",
+          "eval_finished_at": "2026-06-07T02:04:49",
+          "eval_started_at": "2026-06-07T01:47:54",
+          "results_mtime": "2026-06-07T02:04:45",
+          "OA_mean": 67.41766666666666,
+          "results": {
+            "model_type": "HyperSIGMADual",
+            "distance_metric": "euclidean",
+            "temperature": 10.0,
+            "prototype_mode": "mean_features",
+            "dataset": "trento",
+            "split": "all",
+            "n_way": 6,
+            "k_shot": 5,
+            "k_query": 100,
+            "seeds": [
+              42
+            ],
+            "num_episodes": 2000,
+            "OA": {
+              "mean": 67.41766666666666,
+              "std": 3.8727357685921904,
+              "ci_95": 0.16982983811190103
+            },
+            "AA": {
+              "mean": 67.41766666666668,
+              "std": 3.8727357685921895,
+              "ci_95": 0.16982983811190097
+            },
+            "Kappa": {
+              "mean": 60.901199999999996,
+              "std": 4.647282922310627,
+              "ci_95": 0.20379580573428113
+            },
+            "per_class": {
+              "1": {
+                "accuracy": 90.7445,
+                "pooled_accuracy": 90.74449999999999,
+                "std": 4.514113395784381,
+                "ci_95": 0.19795596524869796,
+                "total_samples": 200000,
+                "correct_samples": 181489
+              },
+              "2": {
+                "accuracy": 36.671,
+                "pooled_accuracy": 36.671,
+                "std": 11.543039417761685,
+                "ci_95": 0.5061932010792419,
+                "total_samples": 200000,
+                "correct_samples": 73342
+              },
+              "6": {
+                "accuracy": 69.929,
+                "pooled_accuracy": 69.929,
+                "std": 14.418909771546529,
+                "ci_95": 0.6323078202523545,
+                "total_samples": 200000,
+                "correct_samples": 139858
+              },
+              "3": {
+                "accuracy": 88.5195,
+                "pooled_accuracy": 88.5195,
+                "std": 7.966656748599126,
+                "ci_95": 0.34935924027667514,
+                "total_samples": 200000,
+                "correct_samples": 177039
+              },
+              "5": {
+                "accuracy": 58.5425,
+                "pooled_accuracy": 58.5425,
+                "std": 14.039130804647415,
+                "ci_95": 0.6156534951652011,
+                "total_samples": 200000,
+                "correct_samples": 117085
+              },
+              "4": {
+                "accuracy": 60.0995,
+                "pooled_accuracy": 60.09949999999999,
+                "std": 12.885945822872296,
+                "ci_95": 0.5650832444509011,
+                "total_samples": 200000,
+                "correct_samples": 120199
+              }
+            }
+          }
+        }
+      }
+    },
+    "hypersigma_native_sem_pad": {
+      "_note": "SEM-only adaptation, 11x11 padded to 64x64; 512-d fused feature.",
+      "houston": {
+        "status": "OK",
+        "experiment": "hypersigma_native_sem_pad_run1",
+        "eval_subdir": "native_sem_pad_houston",
+        "eval_path": "experiments/hypersigma_native_sem_pad_run1/evaluations/native_sem_pad_houston",
+        "eval_finished_at": null,
+        "eval_started_at": null,
+        "results_mtime": "2026-06-09T14:53:09",
+        "OA_mean": 45.3197,
+        "results": {
+          "model_type": "HyperSIGMADual",
+          "distance_metric": "euclidean",
+          "temperature": 10.0,
+          "prototype_mode": "mean_features",
+          "dataset": "houston",
+          "split": "all",
+          "n_way": 15,
+          "k_shot": 5,
+          "k_query": 100,
+          "seeds": [
+            42
+          ],
+          "num_episodes": 2000,
+          "OA": {
+            "mean": 45.3197,
+            "std": 2.7796304148813262,
+            "ci_95": 0.12189424003533703
+          },
+          "AA": {
+            "mean": 45.3197,
+            "std": 2.7796304148813262,
+            "ci_95": 0.12189424003533703
+          },
+          "Kappa": {
+            "mean": 41.41396428571429,
+            "std": 2.9781754445157067,
+            "ci_95": 0.13060097146643254
+          },
+          "per_class": {
+            "10": {
+              "accuracy": 27.5095,
+              "pooled_accuracy": 27.5095,
+              "std": 11.201826179244168,
+              "ci_95": 0.49123008649522465,
+              "total_samples": 200000,
+              "correct_samples": 55019
+            },
+            "12": {
+              "accuracy": 28.0505,
+              "pooled_accuracy": 28.0505,
+              "std": 9.511516690307598,
+              "ci_95": 0.41710548724081664,
+              "total_samples": 200000,
+              "correct_samples": 56101
+            },
+            "1": {
+              "accuracy": 69.067,
+              "pooled_accuracy": 69.06700000000001,
+              "std": 13.729621662667912,
+              "ci_95": 0.6020806901463757,
+              "total_samples": 200000,
+              "correct_samples": 138134
+            },
+            "14": {
+              "accuracy": 71.992,
+              "pooled_accuracy": 71.992,
+              "std": 11.454428663185258,
+              "ci_95": 0.5023073821120061,
+              "total_samples": 200000,
+              "correct_samples": 143984
+            },
+            "6": {
+              "accuracy": 36.9985,
+              "pooled_accuracy": 36.9985,
+              "std": 11.358630980448305,
+              "ci_95": 0.498106397091893,
+              "total_samples": 200000,
+              "correct_samples": 73997
+            },
+            "9": {
+              "accuracy": 31.433,
+              "pooled_accuracy": 31.433,
+              "std": 9.167415720910665,
+              "ci_95": 0.4020157379218041,
+              "total_samples": 200000,
+              "correct_samples": 62866
+            },
+            "3": {
+              "accuracy": 53.55,
+              "pooled_accuracy": 53.55,
+              "std": 11.517313054701605,
+              "ci_95": 0.5050650311407879,
+              "total_samples": 200000,
+              "correct_samples": 107100
+            },
+            "2": {
+              "accuracy": 39.7735,
+              "pooled_accuracy": 39.7735,
+              "std": 11.22787592334365,
+              "ci_95": 0.4923724375585608,
+              "total_samples": 200000,
+              "correct_samples": 79547
+            },
+            "15": {
+              "accuracy": 57.044,
+              "pooled_accuracy": 57.044,
+              "std": 14.511790516679877,
+              "ci_95": 0.6363808897443749,
+              "total_samples": 200000,
+              "correct_samples": 114088
+            },
+            "5": {
+              "accuracy": 72.314,
+              "pooled_accuracy": 72.31400000000001,
+              "std": 10.489013490314521,
+              "ci_95": 0.4599713405340879,
+              "total_samples": 200000,
+              "correct_samples": 144628
+            },
+            "8": {
+              "accuracy": 26.1005,
+              "pooled_accuracy": 26.1005,
+              "std": 9.429761383513371,
+              "ci_95": 0.41352029802386686,
+              "total_samples": 200000,
+              "correct_samples": 52201
+            },
+            "11": {
+              "accuracy": 29.7485,
+              "pooled_accuracy": 29.7485,
+              "std": 11.869509162134719,
+              "ci_95": 0.5205097739487257,
+              "total_samples": 200000,
+              "correct_samples": 59497
+            },
+            "13": {
+              "accuracy": 43.875,
+              "pooled_accuracy": 43.875,
+              "std": 13.451184892045756,
+              "ci_95": 0.5898704918512436,
+              "total_samples": 200000,
+              "correct_samples": 87750
+            },
+            "4": {
+              "accuracy": 56.619,
+              "pooled_accuracy": 56.619,
+              "std": 12.471641391573122,
+              "ci_95": 0.5469148852596518,
+              "total_samples": 200000,
+              "correct_samples": 113238
+            },
+            "7": {
+              "accuracy": 35.7205,
+              "pooled_accuracy": 35.7205,
+              "std": 12.907067046777126,
+              "ci_95": 0.5660094667007053,
+              "total_samples": 200000,
+              "correct_samples": 71441
+            }
+          }
+        }
+      },
+      "trento": {
+        "status": "MISSING",
+        "note": "PLACEHOLDER - No native_sem_pad Trento run/eval completed. Config exists (configs/pretrain/hypersigma_trento_adapt_native_sem_pad.yaml) but no experiment dir."
+      },
+      "muufl": {
+        "status": "MISSING",
+        "note": "PLACEHOLDER - No native_sem_pad MUUFL run/eval completed. Config exists (configs/pretrain/hypersigma_muufl_adapt_native_sem_pad.yaml) but no experiment dir."
+      }
+    },
+    "mft_original_mae": {
+      "_note": "MFT-original masked-autoencoder pretrain runs; the *_faithful runs are EXCLUDED.",
+      "houston": {
+        "status": "OK",
+        "experiment": "mft_original_houston_mae_run1",
+        "eval_subdir": "mft_original_houston_mae_eval",
+        "eval_path": "experiments/mft_original_houston_mae_run1/evaluations/mft_original_houston_mae_eval",
+        "eval_finished_at": "2026-06-09T21:23:18",
+        "eval_started_at": "2026-06-09T21:20:47",
+        "results_mtime": "2026-06-09T21:23:10",
+        "OA_mean": 71.15153333333332,
+        "results": {
+          "model_type": "MFTOriginalCosine",
+          "distance_metric": "euclidean",
+          "temperature": 10.0,
+          "prototype_mode": "mean_features",
+          "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_houston_mae/checkpoints/checkpoint_epoch_950.pth",
+          "dataset": "houston",
+          "split": "all",
+          "n_way": 15,
+          "k_shot": 5,
+          "k_query": 100,
+          "seeds": [
+            42
+          ],
+          "num_episodes": 1000,
+          "OA": {
+            "mean": 71.15153333333332,
+            "std": 2.7014929789943105,
+            "ci_95": 0.16764029757460258
+          },
+          "AA": {
+            "mean": 71.15153333333332,
+            "std": 2.7014929789943105,
+            "ci_95": 0.16764029757460258
+          },
+          "Kappa": {
+            "mean": 69.09092857142858,
+            "std": 2.8944567632081895,
+            "ci_95": 0.17961460454421702
+          },
+          "per_class": {
+            "1": {
+              "accuracy": 66.439,
+              "pooled_accuracy": 66.43900000000001,
+              "std": 15.112785282667122,
+              "ci_95": 0.9378191398855847,
+              "total_samples": 100000,
+              "correct_samples": 66439
+            },
+            "2": {
+              "accuracy": 43.851,
+              "pooled_accuracy": 43.851,
+              "std": 12.49491092405224,
+              "ci_95": 0.7753677695124157,
+              "total_samples": 100000,
+              "correct_samples": 43851
+            },
+            "3": {
+              "accuracy": 97.759,
+              "pooled_accuracy": 97.759,
+              "std": 3.971009821191582,
+              "ci_95": 0.24641976613392785,
+              "total_samples": 100000,
+              "correct_samples": 97759
+            },
+            "4": {
+              "accuracy": 62.903,
+              "pooled_accuracy": 62.903,
+              "std": 12.473315156765663,
+              "ci_95": 0.774027650962257,
+              "total_samples": 100000,
+              "correct_samples": 62903
+            },
+            "5": {
+              "accuracy": 65.339,
+              "pooled_accuracy": 65.339,
+              "std": 13.686711767258052,
+              "ci_95": 0.8493245961849994,
+              "total_samples": 100000,
+              "correct_samples": 65339
+            },
+            "6": {
+              "accuracy": 89.131,
+              "pooled_accuracy": 89.131,
+              "std": 6.329284240733702,
+              "ci_95": 0.39276174389534657,
+              "total_samples": 100000,
+              "correct_samples": 89131
+            },
+            "7": {
+              "accuracy": 62.991,
+              "pooled_accuracy": 62.991,
+              "std": 11.170448469063361,
+              "ci_95": 0.6931786682239196,
+              "total_samples": 100000,
+              "correct_samples": 62991
+            },
+            "8": {
+              "accuracy": 73.468,
+              "pooled_accuracy": 73.468,
+              "std": 13.101945504389798,
+              "ci_95": 0.8130371095688707,
+              "total_samples": 100000,
+              "correct_samples": 73468
+            },
+            "9": {
+              "accuracy": 57.662,
+              "pooled_accuracy": 57.662,
+              "std": 14.007489282523117,
+              "ci_95": 0.8692303440556811,
+              "total_samples": 100000,
+              "correct_samples": 57662
+            },
+            "10": {
+              "accuracy": 54.726,
+              "pooled_accuracy": 54.726,
+              "std": 17.166447623197993,
+              "ci_95": 1.0652585108413124,
+              "total_samples": 100000,
+              "correct_samples": 54726
+            },
+            "11": {
+              "accuracy": 87.986,
+              "pooled_accuracy": 87.986,
+              "std": 6.281544714479074,
+              "ci_95": 0.38979928260093455,
+              "total_samples": 100000,
+              "correct_samples": 87986
+            },
+            "12": {
+              "accuracy": 30.475,
+              "pooled_accuracy": 30.475,
+              "std": 21.78364925810182,
+              "ci_95": 1.3517775068393583,
+              "total_samples": 100000,
+              "correct_samples": 30475
+            },
+            "13": {
+              "accuracy": 85.979,
+              "pooled_accuracy": 85.979,
+              "std": 5.772396296166784,
+              "ci_95": 0.3582042375576247,
+              "total_samples": 100000,
+              "correct_samples": 85979
+            },
+            "14": {
+              "accuracy": 100.0,
+              "pooled_accuracy": 100.0,
+              "std": 0.0,
+              "ci_95": 0.0,
+              "total_samples": 100000,
+              "correct_samples": 100000
+            },
+            "15": {
+              "accuracy": 88.564,
+              "pooled_accuracy": 88.564,
+              "std": 9.44996846555585,
+              "ci_95": 0.586414822453525,
+              "total_samples": 100000,
+              "correct_samples": 88564
+            }
+          }
+        }
+      },
+      "muufl": {
+        "status": "OK",
+        "experiment": "mft_original_muufl_mae_run1",
+        "eval_subdir": "mft_original_muufl_mae_eval",
+        "eval_path": "experiments/mft_original_muufl_mae_run1/evaluations/mft_original_muufl_mae_eval",
+        "eval_finished_at": "2026-06-10T07:34:29",
+        "eval_started_at": "2026-06-10T07:32:47",
+        "results_mtime": "2026-06-10T07:34:24",
+        "OA_mean": 55.88290909090909,
+        "results": {
+          "model_type": "MFTOriginalCosine",
+          "distance_metric": "euclidean",
+          "temperature": 10.0,
+          "prototype_mode": "mean_features",
+          "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_muufl_mae/checkpoints/checkpoint_epoch_950.pth",
+          "dataset": "muufl",
+          "split": "all",
+          "n_way": 11,
+          "k_shot": 5,
+          "k_query": 100,
+          "seeds": [
+            42
+          ],
+          "num_episodes": 1000,
+          "OA": {
+            "mean": 55.88290909090909,
+            "std": 2.95741826207581,
+            "ci_95": 0.18352166056397395
+          },
+          "AA": {
+            "mean": 55.88290909090909,
+            "std": 2.9574182620758096,
+            "ci_95": 0.18352166056397393
+          },
+          "Kappa": {
+            "mean": 51.471199999999996,
+            "std": 3.253160088283391,
+            "ci_95": 0.20187382662037137
+          },
+          "per_class": {
+            "1": {
+              "accuracy": 39.713,
+              "pooled_accuracy": 39.713,
+              "std": 9.898516606037491,
+              "ci_95": 0.6142493363062576,
+              "total_samples": 100000,
+              "correct_samples": 39713
+            },
+            "2": {
+              "accuracy": 41.22,
+              "pooled_accuracy": 41.22,
+              "std": 11.270829605667899,
+              "ci_95": 0.6994077881002652,
+              "total_samples": 100000,
+              "correct_samples": 41220
+            },
+            "3": {
+              "accuracy": 27.539,
+              "pooled_accuracy": 27.539,
+              "std": 9.258535467340394,
+              "ci_95": 0.5745355079278274,
+              "total_samples": 100000,
+              "correct_samples": 27539
+            },
+            "4": {
+              "accuracy": 58.304,
+              "pooled_accuracy": 58.304,
+              "std": 16.990514530172415,
+              "ci_95": 1.054341038059648,
+              "total_samples": 100000,
+              "correct_samples": 58304
+            },
+            "5": {
+              "accuracy": 40.91,
+              "pooled_accuracy": 40.910000000000004,
+              "std": 12.995918590080503,
+              "ci_95": 0.8064576427318537,
+              "total_samples": 100000,
+              "correct_samples": 40910
+            },
+            "6": {
+              "accuracy": 99.892,
+              "pooled_accuracy": 99.892,
+              "std": 0.5237709423020716,
+              "ci_95": 0.03250244117278314,
+              "total_samples": 100000,
+              "correct_samples": 99892
+            },
+            "7": {
+              "accuracy": 57.089,
+              "pooled_accuracy": 57.089,
+              "std": 12.529448471501048,
+              "ci_95": 0.777510986162185,
+              "total_samples": 100000,
+              "correct_samples": 57089
+            },
+            "8": {
+              "accuracy": 62.013,
+              "pooled_accuracy": 62.013,
+              "std": 11.34552030538926,
+              "ci_95": 0.7040426959918288,
+              "total_samples": 100000,
+              "correct_samples": 62013
+            },
+            "9": {
+              "accuracy": 30.219,
+              "pooled_accuracy": 30.219,
+              "std": 14.081159007695353,
+              "ci_95": 0.8738018956925505,
+              "total_samples": 100000,
+              "correct_samples": 30219
+            },
+            "10": {
+              "accuracy": 63.409,
+              "pooled_accuracy": 63.409000000000006,
+              "std": 15.767425883764286,
+              "ci_95": 0.9784426565949267,
+              "total_samples": 100000,
+              "correct_samples": 63409
+            },
+            "11": {
+              "accuracy": 94.404,
+              "pooled_accuracy": 94.404,
+              "std": 4.769568533945183,
+              "ci_95": 0.2959740760202491,
+              "total_samples": 100000,
+              "correct_samples": 94404
+            }
+          }
+        }
+      },
+      "trento": {
+        "status": "OK",
+        "experiment": "mft_original_trento_mae_run1",
+        "eval_subdir": "mft_original_trento_mae_eval",
+        "eval_path": "experiments/mft_original_trento_mae_run1/evaluations/mft_original_trento_mae_eval",
+        "eval_finished_at": "2026-06-10T01:04:56",
+        "eval_started_at": "2026-06-10T01:04:07",
+        "results_mtime": "2026-06-10T01:04:52",
+        "OA_mean": 86.71783333333335,
+        "results": {
+          "model_type": "MFTOriginalCosine",
+          "distance_metric": "euclidean",
+          "temperature": 10.0,
+          "prototype_mode": "mean_features",
+          "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_trento_mae/checkpoints/checkpoint_epoch_950.pth",
+          "dataset": "trento",
+          "split": "all",
+          "n_way": 6,
+          "k_shot": 5,
+          "k_query": 100,
+          "seeds": [
+            42
+          ],
+          "num_episodes": 1000,
+          "OA": {
+            "mean": 86.71783333333335,
+            "std": 4.0285121012602145,
+            "ci_95": 0.24998805204726468
+          },
+          "AA": {
+            "mean": 86.71783333333335,
+            "std": 4.028512101260216,
+            "ci_95": 0.2499880520472648
+          },
+          "Kappa": {
+            "mean": 84.06139999999999,
+            "std": 4.834214521512258,
+            "ci_95": 0.2999856624567176
+          },
+          "per_class": {
+            "1": {
+              "accuracy": 92.503,
+              "pooled_accuracy": 92.503,
+              "std": 12.139604235723667,
+              "ci_95": 0.7533193246618122,
+              "total_samples": 100000,
+              "correct_samples": 92503
+            },
+            "2": {
+              "accuracy": 72.818,
+              "pooled_accuracy": 72.81800000000001,
+              "std": 13.268793313636323,
+              "ci_95": 0.8233907979216609,
+              "total_samples": 100000,
+              "correct_samples": 72818
+            },
+            "3": {
+              "accuracy": 84.273,
+              "pooled_accuracy": 84.273,
+              "std": 12.32836043438056,
+              "ci_95": 0.7650325312323776,
+              "total_samples": 100000,
+              "correct_samples": 84273
+            },
+            "4": {
+              "accuracy": 96.611,
+              "pooled_accuracy": 96.611,
+              "std": 3.671195854214264,
+              "ci_95": 0.22781490466217594,
+              "total_samples": 100000,
+              "correct_samples": 96611
+            },
+            "5": {
+              "accuracy": 99.824,
+              "pooled_accuracy": 99.824,
+              "std": 0.9492228400117646,
+              "ci_95": 0.058903724940799373,
+              "total_samples": 100000,
+              "correct_samples": 99824
+            },
+            "6": {
+              "accuracy": 74.278,
+              "pooled_accuracy": 74.278,
+              "std": 12.508265906991266,
+              "ci_95": 0.7761965087804464,
+              "total_samples": 100000,
+              "correct_samples": 74278
+            }
+          }
+        }
+      }
+    },
+    "mft_original_spatial": {
+      "_note": "MFT-original spatial-MAE pretrain runs; the *_faithful runs are EXCLUDED.",
+      "houston": {
+        "status": "OK",
+        "experiment": "mft_original_houston_spatial_run1",
+        "eval_subdir": "mft_original_houston_spatial_eval",
+        "eval_path": "experiments/mft_original_houston_spatial_run1/evaluations/mft_original_houston_spatial_eval",
+        "eval_finished_at": "2026-06-10T20:45:02",
+        "eval_started_at": "2026-06-10T20:42:35",
+        "results_mtime": "2026-06-10T20:44:55",
+        "OA_mean": 67.27426666666668,
+        "results": {
+          "model_type": "MFTOriginalCosine",
+          "distance_metric": "euclidean",
+          "temperature": 10.0,
+          "prototype_mode": "mean_features",
+          "checkpoint": "/work/nmaric/CoFFE/CoFFE/experiments/mft_original_houston_spatial/checkpoints/checkpoint_epoch_950.pth",
+          "dataset": "houston",
+          "split": "all",
+          "n_way": 15,
+          "k_shot": 5,
+          "k_query": 100,
+          "seeds": [
+            42
+          ],
+          "num_episodes": 1000,
+          "OA": {
+            "mean": 67.27426666666668,
+            "std": 2.9865855673513044,
+            "ci_95": 0.18533162852385865
+          },
+          "AA": {
+            "mean": 67.27426666666668,
+            "std": 2.986585567351304,
+            "ci_95": 0.18533162852385862
+          },
+          "Kappa": {
+            "mean": 64.93671428571429,
+            "std": 3.199913107876397,
+            "ci_95": 0.19856960198984855
+          },
+          "per_class": {
+            "1": {
+              "accuracy": 77.209,
+              "pooled_accuracy": 77.209,
+              "std": 23.226651050033023,
+              "ci_95": 1.4413225294179792,
+              "total_samples": 100000,
+              "correct_samples": 77209
+            },
+            "2": {
+              "accuracy": 70.778,
+              "pooled_accuracy": 70.77799999999999,
+              "std": 19.734201681345002,
+              "ci_95": 1.224599681724683,
+              "total_samples": 100000,
+              "correct_samples": 70778
+            },
+            "3": {
+              "accuracy": 97.357,
+              "pooled_accuracy": 97.357,
+              "std": 2.855092117603213,
+              "ci_95": 0.17717184383580542,
+              "total_samples": 100000,
+              "correct_samples": 97357
+            },
+            "4": {
+              "accuracy": 88.787,
+              "pooled_accuracy": 88.787,
+              "std": 7.16670293789271,
+              "ci_95": 0.44472749789798455,
+              "total_samples": 100000,
+              "correct_samples": 88787
+            },
+            "5": {
+              "accuracy": 95.874,
+              "pooled_accuracy": 95.87400000000001,
+              "std": 5.194432018998804,
+              "ci_95": 0.32233884602586527,
+              "total_samples": 100000,
+              "correct_samples": 95874
+            },
+            "6": {
+              "accuracy": 70.953,
+              "pooled_accuracy": 70.953,
+              "std": 12.84487411382455,
+              "ci_95": 0.7970846252398837,
+              "total_samples": 100000,
+              "correct_samples": 70953
+            },
+            "7": {
+              "accuracy": 64.947,
+              "pooled_accuracy": 64.947,
+              "std": 15.082910561294197,
+              "ci_95": 0.9359652734421562,
+              "total_samples": 100000,
+              "correct_samples": 64947
+            },
+            "8": {
+              "accuracy": 31.323,
+              "pooled_accuracy": 31.323,
+              "std": 10.350104878695674,
+              "ci_95": 0.6422725046055147,
+              "total_samples": 100000,
+              "correct_samples": 31323
+            },
+            "9": {
+              "accuracy": 62.295,
+              "pooled_accuracy": 62.295,
+              "std": 18.57638218276099,
+              "ci_95": 1.1527515567102855,
+              "total_samples": 100000,
+              "correct_samples": 62295
+            },
+            "10": {
+              "accuracy": 23.817,
+              "pooled_accuracy": 23.817,
+              "std": 13.226243268592938,
+              "ci_95": 0.8207503682524557,
+              "total_samples": 100000,
+              "correct_samples": 23817
+            },
+            "11": {
+              "accuracy": 49.699,
+              "pooled_accuracy": 49.699,
+              "std": 15.910700770236362,
+              "ci_95": 0.9873335346352937,
+              "total_samples": 100000,
+              "correct_samples": 49699
+            },
+            "12": {
+              "accuracy": 31.617,
+              "pooled_accuracy": 31.617,
+              "std": 9.631734578984203,
+              "ci_95": 0.5976942614826249,
+              "total_samples": 100000,
+              "correct_samples": 31617
+            },
+            "13": {
+              "accuracy": 51.48,
+              "pooled_accuracy": 51.480000000000004,
+              "std": 12.018219502072675,
+              "ci_95": 0.7457868331734051,
+              "total_samples": 100000,
+              "correct_samples": 51480
+            },
+            "14": {
+              "accuracy": 94.099,
+              "pooled_accuracy": 94.099,
+              "std": 6.718571202272102,
+              "ci_95": 0.41691882391800306,
+              "total_samples": 100000,
+              "correct_samples": 94099
+            },
+            "15": {
+              "accuracy": 98.879,
+              "pooled_accuracy": 98.87899999999999,
+              "std": 1.4772809482288736,
+              "ci_95": 0.09167220484673373,
+              "total_samples": 100000,
+              "correct_samples": 98879
+            }
+          }
+        }
+      },
+      "muufl": {
+        "status": "MISSING",
+        "note": "PLACEHOLDER - MUUFL spatial eval has no results.json (mft_original_muufl_spatial, pretrain_metadata status='running').",
+        "experiment": "mft_original_muufl_spatial"
+      },
+      "trento": {
+        "status": "MISSING",
+        "note": "PLACEHOLDER - Trento spatial eval has no results.json (mft_original_trento_spatial status='failed'; mft_original_trento_spatial_run1 status='running'). No completed eval.",
+        "experiments": [
+          "mft_original_trento_spatial",
+          "mft_original_trento_spatial_run1"
+        ]
+      }
+    }
+  }
+}

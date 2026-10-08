@@ -1,0 +1,6 @@
+# Thin mirror of pyproject.toml — the dependency set lives there (phase 6).
+#
+#   pip install -r requirements.txt
+#
+# is therefore equivalent to an editable install with the development tools:
+-e .[dev]

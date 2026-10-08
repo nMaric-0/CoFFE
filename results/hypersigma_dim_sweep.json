@@ -1,0 +1,1143 @@
+{
+  "what": "HyperSIGMA's best published cell per scene, re-evaluated under PAPER_CANON \u00a74's protocol with the frozen eval feature linearly compressed to a target width before the nearest-class-mean prototypes are formed.",
+  "metric_blocks": {
+    "euclidean": "paper metric on the reduced feature as returned",
+    "euclidean_l2": "reduced feature re-normalised to unit length (primary)",
+    "cosine": "recorded for parity; scale-invariant, so identical for both"
+  },
+  "protocol": {
+    "k_shot": 5,
+    "k_query": 100,
+    "num_episodes": 2000,
+    "split": "all",
+    "seed": 42,
+    "paired": "variants share the control's episode stream; deltas are paired"
+  },
+  "coffe_reference": {
+    "feature_dim": 128,
+    "table_2_simmim_token_hsi_lidar_oa": {
+      "houston": 75.3,
+      "trento": 94.19,
+      "muufl": 67.83
+    }
+  },
+  "scenes": {
+    "trento": {
+      "cell": {
+        "scene": "trento",
+        "eval_name": "trento_backbonenative_upscale_frozen_spat768",
+        "description": "64x64 backbone-native (upscale), frozen encoder, pooled SpatViT feature",
+        "feature_dim": 768,
+        "mode": "spat_pool",
+        "native_geometry": true,
+        "input_fit": "upscale",
+        "adapted_checkpoint": "none",
+        "source": "experiments/hypersigma_native_ablation_run1/evaluations/native_trento_spatial_upscale"
+      },
+      "protocol": {
+        "k_shot": 5,
+        "k_query": 100,
+        "num_episodes": 2000,
+        "n_way": 6,
+        "split": "all",
+        "seed": 42,
+        "temperature": 10.0,
+        "labelled_patches": 30214,
+        "train_split_patches": 819
+      },
+      "control": {
+        "dim": 768,
+        "oa_euclidean": {
+          "mean": 91.04725,
+          "std": 1.965085011943927,
+          "ci_95": 0.08617424203352689
+        },
+        "oa_euclidean_l2": {
+          "mean": 91.04733333333334,
+          "std": 1.9651854874286034,
+          "ci_95": 0.0861786481526934
+        },
+        "published": {
+          "OA": 91.07,
+          "ci_95": 0.09,
+          "frozen_run_OA": 91.072333
+        },
+        "check": {
+          "reproduced_oa": 91.04725,
+          "reference_oa": 91.072333,
+          "reference_source": "experiments/hypersigma_native_ablation_run1/evaluations/native_trento_spatial_upscale",
+          "delta_oa": -0.02508299999999508,
+          "tolerance_pp": 0.05,
+          "passed": true
+        }
+      },
+      "coffe_published_oa": 94.19,
+      "curves": {
+        "pca_pool": {
+          "16": {
+            "euclidean_l2": {
+              "oa_mean": 91.51675,
+              "oa_std": 0.0,
+              "delta_oa_mean": 0.469416666666667,
+              "max_p_value": 2.9583290413302984e-50,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 90.972,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.07524999999999993,
+              "max_p_value": 7.31138533608085e-54,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9761300094295873
+          },
+          "32": {
+            "euclidean_l2": {
+              "oa_mean": 91.642,
+              "oa_std": 0.0,
+              "delta_oa_mean": 0.5946666666666672,
+              "max_p_value": 7.855360040225564e-77,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 91.02325,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.024000000000000042,
+              "max_p_value": 3.704162791974625e-15,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9847625040176831
+          },
+          "64": {
+            "euclidean_l2": {
+              "oa_mean": 91.671,
+              "oa_std": 0.0,
+              "delta_oa_mean": 0.6236666666666669,
+              "max_p_value": 1.2548971965936226e-83,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 91.04316666666665,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.004083333333333407,
+              "max_p_value": 0.025003996796846503,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9898018751508879
+          },
+          "128": {
+            "euclidean_l2": {
+              "oa_mean": 91.6745,
+              "oa_std": 0.0,
+              "delta_oa_mean": 0.6271666666666672,
+              "max_p_value": 3.9602729409951385e-84,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 91.04616666666665,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.0010833333333333,
+              "max_p_value": 0.6133736993574855,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9934997704764377
+          },
+          "256": {
+            "euclidean_l2": {
+              "oa_mean": 91.67633333333335,
+              "oa_std": 0.0,
+              "delta_oa_mean": 0.6290000000000004,
+              "max_p_value": 9.22432537039112e-85,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 91.04691666666666,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.0003333333333333357,
+              "max_p_value": 0.7413150709260562,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9964543573690202
+          },
+          "512": {
+            "euclidean_l2": {
+              "oa_mean": 91.67741666666666,
+              "oa_std": 0.0,
+              "delta_oa_mean": 0.6300833333333336,
+              "max_p_value": 1.2244158810804123e-84,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 91.04625,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.0010000000000000284,
+              "max_p_value": 0.07833065036370974,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.998913779440517
+          }
+        },
+        "pca_train": {
+          "16": {
+            "euclidean_l2": {
+              "oa_mean": 90.57341666666666,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.4739166666666664,
+              "max_p_value": 1.8762753097756e-35,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 91.02141666666667,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.0258333333333334,
+              "max_p_value": 1.49053700217264e-07,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9844281685917629
+          },
+          "32": {
+            "euclidean_l2": {
+              "oa_mean": 90.61316666666666,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.43416666666666653,
+              "max_p_value": 9.78457706466913e-31,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 91.00983333333335,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.03741666666666674,
+              "max_p_value": 6.826072545879741e-20,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9913163303438941
+          },
+          "64": {
+            "euclidean_l2": {
+              "oa_mean": 90.6455,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.40183333333333315,
+              "max_p_value": 1.0217244277526018e-26,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 91.02425,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.02300000000000004,
+              "max_p_value": 1.8852432235496223e-11,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.995134987784269
+          },
+          "128": {
+            "euclidean_l2": {
+              "oa_mean": 90.68158333333332,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.3657499999999998,
+              "max_p_value": 2.8782043462749673e-22,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 91.03141666666666,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.0158333333333334,
+              "max_p_value": 6.7922292594187615e-09,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9975583834403672
+          },
+          "256": {
+            "euclidean_l2": {
+              "oa_mean": 90.706,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.3413333333333331,
+              "max_p_value": 1.8889530235399477e-19,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 91.035,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.012249999999999971,
+              "max_p_value": 3.6866231326058947e-07,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9991684787188871
+          },
+          "512": {
+            "euclidean_l2": {
+              "oa_mean": 90.735,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.312333333333333,
+              "max_p_value": 2.0034045184343135e-16,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 91.04258333333333,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.0046666666666666575,
+              "max_p_value": 0.009890156572076522,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9999271446760161
+          }
+        },
+        "gaussian_rp": {
+          "16": {
+            "euclidean_l2": {
+              "oa_mean": 89.74313333333333,
+              "oa_std": 1.2891501815364865,
+              "delta_oa_mean": -1.3041999999999991,
+              "max_p_value": 0.8987605328755904,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 89.82845,
+              "oa_std": 1.3454381097702799,
+              "delta_oa_mean": -1.2187999999999992,
+              "max_p_value": 0.00022681401088919716,
+              "n_runs": 5
+            }
+          },
+          "32": {
+            "euclidean_l2": {
+              "oa_mean": 89.91484999999999,
+              "oa_std": 1.0166800947200672,
+              "delta_oa_mean": -1.1324833333333326,
+              "max_p_value": 6.814630322934987e-36,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 90.01538333333333,
+              "oa_std": 1.0013685060955313,
+              "delta_oa_mean": -1.0318666666666658,
+              "max_p_value": 2.7773023037548626e-84,
+              "n_runs": 5
+            }
+          },
+          "64": {
+            "euclidean_l2": {
+              "oa_mean": 90.62791666666666,
+              "oa_std": 0.6289401424442369,
+              "delta_oa_mean": -0.4194166666666663,
+              "max_p_value": 6.1105794894765325e-109,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 90.60258333333334,
+              "oa_std": 0.6368349777523898,
+              "delta_oa_mean": -0.44466666666666627,
+              "max_p_value": 1.5832394423105844e-113,
+              "n_runs": 5
+            }
+          },
+          "128": {
+            "euclidean_l2": {
+              "oa_mean": 90.82223333333332,
+              "oa_std": 0.22004561017106097,
+              "delta_oa_mean": -0.22509999999999994,
+              "max_p_value": 1.9427044050302597e-28,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 90.81728333333334,
+              "oa_std": 0.23205199728605186,
+              "delta_oa_mean": -0.22996666666666657,
+              "max_p_value": 6.567669170433882e-33,
+              "n_runs": 5
+            }
+          },
+          "256": {
+            "euclidean_l2": {
+              "oa_mean": 91.01035,
+              "oa_std": 0.21248561650667308,
+              "delta_oa_mean": -0.0369833333333333,
+              "max_p_value": 7.466840143719993e-20,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 91.00603333333332,
+              "oa_std": 0.19195114106343522,
+              "delta_oa_mean": -0.04121666666666659,
+              "max_p_value": 2.4288230292314324e-05,
+              "n_runs": 5
+            }
+          },
+          "512": {
+            "euclidean_l2": {
+              "oa_mean": 91.09028333333333,
+              "oa_std": 0.1613912137908687,
+              "delta_oa_mean": 0.04295000000000006,
+              "max_p_value": 0.0010958251907203884,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 91.08685,
+              "oa_std": 0.14792587670857515,
+              "delta_oa_mean": 0.039600000000000045,
+              "max_p_value": 0.0036188383563076246,
+              "n_runs": 5
+            }
+          }
+        }
+      }
+    },
+    "houston": {
+      "cell": {
+        "scene": "houston",
+        "eval_name": "houston_patchnative_joint_sem_fused512",
+        "description": "11x11 patch-native, PCA-100, joint+SEM adaptation, fused SEM feature",
+        "feature_dim": 512,
+        "mode": "fused",
+        "native_geometry": false,
+        "input_fit": "upscale",
+        "adapted_checkpoint": "experiments/hypersigma_adapt_houston_pca100_joint_sem_run1/checkpoints/checkpoint_final.pth",
+        "source": "experiments/hypersigma_houston_pca100_joint_sem_run1/evaluations/hypersigma_houston_pca100_C15way_5shot_adapted_joint_sem_run2"
+      },
+      "protocol": {
+        "k_shot": 5,
+        "k_query": 100,
+        "num_episodes": 2000,
+        "n_way": 15,
+        "split": "all",
+        "seed": 42,
+        "temperature": 10.0,
+        "labelled_patches": 15029,
+        "train_split_patches": 2832
+      },
+      "control": {
+        "dim": 512,
+        "oa_euclidean": {
+          "mean": 67.4789,
+          "std": 2.511909258578688,
+          "ci_95": 0.11015395013413984
+        },
+        "oa_euclidean_l2": {
+          "mean": 67.47876666666666,
+          "std": 2.512049679046973,
+          "ci_95": 0.11016010794784607
+        },
+        "published": {
+          "OA": 67.48,
+          "ci_95": 0.11,
+          "frozen_run_OA": 67.4789
+        },
+        "check": {
+          "reproduced_oa": 67.4789,
+          "reference_oa": 67.4789,
+          "reference_source": "experiments/hypersigma_houston_pca100_joint_sem_run1/evaluations/hypersigma_houston_pca100_C15way_5shot_adapted_joint_sem_run2",
+          "delta_oa": 0.0,
+          "tolerance_pp": 0.05,
+          "passed": true
+        }
+      },
+      "coffe_published_oa": 75.3,
+      "curves": {
+        "pca_pool": {
+          "16": {
+            "euclidean_l2": {
+              "oa_mean": 66.32153333333333,
+              "oa_std": 0.0,
+              "delta_oa_mean": -1.1572333333333331,
+              "max_p_value": 3.266352939557771e-254,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 65.42926666666666,
+              "oa_std": 0.0,
+              "delta_oa_mean": -2.0496333333333334,
+              "max_p_value": 0.0,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.8528579185138655
+          },
+          "32": {
+            "euclidean_l2": {
+              "oa_mean": 68.47866666666665,
+              "oa_std": 0.0,
+              "delta_oa_mean": 0.9998999999999999,
+              "max_p_value": 1.3105445030654767e-252,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 67.38186666666667,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.09703333333333332,
+              "max_p_value": 3.159057405352383e-55,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9491848161447991
+          },
+          "64": {
+            "euclidean_l2": {
+              "oa_mean": 68.61023333333334,
+              "oa_std": 0.0,
+              "delta_oa_mean": 1.1314666666666666,
+              "max_p_value": 4.2986485437138064e-277,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 67.45770000000002,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.021200000000000007,
+              "max_p_value": 2.308442717027828e-11,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9819394556527571
+          },
+          "128": {
+            "euclidean_l2": {
+              "oa_mean": 68.6421,
+              "oa_std": 0.0,
+              "delta_oa_mean": 1.1633333333333333,
+              "max_p_value": 1.721331023550859e-280,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 67.47333333333334,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.005566666666666574,
+              "max_p_value": 0.00037188886707435244,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9947041899630578
+          },
+          "256": {
+            "euclidean_l2": {
+              "oa_mean": 68.64956666666669,
+              "oa_std": 0.0,
+              "delta_oa_mean": 1.1708,
+              "max_p_value": 1.2154051786125084e-281,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 67.47856666666667,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.0003333333333332966,
+              "max_p_value": 0.8464982683378213,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9989022683574992
+          }
+        },
+        "pca_train": {
+          "16": {
+            "euclidean_l2": {
+              "oa_mean": 66.10413333333334,
+              "oa_std": 0.0,
+              "delta_oa_mean": -1.3746333333333332,
+              "max_p_value": 7.501615077748397e-268,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 65.32963333333333,
+              "oa_std": 0.0,
+              "delta_oa_mean": -2.149266666666666,
+              "max_p_value": 0.0,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.8684490354250313
+          },
+          "32": {
+            "euclidean_l2": {
+              "oa_mean": 68.4786,
+              "oa_std": 0.0,
+              "delta_oa_mean": 0.9998333333333335,
+              "max_p_value": 4.4047221501251394e-251,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 67.40336666666667,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.07553333333333315,
+              "max_p_value": 2.7853955981621717e-16,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9569998786239782
+          },
+          "64": {
+            "euclidean_l2": {
+              "oa_mean": 68.67306666666668,
+              "oa_std": 0.0,
+              "delta_oa_mean": 1.1943,
+              "max_p_value": 5.20691649285029e-287,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 67.50193333333334,
+              "oa_std": 0.0,
+              "delta_oa_mean": 0.02303333333333319,
+              "max_p_value": 8.61291276331841e-06,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9866298357796063
+          },
+          "128": {
+            "euclidean_l2": {
+              "oa_mean": 68.71953333333335,
+              "oa_std": 0.0,
+              "delta_oa_mean": 1.2407666666666666,
+              "max_p_value": 1.1160391893174396e-291,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 67.49593333333334,
+              "oa_std": 0.0,
+              "delta_oa_mean": 0.01703333333333315,
+              "max_p_value": 2.647633002826763e-08,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9965576632175098
+          },
+          "256": {
+            "euclidean_l2": {
+              "oa_mean": 68.74183333333335,
+              "oa_std": 0.0,
+              "delta_oa_mean": 1.2630666666666666,
+              "max_p_value": 1.1351035291098967e-293,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 67.48470000000002,
+              "oa_std": 0.0,
+              "delta_oa_mean": 0.0057999999999999476,
+              "max_p_value": 0.0009614293279585741,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9993989796874893
+          }
+        },
+        "gaussian_rp": {
+          "16": {
+            "euclidean_l2": {
+              "oa_mean": 58.06126666666667,
+              "oa_std": 1.7650267459100377,
+              "delta_oa_mean": -9.4175,
+              "max_p_value": 0.0,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 59.04397333333334,
+              "oa_std": 2.0046566978357596,
+              "delta_oa_mean": -8.434926666666666,
+              "max_p_value": 0.0,
+              "n_runs": 5
+            }
+          },
+          "32": {
+            "euclidean_l2": {
+              "oa_mean": 61.91844666666667,
+              "oa_std": 0.910703330789511,
+              "delta_oa_mean": -5.56032,
+              "max_p_value": 0.0,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 62.16437333333333,
+              "oa_std": 0.9506020060759165,
+              "delta_oa_mean": -5.314526666666667,
+              "max_p_value": 0.0,
+              "n_runs": 5
+            }
+          },
+          "64": {
+            "euclidean_l2": {
+              "oa_mean": 65.17008666666666,
+              "oa_std": 1.1731138000305943,
+              "delta_oa_mean": -2.30868,
+              "max_p_value": 9.078545674309336e-176,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 65.10994,
+              "oa_std": 1.0059377132031782,
+              "delta_oa_mean": -2.36896,
+              "max_p_value": 4.425221017033471e-217,
+              "n_runs": 5
+            }
+          },
+          "128": {
+            "euclidean_l2": {
+              "oa_mean": 66.73580666666666,
+              "oa_std": 0.4811344877359024,
+              "delta_oa_mean": -0.7429599999999998,
+              "max_p_value": 0.01686182930962534,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 66.77221333333333,
+              "oa_std": 0.5285510018910154,
+              "delta_oa_mean": -0.7066866666666665,
+              "max_p_value": 0.9857977778329708,
+              "n_runs": 5
+            }
+          },
+          "256": {
+            "euclidean_l2": {
+              "oa_mean": 67.15409333333334,
+              "oa_std": 0.6090418326811045,
+              "delta_oa_mean": -0.32467333333333326,
+              "max_p_value": 3.670301081871628e-18,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 67.15830666666668,
+              "oa_std": 0.611810442103328,
+              "delta_oa_mean": -0.3205933333333332,
+              "max_p_value": 8.015463002304845e-22,
+              "n_runs": 5
+            }
+          }
+        },
+        "stage0": {
+          "128": {
+            "euclidean_l2": {
+              "oa_mean": 66.21116666666667,
+              "oa_std": 0.0,
+              "delta_oa_mean": -1.2675999999999998,
+              "max_p_value": 3.042785543631506e-263,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 66.22116666666666,
+              "oa_std": 0.0,
+              "delta_oa_mean": -1.2577333333333331,
+              "max_p_value": 1.7783110194462546e-263,
+              "n_runs": 1
+            }
+          }
+        },
+        "stage1": {
+          "128": {
+            "euclidean_l2": {
+              "oa_mean": 67.0209,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.4578666666666667,
+              "max_p_value": 1.5230986878599983e-66,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 66.8774,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.6015,
+              "max_p_value": 2.7843589340352883e-105,
+              "n_runs": 1
+            }
+          }
+        },
+        "stage2": {
+          "128": {
+            "euclidean_l2": {
+              "oa_mean": 67.13086666666666,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.3479,
+              "max_p_value": 1.1999229406050268e-34,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 67.1014,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.3774999999999998,
+              "max_p_value": 5.17871851019457e-40,
+              "n_runs": 1
+            }
+          }
+        },
+        "stage3": {
+          "128": {
+            "euclidean_l2": {
+              "oa_mean": 64.5655,
+              "oa_std": 0.0,
+              "delta_oa_mean": -2.9132666666666664,
+              "max_p_value": 0.0,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 64.535,
+              "oa_std": 0.0,
+              "delta_oa_mean": -2.9438999999999997,
+              "max_p_value": 0.0,
+              "n_runs": 1
+            }
+          }
+        },
+        "stage_mean": {
+          "128": {
+            "euclidean_l2": {
+              "oa_mean": 67.02860000000001,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.4501666666666667,
+              "max_p_value": 3.6564311808709886e-67,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 66.83160000000001,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.6472999999999999,
+              "max_p_value": 5.529295250748225e-125,
+              "n_runs": 1
+            }
+          }
+        }
+      }
+    },
+    "muufl": {
+      "cell": {
+        "scene": "muufl",
+        "eval_name": "muufl_backbonenative_pad_frozen_spat768",
+        "description": "64x64 backbone-native (pad), frozen encoder, pooled SpatViT feature",
+        "feature_dim": 768,
+        "mode": "spat_pool",
+        "native_geometry": true,
+        "input_fit": "pad",
+        "adapted_checkpoint": "none",
+        "source": "experiments/hypersigma_native_ablation_run1/evaluations/native_muufl_spatial_pad"
+      },
+      "protocol": {
+        "k_shot": 5,
+        "k_query": 100,
+        "num_episodes": 2000,
+        "n_way": 11,
+        "split": "all",
+        "seed": 42,
+        "temperature": 10.0,
+        "labelled_patches": 53687,
+        "train_split_patches": 2683
+      },
+      "control": {
+        "dim": 768,
+        "oa_euclidean": {
+          "mean": 54.796727272727274,
+          "std": 2.689588594918813,
+          "ci_95": 0.117945665017245
+        },
+        "oa_euclidean_l2": {
+          "mean": 54.79686363636363,
+          "std": 2.690072827288455,
+          "ci_95": 0.1179668999038623
+        },
+        "published": {
+          "OA": 54.8,
+          "ci_95": 0.12,
+          "frozen_run_OA": 54.796682
+        },
+        "check": {
+          "reproduced_oa": 54.796727272727274,
+          "reference_oa": 54.796682,
+          "reference_source": "experiments/hypersigma_native_ablation_run1/evaluations/native_muufl_spatial_pad",
+          "delta_oa": 4.5272727277279046e-05,
+          "tolerance_pp": 0.05,
+          "passed": true
+        }
+      },
+      "coffe_published_oa": 67.83,
+      "curves": {
+        "pca_pool": {
+          "16": {
+            "euclidean_l2": {
+              "oa_mean": 51.9744090909091,
+              "oa_std": 0.0,
+              "delta_oa_mean": -2.8224545454545455,
+              "max_p_value": 9.397579040102273e-273,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 53.725545454545454,
+              "oa_std": 0.0,
+              "delta_oa_mean": -1.0711818181818182,
+              "max_p_value": 1.295855877657526e-307,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.8709964752749355
+          },
+          "32": {
+            "euclidean_l2": {
+              "oa_mean": 53.45881818181818,
+              "oa_std": 0.0,
+              "delta_oa_mean": -1.3380454545454545,
+              "max_p_value": 4.665695371146974e-114,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 54.25,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.5467272727272727,
+              "max_p_value": 2.2701093065889246e-264,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.919537130510519
+          },
+          "64": {
+            "euclidean_l2": {
+              "oa_mean": 54.15790909090909,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.6389545454545453,
+              "max_p_value": 2.660298654066218e-31,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 54.60459090909091,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.1921363636363634,
+              "max_p_value": 1.8471184111282126e-124,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9541593781859622
+          },
+          "128": {
+            "euclidean_l2": {
+              "oa_mean": 54.39609090909091,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.4007727272727271,
+              "max_p_value": 1.3590262987161366e-13,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 54.74518181818182,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.0515454545454547,
+              "max_p_value": 4.629273474099658e-29,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9770413240919458
+          },
+          "256": {
+            "euclidean_l2": {
+              "oa_mean": 54.47627272727273,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.32059090909090904,
+              "max_p_value": 3.888554597513067e-09,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 54.792545454545454,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.004181818181817963,
+              "max_p_value": 0.42446521209402266,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9909506457237431
+          },
+          "512": {
+            "euclidean_l2": {
+              "oa_mean": 54.48768181818182,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.30918181818181806,
+              "max_p_value": 1.601196914892853e-08,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 54.79663636363637,
+              "oa_std": 0.0,
+              "delta_oa_mean": -9.090909090890876e-05,
+              "max_p_value": 0.28553482208541725,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9988806373144984
+          }
+        },
+        "pca_train": {
+          "16": {
+            "euclidean_l2": {
+              "oa_mean": 51.79204545454546,
+              "oa_std": 0.0,
+              "delta_oa_mean": -3.004818181818182,
+              "max_p_value": 8.577537334262035e-282,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 53.696590909090915,
+              "oa_std": 0.0,
+              "delta_oa_mean": -1.1001363636363637,
+              "max_p_value": 1.9800458820266282e-307,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.8689767572672747
+          },
+          "32": {
+            "euclidean_l2": {
+              "oa_mean": 53.443363636363635,
+              "oa_std": 0.0,
+              "delta_oa_mean": -1.3535,
+              "max_p_value": 2.4637188098517952e-116,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 54.24754545454545,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.549181818181818,
+              "max_p_value": 1.5559821594509612e-266,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9197596666700206
+          },
+          "64": {
+            "euclidean_l2": {
+              "oa_mean": 54.11154545454546,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.6853181818181817,
+              "max_p_value": 3.6457943279499604e-35,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 54.58313636363637,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.21359090909090908,
+              "max_p_value": 9.325832235438012e-140,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9553052711168786
+          },
+          "128": {
+            "euclidean_l2": {
+              "oa_mean": 54.388318181818185,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.4085454545454546,
+              "max_p_value": 7.211844564730797e-14,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 54.74181818181818,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.05490909090909091,
+              "max_p_value": 4.996841707255077e-30,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9786514194989315
+          },
+          "256": {
+            "euclidean_l2": {
+              "oa_mean": 54.48290909090909,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.3139545454545454,
+              "max_p_value": 1.2814772072430526e-08,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 54.7869090909091,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.009818181818181572,
+              "max_p_value": 0.0016464674724232563,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.992535867268442
+          },
+          "512": {
+            "euclidean_l2": {
+              "oa_mean": 54.504636363636365,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.29222727272727267,
+              "max_p_value": 1.3255080427732805e-07,
+              "n_runs": 1
+            },
+            "euclidean": {
+              "oa_mean": 54.79640909090909,
+              "oa_std": 0.0,
+              "delta_oa_mean": -0.00031818181818163893,
+              "max_p_value": 0.3971443656016739,
+              "n_runs": 1
+            },
+            "explained_variance_ratio": 0.9992837771853251
+          }
+        },
+        "gaussian_rp": {
+          "16": {
+            "euclidean_l2": {
+              "oa_mean": 51.15818181818181,
+              "oa_std": 2.0736471983695286,
+              "delta_oa_mean": -3.638681818181818,
+              "max_p_value": 7.468701025259626e-07,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 51.36654545454545,
+              "oa_std": 1.7656203601562646,
+              "delta_oa_mean": -3.4301818181818176,
+              "max_p_value": 0.004349953421407568,
+              "n_runs": 5
+            }
+          },
+          "32": {
+            "euclidean_l2": {
+              "oa_mean": 50.95159090909091,
+              "oa_std": 1.0538361729124897,
+              "delta_oa_mean": -3.8452727272727274,
+              "max_p_value": 9.205803529365408e-282,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 51.075072727272726,
+              "oa_std": 1.0036750003267916,
+              "delta_oa_mean": -3.7216545454545455,
+              "max_p_value": 1.834494305097449e-278,
+              "n_runs": 5
+            }
+          },
+          "64": {
+            "euclidean_l2": {
+              "oa_mean": 53.78633636363636,
+              "oa_std": 0.5009212971619559,
+              "delta_oa_mean": -1.0105272727272725,
+              "max_p_value": 7.423658264334634e-39,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 53.772663636363646,
+              "oa_std": 0.4111112380884832,
+              "delta_oa_mean": -1.0240636363636364,
+              "max_p_value": 2.678780377364673e-74,
+              "n_runs": 5
+            }
+          },
+          "128": {
+            "euclidean_l2": {
+              "oa_mean": 53.6300909090909,
+              "oa_std": 0.43084746586579087,
+              "delta_oa_mean": -1.1667727272727273,
+              "max_p_value": 1.0667027033524718e-68,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 53.65665454545454,
+              "oa_std": 0.4734335891186686,
+              "delta_oa_mean": -1.1400727272727271,
+              "max_p_value": 2.7388249803987243e-42,
+              "n_runs": 5
+            }
+          },
+          "256": {
+            "euclidean_l2": {
+              "oa_mean": 54.54685454545455,
+              "oa_std": 0.24875469911255393,
+              "delta_oa_mean": -0.25000909090909085,
+              "max_p_value": 0.00022420430959482188,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 54.56709090909091,
+              "oa_std": 0.2563585379892768,
+              "delta_oa_mean": -0.2296363636363635,
+              "max_p_value": 6.10265519957147e-05,
+              "n_runs": 5
+            }
+          },
+          "512": {
+            "euclidean_l2": {
+              "oa_mean": 54.47590909090909,
+              "oa_std": 0.26450653259442275,
+              "delta_oa_mean": -0.3209545454545454,
+              "max_p_value": 0.4255823459235377,
+              "n_runs": 5
+            },
+            "euclidean": {
+              "oa_mean": 54.47873636363636,
+              "oa_std": 0.24134806387018287,
+              "delta_oa_mean": -0.31799090909090894,
+              "max_p_value": 0.4901028212636296,
+              "n_runs": 5
+            }
+          }
+        }
+      }
+    }
+  }
+}

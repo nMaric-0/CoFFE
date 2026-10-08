@@ -1,0 +1,25 @@
+# The environment the behaviour goldens in tests/equivalence/ were generated on
+# (tests/equivalence/golden/meta.json), pinned so the harness can be reproduced.
+#
+#   pip install -e ".[dev]" -c constraints/verification.txt
+#
+# Why pins when pyproject.toml declares floors: the goldens are bit-level
+# fingerprints of float32 arithmetic. A newer torch changes reduction order and
+# they drift - measured at the phase-8 gate, 19 of 33 tests fail on torch 2.14
+# (e.g. a masked loss off by 2.6e-04 against a 1e-06 tolerance). Nothing about
+# the code changed; the goldens simply pin one environment.
+#
+# torchvision is here because timm requires it, and a torchvision built for a
+# different torch fails these tests with an unrelated-looking
+# "RuntimeError: operator torchvision::nms does not exist".
+torch==2.11.0
+torchvision==0.26.0
+numpy==2.4.4
+
+# NOT expressible as a pin, and just as load-bearing: the **thread count**.
+# The goldens were generated on a 64-core machine where torch defaults to 32
+# threads, and BLAS reduction order follows it. The same clone with the pins
+# above gives 33 passed at 32 threads, 31 at OMP_NUM_THREADS=2 and 26 at 1.
+# So the goldens are reproducible on the reference machine, not on an arbitrary
+# one - which is why tests/equivalence/ skips itself when the environment does
+# not match, and why CI does not run it. See tests/equivalence/README.md.

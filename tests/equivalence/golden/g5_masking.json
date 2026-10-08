@@ -1,0 +1,91 @@
+{
+  "description": "Masking semantics: realized band/token mask rates on a fixed seed (4 decimals, compared exactly), the union-mask rate, and the masked reconstruction loss for a fixed (input, prediction) pair. Pins Eq. 1: union of the two masks, centre weights with mean one.",
+  "entries": {
+    "mae": {
+      "masked_loss": 1.3555787801742554,
+      "pred": {
+        "abs_sum": 68817.49897488463,
+        "norm": 224.22124003547404,
+        "shape": [
+          8,
+          121,
+          145
+        ],
+        "sum": -3111.6159480882343
+      },
+      "union_mask_ratio": 0.7521
+    },
+    "simmim_band": {
+      "band_mask_ratio_realized": 0.8499,
+      "masked_loss": 0.3295653462409973,
+      "pred": {
+        "abs_sum": 4795.554925015658,
+        "norm": 15.262108873670948,
+        "shape": [
+          8,
+          121,
+          145
+        ],
+        "sum": 924.9385004894029
+      },
+      "recon_center_weight_mean": 0.9999998807907104,
+      "union_mask_ratio": 0.8499
+    },
+    "simmim_band_token": {
+      "band_mask_ratio_realized": 0.8499,
+      "masked_loss": 0.336370050907135,
+      "pred": {
+        "abs_sum": 4320.182739152398,
+        "norm": 14.232435316120373,
+        "shape": [
+          8,
+          121,
+          145
+        ],
+        "sum": 811.2344379794667
+      },
+      "recon_center_weight_mean": 0.9999998807907104,
+      "token_mask_ratio_realized": 0.7521,
+      "union_mask_ratio": 0.9628
+    },
+    "simmim_band_token_houston_run": {
+      "band_mask_ratio_realized": 0.7489,
+      "masked_loss": 0.3415009677410126,
+      "pred": {
+        "abs_sum": 4325.417776632414,
+        "norm": 14.254758282961163,
+        "shape": [
+          8,
+          121,
+          145
+        ],
+        "sum": 810.6736353473389
+      },
+      "recon_center_weight_mean": 0.9999998807907104,
+      "token_mask_ratio_realized": 0.7521,
+      "union_mask_ratio": 0.9373
+    },
+    "simmim_token": {
+      "masked_loss": 0.32139822840690613,
+      "pred": {
+        "abs_sum": 5016.966971328482,
+        "norm": 15.741340247174318,
+        "shape": [
+          8,
+          121,
+          145
+        ],
+        "sum": 818.513053757837
+      },
+      "recon_center_weight_mean": 0.9999998807907104,
+      "token_mask_ratio_realized": 0.7521,
+      "union_mask_ratio": 0.7521
+    }
+  },
+  "input": {
+    "batch": 8,
+    "generator_seed": 20260505,
+    "mask_seed": 777
+  },
+  "scene": "houston_mini"
+}

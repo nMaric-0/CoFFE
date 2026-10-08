@@ -1,0 +1,55 @@
+{
+  "dirty": true,
+  "generated_groups": [
+    "g1",
+    "g2",
+    "g3",
+    "g5"
+  ],
+  "git_describe": "pre-refactor-4-g4d42f64-dirty",
+  "git_sha": "4d42f640a75dfbd9eba9c011f4d5559a1acfbf97",
+  "groups": {
+    "g1": {
+      "generated_at": "2026-08-31T16:25:39+00:00",
+      "git_describe": "pre-refactor-4-g4d42f64-dirty",
+      "git_sha": "4d42f640a75dfbd9eba9c011f4d5559a1acfbf97",
+      "numpy": "2.4.4",
+      "python": "3.12.3",
+      "torch": "2.11.0+cu128"
+    },
+    "g2": {
+      "generated_at": "2026-08-31T16:25:39+00:00",
+      "git_describe": "pre-refactor-4-g4d42f64-dirty",
+      "git_sha": "4d42f640a75dfbd9eba9c011f4d5559a1acfbf97",
+      "numpy": "2.4.4",
+      "python": "3.12.3",
+      "torch": "2.11.0+cu128"
+    },
+    "g3": {
+      "generated_at": "2026-08-31T16:25:39+00:00",
+      "git_describe": "pre-refactor-4-g4d42f64-dirty",
+      "git_sha": "4d42f640a75dfbd9eba9c011f4d5559a1acfbf97",
+      "numpy": "2.4.4",
+      "python": "3.12.3",
+      "torch": "2.11.0+cu128"
+    },
+    "g5": {
+      "generated_at": "2026-08-31T16:25:39+00:00",
+      "git_describe": "pre-refactor-4-g4d42f64-dirty",
+      "git_sha": "4d42f640a75dfbd9eba9c011f4d5559a1acfbf97",
+      "numpy": "2.4.4",
+      "python": "3.12.3",
+      "torch": "2.11.0+cu128"
+    }
+  },
+  "last_generated_groups": [
+    "g1",
+    "g2",
+    "g3",
+    "g5"
+  ],
+  "numpy": "2.4.4",
+  "platform": "linux",
+  "python": "3.12.3",
+  "torch": "2.11.0+cu128"
+}

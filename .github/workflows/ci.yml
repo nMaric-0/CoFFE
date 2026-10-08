@@ -1,0 +1,119 @@
+# CPU continuous integration for the CoFFE release.
+#
+# Runs what can run without the things this repository deliberately does not
+# ship: no dataset under data/raw/, no HyperSIGMA ViT-Base checkpoints, no GPU,
+# no network access during the tests (PAPER_CANON §7.5).
+#
+# That is the `not gpu and not data and not slow` selection — about 500 tests,
+# roughly 2-4 minutes on a GitHub runner. The `slow` tests are excluded because
+# they build 180M-parameter ViT bodies and shell out to the CLIs; they pass on
+# CPU but would dominate the runtime. Run them locally with
+# `pytest -m "not gpu and not data"`.
+#
+# What CI cannot check: anything GPU, the equivalence harness's real-data
+# goldens (they need data/raw/), and - since the phase-8 gate - the synthetic
+# equivalence goldens either. Those are bit-level float32 fingerprints, and they
+# reproduce only on the environment golden/meta.json records: same torch
+# release, same numpy, AND the reference machine's thread count, because BLAS
+# reduction order follows it (33 passed at 32 threads, 31 at 2, 26 at 1). A
+# GitHub runner has 2-4 cores, so tests/equivalence/conftest.py skips the
+# package here and says why, rather than reporting float drift as a behaviour
+# change. The harness stays the local arbiter, run by the verifier battery on
+# the reference machine; constraints/verification.txt reconstructs its
+# environment.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A new push to the same branch supersedes an in-flight run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.11 is the floor pyproject.toml declares; 3.12 is what the release
+        # was actually developed and verified on (docs/refactor/ENV.md). Running
+        # both is what turns ">=3.11" from an intention into a tested claim —
+        # phase 6 recorded that it had never been exercised. A 3.11 failure is
+        # real information: it means the declared floor is wrong.
+        python-version: ["3.11", "3.12"]
+
+    name: test (py${{ matrix.python-version }})
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # third_party/HyperSIGMA is vendored in-tree, not a submodule, so no
+          # submodule fetch is needed.
+          submodules: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          # CPU-only torch: the default wheel pulls ~2.5GB of CUDA libraries
+          # that no CI test can use. Pinned to the goldens' release via the
+          # constraints file - a CPU build of the same release reproduces every
+          # numeric fingerprint (measured at the phase-8 gate), so this is the
+          # nearest CI can get to the reference environment.
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu \
+            -c constraints/verification.txt
+          pip install -e ".[dev]" -c constraints/verification.txt
+
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Types
+        run: mypy
+
+      - name: Tests
+        # Deselects `slow`; `gpu` and `data` have nothing to select on a runner
+        # anyway, but naming them documents the contract. tests/equivalence
+        # self-skips here (thread count) - see the header.
+        run: pytest -q -rs -m "not gpu and not data and not slow" --no-cov
+
+      - name: The equivalence harness skipped for the documented reason
+        # A guard on the guard: if the package ever fails instead of skipping on
+        # a runner, that is either a real behaviour change or a broken skip
+        # condition, and both need a human.
+        run: |
+          pytest -q -rs tests/equivalence --no-cov > "$RUNNER_TEMP/eq.txt" 2>&1 || true
+          tail -5 "$RUNNER_TEMP/eq.txt"
+          grep -q "environment differs from the one golden/meta.json records" "$RUNNER_TEMP/eq.txt" \
+            || { echo "::error::tests/equivalence did not skip for the expected reason"; exit 1; }
+          grep -qE "[0-9]+ skipped" "$RUNNER_TEMP/eq.txt" \
+            || { echo "::error::tests/equivalence did not skip at all"; exit 1; }
+
+      - name: Frozen artifacts untouched
+        # The report scripts write committed artifacts under docs/presentation/
+        # and results/ when run without --out. Nothing in the test suite should
+        # do that (tests/integration/test_cli.py asserts it), so a dirty tree
+        # here means something regressed past that guard.
+        run: |
+          if [ -n "$(git status --porcelain -- docs/presentation results experiments)" ]; then
+            echo "::error::a test wrote into a frozen artifact tree"
+            git status --porcelain -- docs/presentation results experiments
+            exit 1
+          fi

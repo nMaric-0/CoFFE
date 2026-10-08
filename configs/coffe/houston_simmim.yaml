@@ -1,0 +1,109 @@
+# Houston SimMIM Pretraining Configuration (unified HSI+LiDAR tokens)
+#
+# LiDAR is concatenated as an extra band on each pixel, so one token per pixel
+# carries all 144 HSI bands + 1 LiDAR band. Two masking regimes are supported
+# and can be combined (set either ratio to 0 to disable):
+#   - band_mask_ratio: per-(pixel, band) Bernoulli mask on the raw input.
+#   - spatial_mask_ratio: in-place masking of whole pixel tokens.
+# The decoder reconstructs the full 145-value vector per pixel; loss is MSE
+# over the masked entries (union of both masks when both are enabled).
+#
+# Run with:
+#   python scripts/pretrain.py --config configs/coffe/houston_simmim.yaml
+#
+# ROLE: this is the **5-seed significance experiment's base config** for this
+# scene (the `enhanced` group in scripts/reproduce/sig_significance_config.py). That runner
+# CLONES the per-variant mask rates from the canonical run dir at launch, so the
+# pair in this file (0.0 / 0.75) is only what it happens to carry — it is NOT
+# the recipe of any Table 2 cell.
+#
+# To reproduce a published cell, use that cell's own config, each generated from
+# its frozen run by tools/refactor/make_cell_configs.py:
+#   configs/coffe/houston_simmim_band.yaml
+#   configs/coffe/houston_simmim_token.yaml
+#   configs/coffe/houston_simmim_band_token.yaml
+
+# Model architecture
+#
+# RUNTIME     PAPER_CANON §3 times CoFFE pretraining at 0.7-4.3 h/scene for
+#             1500 epochs on one RTX 4090. This config runs 3000 epochs.
+model:
+  name: "coffe"
+  embed_dim: 128
+  num_heads: 2
+  num_layers: 2
+  lambda_factor: 0.5
+  dropout: 0.1
+
+  # Projection head (trained for few-shot transfer)
+  use_projection: true
+  proj_hidden_dim: 512
+  proj_num_layers: 1
+  proj_l2_normalize: true
+
+# Data settings
+data:
+  patch_size: 11
+  num_workers: 4
+  # Houston-specific (informational only; actual values read from dataset class)
+  # hsi_channels: 144
+  # aux_channels: 1
+
+# Pretraining settings
+pretrain:
+  # Single dataset
+  datasets:
+    - houston
+
+  # Objective: SimMIM-style in-place masked reconstruction. Frozen configs
+  # omit this key (it defaulted to "enhanced"); stated explicitly here.
+  objective: "simmim"
+
+  # Training schedule
+  epochs: 3000
+  batch_size: 64
+  val_split: 0.00
+
+  # Optimizer (MAE settings)
+  lr: 1.5e-5
+  min_lr: 1.0e-6
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+
+  # Decoder
+  decoder_hidden_dim: 256
+
+  # Band masking: fraction of (pixel, band) entries hidden, where bands include
+  # both HSI channels and LiDAR/aux (LiDAR is masked at the same rate as HSI).
+  # 0 here: this config is token-only. Canon's SimMIM band rate is 0.85.
+  band_mask_ratio: 0.0
+
+  # Spatial (whole-token) masking: fraction of whole pixel tokens (all bands
+  # at once) replaced with a learnable mask token after tokenization. Set to 0
+  # to disable. Composes with band_mask_ratio when both > 0.
+  spatial_mask_ratio: 0.75
+
+  # Center-weighted reconstruction loss (Gaussian sigma)
+  # Emphasizes center pixel reconstruction; larger = more uniform
+  recon_center_sigma: 1.0
+
+  # Center-weighted prototype pooling (Gaussian sigma, used at evaluation)
+  pool_center_sigma: 1.0
+
+  # Checkpointing
+  save_interval: 200
+  val_interval: 50000             # Validate every 50 epochs
+  log_interval: 1
+  use_amp: False
+
+# Paths - unique for enhanced Houston pretraining
+paths:
+  data_root: "./data/raw"
+  checkpoint_dir: "./checkpoints/pretrained/houston_enhanced_CenterWeightedLoss_2layers"
+  log_dir: "./logs/pretrain/houston_enhanced_CenterWeightedLoss_2layers"
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: true

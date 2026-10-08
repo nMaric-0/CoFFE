@@ -1,0 +1,114 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+finetune_output.log
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+.claude/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Project specific
+data/raw/
+data/processed/
+checkpoints/
+logs/
+outputs/
+experiments/*/
+!/experiments/_example/
+!/experiments/_example/**
+*.pth
+*.pt
+*.ckpt
+# ...except the tiny pre-refactor checkpoints the equivalence harness loads
+# (PAPER_CANON §7.2); they are a few hundred KB and must stay in git.
+!/tests/equivalence/fixtures/*.pth
+# Local-only golden produced by `make_golden.py --real`; never committed.
+/tests/equivalence/golden/real_local.json
+wandb/
+
+# Large files
+*.mat
+*.h5
+*.hdf5
+*.npy
+*.npz
+*.tif
+*.tiff
+
+# OS
+.DS_Store
+Thumbs.db
+
+#Old files
+old_outputs/
+old_models/
+old*
+exploration_results/
+# Bulk artefacts archived to /ceph/home/nmaric/CoFFE (2026-08-28).
+# These paths are now symlinks, so the directory-only rules above no longer match them.
+/checkpoints
+/logs
+/data/raw
+/experiments/*
+!/experiments/_example/
+
+# Exploratory tree archived out of the release (phase 3, D9 decision):
+# present on disk, deliberately untracked.
+/archive/
+
+# Internal refactor-process documents: kept on disk, not shipped in the release
+# (phase-8 gate decision). CLAUDE.md still steers Claude Code sessions locally.
+/CLAUDE.md
+/WORKFLOW.md
+/PAPAER_CANON.md

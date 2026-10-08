@@ -1,0 +1,114 @@
+# Houston HSI-only Pretraining Configuration (no LiDAR/aux)
+#
+# Ablation of CoFFE with LiDAR removed. Setting
+# model.use_aux=false makes the model HSI-only: the aux/LiDAR bands are never
+# concatenated, so one token per pixel carries the 144 HSI bands alone. The
+# decoder reconstructs a 144-value per-pixel vector; loss is MSE over the
+# masked entries.
+#
+# Same architecture as houston_simmim.yaml (2 heads / 2 layers, lambda 0.5,
+# AMP off, deterministic). NOTE it is NOT the same recipe: this file is
+# band-only (0.9 / 0.0) where houston_simmim.yaml is token-only (0.0 / 0.75),
+# its lr is 1.5e-4 against that file's 1.5e-5, and save_interval is 50 against
+# 200. Match masking, lr and schedule explicitly before treating an HSI-only vs
+# HSI+LiDAR result as controlled.
+#
+# Run with:
+#   python scripts/pretrain.py --config configs/coffe/houston_simmim_hsi.yaml
+#
+# ROLE: this is the **5-seed significance experiment's base config** for this
+# scene (the `hsi_only` group in scripts/reproduce/sig_significance_config.py). That runner
+# CLONES the per-variant mask rates from the canonical run dir at launch, so the
+# pair in this file (0.9 / 0.0) is only what it happens to carry — it is NOT
+# the recipe of any Table 2 cell.
+#
+# To reproduce a published cell, use that cell's own config, each generated from
+# its frozen run by tools/refactor/make_cell_configs.py:
+#   configs/coffe/houston_simmim_band_hsi.yaml
+#   configs/coffe/houston_simmim_token_hsi.yaml
+#   configs/coffe/houston_simmim_band_token_hsi.yaml
+
+# Model architecture
+#
+# RUNTIME     PAPER_CANON §3 times CoFFE pretraining at 0.7-4.3 h/scene for
+#             1500 epochs on one RTX 4090. This config runs 3000 epochs.
+model:
+  name: "coffe"
+  embed_dim: 128
+  num_heads: 2
+  num_layers: 2
+  lambda_factor: 0.5
+  dropout: 0.1
+
+  # HSI-only: ignore aux/LiDAR bands entirely.
+  use_aux: false
+
+  # Projection head (trained for few-shot transfer)
+  use_projection: true
+  proj_hidden_dim: 512
+  proj_num_layers: 1
+  proj_l2_normalize: true
+
+# Data settings
+data:
+  patch_size: 11
+  num_workers: 4
+  # Houston-specific (informational only; actual values read from dataset class)
+  # hsi_channels: 144
+  # aux_channels: 1
+
+# Pretraining settings
+pretrain:
+  # Single dataset
+  datasets:
+    - houston
+
+  # Objective: SimMIM-style in-place masked reconstruction. Frozen configs
+  # omit this key (it defaulted to "enhanced"); stated explicitly here.
+  objective: "simmim"
+
+  # Training schedule
+  epochs: 3000
+  batch_size: 64
+  val_split: 0.00
+
+  # Optimizer (MAE settings)
+  lr: 1.5e-4
+  min_lr: 1.0e-6
+  weight_decay: 0.05
+  warmup_epochs: 100
+  grad_clip: 1.0
+
+  # Decoder
+  decoder_hidden_dim: 256
+
+  # Unified masking: mask this fraction of (pixel, band) entries. With
+  # use_aux=false the bands are HSI channels only. Set to 0 to disable.
+  band_mask_ratio: 0.9
+
+  # Spatial (whole-token) masking: fraction of whole pixel tokens replaced
+  # with a learnable mask token after tokenization. Set to 0 to disable.
+  spatial_mask_ratio: 0.0
+
+  # Center-weighted reconstruction loss (Gaussian sigma)
+  recon_center_sigma: 1.0
+
+  # Center-weighted prototype pooling (Gaussian sigma, used at evaluation)
+  pool_center_sigma: 1.0
+
+  # Checkpointing
+  save_interval: 50
+  val_interval: 50000             # Validate every 50 epochs
+  log_interval: 1
+  use_amp: False
+
+# Paths - unique for HSI-only Houston pretraining
+paths:
+  data_root: "./data/raw"
+  checkpoint_dir: "./checkpoints/pretrained/houston_hsi_only"
+  log_dir: "./logs/pretrain/houston_hsi_only"
+
+hardware:
+  device: "cuda"
+  seed: 42
+  deterministic: true
